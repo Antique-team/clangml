@@ -13,12 +13,12 @@ OCAML_DIR := $(shell ocamlc -where)
 C_INCLUDES = -I $(OCAML_DIR)
 
 C_FLAGS = -c99
-CPP_FLAGS = 
+CPP_FLAGS = -std=c++11
 
 LD_FLAGS = -L $(OCAML_DIR) -lm -ldl -lasmrun -lstdc++ -lcrt1.o  -macosx_version_min 10.7
 
-CC = gcc
-CPP = g++
+CC = clang
+CPP = clang++
 
 OUTPUT_BINARY_NAME = hello
 

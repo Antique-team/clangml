@@ -26,6 +26,12 @@ type stmt =
 	| Skip
 	| Print of expr
 
+
+
+
+external create_stmt: unit -> stmt = "create_stmt"
+
+
 type value =
 	| UnitVal
 	| IntVal of int
@@ -63,3 +69,9 @@ and eval_stmt (s : stmt) : unit =
 	| Skip -> ()
 	| Print(e) -> print_val (eval_expr e)
 
+
+
+let () = 
+    let s = create_stmt () in
+    print_endline "Created statement"
+    
