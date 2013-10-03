@@ -9,7 +9,8 @@
 /* Begin PBXBuildFile section */
 		9C92A6F417FA740A00FA7A28 /* hello_cpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C92A6F017FA740A00FA7A28 /* hello_cpp.cpp */; };
 		9C92A6F517FA740A00FA7A28 /* hello_stubs.c in Sources */ = {isa = PBXBuildFile; fileRef = 9C92A6F217FA740A00FA7A28 /* hello_stubs.c */; };
-		9C92A6F717FA765700FA7A28 /* hello.ml in Sources */ = {isa = PBXBuildFile; fileRef = 9C92A6F317FA740A00FA7A28 /* hello.ml */; };
+		9C92A6FC17FD22BE00FA7A28 /* hello_ast.ml in Sources */ = {isa = PBXBuildFile; fileRef = 9C92A6FA17FD227C00FA7A28 /* hello_ast.ml */; };
+		9C92A6FD17FD22C100FA7A28 /* hello.ml in Sources */ = {isa = PBXBuildFile; fileRef = 9C92A6FB17FD227C00FA7A28 /* hello.ml */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -43,7 +44,8 @@
 		9C92A6F017FA740A00FA7A28 /* hello_cpp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hello_cpp.cpp; sourceTree = "<group>"; };
 		9C92A6F117FA740A00FA7A28 /* hello_cpp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hello_cpp.h; sourceTree = "<group>"; };
 		9C92A6F217FA740A00FA7A28 /* hello_stubs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hello_stubs.c; sourceTree = "<group>"; };
-		9C92A6F317FA740A00FA7A28 /* hello.ml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = hello.ml; sourceTree = "<group>"; };
+		9C92A6FA17FD227C00FA7A28 /* hello_ast.ml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = hello_ast.ml; path = ocaml/hello_ast.ml; sourceTree = "<group>"; };
+		9C92A6FB17FD227C00FA7A28 /* hello.ml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = hello.ml; path = ocaml/hello.ml; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -63,7 +65,8 @@
 				9C92A6F117FA740A00FA7A28 /* hello_cpp.h */,
 				9C92A6F017FA740A00FA7A28 /* hello_cpp.cpp */,
 				9C92A6F217FA740A00FA7A28 /* hello_stubs.c */,
-				9C92A6F317FA740A00FA7A28 /* hello.ml */,
+				9C92A6FA17FD227C00FA7A28 /* hello_ast.ml */,
+				9C92A6FB17FD227C00FA7A28 /* hello.ml */,
 				9C92A6E517FA73D700FA7A28 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -84,6 +87,7 @@
 			buildConfigurationList = 9C92A6ED17FA73D700FA7A28 /* Build configuration list for PBXNativeTarget "hello" */;
 			buildPhases = (
 				9C92A6E017FA73D700FA7A28 /* Sources */,
+				9C92A6FE17FD22FA00FA7A28 /* ShellScript */,
 				9C92A6E117FA73D700FA7A28 /* Frameworks */,
 				9C92A6E217FA73D700FA7A28 /* CopyFiles */,
 			);
@@ -123,6 +127,22 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		9C92A6FE17FD22FA00FA7A28 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		9C92A6E017FA73D700FA7A28 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -130,7 +150,8 @@
 			files = (
 				9C92A6F417FA740A00FA7A28 /* hello_cpp.cpp in Sources */,
 				9C92A6F517FA740A00FA7A28 /* hello_stubs.c in Sources */,
-				9C92A6F717FA765700FA7A28 /* hello.ml in Sources */,
+				9C92A6FD17FD22C100FA7A28 /* hello.ml in Sources */,
+				9C92A6FC17FD22BE00FA7A28 /* hello_ast.ml in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

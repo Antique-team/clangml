@@ -22,7 +22,11 @@ void hello_closure()
 
 int main(int argc, char **argv)
 {
+    printf("In C main()");
     caml_main(argv);
+   //caml_startup(argv);
+    
     hello_closure();
+   
     return 0;
 }

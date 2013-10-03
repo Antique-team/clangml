@@ -1,3 +1,5 @@
+open Hello_ast
+
 external print_hello: unit -> unit = "caml_print_hello"
 
 let () =
@@ -8,23 +10,14 @@ let print_hello_in_ocaml () =
   print_endline "Hello World from ocaml"
 
 
+
+
 let () =
+  print_endline "About to register";
   Callback.register "Hello callback" print_hello_in_ocaml;
 
 
-type binary_op =
-	| BinaryOp_Add
-	| BinaryOp_Multiply
 
-
-type expr =
-	| Unit
-	| IntConst of int
-	| BinaryOp of binary_op * expr * expr
-
-type stmt =
-	| Skip
-	| Print of expr
 
 
 
@@ -73,5 +66,6 @@ and eval_stmt (s : stmt) : unit =
 
 let () = 
     let s = create_stmt () in
-    print_endline "Created statement"
+    print_endline "Created statement";
+    Format.printf "@[<v 2>Statement is:@,%a@]@." Hello_pp.pp_stmt s
     
