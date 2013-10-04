@@ -61,6 +61,7 @@ and eval_stmt (s : stmt) : unit =
 	match s with
 	| Skip -> ()
 	| Print(e) -> print_val (eval_expr e)
+	| Block ss -> List.iter eval_stmt ss
 
 
 

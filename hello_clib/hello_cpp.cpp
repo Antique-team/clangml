@@ -24,18 +24,26 @@ create_stmt() {
     CAMLparam0();
     
     printf("Creating stmt\n");
-
-    Stmt *stmt = new PrintStmt(
-                    new BinaryOpExpr(BinaryOpExpr::Addition, 
-                        new BinaryOpExpr(BinaryOpExpr::Multiplication, 
-                            new IntConstExpr(17), 
-                            new IntConstExpr(9)), 
-                        new IntConstExpr(43)));
-
-
-    //stmt = new SkipStmt();
     
-    CAMLreturn(stmt->ToValue());
+    std::list<Stmt *> blockStmts;
+    
+    blockStmts.push_back(new PrintStmt(
+                                       new BinaryOpExpr(BinaryOpExpr::Addition,
+                                                        new BinaryOpExpr(BinaryOpExpr::Multiplication,
+                                                                         new IntConstExpr(17),
+                                                                         new IntConstExpr(9)),
+                                                        new IntConstExpr(43))));
+    
+    blockStmts.push_back(new SkipStmt());
+    
+    for (int i = 0; i < 10; i++) {
+        blockStmts.push_back(new PrintStmt(new IntConstExpr(i)));
+    }
+    
+    BlockStmt *blockStmt = new BlockStmt(blockStmts);
+
+    
+    CAMLreturn(blockStmt->ToValue());
 }
 
 int const Expr::expr_constructor_tag_sizes[];
@@ -122,6 +130,61 @@ value PrintStmt::ToValue() {
 
     result_value = caml_alloc(stmt_constructor_tag_sizes[PrintTag], PrintTag);
     Store_field(result_value, 0, expression_value);
+    
+    CAMLreturn(result_value);
+}
+
+BlockStmt::BlockStmt(const std::list<Stmt *> &stmts) {
+    this->stmts = stmts;
+}
+
+
+template <class T>
+CAMLprim
+value ToList(const T &begin, const T &end) {
+    CAMLparam0();
+    CAMLlocal3(start_value, cons_value, tmp_value);
+    
+    // It would be much easier to build the list backwards,
+    // but we may not have that kind of iterator
+    
+    if (begin == end) {
+        return Val_emptylist;
+    }
+    
+    start_value = caml_alloc(2, 0);
+    Store_field(start_value, 0, (*begin)->ToValue()); // head is first item
+    
+    cons_value = start_value;
+    
+    T i = begin;
+    i++;
+    for ( ; i != end; i++) {
+        
+        tmp_value = caml_alloc(2, 0); 
+        Store_field(cons_value, 1, tmp_value); // tail is not yet fully constructed rest of list
+        
+        cons_value = tmp_value;
+        Store_field(cons_value, 0, (*i)->ToValue()); //
+        
+    }
+    
+    Store_field(cons_value, 1, Val_emptylist); // tail of last cons is empty list
+    
+    CAMLreturn(start_value);
+}
+
+CAMLprim
+value BlockStmt::ToValue() {
+    CAMLparam0();
+    CAMLlocal2(list_value, result_value);
+    
+    list_value = ToList(stmts.begin(), stmts.end());
+    
+    
+    result_value = caml_alloc(stmt_constructor_tag_sizes[BlockTag], BlockTag);
+    Store_field(result_value, 0, list_value);
+    
     
     CAMLreturn(result_value);
 }

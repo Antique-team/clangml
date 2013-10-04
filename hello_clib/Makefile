@@ -4,13 +4,15 @@ C_FILES = hello_stubs.c
 
 CPP_FILES = hello_cpp.cpp
 
-OCAML_SRC_FILES = hello_ast.ml hello_pp.ml hello.ml
+OCAML_UTIL_SRC_FILES = util/formatx.ml
+
+OCAML_SRC_FILES = hello_ast.ml $(OCAML_UTIL_SRC_FILES) hello_pp.ml hello.ml
 
 OCAML_SRC_PATHS = $(addprefix ocaml/, $(OCAML_SRC_FILES))
 
 OCAML_DIR := $(shell ocamlc -where)
 
-OCAML_FLAGS = -I ocaml -I build/ocaml
+OCAML_FLAGS = -I ocaml -I ocaml/util -warn-error A
 
 
 C_INCLUDES = -I $(OCAML_DIR)

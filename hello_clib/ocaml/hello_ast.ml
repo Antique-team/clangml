@@ -14,3 +14,4 @@ type expr =
 type stmt =
 	| Skip
 	| Print of expr
+	| Block of stmt list

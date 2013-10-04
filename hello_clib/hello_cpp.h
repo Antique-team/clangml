@@ -1,3 +1,6 @@
+#include <list>
+
+
 extern "C" {
 #include <stdio.h>
 #include <caml/mlvalues.h>
@@ -99,6 +102,7 @@ private:
  type stmt =
  | Skip
  | Print of expr
+ | Block of stmt list
  */
 
 
@@ -112,10 +116,11 @@ protected:
     };
     
     enum expr_block_tag {
-        PrintTag // size = 1
+        PrintTag, // size = 1
+        BlockTag, // size = 1
     };
     
-    constexpr static int const stmt_constructor_tag_sizes[] = {1};
+    constexpr static int const stmt_constructor_tag_sizes[] = {1, 1};
 };
 
 class SkipStmt : public Stmt {
@@ -133,4 +138,15 @@ public:
     virtual CAMLprim value ToValue();
 private:
 	Expr *e;
+};
+
+
+
+class BlockStmt : public Stmt {
+public:
+	BlockStmt(const std::list<Stmt *> &stmts);
+    
+    virtual CAMLprim value ToValue();
+private:
+    std::list<Stmt *> stmts;
 };

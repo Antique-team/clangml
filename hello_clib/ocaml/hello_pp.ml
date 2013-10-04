@@ -6,7 +6,8 @@ let rec pp_stmt ff (s : stmt) =
 	match s with
 	| Skip -> Format.fprintf ff "Skip"
 	| Print e -> Format.fprintf ff "Print %a" pp_expr e
-
+	| Block ss -> Formatx.pp_list ~sep:(Formatx.pp_sep ";") pp_stmt ff ss
+	
 and pp_expr ff (e : expr) =
 	match e with
 	| Unit -> Format.fprintf ff "Unit"
