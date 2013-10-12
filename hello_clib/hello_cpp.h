@@ -31,12 +31,12 @@ public:
     
 protected:
     enum expr_constant_tag {
-        UnitTag
+        UnitTag = 0
     };
     
     enum expr_block_tag {
-        IntConstTag, // size = 1
-        BinaryOpTag // size = 3
+        IntConstTag = 0, // size = 1
+        BinaryOpTag = 1// size = 3
     };
     
     constexpr static int const expr_constructor_tag_sizes[] = {1, 3};

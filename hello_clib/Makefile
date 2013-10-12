@@ -12,7 +12,7 @@ OCAML_SRC_PATHS = $(addprefix ocaml/, $(OCAML_SRC_FILES))
 
 OCAML_DIR := $(shell ocamlc -where)
 
-OCAML_FLAGS = -I ocaml -I ocaml/util -warn-error A
+OCAML_FLAGS = -I ocaml -I ocaml/util -warn-error A -annot
 
 
 C_INCLUDES = -I $(OCAML_DIR)
