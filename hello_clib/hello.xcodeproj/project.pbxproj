@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9C77CB68180B5E0500E89DF8 /* hello_lib.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C77CB67180B5E0500E89DF8 /* hello_lib.o */; };
 		9C92A6F417FA740A00FA7A28 /* hello_cpp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9C92A6F017FA740A00FA7A28 /* hello_cpp.cpp */; };
 		9C92A6F517FA740A00FA7A28 /* hello_stubs.c in Sources */ = {isa = PBXBuildFile; fileRef = 9C92A6F217FA740A00FA7A28 /* hello_stubs.c */; };
-		9C92A70517FE111200FA7A28 /* ocaml_combined_object.o in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C92A70417FE111200FA7A28 /* ocaml_combined_object.o */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -39,11 +39,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		9C77CB67180B5E0500E89DF8 /* hello_lib.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = hello_lib.o; sourceTree = "<group>"; };
 		9C92A6E417FA73D700FA7A28 /* hello */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = hello; sourceTree = BUILT_PRODUCTS_DIR; };
 		9C92A6F017FA740A00FA7A28 /* hello_cpp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hello_cpp.cpp; sourceTree = "<group>"; };
 		9C92A6F117FA740A00FA7A28 /* hello_cpp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hello_cpp.h; sourceTree = "<group>"; };
 		9C92A6F217FA740A00FA7A28 /* hello_stubs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hello_stubs.c; sourceTree = "<group>"; };
-		9C92A70417FE111200FA7A28 /* ocaml_combined_object.o */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.objfile"; path = ocaml_combined_object.o; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,7 +51,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9C92A70517FE111200FA7A28 /* ocaml_combined_object.o in Frameworks */,
+				9C77CB68180B5E0500E89DF8 /* hello_lib.o in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,7 +65,7 @@
 				9C92A6F017FA740A00FA7A28 /* hello_cpp.cpp */,
 				9C92A6F217FA740A00FA7A28 /* hello_stubs.c */,
 				9C92A6E517FA73D700FA7A28 /* Products */,
-				9C92A70417FE111200FA7A28 /* ocaml_combined_object.o */,
+				9C77CB67180B5E0500E89DF8 /* hello_lib.o */,
 			);
 			sourceTree = "<group>";
 		};
@@ -138,7 +138,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd ${PROJECT_DIR} && make ocaml_combined_object.o";
+			shellScript = "PATH=\"$PATH:/usr/local/bin/\" # for ocamlc and ocamlbuild\ncd ${PROJECT_DIR} && make hello_lib.o";
 		};
 /* End PBXShellScriptBuildPhase section */
 
