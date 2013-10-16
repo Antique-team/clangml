@@ -56,13 +56,9 @@ OCAML_COMBINED_OBJECT_FILE = ocaml_combined.o
 .PHONY: ocamlbuild_stage
 
 all: hello_driver
-	
-
-build:
-	mkdir -p build/ocaml
 
 
-hello_driver: build $(C_OBJECT_FILES) $(CPP_OBJECT_FILES) $(OCAML_LIBRARY_MODULE_LIST_FILE_BASE).o
+hello_driver: $(C_OBJECT_FILES) $(CPP_OBJECT_FILES) $(OCAML_LIBRARY_MODULE_LIST_FILE_BASE).o
 	ld -o $(OUTPUT_BINARY_NAME) $(OCAML_LIBRARY_MODULE_LIST_FILE_BASE).o $(C_OBJECT_FILES) $(CPP_OBJECT_FILES)   $(LD_FLAGS) 
 
 %.o : %.c
