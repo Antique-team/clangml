@@ -1,4 +1,7 @@
 # Makefile
+# For upgrading to mavricks:
+#   Problem: The linker cannot find lcrt1.o
+#   Solution: The command line tools need to be reinstalled using xcode-select --install
 
 C_FILES = hello_stubs.c
 
