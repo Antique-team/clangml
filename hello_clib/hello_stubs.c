@@ -22,11 +22,12 @@ void hello_closure()
 
 int main(int argc, char **argv)
 {
-    printf("In C main()");
+    printf("In C main()\n");
     caml_main(argv);
    //caml_startup(argv);
+
     
-    hello_closure();
+    //hello_closure();
    
     return 0;
 }
