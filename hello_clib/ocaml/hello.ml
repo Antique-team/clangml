@@ -57,6 +57,8 @@ let rec eval_expr (e : expr) : value =
 		let v1 = (eval_expr e1) in
 		let v2 = (eval_expr e2) in
 		apply_op op v1 v2
+	| ConstDecl (name, e1, e2) -> raise Eval_error (*TODO:*)
+	| Var name -> raise Eval_error (*TODO:*)
 
 and eval_stmt (s : stmt) : unit =
 	match s with
