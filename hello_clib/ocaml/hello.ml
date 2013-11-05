@@ -69,7 +69,19 @@ and eval_stmt (s : stmt) : unit =
 
 
 let () = 
-    let s = create_stmt () in
-    print_endline "Created statement";
-    Format.printf "@[<v 2>Statement is:@,%a@]@." Hello_pp.pp_stmt s
+	let s = create_stmt () in
+	print_endline "Created statement";
+	Format.printf "@[<v 2>Statement is:@,%a@]@." Hello_pp.pp_stmt s
+	(*
+	let v1 = IntConst 2 in
+	let e1 = Var foo in
+	let s = ConstDecl foo v1 e1 in
+	Format.printf "@[<v 2>Statement is:@,%a@]@." Hello_pp.pp_stmt s;
+	*)
+
+let () =
+	let v1 = ConstDecl ("foo", IntConst 2, BinaryOp(BinaryOp_Add, Var "foo", IntConst 2)) in
+	print_endline "Created statement 2";
+	Format.printf "@[<v 2>Statement is:@,%a@]@." Hello_pp.pp_expr v1
+	
     
