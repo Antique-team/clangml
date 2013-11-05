@@ -10,6 +10,8 @@ type expr =
 	| Unit
 	| IntConst of int
 	| BinaryOp of binary_op * expr * expr
+	| ConstDecl of string * expr * expr
+	| Var of string
 
 type stmt =
 	| Skip
