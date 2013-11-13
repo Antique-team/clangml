@@ -54,11 +54,23 @@ void initialize_caml() {
 	}
 }
 
-
 void HelloChecker::checkASTDecl	( const	TranslationUnitDecl * 	D, AnalysisManager & 	Mgr, BugReporter & 	BR ) const {
     llvm::outs() << "Running Hello Checker on translation unit!" << "\n";
     
     initialize_caml();
-    
+    clang::DeclContext::decl_iterator current;
+    current = D->decls_begin();
+    for(current = D->decls_begin(); current != D->decls_end(); current++){
+        //FunctionDecl * n = dynamic_cast<FunctionDecl*>(*current);
+        Decl *c = *current;
+        FunctionDecl * fCastTry = dyn_cast<FunctionDecl>(c);
+        printf("fCastTry: %p\n",fCastTry);
+        if(fCastTry){
+            AttrVec attr = fCastTry->getAttrs();
+            fCastTry->dump(); //TODO: veryify name of function
+            //TODO: extract statement tree
+            //TODO: pass into ocaml
+        }
+    }
     hello_closure();
 }
