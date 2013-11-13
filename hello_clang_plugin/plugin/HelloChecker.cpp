@@ -66,7 +66,7 @@ void HelloChecker::checkASTDecl	( const	TranslationUnitDecl * 	D, AnalysisManage
         FunctionDecl * fCastTry = dyn_cast<FunctionDecl>(c);
         printf("fCastTry: %p\n",fCastTry);
         if(fCastTry){
-            AttrVec attr = fCastTry->getAttrs();
+            //AttrVec attr = fCastTry->getAttrs();
             fCastTry->dump(); //TODO: veryify name of function
             //TODO: extract statement tree
             //TODO: pass into ocaml
