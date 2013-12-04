@@ -53,7 +53,17 @@ void initialize_caml() {
         already_initialized =  true;
 	}
 }
-
+void HelloChecker::convertExpr(const clang::Expr * in) const {
+    //Check for binary operator
+    const BinaryOperator * binOp = dyn_cast<BinaryOperator>(in);
+    if(binOp) {
+        printf("binary operator\n");
+    }
+    const IntegerLiteral * intLit = dyn_cast<IntegerLiteral>(in);
+    if(intLit) {
+        printf("integer literal\n");
+    }
+}
 void HelloChecker::checkASTDecl	( const	TranslationUnitDecl * 	D, AnalysisManager & 	Mgr, BugReporter & 	BR ) const {
     llvm::outs() << "Running Hello Checker on translation unit!" << "\n";
     
@@ -64,13 +74,30 @@ void HelloChecker::checkASTDecl	( const	TranslationUnitDecl * 	D, AnalysisManage
         //FunctionDecl * n = dynamic_cast<FunctionDecl*>(*current);
         Decl *c = *current;
         FunctionDecl * fCastTry = dyn_cast<FunctionDecl>(c);
-        printf("fCastTry: %p\n",fCastTry);
+        //printf("fCastTry: %p\n",fCastTry);
         if(fCastTry){
             //Get main function
             if(fCastTry->isMain()){
                 fCastTry->dump();
                 Stmt *mainBody = fCastTry->getBody();
+                CompoundStmt * compoundStmt = dyn_cast<CompoundStmt>(mainBody);
+                
+                printf("main body dump\n");
                 mainBody->dump();
+                if(compoundStmt) {
+                    Stmt** currentSt;
+//                    cmpStmtIterator = compoundStmt->body_begin();
+                    for(currentSt = compoundStmt->body_begin(); currentSt != compoundStmt->body_end(); currentSt++){
+                        ReturnStmt * returnStmt = dyn_cast<ReturnStmt>(*currentSt);
+                        if(returnStmt){
+                            Expr * retVal = returnStmt->getRetValue();
+                            retVal->dump();
+                            convertExpr(retVal);
+                        }
+
+                    }
+                }
+                
                 
             }
             //TODO: extract statement tree
