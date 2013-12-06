@@ -1,11 +1,12 @@
 #include <list>
 
-
+#ifndef __HelloClangPlugin__hello_cpp__
+#define __HelloClangPlugin__hello_cpp__
+namespace hello_clang{
 extern "C" {
 #include <stdio.h>
 #include <caml/mlvalues.h>
 }
-
 class OCamlADTBase {
 public:
     
@@ -150,3 +151,5 @@ public:
 private:
     std::list<Stmt *> stmts;
 };
+}
+#endif /* defined(__HelloClangPlugin__hello_cpp__) */

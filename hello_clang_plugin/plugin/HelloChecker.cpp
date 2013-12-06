@@ -12,6 +12,10 @@
 
 #include <llvm/Support/raw_ostream.h>
 
+#include "hello_cpp.h"
+
+#include <iostream>
+
 extern "C" {
     CAMLprim value
     caml_print_hello(value unit);
@@ -53,16 +57,28 @@ void initialize_caml() {
         already_initialized =  true;
 	}
 }
-void HelloChecker::convertExpr(const clang::Expr * in) const {
+hello_clang::Expr* HelloChecker::convertExpr(const clang::Expr * in) const {
     //Check for binary operator
     const BinaryOperator * binOp = dyn_cast<BinaryOperator>(in);
     if(binOp) {
-        printf("binary operator\n");
+        if(binOp->getOpcode() == BO_Add) {
+            hello_clang::BinaryOpExpr::Op oper = hello_clang::BinaryOpExpr::Addition;
+            return new hello_clang::BinaryOpExpr(oper, convertExpr(binOp->getLHS()), convertExpr(binOp->getRHS()));
+        }
+        if(binOp->getOpcode() == BO_Mul) {
+            hello_clang::BinaryOpExpr::Op oper = hello_clang::BinaryOpExpr::Multiplication;
+            return new hello_clang::BinaryOpExpr(oper, convertExpr(binOp->getLHS()), convertExpr(binOp->getRHS()));
+        }
+        return NULL;  //Return null if not defined
     }
     const IntegerLiteral * intLit = dyn_cast<IntegerLiteral>(in);
     if(intLit) {
-        printf("integer literal\n");
+        //TODO:
+        //std::cout << intLit->getValue().getSExtValue() << "\n";
+        int value = intLit->getValue().getSExtValue();
+        return new hello_clang::IntConstExpr(value);
     }
+    return NULL; //Return null if something other than int lit or binop is encountered
 }
 void HelloChecker::checkASTDecl	( const	TranslationUnitDecl * 	D, AnalysisManager & 	Mgr, BugReporter & 	BR ) const {
     llvm::outs() << "Running Hello Checker on translation unit!" << "\n";
@@ -79,18 +95,18 @@ void HelloChecker::checkASTDecl	( const	TranslationUnitDecl * 	D, AnalysisManage
             //Get main function
             if(fCastTry->isMain()){
                 fCastTry->dump();
-                Stmt *mainBody = fCastTry->getBody();
+                clang::Stmt *mainBody = fCastTry->getBody();
                 CompoundStmt * compoundStmt = dyn_cast<CompoundStmt>(mainBody);
                 
                 printf("main body dump\n");
                 mainBody->dump();
                 if(compoundStmt) {
-                    Stmt** currentSt;
+                    clang::Stmt** currentSt;
 //                    cmpStmtIterator = compoundStmt->body_begin();
                     for(currentSt = compoundStmt->body_begin(); currentSt != compoundStmt->body_end(); currentSt++){
                         ReturnStmt * returnStmt = dyn_cast<ReturnStmt>(*currentSt);
                         if(returnStmt){
-                            Expr * retVal = returnStmt->getRetValue();
+                            clang::Expr * retVal = returnStmt->getRetValue();
                             retVal->dump();
                             convertExpr(retVal);
                         }

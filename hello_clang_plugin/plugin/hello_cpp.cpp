@@ -5,6 +5,8 @@
 
 #include <assert.h>
 
+using namespace hello_clang;
+
 extern "C" {
 #include <caml/memory.h>
 #include <caml/mlvalues.h>

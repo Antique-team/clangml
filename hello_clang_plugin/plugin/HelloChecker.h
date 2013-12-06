@@ -19,10 +19,11 @@
 #include <clang/AST/ExprCXX.h>
 #include <clang/AST/DeclObjC.h>
 #include <clang/AST/Expr.h>
+#include "hello_cpp.h"
 
 class HelloChecker: public clang::ento::Checker<clang::ento::check::ASTDecl<clang::TranslationUnitDecl> > {
 public:
-    void convertExpr(const clang::Expr * in) const;
+    hello_clang::Expr* convertExpr(const clang::Expr * in) const;
     void checkASTDecl	( const	clang::TranslationUnitDecl * 	D, clang::ento::AnalysisManager & 	Mgr, clang::ento::BugReporter & 	BR ) const;
     
 
