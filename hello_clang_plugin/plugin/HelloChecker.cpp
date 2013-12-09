@@ -85,38 +85,27 @@ hello_clang::Expr* HelloChecker::convertExpr(const clang::Expr * in) const {
 void HelloChecker::checkASTDecl	( const	TranslationUnitDecl * 	D, AnalysisManager & 	Mgr, BugReporter & 	BR ) const {
     CAMLparam0();
     CAMLlocal1(caml_expr);
-    
-    //print something test
-    
-    //end print something test
-    
+
     llvm::outs() << "Running Hello Checker on translation unit!" << "\n";
     
     initialize_caml();
     clang::DeclContext::decl_iterator current;
     current = D->decls_begin();
     for(current = D->decls_begin(); current != D->decls_end(); current++){
-        //FunctionDecl * n = dynamic_cast<FunctionDecl*>(*current);
         Decl *c = *current;
         FunctionDecl * fCastTry = dyn_cast<FunctionDecl>(c);
-        //printf("fCastTry: %p\n",fCastTry);
         if(fCastTry){
             //Get main function
             if(fCastTry->isMain()){
-                //fCastTry->dump();
                 clang::Stmt *mainBody = fCastTry->getBody();
                 CompoundStmt * compoundStmt = dyn_cast<CompoundStmt>(mainBody);
                 
-                //printf("main body dump\n");
-                //mainBody->dump();
                 if(compoundStmt) {
                     clang::Stmt** currentSt;
-//                    cmpStmtIterator = compoundStmt->body_begin();
                     for(currentSt = compoundStmt->body_begin(); currentSt != compoundStmt->body_end(); currentSt++){
                         ReturnStmt * returnStmt = dyn_cast<ReturnStmt>(*currentSt);
                         if(returnStmt){
                             clang::Expr * retVal = returnStmt->getRetValue();
-                            retVal->dump(); //print out expression being returned
                             value * caml_print;
                             caml_print = caml_named_value("Hello print expr");
                             hello_clang::Expr * val = convertExpr(retVal);
