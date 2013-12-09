@@ -7,14 +7,16 @@
 //
 
 #include <caml/callback.h>
-
 #include "HelloChecker.h"
-
 #include <llvm/Support/raw_ostream.h>
-
 #include "hello_cpp.h"
-
 #include <iostream>
+
+extern "C" {
+#include <caml/memory.h>
+#include <caml/mlvalues.h>
+#include <caml/alloc.h>
+}
 
 extern "C" {
     CAMLprim value
@@ -71,16 +73,23 @@ hello_clang::Expr* HelloChecker::convertExpr(const clang::Expr * in) const {
         }
         return NULL;  //Return null if not defined
     }
+    
+    //Check for integer literal
     const IntegerLiteral * intLit = dyn_cast<IntegerLiteral>(in);
     if(intLit) {
-        //TODO:
-        //std::cout << intLit->getValue().getSExtValue() << "\n";
         int value = intLit->getValue().getSExtValue();
         return new hello_clang::IntConstExpr(value);
     }
     return NULL; //Return null if something other than int lit or binop is encountered
 }
 void HelloChecker::checkASTDecl	( const	TranslationUnitDecl * 	D, AnalysisManager & 	Mgr, BugReporter & 	BR ) const {
+    CAMLparam0();
+    CAMLlocal1(caml_expr);
+    
+    //print something test
+    
+    //end print something test
+    
     llvm::outs() << "Running Hello Checker on translation unit!" << "\n";
     
     initialize_caml();
@@ -94,12 +103,12 @@ void HelloChecker::checkASTDecl	( const	TranslationUnitDecl * 	D, AnalysisManage
         if(fCastTry){
             //Get main function
             if(fCastTry->isMain()){
-                fCastTry->dump();
+                //fCastTry->dump();
                 clang::Stmt *mainBody = fCastTry->getBody();
                 CompoundStmt * compoundStmt = dyn_cast<CompoundStmt>(mainBody);
                 
-                printf("main body dump\n");
-                mainBody->dump();
+                //printf("main body dump\n");
+                //mainBody->dump();
                 if(compoundStmt) {
                     clang::Stmt** currentSt;
 //                    cmpStmtIterator = compoundStmt->body_begin();
@@ -107,8 +116,13 @@ void HelloChecker::checkASTDecl	( const	TranslationUnitDecl * 	D, AnalysisManage
                         ReturnStmt * returnStmt = dyn_cast<ReturnStmt>(*currentSt);
                         if(returnStmt){
                             clang::Expr * retVal = returnStmt->getRetValue();
-                            retVal->dump();
-                            convertExpr(retVal);
+                            retVal->dump(); //print out expression being returned
+                            value * caml_print;
+                            caml_print = caml_named_value("Hello print expr");
+                            hello_clang::Expr * val = convertExpr(retVal);
+                            caml_expr = val->ToValue();
+                            printf("%p\n", caml_print);
+                            caml_callback(*caml_print, caml_expr);
                         }
 
                     }
@@ -121,4 +135,5 @@ void HelloChecker::checkASTDecl	( const	TranslationUnitDecl * 	D, AnalysisManage
         }
     }
     hello_closure();
+    CAMLreturn0;
 }

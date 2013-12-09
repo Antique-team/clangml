@@ -13,10 +13,6 @@ let print_hello_in_ocaml () =
 
   
 
-let () =
-  print_endline "About to register";
-  Callback.register "Hello callback" print_hello_in_ocaml;
-
 
 
 
@@ -57,16 +53,31 @@ let rec eval_expr (e : expr) : value =
 		let v1 = (eval_expr e1) in
 		let v2 = (eval_expr e2) in
 		apply_op op v1 v2
-
 and eval_stmt (s : stmt) : unit =
 	match s with
 	| Skip -> ()
 	| Print(e) -> print_val (eval_expr e)
 	| Block ss -> List.iter eval_stmt ss
 
+let printSomething(): unit =
+	Format.printf "hi there"
+
+let print_expr (e: expr) : unit =
+	Format.printf "hi there";
+	Format.printf "@[<v 2>Statement is:@,%a@]@." Hello_pp.pp_expr e
+
 
 
 let () = 
-    let s = create_stmt () in
-    print_endline "Created statement";
-    Format.printf "@[<v 2>Statement is:@,%a@]@." Hello_pp.pp_stmt s
+	let s = create_stmt () in
+	print_endline "Created statement";
+	Format.printf "@[<v 2>Statement is:@,%a@]@." Hello_pp.pp_stmt s
+
+let () =
+	print_endline "About to register";
+	Callback.register "Hello callback" print_hello_in_ocaml;
+	Callback.register "Hello print expr" print_expr;
+	Callback.register "print something" printSomething;
+
+
+
