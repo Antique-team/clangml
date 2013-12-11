@@ -60,6 +60,7 @@ and eval_stmt (s : stmt) : unit =
 	| Block ss -> List.iter eval_stmt ss
 
 let print_expr (e: expr) : unit =
+	Gc.full_major();
 	Format.printf "@[<v 2>Statement is:@,%a@]@." Hello_pp.pp_expr e
 
 
@@ -72,7 +73,7 @@ let () =
 let () =
 	print_endline "About to register";
 	Callback.register "Hello callback" print_hello_in_ocaml;
-	Callback.register "Hello print expr" print_expr;
+	Callback.register "Hello print expr" print_expr; (*TODO: standardize convention for naming*)
 
 
 

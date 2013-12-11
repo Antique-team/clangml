@@ -119,8 +119,6 @@ void HelloChecker::checkASTDecl	( const	TranslationUnitDecl * 	D, AnalysisManage
                 
                 
             }
-            //TODO: extract statement tree
-            //TODO: pass into ocaml
         }
     }
     hello_closure();

@@ -88,7 +88,7 @@ value BinaryOpExpr::ToValue() {
     
     e2_value = e2->ToValue();
 
-    printf("BinaryOpTag is %d\n", BinaryOpTag);
+    //printf("BinaryOpTag is %d\n", BinaryOpTag);
 
     result_value = caml_alloc(expr_constructor_tag_sizes[BinaryOpTag], BinaryOpTag);
     
@@ -97,7 +97,7 @@ value BinaryOpExpr::ToValue() {
     Store_field(result_value, 1, e1_value);
     Store_field(result_value, 2, e2_value);
     
-    printf("result_value tag is %d\n", Tag_val(result_value));
+    //printf("result_value tag is %d\n", Tag_val(result_value));
     CAMLreturn(result_value);
 }
 
