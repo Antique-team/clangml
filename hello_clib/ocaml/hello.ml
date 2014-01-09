@@ -49,15 +49,6 @@ let print_val v =
 	| IntVal(i) -> print_endline (string_of_int i)
 	| _ -> raise Eval_error
 
-let rec substitute (e: expr)  (v: expr) (s: string) : expr =
-	match e with
-	| Unit -> Unit
-	| IntConst i -> IntConst i
-	| BinaryOp(op, e1, e2) -> BinaryOp(op, substitute e1 v s, substitute e2 v s)
-	| Var name -> v
-	| ConstDecl(name, e1, e2) when name == s  -> ConstDecl(name, substitute e1 v s, e2)
-	| ConstDecl(name, e1, e2) -> ConstDecl(name, substitute e1 v s, substitute e2 v s)
-
 let rec eval_expr (e : expr) : value =
 	match e with
 	| Unit -> UnitVal
@@ -66,8 +57,6 @@ let rec eval_expr (e : expr) : value =
 		let v1 = (eval_expr e1) in
 		let v2 = (eval_expr e2) in
 		apply_op op v1 v2
-	| ConstDecl (name, e1, e2) -> eval_expr (substitute e2 e1 name)
-	| Var name -> raise Eval_error
 
 and eval_stmt (s : stmt) : unit =
 	match s with
@@ -83,7 +72,7 @@ let () =
 	Format.printf "@[<v 2>Statement is:@,%a@]@." Hello_pp.pp_stmt s
 
 let () =
-	let v1 = ConstDecl ("foo", IntConst 4, BinaryOp(BinaryOp_Add, Var "foo", IntConst 2)) in
+	let v1 = BinaryOp(BinaryOp_Add, IntConst 6, BinaryOp(BinaryOp_Multiply, IntConst 6, IntConst 2)) in
 	Format.printf "@[<v 2>Statement is:@,%a@]@." Hello_pp.pp_expr v1;
 	print_endline "result is:";
 	print_val (eval_expr v1)
