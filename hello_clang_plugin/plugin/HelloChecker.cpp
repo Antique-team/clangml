@@ -6,17 +6,18 @@
 //  Copyright (c) 2013 Devin Coughlin. All rights reserved.
 //
 
-#include <caml/callback.h>
-#include "HelloChecker.h"
-#include <llvm/Support/raw_ostream.h>
-#include "hello_cpp.h"
-#include <iostream>
-
 extern "C" {
+#include <caml/callback.h>
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
 #include <caml/alloc.h>
 }
+
+#include <stdio.h>
+#include "HelloChecker.h"
+#include <llvm/Support/raw_ostream.h>
+#include "hello_cpp.h"
+#include <iostream>
 
 extern "C" {
     CAMLprim value
