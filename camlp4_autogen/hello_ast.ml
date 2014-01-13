@@ -6,11 +6,11 @@ type binary_op =
 
 
 type expr =
-  | Unit
-  | IntConst of int
-  | BinaryOp of binary_op * expr * expr
+  | Unit of Clang.Unit.t
+  | IntConst of Clang.IntConst.t	* int
+  | BinaryOp of Clang.BinaryOp.t	* binary_op * expr * expr
 
-type stmt =
-  | Skip
-  | Print of expr
-  | Block of stmt list
+and stmt =
+  | Skip of Clang.Skip.t
+  | Print of Clang.Print.t		* expr
+  | Block of Clang.Block.t		* stmt list

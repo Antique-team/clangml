@@ -1,53 +1,71 @@
 module Log = Logger.Make(struct let tag = "main" end)
 
 
-let enum_interface_for_constant_sum_type (sum_type : Parse.sum_type) : Codegen.enum_interface =
-  let (sum_type_name, branches) = sum_type in
+(*****************************************************
+ * Enum (all tycons are nullary)
+ *****************************************************)
 
+let enum_interface_for_constant_sum_type (sum_type_name, branches) =
   (* Explicitly make the first enum have value 0, the second have value 2, etc.*)
-  let branch_to_element i branch =
-    let (branch_name, _) = branch in
-    (branch_name, Some i)
+  let enum_elements =
+    List.mapi (fun i (branch_name, _) ->
+      (branch_name, Some i)
+    ) branches
   in
-  let enum_elements = List.mapi branch_to_element branches in
-  {
-    Codegen.enum_name = sum_type_name;
-    Codegen.enum_elements = enum_elements;
-  }
+
+  Codegen.({
+    enum_name = sum_type_name;
+    enum_elements = enum_elements;
+  })
 
 
-let emit_constant_sum_type (cg : Codegen.t) (sum : Parse.sum_type) : unit =
-  let enum_interface = enum_interface_for_constant_sum_type sum in
-  Codegen.emit_enum_interface cg enum_interface
-
-
-let sum_type_is_enum (sum_type : Parse.sum_type) : bool =
-  let (_, branches) = sum_type in
-  List.for_all (fun branch ->
-    let (_, components) = branch in
-    components = []
+let sum_type_is_enum (sum_type_name, branches) =
+  List.for_all (fun (branch_name, types) ->
+    types = []
   ) branches
 
 
-let gen_code_for_sum_type (cg : Codegen.t) (sum_type : Parse.sum_type) =
-  begin
-    if sum_type_is_enum sum_type then
-      emit_constant_sum_type cg sum_type
-    else
-      (* TODO: Implement me! *)
-      Log.unimp "Non-enum type in process_sum_type"
-  end;
-  Codegen.flush cg
+(*****************************************************
+ * Class (none of the tycons are nullary)
+ *****************************************************)
 
 
-let code_gen (sum_types : Parse.sum_type list) =
+let class_interface_for_sum_type (sum_type_name, branches) =
+  failwith (Show.show_list<Parse.sum_type_branch> branches);
+  (* TODO: Implement me! *)
+  Log.unimp "Non-enum type in process_sum_type"
+
+
+(*****************************************************
+ * Main
+ *****************************************************)
+
+let gen_code_for_sum_type (sum_type : Parse.sum_type) =
+  if sum_type_is_enum sum_type then
+    Codegen.Enum (enum_interface_for_constant_sum_type sum_type)
+  else
+    Codegen.Enum (class_interface_for_sum_type sum_type)
+
+
+let gen_code_for_ocaml_type = function
+  | Parse.SumType sum_type ->
+      [gen_code_for_sum_type sum_type]
+  | Parse.RecursiveType rec_types ->
+      List.map gen_code_for_sum_type rec_types
+
+
+let code_gen (sum_types : Parse.ocaml_type list) =
+  let cpp_types =
+    List.map gen_code_for_ocaml_type sum_types
+    |> List.flatten
+  in
   let cg = Codegen.make_codegen_with_channel stdout in
-  List.iter (gen_code_for_sum_type cg) sum_types
+  List.iter (Codegen.emit_interface cg) cpp_types
 
 
 let parse_and_generate filename =
   let sum_types = Parse.parse_file filename in
-  print_endline (Show.show_list<Parse.sum_type> sum_types);
+  print_endline (Show.show_list<Parse.ocaml_type> sum_types);
   code_gen sum_types
 
   (* TODO: Think about detecting versioning mismatch between generated and ocaml ast.*)

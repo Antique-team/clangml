@@ -5,11 +5,9 @@
 module Log = Logger.Make(struct let tag = "codegen" end)
 
 
-type codegen_state = {
-  codegen_output : Format.formatter;
-}
-
-type t = codegen_state
+(*****************************************************
+ * C++ data types
+ *****************************************************)
 
 
 type enum_element = string * int option
@@ -29,7 +27,7 @@ type cpp_type =
 
 
 type class_interface_member =
-  | MemberField of cpp_type * string (* field_type, field_name *)
+  | MemberField of (* field_type *)cpp_type * (* field_name *)string
   | MemberFunction of cpp_type * string * cpp_type list
   | MemberConstructor of string * cpp_type list
 
@@ -40,6 +38,23 @@ type class_interface = {
   class_interface_private_members : class_interface_member;
 }
 
+
+type interface =
+  | Enum of enum_interface
+  | Class of class_interface
+
+
+
+(*****************************************************
+ * Code generation
+ *****************************************************)
+
+
+type codegen_state = {
+  codegen_output : Format.formatter;
+}
+
+type t = codegen_state
 
 
 let make_codegen_with_channel (oc : out_channel) : t =
@@ -67,8 +82,13 @@ let emit_enum_interface (cg: t) (i : enum_interface) =
     i.enum_elements
 
 
-let emit_class_interface (cg: t) (class_name : string) : unit =
+let emit_class_interface (cg: t) (i : class_interface) : unit =
   Log.unimp "emit_class_interface"
+
+
+let emit_interface cg = function
+  | Enum i -> emit_enum_interface cg i
+  | Class i -> emit_class_interface cg i
 
 
 let flush (cg : t) : unit =

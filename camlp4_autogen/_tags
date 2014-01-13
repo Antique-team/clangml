@@ -2,6 +2,6 @@
 <*.ml>: package(camlp4.quotations), package(deriving-ocsigen.syntax), syntax(camlp4o)
 <*.byte>: package(camlp4.fulllib), package(deriving-ocsigen)
 
-true: -annot
+true: annot
 
 "util": include
