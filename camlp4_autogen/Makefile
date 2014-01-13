@@ -1,4 +1,8 @@
+ifneq ($(wildcard $(HOME)/.opam/4.01.0+PIC),)
 LIBDIR = $(HOME)/.opam/4.01.0+PIC/lib/ocaml
+else
+LIBDIR = /usr/lib/ocaml
+endif
 
 INCLUDE_PART=-I,$(LIBDIR)/camlp4,-I,$(LIBDIR)/camlp4/Camlp4Parsers
 

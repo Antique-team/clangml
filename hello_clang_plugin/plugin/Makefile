@@ -1,5 +1,7 @@
+EXT = ../ext/clang
+
 CXXFLAGS =	\
-	-I$(HOME)/usr/include	\
+	-I$(EXT)/include	\
 	-D__STDC_CONSTANT_MACROS	\
 	-D__STDC_LIMIT_MACROS	\
 	-fPIC	\
@@ -8,7 +10,7 @@ CXXFLAGS =	\
 LDFLAGS =	\
 	-Wl,-z,defs	\
 	-shared		\
-	-L$(HOME)/usr/lib	\
+	-L$(EXT)/lib	\
 	-lclangStaticAnalyzerCore	\
 	-lclangAnalysis	\
 	-lclangAST	\
@@ -34,4 +36,4 @@ clean:
 	rm -f $(PLUGIN)
 
 %.o: %.cpp
-	$(HOME)/usr/bin/clang++ -c $< $(CXXFLAGS)
+	$(EXT)/bin/clang++ -c $< $(CXXFLAGS)
