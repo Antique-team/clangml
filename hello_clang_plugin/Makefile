@@ -60,6 +60,7 @@ CLANG_BUILD_DIR = $(CLANG_DOWNLOAD_DIR)/build
 .PHONY: ocamlbuild_stage
 
 all: hello_lib.o
+	$(MAKE) -C plugin
 
 %.o : %.c
 	$(CC) $(C_FLAGS) $(C_INCLUDES) -c $<  -o $@
@@ -101,4 +102,5 @@ clean:
 		$(CPP_OBJECT_FILES) \
 		$(OCAML_LIBRARY_MODULE_LIST_FILE_BASE).o
 	cd ocaml && ocamlbuild -clean 
+	$(MAKE) -C plugin clean
 

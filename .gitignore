@@ -1,3 +1,4 @@
+_build
 *.annot
 *.cmo
 *.cma
@@ -8,3 +9,5 @@
 *.cmxs
 *.cmxa
 *.DS_Store
+*.byte
+*.native
