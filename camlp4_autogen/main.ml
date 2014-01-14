@@ -27,7 +27,7 @@ let cpp_name name =
  * Enum (all tycons are nullary)
  *****************************************************)
 
-let enum_interface_for_constant_sum_type (sum_type_name, branches) =
+let enum_intf_for_constant_sum_type (sum_type_name, branches) =
   (* Explicitly make the first enum have value 0, the second have value 2, etc.*)
   let enum_elements =
     List.mapi (fun i (branch_name, _) ->
@@ -52,29 +52,50 @@ let sum_type_is_enum (sum_type_name, branches) =
  *****************************************************)
 
 
-let class_interface_for_sum_type (sum_type_name, branches) =
+let class_intf_for_sum_type (sum_type_name, branches) =
   let open Codegen in
 
   (* Base class *)
   let base =
-    let class_members =
-      [
-        MemberFunction ([], TyInt, "doStuff", []);
-        MemberField { decl_type = TyInt; decl_name = "field"; };
-      ]
-    in
+    let field = {
+      empty_decl with
+      decl_type = TyInt;
+      decl_name = "field";
+    } in
+    let class_fields = [MemberField field] in
+    let class_methods = [MemberFunction ([], TyInt, "doStuff", [])] in
     {
       class_name = cpp_name sum_type_name;
       class_bases = ["OCamlADTBase"];
-      class_members;
+      class_fields;
+      class_methods;
     }
   in
 
   let derived =
-    let toValue =
-      MemberFunction ([Virtual], TyName "value", "ToValue", [])
-    in
-    List.map (fun (branch_name, types) ->
+    let explicit = [Explicit] in
+
+    let toValue = MemberFunction ([Virtual], TyName "value", "ToValue", []) in
+
+    List.mapi (fun tag (branch_name, types) ->
+      let tag_const =
+        MemberField {
+          decl_flags = [Static; Const];
+          decl_type = TyInt;
+          decl_name = "tag";
+          decl_init = string_of_int tag;
+        }
+      in
+
+      let size_const =
+        MemberField {
+          decl_flags = [Static; Const];
+          decl_type = TyInt;
+          decl_name = "size";
+          decl_init = string_of_int (List.length types);
+        }
+      in
+
       let rec translate_type = let open Parse in function
         | NamedType "int" ->
             TyInt
@@ -85,43 +106,59 @@ let class_interface_for_sum_type (sum_type_name, branches) =
         | ClangType name ->
             TyPointer (TyName ("clang::" ^ name))
         | ListOfType ty ->
-            TyTemplate ("std::list", translate_type ty)
+            TyTemplate ("std::vector", translate_type ty)
       in
 
       let constructors =
         let args = 
           List.mapi (fun i ty ->
-            {
+            { empty_decl with
               decl_type = translate_type ty;
               decl_name = "arg" ^ string_of_int i;
             }
           ) types
         in
+
+        let init =
+          List.mapi (fun i ty ->
+            ("field" ^ string_of_int i, "arg" ^ string_of_int i)
+          ) types
+        in
+
+        let constructor args init =
+          let flags =
+            (* Explicit constructor only if it's a unary constructor. *)
+            if List.length args = 1 then
+              explicit
+            else
+              []
+          in
+          MemberConstructor (flags, args, init)
+        in
+
         [
           (* Constructor without clang object; pointer will be NULL. *)
-          MemberConstructor (List.tl args);
+          constructor (List.tl args) (("field0", "NULL") :: List.tl init);
           (* Constructor with pointer to clang object. *)
-          MemberConstructor (args);
+          constructor args init;
         ]
       in
 
       let fields =
         List.mapi (fun i ty ->
           MemberField {
+            empty_decl with
             decl_type = translate_type ty;
             decl_name = "field" ^ string_of_int i;
           }
         ) types
       in
 
-      let class_members =
-        toValue :: constructors @ fields
-      in
-
       {
         class_name = branch_name;
         class_bases = [base.class_name];
-        class_members;
+        class_fields = tag_const :: size_const :: fields;
+        class_methods = toValue :: constructors;
       }
     ) branches
   in
@@ -134,10 +171,10 @@ let class_interface_for_sum_type (sum_type_name, branches) =
 
 let gen_code_for_sum_type (sum_type : Parse.sum_type) =
   if sum_type_is_enum sum_type then
-    [Codegen.Enum (enum_interface_for_constant_sum_type sum_type)]
+    [Codegen.Enum (enum_intf_for_constant_sum_type sum_type)]
   else
     List.map (fun i -> Codegen.Class i)
-      (class_interface_for_sum_type sum_type)
+      (class_intf_for_sum_type sum_type)
 
 
 let gen_code_for_ocaml_type = function
@@ -153,9 +190,17 @@ let code_gen (sum_types : Parse.ocaml_type list) =
     List.map gen_code_for_ocaml_type sum_types
     |> List.flatten
   in
-  let cg = Codegen.make_codegen_with_channel stdout in
-  Codegen.emit_interfaces cg cpp_types;
-  Codegen.flush cg
+  begin (* interface *)
+    let cg = Codegen.make_codegen_with_channel stdout in
+    Codegen.emit_intfs cg cpp_types;
+    Codegen.flush cg;
+  end;
+  begin (* implementation *)
+    let cg = Codegen.make_codegen_with_channel stdout in
+    Codegen.emit_impls cg cpp_types;
+    Codegen.flush cg;
+  end;
+;;
 
 
 let parse_and_generate filename =
