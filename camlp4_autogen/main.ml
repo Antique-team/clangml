@@ -57,34 +57,71 @@ let class_interface_for_sum_type (sum_type_name, branches) =
 
   (* Base class *)
   let base =
-    let class_public =
-      [MemberFunction ([], TyInt, "doStuff", [])]
-    in
-    let class_private =
-      [MemberField { decl_type = TyInt; decl_name = "field"; }]
+    let class_members =
+      [
+        MemberFunction ([], TyInt, "doStuff", []);
+        MemberField { decl_type = TyInt; decl_name = "field"; };
+      ]
     in
     {
       class_name = cpp_name sum_type_name;
       class_bases = ["OCamlADTBase"];
-      class_public;
-      class_private;
+      class_members;
     }
   in
 
-  (* TODO: Implement me! *)
-  (*failwith (Show.show_list<Parse.sum_type_branch> branches);*)
-  (*Log.unimp "Non-enum type in process_sum_type"*)
-
   let derived =
-    let class_public =
-      [MemberFunction ([Virtual], TyName "value", "ToValue", [])]
+    let toValue =
+      MemberFunction ([Virtual], TyName "value", "ToValue", [])
     in
     List.map (fun (branch_name, types) ->
+      let rec translate_type = let open Parse in function
+        | NamedType "int" ->
+            TyInt
+        | NamedType "string" ->
+            TyString
+        | NamedType name ->
+            TyPointer (TyName (cpp_name name))
+        | ClangType name ->
+            TyPointer (TyName ("clang::" ^ name))
+        | ListOfType ty ->
+            TyTemplate ("std::list", translate_type ty)
+      in
+
+      let constructors =
+        let args = 
+          List.mapi (fun i ty ->
+            {
+              decl_type = translate_type ty;
+              decl_name = "arg" ^ string_of_int i;
+            }
+          ) types
+        in
+        [
+          (* Constructor without clang object; pointer will be NULL. *)
+          MemberConstructor (List.tl args);
+          (* Constructor with pointer to clang object. *)
+          MemberConstructor (args);
+        ]
+      in
+
+      let fields =
+        List.mapi (fun i ty ->
+          MemberField {
+            decl_type = translate_type ty;
+            decl_name = "field" ^ string_of_int i;
+          }
+        ) types
+      in
+
+      let class_members =
+        toValue :: constructors @ fields
+      in
+
       {
         class_name = branch_name;
         class_bases = [base.class_name];
-        class_public;
-        class_private = [];
+        class_members;
       }
     ) branches
   in

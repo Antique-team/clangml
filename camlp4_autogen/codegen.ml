@@ -36,7 +36,7 @@ type cpp_type =
   (* Parameterised types *)
   | TyPointer of cpp_type
   | TyReference of cpp_type
-  | TyList of cpp_type
+  | TyTemplate of string * cpp_type
   deriving (Show)
 
 
@@ -62,8 +62,7 @@ type class_member =
 type class_interface = {
   class_name : string;
   class_bases : string list;
-  class_public : class_member list;
-  class_private : class_member list;
+  class_members : class_member list;
 } deriving (Show)
 
 
@@ -121,9 +120,11 @@ let emit_flag fmt flag =
   Format.pp_print_string fmt (string_of_flag flag ^ " ")
 
 
-let string_of_cpp_type = function
+let rec string_of_cpp_type = function
   | TyInt -> "int"
   | TyName name -> name
+  | TyPointer ty -> string_of_cpp_type ty ^ "*"
+  | TyTemplate (template, ty) -> template ^ "<" ^ string_of_cpp_type ty ^ ">"
   | ty ->
       Log.unimp "type: %a"
         Show.format<cpp_type> ty
@@ -144,17 +145,23 @@ let pp_argument_list =
 
 
 let emit_class_member class_name fmt = function
-  | MemberField (decl) ->  Formatx.fprintf fmt "%s" "name"
+  | MemberField { decl_type; decl_name } ->
+      Formatx.fprintf fmt "%a%s;"
+        emit_type decl_type
+        decl_name
   | MemberFunction (flags, retty, name, args) ->
       let pp_enum_list =
         Formatx.pp_list ~sep:(Formatx.pp_sep "") emit_flag
       in
-      Formatx.fprintf fmt "%a%a%s(%a);"
+      Formatx.fprintf fmt "%a%a%s (%a);"
         pp_enum_list flags
         emit_type retty
         name
         pp_argument_list args
-  | MemberConstructor (args) -> Formatx.fprintf fmt "%s (%s)" class_name "name"
+  | MemberConstructor (args) ->
+      Formatx.fprintf fmt "%s (%a);"
+        class_name
+        pp_argument_list args
 
 
 let emit_base_classes fmt bases =
@@ -174,14 +181,13 @@ let emit_class_interface fmt (i : class_interface) : unit =
   (*Log.unimp "emit_class_interface: %s"*)
     (*(Show.show<class_interface> i)*)
   let pp_member_list =
-    Formatx.pp_list ~sep:(Formatx.pp_sep ";") (emit_class_member i.class_name)
+    Formatx.pp_list ~sep:(Formatx.pp_sep "") (emit_class_member i.class_name)
   in
   Formatx.fprintf fmt
-    "@[<v>class %s%a@,{@,public:@,@[<v2>  %a@]@,private:@,@[<v2>  %a@]@,}@]"
+    "@[<v>struct %s%a@,{@,@[<v2>  %a@]@,}@]"
     i.class_name
     emit_base_classes i.class_bases
-    pp_member_list i.class_public
-    pp_member_list i.class_private
+    pp_member_list i.class_members
 
 
 let emit_interface fmt = function

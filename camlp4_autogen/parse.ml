@@ -26,10 +26,10 @@ type basic_type =
   (* Will want others, eventually *)
   deriving (Show)
 
-type sum_type_branch = string * basic_type list
+type sum_type_branch = (* branch_name *)string * (* types *)basic_type list
   deriving (Show)
 
-type sum_type = string * sum_type_branch list
+type sum_type = (* sum_type_name *)string * (* branches *)sum_type_branch list
   deriving (Show)
 
 type ocaml_type =
