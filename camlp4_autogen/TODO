@@ -1,4 +1,8 @@
 TODO:
+- use clang AST visitor to construct a bridge-AST
+- figure out where to put the type/location information
+  - in the AST itself?
+  - make it queriable through an opaque clang pointer?
 
 DONE:
 - Unit => UnitExpr

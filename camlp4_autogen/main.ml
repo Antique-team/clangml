@@ -144,7 +144,10 @@ let class_intf_for_sum_type ctx (sum_type_name, branches) =
             TyTemplate ("std::vector", translate_type ty)
       in
 
+      (* Create 1 or 2 constructors, one with clang pointer (if requested),
+         the other without, and defaulting it to NULL. *)
       let constructors =
+        (* Constructor arguments. *)
         let args = 
           List.mapi (fun i ty ->
             { empty_decl with
@@ -154,6 +157,7 @@ let class_intf_for_sum_type ctx (sum_type_name, branches) =
           ) types
         in
 
+        (* Constructor initialiser list. *)
         let init =
           List.mapi (fun i ty ->
             ("field" ^ string_of_int i, "arg" ^ string_of_int i)
