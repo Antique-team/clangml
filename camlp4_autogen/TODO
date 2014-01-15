@@ -1,0 +1,6 @@
+TODO:
+
+DONE:
+- Unit => UnitExpr
+- keep track of which ADTs are enums and which are class hierarchies
+- make sure enum/constant ADTs are passed and stored by value, not by pointer

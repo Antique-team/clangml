@@ -1,9 +1,19 @@
 module Log = Logger.Make(struct let tag = "main" end)
 
+let (%) f g x = f (g x)
+
+
+type context = {
+  (* These are actually lookup sets, but since the number of
+     types is typically very small, we use simple lists. *)
+  enum_types  : string list;
+  class_types : string list;
+}
+
 
 (**
   Turn an underscore_name into a CamelcaseName.
-  This function is non-destructive and returns a new string.
+  This function is non-destructive (returns a new string).
  *)
 let cpp_name name =
   let rec to_camelcase length name =
@@ -36,7 +46,7 @@ let enum_intf_for_constant_sum_type (sum_type_name, branches) =
   in
 
   Codegen.({
-    enum_name = sum_type_name;
+    enum_name = cpp_name sum_type_name;
     enum_elements = enum_elements;
   })
 
@@ -48,52 +58,72 @@ let sum_type_is_enum (sum_type_name, branches) =
 
 
 (*****************************************************
- * Class (none of the tycons are nullary)
+ * Class (some of the tycons have arguments)
  *****************************************************)
 
 
-let class_intf_for_sum_type (sum_type_name, branches) =
+let first_is_clang_pointer = function
+  | Parse.ClangType _ :: _ -> true
+  | _ -> false
+
+
+let class_intf_for_sum_type ctx (sum_type_name, branches) =
   let open Codegen in
 
   (* Base class *)
-  let base =
-    let field = {
-      empty_decl with
-      decl_type = TyInt;
-      decl_name = "field";
-    } in
-    let class_fields = [MemberField field] in
-    let class_methods = [MemberFunction ([], TyInt, "doStuff", [])] in
-    {
-      class_name = cpp_name sum_type_name;
-      class_bases = ["OCamlADTBase"];
-      class_fields;
-      class_methods;
-    }
-  in
+  let base = {
+    class_name = cpp_name sum_type_name;
+    class_bases = ["OCamlADTBase"];
+    class_fields = [];
+    class_methods = [];
+  } in
 
   let derived =
     let explicit = [Explicit] in
 
-    let toValue = MemberFunction ([Virtual], TyName "value", "ToValue", []) in
+    let branch_names = List.map fst branches in
 
-    List.mapi (fun tag (branch_name, types) ->
-      let tag_const =
-        MemberField {
-          decl_flags = [Static; Const];
-          decl_type = TyInt;
-          decl_name = "tag";
-          decl_init = string_of_int tag;
-        }
+    let make_derived tag (branch_name, types) =
+      let toValue =
+        let body =
+          CompoundStmt [
+            Return (
+              FCall (
+                "value_of_adt",
+                IdExpr "this"
+                :: List.mapi (fun i ty -> IdExpr ("field" ^ string_of_int i)) types
+              )
+            );
+          ]
+        in
+        MemberFunction ([Virtual], TyName "value", "ToValue", [], [Const], body)
       in
 
+
       let size_const =
-        MemberField {
-          decl_flags = [Static; Const];
-          decl_type = TyInt;
-          decl_name = "size";
-          decl_init = string_of_int (List.length types);
-        }
+        MemberFunction (
+          [Virtual],
+          TyName "mlsize_t",
+          "size",
+          [],
+          [Const],
+          CompoundStmt [
+            Return (IntExpr (List.length types))
+          ]
+        )
+      in
+
+      let tag_const =
+        MemberFunction (
+          [Virtual],
+          TyName "tag_t",
+          "tag",
+          [],
+          [Const],
+          CompoundStmt [
+            Return (IntExpr tag)
+          ]
+        )
       in
 
       let rec translate_type = let open Parse in function
@@ -102,7 +132,12 @@ let class_intf_for_sum_type (sum_type_name, branches) =
         | NamedType "string" ->
             TyString
         | NamedType name ->
-            TyPointer (TyName (cpp_name name))
+            (* Make sure enum/constant ADTs are passed and stored
+               by value, not by pointer. *)
+            if List.mem name ctx.enum_types then
+              TyName (cpp_name name)
+            else
+              TyPointer (TyName (cpp_name name))
         | ClangType name ->
             TyPointer (TyName ("clang::" ^ name))
         | ListOfType ty ->
@@ -133,15 +168,17 @@ let class_intf_for_sum_type (sum_type_name, branches) =
             else
               []
           in
-          MemberConstructor (flags, args, init)
+          MemberConstructor (flags, args, init, empty_body)
         in
 
-        [
+        (* Constructor with pointer to clang object. *)
+        let ctors = [constructor args init] in
+        if first_is_clang_pointer types then
           (* Constructor without clang object; pointer will be NULL. *)
-          constructor (List.tl args) (("field0", "NULL") :: List.tl init);
-          (* Constructor with pointer to clang object. *)
-          constructor args init;
-        ]
+          constructor (List.tl args) (("field0", "NULL") :: List.tl init)
+          :: ctors
+        else
+          ctors
       in
 
       let fields =
@@ -155,12 +192,22 @@ let class_intf_for_sum_type (sum_type_name, branches) =
       in
 
       {
-        class_name = branch_name;
+        class_name = branch_name ^ base.class_name;
         class_bases = [base.class_name];
-        class_fields = tag_const :: size_const :: fields;
-        class_methods = toValue :: constructors;
+        class_fields = fields;
+        class_methods = size_const :: tag_const :: toValue :: constructors;
       }
-    ) branches
+    in
+
+    let (nullary, parameterised) =
+      List.partition
+        (fun branch -> snd branch = [])
+        branches
+    in
+    (* First, nullary constructors. *)
+    List.mapi make_derived nullary
+    @ (* Then, tycons with arguments. *)
+    List.mapi make_derived parameterised
   in
   base :: derived
 
@@ -169,48 +216,80 @@ let class_intf_for_sum_type (sum_type_name, branches) =
  * Main
  *****************************************************)
 
-let gen_code_for_sum_type (sum_type : Parse.sum_type) =
+let gen_code_for_sum_type ctx (sum_type : Parse.sum_type) =
   if sum_type_is_enum sum_type then
     [Codegen.Enum (enum_intf_for_constant_sum_type sum_type)]
   else
     List.map (fun i -> Codegen.Class i)
-      (class_intf_for_sum_type sum_type)
+      (class_intf_for_sum_type ctx sum_type)
 
 
-let gen_code_for_ocaml_type = function
+let gen_code_for_ocaml_type ctx = function
   | Parse.SumType sum_type ->
-      gen_code_for_sum_type sum_type
+      gen_code_for_sum_type ctx sum_type
   | Parse.RecursiveType rec_types ->
-      List.map gen_code_for_sum_type rec_types
-      |> List.flatten
+      (* Generate forward declarations for recursive types.
+         Only consider types that will be turned into classes,
+         as recursive type definitions may contain some enum
+         types, as well (even though that would be useless). *)
+      List.map (fun sum_type ->
+        Codegen.Forward (cpp_name @@ fst sum_type)
+      ) (List.filter (not % sum_type_is_enum) rec_types)
+      @
+      (
+        List.map (gen_code_for_sum_type ctx) rec_types
+        |> List.flatten
+      )
 
 
-let code_gen (sum_types : Parse.ocaml_type list) =
+let code_gen basename (sum_types : Parse.ocaml_type list) =
+  let (enum_types, class_types) =
+    (* Get all types, including the ones in a recursive definition,
+       as a flat list. *)
+    List.map (function
+      | Parse.SumType ty -> [ty]
+      | Parse.RecursiveType tys -> tys
+    ) sum_types
+    |> List.flatten
+    (* Partition by enum/class types. *)
+    |> List.partition sum_type_is_enum
+  in
+
+  (* Extract type names. *)
+  let ctx = {
+    enum_types  = List.map fst enum_types;
+    class_types = List.map fst class_types;
+  } in
+
   let cpp_types =
-    List.map gen_code_for_ocaml_type sum_types
+    List.map (gen_code_for_ocaml_type ctx) sum_types
     |> List.flatten
   in
   begin (* interface *)
-    let cg = Codegen.make_codegen_with_channel stdout in
-    Codegen.emit_intfs cg cpp_types;
+    let fh = open_out (basename ^ ".h") in
+    let cg = Codegen.make_codegen_with_channel fh in
+    Codegen.emit_intfs basename cg cpp_types;
     Codegen.flush cg;
+    close_out fh;
   end;
   begin (* implementation *)
-    let cg = Codegen.make_codegen_with_channel stdout in
-    Codegen.emit_impls cg cpp_types;
+    let fh = open_out (basename ^ ".cpp") in
+    let cg = Codegen.make_codegen_with_channel fh in
+    Codegen.emit_impls basename cg cpp_types;
     Codegen.flush cg;
+    close_out fh;
   end;
 ;;
 
 
-let parse_and_generate filename =
-  let sum_types = Parse.parse_file filename in
-  print_endline (Show.show_list<Parse.ocaml_type> sum_types);
-  code_gen sum_types
+let parse_and_generate basename =
+  let sum_types = Parse.parse_file (basename ^ ".ml") in
+  (*print_endline (Show.show_list<Parse.ocaml_type> sum_types);*)
+  code_gen basename sum_types
 
   (* TODO: Think about detecting versioning mismatch between generated and ocaml ast.*)
   (* Maybe keep a version number around someplace?*)
 
 
 let () =
-  parse_and_generate "hello_ast.ml"
+  parse_and_generate "hello_ast"
