@@ -1,7 +1,8 @@
-EXT = ../ext/clang
+EXT = ../ext/clang/build/Debug+Asserts
 
 CXXFLAGS =	\
 	-I$(EXT)/include	\
+	-I../../camlp4_autogen/cutil	\
 	-D__STDC_CONSTANT_MACROS	\
 	-D__STDC_LIMIT_MACROS	\
 	-fPIC	\
@@ -27,7 +28,7 @@ LDFLAGS =	\
 PLUGIN = build/HelloClangPlugin/Build/Products/Debug/libHelloClangPlugin.dylib
 
 $(PLUGIN): ../hello_lib.o HelloChecker.o PluginRegistration.o hello_cpp.o
-	g++ $^ -o $@ $(LDFLAGS)
+	$(EXT)/bin/clang++ $^ -o $@ $(LDFLAGS)
 
 ../hello_lib.o: $(shell find ../ocaml -name "*.ml*")
 	$(MAKE) -C ../ocaml
@@ -35,5 +36,11 @@ $(PLUGIN): ../hello_lib.o HelloChecker.o PluginRegistration.o hello_cpp.o
 clean:
 	rm -f $(PLUGIN)
 
-%.o: %.cpp
+%.o: %.cpp hello_cpp.h
 	$(EXT)/bin/clang++ -c $< $(CXXFLAGS)
+
+hello_cpp.h: ../ocaml/hello_ast.ml ../../camlp4_autogen/main.byte
+	../../camlp4_autogen/main.byte hello_cpp $<
+
+../../camlp4_autogen/main.byte: $(wildcard ../../camlp4_autogen/*.ml*)
+	$(MAKE) -C ../../camlp4_autogen

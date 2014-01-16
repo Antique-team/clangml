@@ -11,7 +11,6 @@
 
 #include "HelloChecker.h"
 
-
 using namespace clang;
 using namespace ento;
 
@@ -20,10 +19,11 @@ extern "C"
 void clang_registerCheckers (CheckerRegistry &registry);
 
 extern "C"
-void clang_registerCheckers (CheckerRegistry &registry) {
-    registry.addChecker<HelloChecker>("coughlin.HelloChecker", "RunHelloChecker");
+void
+clang_registerCheckers (CheckerRegistry &registry)
+{
+  registry.addChecker<HelloChecker> ("coughlin.HelloChecker", "RunHelloChecker");
 }
 
 extern "C"
-const char clang_analyzerAPIVersionString[] = CLANG_ANALYZER_API_VERSION_STRING;
-
+char const clang_analyzerAPIVersionString[] = CLANG_ANALYZER_API_VERSION_STRING;

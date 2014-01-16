@@ -278,10 +278,13 @@ let emit_intfs basename cg cpp_types =
      #define %s_H@,\
      #include \"ocaml++.h\"@,\
      @,\
+     namespace %s {@,\
      %a@,\
+     }@,\
      @,\
      #endif /* %s_H */@]@."
     ucasename ucasename
+    basename
     pp_intf_list cpp_types
     ucasename
 
@@ -371,7 +374,10 @@ let emit_impls basename cg cpp_types =
     Formatx.pp_list ~sep:(Formatx.pp_sep "") emit_impl
   in
   Formatx.fprintf cg.output
-    "#include \"%s.h\"@,\
-     @[<v>%a@]@."
+    "#include \"%s.h\"@\n\
+     namespace %s {@\n\
+     @[<v>%a@]@,\
+     }@."
+    basename
     basename
     pp_impl_list cpp_types

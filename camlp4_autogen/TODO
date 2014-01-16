@@ -3,6 +3,7 @@ TODO:
 - figure out where to put the type/location information
   - in the AST itself?
   - make it queriable through an opaque clang pointer?
+- think about location tracking in the presence of heavy transformations
 
 DONE:
 - Unit => UnitExpr

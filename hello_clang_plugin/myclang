@@ -10,25 +10,27 @@ SCRIPT_DIR_PATH = File.expand_path(File.dirname(__FILE__))
 EXT_CLANG_PATH = File.join(SCRIPT_DIR_PATH, "ext", "clang", "build", LLVM_BUILD, "bin", "clang")
 
 PLUGIN_PATH = File.join(SCRIPT_DIR_PATH, 
-							"plugin",
-							"build",
-							"HelloClangPlugin",
-							"Build",
-							"Products",
-							"Debug",
-							"libHelloClangPlugin.dylib")
+                        "plugin",
+                        "build",
+                        "HelloClangPlugin",
+                        "Build",
+                        "Products",
+                        "Debug",
+                        "libHelloClangPlugin.dylib")
 
 if (!File.exists?(PLUGIN_PATH))
-	puts "Plugin does not exist at: #{PLUGIN_PATH}"
+        puts "Plugin does not exist at: #{PLUGIN_PATH}"
 end
 
-ADDITIONAL_ARGS = ["-Xclang", "-load",
-					"-Xclang", PLUGIN_PATH,
-					"-Xclang", "-analyze",
-					"-Xclang", "-analyzer-checker=coughlin.HelloChecker"]
+ADDITIONAL_ARGS = [
+        "-c",
+        "-Xclang", "-load",
+        "-Xclang", PLUGIN_PATH,
+        "-Xclang", "-analyze",
+        "-Xclang", "-analyzer-checker=coughlin.HelloChecker"
+]
 
 # Run analyzer version
 
 puts "***Running clang with our analyzer****"
 exec(*(["#{EXT_CLANG_PATH}"] + ARGV + ADDITIONAL_ARGS))
-

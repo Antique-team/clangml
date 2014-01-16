@@ -27,7 +27,7 @@ OCAMLBUILD_FLAGS = $(OCAML_BUILD_INCLUDES) -cflags $(OCAML_BUILD_OCAMLOPT_FLAGS)
 
 
 
-C_INCLUDES = -I $(OCAML_INSTALL_DIR) 
+C_INCLUDES = -I $(OCAML_INSTALL_DIR)
 
 C_FLAGS = 
 CPP_FLAGS = -std=c++11
@@ -104,3 +104,6 @@ clean:
 	cd ocaml && ocamlbuild -clean 
 	$(MAKE) -C plugin clean
 
+
+check: all myclang test.c
+	./myclang test.c

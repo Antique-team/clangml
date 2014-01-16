@@ -81,8 +81,6 @@ let class_intf_for_sum_type ctx (sum_type_name, branches) =
   let derived =
     let explicit = [Explicit] in
 
-    let branch_names = List.map fst branches in
-
     let make_derived tag (branch_name, types) =
       let toValue =
         let body =
@@ -286,8 +284,8 @@ let code_gen basename (sum_types : Parse.ocaml_type list) =
 ;;
 
 
-let parse_and_generate basename =
-  let sum_types = Parse.parse_file (basename ^ ".ml") in
+let parse_and_generate basename source =
+  let sum_types = Parse.parse_file source in
   (*print_endline (Show.show_list<Parse.ocaml_type> sum_types);*)
   code_gen basename sum_types
 
@@ -296,4 +294,8 @@ let parse_and_generate basename =
 
 
 let () =
-  parse_and_generate "hello_ast"
+  match Sys.argv with
+  | [|_; basename; source|] ->
+      parse_and_generate basename source
+  | _ ->
+      print_endline "Usage: c++adt <basename> <source>"

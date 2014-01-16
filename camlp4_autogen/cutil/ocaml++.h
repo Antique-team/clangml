@@ -61,7 +61,7 @@ static inline value value_of (int v) { return Val_int (v); }
  */
 
 template<typename Iterator>
-static value
+value
 value_of_range (Iterator begin, Iterator end)
 {
   CAMLparam0 ();
@@ -79,16 +79,14 @@ value_of_range (Iterator begin, Iterator end)
 
   cons_value = start_value;
 
-  Iterator i = begin;
-  i++;
-  for (; i != end; i++)
+  for (; begin != end; begin++)
     {
       tmp_value = caml_alloc (2, 0); 
       // tail is not yet fully constructed rest of list
       Store_field (cons_value, 1, tmp_value);
 
       cons_value = tmp_value;
-      Store_field (cons_value, 0, value_of (*i));
+      Store_field (cons_value, 0, value_of (*begin));
     }
 
   // tail of last cons is empty list
@@ -121,7 +119,7 @@ template<typename OCamlADT, typename... Args>
 value
 value_of_adt (OCamlADT const *self, Args const &...v)
 {
-  assert (sizeof... v == self->size ());
+  assert (sizeof... (v) == self->size ());
   CAMLparam0 ();
   CAMLlocal1 (result);
 
