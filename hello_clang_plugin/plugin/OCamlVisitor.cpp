@@ -35,8 +35,7 @@ private:
     }
   };
 
-  static dynamic
-  pop (std::vector<adt_ptr> &stack)
+  dynamic pop ()
   {
     if (stack.empty ())
       failwith ("empty stack");
@@ -47,31 +46,30 @@ private:
     return dynamic { p };
   }
 
-  template<typename T, typename Derived>
-  static void
-  push (std::vector<ptr<T>> &stack, ptr<Derived> p)
+  template<typename Derived>
+  void push (ptr<Derived> p)
   {
-    static_assert (std::is_base_of<T, Derived>::value,
-                   "can only push derived class instances");
+    static_assert (std::is_base_of<OCamlADTBase, Derived>::value,
+                   "can only push OCamlADTBase derived instances");
     stack.push_back (p);
   }
 
 
   void consume_unaryop (UnaryOp op)
   {
-    ptr<Expr> arg = pop (stack);
+    ptr<Expr> arg = pop ();
 
-    push (stack, mkUnaryOperator
+    push (mkUnaryOperator
           (op, arg));
   }
 
 
   void consume_binop (BinaryOp op)
   {
-    ptr<Expr> rhs = pop (stack);
-    ptr<Expr> lhs = pop (stack);
+    ptr<Expr> rhs = pop ();
+    ptr<Expr> lhs = pop ();
 
-    push (stack, mkBinaryOperator
+    push (mkBinaryOperator
           (op, lhs, rhs));
   }
 
@@ -161,7 +159,7 @@ public:
   {
     Base::TraverseIntegerLiteral (lit);
 
-    push (stack, mkIntegerLiteral
+    push (mkIntegerLiteral
           (lit->getValue ().getSExtValue ()));
 
     return true;
@@ -172,7 +170,7 @@ public:
   {
     Base::TraverseCharacterLiteral (lit);
 
-    push (stack, mkCharacterLiteral
+    push (mkCharacterLiteral
           (lit->getValue ()));
 
     return true;
@@ -183,7 +181,7 @@ public:
   {
     Base::TraverseFloatingLiteral (lit);
 
-    push (stack, mkFloatingLiteral
+    push (mkFloatingLiteral
           (lit->getValue ().convertToDouble ()));
 
     return true;
@@ -194,7 +192,7 @@ public:
   {
     Base::TraverseStringLiteral (lit);
 
-    push (stack, mkStringLiteral
+    push (mkStringLiteral
           (lit->getString ()));
 
     return true;
@@ -204,7 +202,7 @@ public:
   ptr<Expr> result ()
   {
     assert (stack.size () == 1);
-    return pop (stack);
+    return pop ();
   }
 };
 
