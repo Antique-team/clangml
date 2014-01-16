@@ -1,43 +1,41 @@
 type unary_op =
-  | UO_PostInc
+  | UO_PostInc	(* [C99 6.5.2.4] Postfix increment and decrement *)
   | UO_PostDec
-  | UO_PreInc
+  | UO_PreInc	(* [C99 6.5.3.1] Prefix increment and decrement *)
   | UO_PreDec
-  | UO_AddrOf
+  | UO_AddrOf	(* [C99 6.5.3.2] Address and indirection *)
   | UO_Deref
-  | UO_Plus
+  | UO_Plus	(* [C99 6.5.3.3] Unary arithmetic *)
   | UO_Minus
   | UO_Not
   | UO_LNot
-  | UO_Real
+  | UO_Real	(* "__real expr"/"__imag expr" Extension. *)
   | UO_Imag
-  | UO_Extension
+  | UO_Extension(* __extension__ marker. *)
 
 
 type binary_op =
-  | BO_PtrMemD
+  | BO_PtrMemD	(* [C++ 5.5] Pointer-to-member operators. *)
   | BO_PtrMemI
-  | BO_Mul
+  | BO_Mul	(* [C99 6.5.5] Multiplicative operators. *)
   | BO_Div
   | BO_Rem
-  | BO_Add
+  | BO_Add	(* [C99 6.5.6] Additive operators. *)
   | BO_Sub
-  | BO_Shl
+  | BO_Shl	(* [C99 6.5.7] Bitwise shift operators. *)
   | BO_Shr
-  | BO_LT
+  | BO_LT	(* [C99 6.5.8] Relational operators. *)
   | BO_GT
   | BO_LE
   | BO_GE
-  | BO_EQ
+  | BO_EQ	(* [C99 6.5.9] Equality operators. *)
   | BO_NE
-  | BO_And
-  | BO_Xor
-  | BO_Or
-  | BO_LAnd
-  | BO_LOr
-  | BO_Assign
-  | BO_Comma
-
+  | BO_And	(* [C99 6.5.10] Bitwise AND operator. *)
+  | BO_Xor	(* [C99 6.5.11] Bitwise XOR operator. *)
+  | BO_Or	(* [C99 6.5.12] Bitwise OR operator. *)
+  | BO_LAnd	(* [C99 6.5.13] Logical AND operator. *)
+  | BO_LOr	(* [C99 6.5.14] Logical OR operator. *)
+  | BO_Assign	(* [C99 6.5.16] Assignment operators. *)
   | BO_MulAssign
   | BO_DivAssign
   | BO_RemAssign
@@ -48,6 +46,7 @@ type binary_op =
   | BO_AndAssign
   | BO_OrAssign
   | BO_XorAssign
+  | BO_Comma	(* [C99 6.5.17] Comma operator. *)
 
 
 (*
