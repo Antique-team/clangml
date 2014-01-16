@@ -10,15 +10,14 @@
 #define __HelloClangPlugin__HelloChecker__
 
 #include <clang/StaticAnalyzer/Core/Checker.h>
-
 #include <clang/StaticAnalyzer/Core/PathSensitive/CheckerContext.h>
 
-
+#include <clang/AST/DeclObjC.h>
+#include <clang/AST/ExprCXX.h>
+#include <clang/AST/Expr.h>
 #include <clang/AST/ExprObjC.h>
 #include <clang/AST/StmtObjC.h>
-#include <clang/AST/ExprCXX.h>
-#include <clang/AST/DeclObjC.h>
-#include <clang/AST/Expr.h>
+
 #include "hello_cpp.h"
 
 class HelloChecker
@@ -26,9 +25,10 @@ class HelloChecker
 {
 public:
   hello_cpp::Expr *convertExpr (const clang::Expr *in) const;
-  void checkASTDecl   (const clang::TranslationUnitDecl *D, clang::ento::AnalysisManager &Mgr, clang::ento::BugReporter &BR) const;
+  void checkASTDecl (const clang::TranslationUnitDecl *D,
+                     clang::ento::AnalysisManager &Mgr,
+                     clang::ento::BugReporter &BR) const;
 };
-
 
 
 #endif /* defined(__HelloClangPlugin__HelloChecker__) */

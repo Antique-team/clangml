@@ -7,47 +7,27 @@
 //
 
 extern "C" {
+#include <caml/alloc.h>
 #include <caml/callback.h>
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
-#include <caml/alloc.h>
 }
 
-#include <stdio.h>
-#include "HelloChecker.h"
+#include <cstdio>
 #include <llvm/Support/raw_ostream.h>
-#include "hello_cpp.h"
-#include <iostream>
 
-extern "C" {
-CAMLprim value caml_print_hello (value unit);
-}
+#include "HelloChecker.h"
+#include "OCamlVisitor.h"
+
+#include "hello_cpp.h"
 
 using namespace clang;
 using namespace ento;
 
 void
-hello_closure ()
-{
-  static value *closure_f = NULL;
-
-  if (closure_f == NULL)
-    closure_f = caml_named_value ("Hello callback");
-  caml_callback (*closure_f, Val_unit);
-}
-
-CAMLprim value
-caml_print_hello (value unit)
-{
-  printf ("Hello from C\n");
-  return Val_unit;
-}
-
-void
 initialize_caml ()
 {
   // Make sure caml main is called once and only once
-
   static bool already_initialized = false;
 
   if (!already_initialized)
@@ -56,8 +36,10 @@ initialize_caml ()
       // We leak this, but since we do not know what ocaml
       // is doing with this array, it is not safe to stack-allocated
       // or free after we are done.
-      char **argv = (char **)malloc (sizeof (char *) * 1);
-      argv[0] = NULL;
+      static char *argv[] = {
+        const_cast<char *> ("clang"),
+        NULL
+      };
 
       caml_main (argv);
       already_initialized = true;
@@ -96,14 +78,20 @@ HelloChecker::convertExpr (const clang::Expr *in) const
 }
 
 void
-HelloChecker::checkASTDecl (const TranslationUnitDecl *D, AnalysisManager &Mgr, BugReporter &BR) const
+HelloChecker::checkASTDecl (const TranslationUnitDecl *D,
+                            AnalysisManager &Mgr,
+                            BugReporter &BR) const
 {
   CAMLparam0 ();
   CAMLlocal1 (caml_expr);
 
-  llvm::outs () << "Running Hello Checker on translation unit!" << "\n";
-
   initialize_caml ();
+
+  value *caml_print = caml_named_value ("Hello print expr");
+  caml_expr = adt_of_clangAST (D)->ToValue ();
+  caml_callback (*caml_print, caml_expr);
+
+#if 0
   clang::DeclContext::decl_iterator current;
   current = D->decls_begin ();
   for (current = D->decls_begin (); current != D->decls_end (); current++)
@@ -137,38 +125,7 @@ HelloChecker::checkASTDecl (const TranslationUnitDecl *D, AnalysisManager &Mgr, 
               }
           }
     }
-  hello_closure ();
+#endif
+
   CAMLreturn0;
-}
-
-extern "C" {
-CAMLprim value create_stmt ();
-}
-
-CAMLprim value
-create_stmt ()
-{
-  CAMLparam0 ();
-
-  printf ("Creating stmt\n");
-
-  using namespace hello_cpp;
-  std::vector<hello_cpp::Stmt *> blockStmts;
-
-  blockStmts.push_back (new PrintStmt (
-                          new BinaryOpExpr (BinaryOp_Add,
-                                            new BinaryOpExpr (BinaryOp_Multiply,
-                                                              new IntConstExpr (17),
-                                                              new IntConstExpr (9)),
-                                            new IntConstExpr (43))));
-
-  blockStmts.push_back (new SkipStmt ());
-
-  for (int i = 0; i < 10; i++)
-    blockStmts.push_back (new PrintStmt (new IntConstExpr (i)));
-
-  BlockStmt *blockStmt = new BlockStmt (blockStmts);
-
-
-  CAMLreturn (blockStmt->ToValue ());
 }

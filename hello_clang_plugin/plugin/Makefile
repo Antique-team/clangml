@@ -27,7 +27,7 @@ LDFLAGS =	\
 
 PLUGIN = build/HelloClangPlugin/Build/Products/Debug/libHelloClangPlugin.dylib
 
-$(PLUGIN): ../hello_lib.o HelloChecker.o PluginRegistration.o hello_cpp.o
+$(PLUGIN): ../hello_lib.o HelloChecker.o OCamlVisitor.o PluginRegistration.o hello_cpp.o
 	$(EXT)/bin/clang++ $^ -o $@ $(LDFLAGS)
 
 ../hello_lib.o: $(shell find ../ocaml -name "*.ml*")
@@ -36,7 +36,7 @@ $(PLUGIN): ../hello_lib.o HelloChecker.o PluginRegistration.o hello_cpp.o
 clean:
 	rm -f $(PLUGIN)
 
-%.o: %.cpp hello_cpp.h
+%.o: %.cpp hello_cpp.h $(wildcard *.h)
 	$(EXT)/bin/clang++ -c $< $(CXXFLAGS)
 
 hello_cpp.h: ../ocaml/hello_ast.ml ../../camlp4_autogen/main.byte

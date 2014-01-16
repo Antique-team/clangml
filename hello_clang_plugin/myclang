@@ -31,6 +31,4 @@ ADDITIONAL_ARGS = [
 ]
 
 # Run analyzer version
-
-puts "***Running clang with our analyzer****"
 exec(*(["#{EXT_CLANG_PATH}"] + ARGV + ADDITIONAL_ARGS))
