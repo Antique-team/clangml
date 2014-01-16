@@ -148,6 +148,10 @@ public:
   CAO_LIST ()
 #undef OPERATOR
 
+#undef UNARYOP_LIST
+#undef BINOP_LIST
+#undef CAO_LIST
+
 
   /****************************************************
    * Literals
