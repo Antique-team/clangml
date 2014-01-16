@@ -194,7 +194,7 @@ let emit_function_decl fmt (class_name, func_name, params, this_flags) =
     else
       class_name ^ "::"
   in
-  Formatx.fprintf fmt "%s%s (%a)%a@\n"
+  Formatx.fprintf fmt "%s%s (@[<v>%a@])%a@\n"
     class_name
     func_name
     pp_param_list params
