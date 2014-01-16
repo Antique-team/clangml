@@ -1,2 +1,3 @@
-build/
-
+/build
+/hello_cpp.h
+/hello_cpp.cpp
