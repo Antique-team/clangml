@@ -40,6 +40,12 @@ clean:
 %.o: %.cpp hello_cpp.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
 	$(EXT)/bin/clang++ -c $< $(CXXFLAGS)
 
+OCamlVisitor.o: OCamlVisitor.cpp hello_cpp.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
+	$(EXT)/bin/clang++ -c $< $(CXXFLAGS) -frtti
+
+hello_cpp.o: hello_cpp.cpp hello_cpp.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
+	$(EXT)/bin/clang++ -c $< $(CXXFLAGS) -frtti
+
 hello_cpp.h: ../ocaml/hello_ast.ml ../../camlp4_autogen/main.byte
 	../../camlp4_autogen/main.byte hello_cpp $<
 

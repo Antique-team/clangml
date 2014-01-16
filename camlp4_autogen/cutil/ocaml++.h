@@ -31,6 +31,8 @@ struct OCamlADTBase
 template<typename T>
 using ptr = boost::intrusive_ptr<T>;
 
+typedef ptr<OCamlADTBase> adt_ptr;
+
 
 static inline void
 intrusive_ptr_add_ref (OCamlADTBase *p)
@@ -52,7 +54,7 @@ intrusive_ptr_release (OCamlADTBase *p)
 
 // Recursive entry-point for OCamlADTBase::ToValue.
 template<typename OCamlADT, typename... Args>
-value value_of_adt (ptr<OCamlADTBase> self, Args const &...v);
+value value_of_adt (adt_ptr self, Args const &...v);
 
 
 // Create an OCaml list from a C++ iterator range.
@@ -73,7 +75,7 @@ value_of (std::vector<T> const &v)
 
 
 static inline value
-value_of (ptr<OCamlADTBase> ob)
+value_of (adt_ptr ob)
 {
   return ob->ToValue ();
 }

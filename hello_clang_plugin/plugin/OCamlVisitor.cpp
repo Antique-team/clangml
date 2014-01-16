@@ -20,18 +20,31 @@ struct OCamlVisitor
 private:
   typedef clang::RecursiveASTVisitor<OCamlVisitor> Base;
 
-  std::vector<ptr<Expr>> expr_stack;
+  std::vector<adt_ptr> stack;
 
-  template<typename T>
-  static ptr<T>
-  pop (std::vector<ptr<T>> &stack)
+  struct dynamic
+  {
+    adt_ptr adt;
+
+    template<typename T>
+    operator ptr<T> () const
+    {
+      ptr<T> p = boost::dynamic_pointer_cast<T> (adt);
+      assert (p);
+      return p;
+    }
+  };
+
+  static dynamic
+  pop (std::vector<adt_ptr> &stack)
   {
     if (stack.empty ())
       failwith ("empty stack");
     assert (!stack.empty ());
-    ptr<T> p = stack.back ();
+    adt_ptr p = stack.back ();
     stack.pop_back ();
-    return p;
+
+    return dynamic { p };
   }
 
   template<typename T, typename Derived>
@@ -44,37 +57,96 @@ private:
   }
 
 
+  void consume_unaryop (UnaryOp op)
+  {
+    ptr<Expr> arg = pop (stack);
+
+    push (stack, mkUnaryOperator
+          (op, arg));
+  }
+
+
+  void consume_binop (BinaryOp op)
+  {
+    ptr<Expr> rhs = pop (stack);
+    ptr<Expr> lhs = pop (stack);
+
+    push (stack, mkBinaryOperator
+          (op, lhs, rhs));
+  }
+
 public:
   /****************************************************
-   * Binary operators
+   * Unary/binary operators
    */
 
-  bool TraverseBinAdd (clang::BinaryOperator *op)
-  {
-    Base::TraverseBinAdd (op);
+// Code taken from <clang/AST/RecursiveASTVisitor.h>
 
-    ptr<Expr> rhs = pop (expr_stack);
-    ptr<Expr> lhs = pop (expr_stack);
+// All unary operators.
+#define UNARYOP_LIST()                          \
+  OPERATOR(PostInc)   OPERATOR(PostDec)         \
+  OPERATOR(PreInc)    OPERATOR(PreDec)          \
+  OPERATOR(AddrOf)    OPERATOR(Deref)           \
+  OPERATOR(Plus)      OPERATOR(Minus)           \
+  OPERATOR(Not)       OPERATOR(LNot)            \
+  OPERATOR(Real)      OPERATOR(Imag)            \
+  OPERATOR(Extension)
 
-    push (expr_stack, mkBinaryOp
-          (BinaryOp_Add, lhs, rhs));
+// All binary operators (excluding compound assign operators).
+#define BINOP_LIST() \
+  OPERATOR(PtrMemD)              OPERATOR(PtrMemI)    \
+  OPERATOR(Mul)   OPERATOR(Div)  OPERATOR(Rem)        \
+  OPERATOR(Add)   OPERATOR(Sub)  OPERATOR(Shl)        \
+  OPERATOR(Shr)                                       \
+                                                      \
+  OPERATOR(LT)    OPERATOR(GT)   OPERATOR(LE)         \
+  OPERATOR(GE)    OPERATOR(EQ)   OPERATOR(NE)         \
+  OPERATOR(And)   OPERATOR(Xor)  OPERATOR(Or)         \
+  OPERATOR(LAnd)  OPERATOR(LOr)                       \
+                                                      \
+  OPERATOR(Assign)                                    \
+  OPERATOR(Comma)
 
-    return true;
+// All compound assign operators.
+#define CAO_LIST()                                                      \
+  OPERATOR(Mul) OPERATOR(Div) OPERATOR(Rem) OPERATOR(Add) OPERATOR(Sub) \
+  OPERATOR(Shl) OPERATOR(Shr) OPERATOR(And) OPERATOR(Or)  OPERATOR(Xor)
+
+
+#define OPERATOR(OP)							\
+  bool TraverseUnary##OP (clang::UnaryOperator *op)			\
+  {									\
+    Base::TraverseUnary##OP (op);					\
+    consume_unaryop (UO_##OP);						\
+    return true;							\
   }
 
+  UNARYOP_LIST ()
+#undef OPERATOR
 
-  bool TraverseBinMul (clang::BinaryOperator *op)
-  {
-    Base::TraverseBinMul (op);
 
-    ptr<Expr> rhs = pop (expr_stack);
-    ptr<Expr> lhs = pop (expr_stack);
-
-    push (expr_stack, mkBinaryOp
-          (BinaryOp_Multiply, lhs, rhs));
-
-    return true;
+#define OPERATOR(OP)							\
+  bool TraverseBin##OP (clang::BinaryOperator *op)			\
+  {									\
+    Base::TraverseBin##OP (op);						\
+    consume_binop (BO_##OP);						\
+    return true;							\
   }
+
+  BINOP_LIST ()
+#undef OPERATOR
+
+
+#define OPERATOR(OP)							\
+  bool TraverseBin##OP##Assign (clang::CompoundAssignOperator *op)	\
+  {									\
+    Base::TraverseBin##OP##Assign (op);					\
+    consume_binop (BO_##OP##Assign);					\
+    return true;							\
+  }
+
+  CAO_LIST ()
+#undef OPERATOR
 
 
   /****************************************************
@@ -85,7 +157,7 @@ public:
   {
     Base::TraverseIntegerLiteral (lit);
 
-    push (expr_stack, mkIntConst
+    push (stack, mkIntegerLiteral
           (lit->getValue ().getSExtValue ()));
 
     return true;
@@ -96,7 +168,7 @@ public:
   {
     Base::TraverseCharacterLiteral (lit);
 
-    push (expr_stack, mkCharConst
+    push (stack, mkCharacterLiteral
           (lit->getValue ()));
 
     return true;
@@ -107,7 +179,7 @@ public:
   {
     Base::TraverseFloatingLiteral (lit);
 
-    push (expr_stack, mkFloatConst
+    push (stack, mkFloatingLiteral
           (lit->getValue ().convertToDouble ()));
 
     return true;
@@ -118,17 +190,17 @@ public:
   {
     Base::TraverseStringLiteral (lit);
 
-    push (expr_stack, mkStringConst
+    push (stack, mkStringLiteral
           (lit->getString ()));
 
     return true;
   }
 
 
-  ptr<Expr> result () const
+  ptr<Expr> result ()
   {
-    assert (expr_stack.size () == 1);
-    return expr_stack.back ();
+    assert (stack.size () == 1);
+    return pop (stack);
   }
 };
 

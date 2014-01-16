@@ -46,6 +46,7 @@ initialize_caml ()
     }
 }
 
+#if 0
 hello_cpp::Expr *
 HelloChecker::convertExpr (const clang::Expr *in) const
 {
@@ -76,6 +77,7 @@ HelloChecker::convertExpr (const clang::Expr *in) const
     }
   return NULL;   //Return null if something other than int lit or binop is encountered
 }
+#endif
 
 void
 HelloChecker::checkASTDecl (const TranslationUnitDecl *D,
