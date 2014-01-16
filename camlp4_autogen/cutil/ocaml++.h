@@ -12,6 +12,8 @@ extern "C" {
 #include <caml/mlvalues.h>
 }
 
+#include <llvm/ADT/StringRef.h>
+
 
 // Base class for all ADT types.
 struct OCamlADTBase
@@ -78,6 +80,20 @@ value_of (ptr<OCamlADTBase> ob)
 
 
 static inline value value_of (int v) { return Val_int (v); }
+static inline value value_of (double v) { return caml_copy_double (v); }
+static inline value value_of (int64 v) { return caml_copy_int64 (v); }
+
+static inline value
+value_of (llvm::StringRef v)
+{
+  CAMLparam0 ();
+  CAMLlocal1 (string);
+
+  string = caml_alloc_string (v.size ());
+  memcpy (String_val (string), v.data (), v.size ());
+
+  CAMLreturn (string);
+}
 
 
 /********************************************************

@@ -7,6 +7,7 @@ extern "C" {
 }
 
 #include <cstdio>
+#include <type_traits>
 
 #include "OCamlVisitor.h"
 
@@ -37,11 +38,17 @@ private:
   static void
   push (std::vector<ptr<T>> &stack, ptr<Derived> p)
   {
+    static_assert (std::is_base_of<T, Derived>::value,
+                   "can only push derived class instances");
     stack.push_back (p);
   }
 
 
 public:
+  /****************************************************
+   * Binary operators
+   */
+
   bool TraverseBinAdd (clang::BinaryOperator *op)
   {
     Base::TraverseBinAdd (op);
@@ -54,6 +61,7 @@ public:
 
     return true;
   }
+
 
   bool TraverseBinMul (clang::BinaryOperator *op)
   {
@@ -68,12 +76,50 @@ public:
     return true;
   }
 
+
+  /****************************************************
+   * Literals
+   */
+
   bool TraverseIntegerLiteral (clang::IntegerLiteral *lit)
   {
     Base::TraverseIntegerLiteral (lit);
 
     push (expr_stack, mkIntConst
           (lit->getValue ().getSExtValue ()));
+
+    return true;
+  }
+
+
+  bool TraverseCharacterLiteral (clang::CharacterLiteral *lit)
+  {
+    Base::TraverseCharacterLiteral (lit);
+
+    push (expr_stack, mkCharConst
+          (lit->getValue ()));
+
+    return true;
+  }
+
+
+  bool TraverseFloatingLiteral (clang::FloatingLiteral *lit)
+  {
+    Base::TraverseFloatingLiteral (lit);
+
+    push (expr_stack, mkFloatConst
+          (lit->getValue ().convertToDouble ()));
+
+    return true;
+  }
+
+
+  bool TraverseStringLiteral (clang::StringLiteral *lit)
+  {
+    Base::TraverseStringLiteral (lit);
+
+    push (expr_stack, mkStringConst
+          (lit->getString ()));
 
     return true;
   }

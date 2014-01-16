@@ -68,8 +68,12 @@ let first_is_clang_pointer = function
 
 
 let rec translate_type ctx = let open Parse in let open Codegen in function
+  | NamedType "char" ->
+      TyChar
   | NamedType "int" ->
       TyInt
+  | NamedType "float" ->
+      TyFloat
   | NamedType "string" ->
       TyString
   | NamedType name ->
@@ -151,7 +155,7 @@ let class_intf_for_sum_type ctx (sum_type_name, branches) =
           params = [];
           this_flags = [Const];
           body   = CompoundStmt [
-            Return (IntExpr (List.length types))
+            Return (IntLit (List.length types))
           ];
         }
       in
@@ -164,7 +168,7 @@ let class_intf_for_sum_type ctx (sum_type_name, branches) =
           params = [];
           this_flags = [Const];
           body   = CompoundStmt [
-            Return (IntExpr tag)
+            Return (IntLit tag)
           ];
         }
       in

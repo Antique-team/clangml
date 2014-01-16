@@ -1,5 +1,3 @@
-(* Changing the ordering of variants requires changing the C interface -- so don't. *)
-
 type binary_op =
   | BinaryOp_Add
   | BinaryOp_Multiply
@@ -19,6 +17,9 @@ and stmt =
 type expr =
   | Unit
   | IntConst	of int
+  | CharConst	of char
+  | FloatConst	of float
+  | StringConst	of string
   | BinaryOp	of binary_op * expr * expr
 
 and stmt =

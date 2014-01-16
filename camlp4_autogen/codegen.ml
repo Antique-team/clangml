@@ -32,7 +32,9 @@ type flag =
 type cpp_type =
   (* Built-in basic types (or std:: types) *)
   | TyVoid
+  | TyChar
   | TyInt
+  | TyFloat
   | TyString
   (* Typedef-name *)
   | TyName of string
@@ -60,7 +62,7 @@ let empty_decl = {
 
 type expression =
   | IdExpr of string
-  | IntExpr of int
+  | IntLit of int
   | FCall of (* name *)string * (* arguments *)expression list
   | New of cpp_type * expression list
   deriving (Show)
@@ -127,7 +129,10 @@ let string_of_flag = function
   | Const -> "const"
 
 let rec string_of_cpp_type = function
+  | TyChar -> "char"
   | TyInt -> "int"
+  | TyFloat -> "float"
+  | TyString -> "llvm::StringRef"
   | TyName name -> name
   | TyPointer ty -> string_of_cpp_type ty ^ "*"
   | TyTemplate (template, ty) -> template ^ "<" ^ string_of_cpp_type ty ^ ">"
@@ -286,7 +291,7 @@ let emit_class_intf fmt (i : class_intf) : unit =
 let rec emit_expression fmt = function
   | IdExpr id ->
       Formatx.pp_print_string fmt id
-  | IntExpr value ->
+  | IntLit value ->
       Formatx.pp_print_int fmt value
   | FCall (name, params) ->
       Formatx.fprintf fmt "%s (%a)"
