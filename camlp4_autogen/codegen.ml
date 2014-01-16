@@ -24,6 +24,7 @@ type flag =
   | Explicit
   | Virtual
   | Static
+  | Inline
   | Const
   deriving (Show)
 
@@ -61,6 +62,7 @@ type expression =
   | IdExpr of string
   | IntExpr of int
   | FCall of (* name *)string * (* arguments *)expression list
+  | New of cpp_type * expression list
   deriving (Show)
 
 
@@ -73,17 +75,20 @@ type statement =
 
 let empty_body = CompoundStmt []
 
+type member_function = {
+  flags : flag list;
+  retty : cpp_type;
+  name : string;
+  params : declaration list;
+  this_flags : flag list;
+  body : statement;
+} deriving (Show)
+
 
 type class_member =
   | MemberField
     of (* field-decl *)declaration
-  | MemberFunction
-    of (* flags *)flag list
-     * (* return-type *)cpp_type
-     * (* name *)string
-     * (* arguments *)declaration list
-     * (* this-flags *)flag list
-     * (* body *)statement
+  | MemberFunction of member_function
   | MemberConstructor
     of (* flags *)flag list
      * (* arguments *)declaration list
@@ -104,6 +109,7 @@ type intf =
   | Enum of enum_intf
   | Class of class_intf
   | Forward of string
+  | Function of member_function
   deriving (Show)
 
 
@@ -117,6 +123,7 @@ let string_of_flag = function
   | Explicit -> "explicit"
   | Virtual -> "virtual"
   | Static -> "static"
+  | Inline -> "inline"
   | Const -> "const"
 
 let rec string_of_cpp_type = function
@@ -159,6 +166,40 @@ let flush cg : unit =
  * Interface
  *****************************************************)
 
+let emit_type fmt ty =
+  Format.pp_print_string fmt (string_of_cpp_type ty ^ " ")
+
+
+let emit_declaration fmt decl =
+  Formatx.fprintf fmt "%a%s"
+    emit_type decl.decl_type
+    decl.decl_name
+
+
+let pp_param_list =
+  Formatx.pp_list ~sep:Formatx.pp_comma_sep emit_declaration
+
+
+let pp_this_flag_list =
+  let emit_flag fmt flag =
+    Format.pp_print_string fmt (" " ^ string_of_flag flag)
+  in
+  Formatx.pp_list ~sep:(Formatx.pp_sep "") emit_flag
+
+
+let emit_function_decl fmt (class_name, func_name, params, this_flags) =
+  let class_name =
+    if class_name = "" then
+      class_name
+    else
+      class_name ^ "::"
+  in
+  Formatx.fprintf fmt "%s%s (%a)%a@\n"
+    class_name
+    func_name
+    pp_param_list params
+    pp_this_flag_list this_flags
+
 
 let emit_enum_element fmt (name, value) =
   match value with
@@ -179,28 +220,9 @@ let emit_enum_intf fmt (i : enum_intf) =
     pp_enum_list i.enum_elements
 
 
-let emit_type fmt ty =
-  Format.pp_print_string fmt (string_of_cpp_type ty ^ " ")
-
-
-let emit_declaration fmt decl =
-  Formatx.fprintf fmt "%a%s"
-    emit_type decl.decl_type
-    decl.decl_name
-
-
-let pp_argument_list =
-  Formatx.pp_list ~sep:Formatx.pp_comma_sep emit_declaration
-
 let pp_flag_list =
   let emit_flag fmt flag =
     Format.pp_print_string fmt (string_of_flag flag ^ " ")
-  in
-  Formatx.pp_list ~sep:(Formatx.pp_sep "") emit_flag
-
-let pp_this_flag_list =
-  let emit_flag fmt flag =
-    Format.pp_print_string fmt (" " ^ string_of_flag flag)
   in
   Formatx.pp_list ~sep:(Formatx.pp_sep "") emit_flag
 
@@ -218,18 +240,18 @@ let emit_class_member_intf class_name fmt = function
         emit_type decl_type
         decl_name
         pp_initialiser decl_init
-  | MemberFunction (flags, retty, name, args, this_flags, body) ->
+  | MemberFunction { flags; retty; name; params; this_flags; body } ->
       Formatx.fprintf fmt "%a%a%s (%a)%a;"
         pp_flag_list flags
         emit_type retty
         name
-        pp_argument_list args
+        pp_param_list params
         pp_this_flag_list this_flags
-  | MemberConstructor (flags, args, init, body) ->
+  | MemberConstructor (flags, params, init, body) ->
       Formatx.fprintf fmt "%a%s (%a);"
         pp_flag_list flags
         class_name
-        pp_argument_list args
+        pp_param_list params
 
 
 let emit_base_classes fmt bases =
@@ -261,11 +283,49 @@ let emit_class_intf fmt (i : class_intf) : unit =
     pp_member_list (i.class_fields @ i.class_methods)
 
 
+let rec emit_expression fmt = function
+  | IdExpr id ->
+      Formatx.pp_print_string fmt id
+  | IntExpr value ->
+      Formatx.pp_print_int fmt value
+  | FCall (name, params) ->
+      Formatx.fprintf fmt "%s (%a)"
+        name
+        pp_arguments params
+  | New (ty, args) ->
+      Formatx.fprintf fmt "new %a(%a)"
+        emit_type ty
+        pp_arguments args
+
+and pp_arguments fmt =
+  Formatx.pp_list ~sep:Formatx.pp_comma_sep
+    emit_expression fmt
+
+
+let rec emit_statement fmt = function
+  | CompoundStmt stmts ->
+      Formatx.fprintf fmt "@[<v2>{@,%a@]@\n}"
+        (Formatx.pp_list ~sep:(Formatx.pp_sep "\n")
+          emit_statement) stmts
+  | Return expr ->
+      Formatx.fprintf fmt "return %a;"
+        emit_expression expr
+  | Expression expr ->
+      Formatx.fprintf fmt "%a;"
+        emit_expression expr
+
+
 let emit_intf fmt = function
   | Enum i -> emit_enum_intf fmt i
   | Class i -> emit_class_intf fmt i
   | Forward name ->
       Formatx.fprintf fmt "struct %s;" name
+  | Function { flags; retty; name; params; this_flags; body } ->
+      Formatx.fprintf fmt "%a%a%a%a"
+        pp_flag_list flags
+        emit_type retty
+        emit_function_decl ("", name, params, [])
+        emit_statement body
 
 
 let emit_intfs basename cg cpp_types =
@@ -294,14 +354,6 @@ let emit_intfs basename cg cpp_types =
  *****************************************************)
 
 
-let emit_function_decl fmt (class_name, func_name, args, this_flags) =
-  Formatx.fprintf fmt "%s::%s (%a)%a@\n"
-    class_name
-    func_name
-    pp_argument_list args
-    pp_this_flag_list this_flags
-
-
 let emit_ctor_init fmt (member, initialiser) =
   Formatx.fprintf fmt "%s (%s)"
     member initialiser
@@ -317,40 +369,15 @@ let emit_ctor_init_list fmt = function
         pp_init_list init
 
 
-let rec emit_expression fmt = function
-  | IdExpr id ->
-      Formatx.pp_print_string fmt id
-  | IntExpr value ->
-      Formatx.pp_print_int fmt value
-  | FCall (name, args) ->
-      Formatx.fprintf fmt "%s (%a)"
-        name
-        (Formatx.pp_list ~sep:Formatx.pp_comma_sep
-          emit_expression) args
-
-
-let rec emit_statement fmt = function
-  | CompoundStmt stmts ->
-      Formatx.fprintf fmt "@[<v2>{@,%a@]@\n}"
-        (Formatx.pp_list ~sep:(Formatx.pp_sep "\n")
-          emit_statement) stmts
-  | Return expr ->
-      Formatx.fprintf fmt "return %a;"
-        emit_expression expr
-  | Expression expr ->
-      Formatx.fprintf fmt "%a;"
-        emit_expression expr
-
-
 let emit_class_member_impl class_name fmt = function
-  | MemberFunction (flags, retty, name, args, this_flags, body) ->
+  | MemberFunction { flags; retty; name; params; this_flags; body } ->
       Formatx.fprintf fmt "%a%a%a"
         emit_type retty
-        emit_function_decl (class_name, name, args, this_flags)
+        emit_function_decl (class_name, name, params, this_flags)
         emit_statement body
-  | MemberConstructor (flags, args, init, body) ->
+  | MemberConstructor (flags, params, init, body) ->
       Formatx.fprintf fmt "%a%a%a"
-        emit_function_decl (class_name, class_name, args, [])
+        emit_function_decl (class_name, class_name, params, [])
         emit_ctor_init_list init
         emit_statement body
   | MemberField { decl_flags; decl_type; decl_name; decl_init; } ->
@@ -366,7 +393,7 @@ let emit_class_impl fmt (i : class_intf) : unit =
 let emit_impl fmt = function
   | Class i -> emit_class_impl fmt i
   (* enums and forward declarations have no implementation *)
-  | Forward _ | Enum _ -> ()
+  | Function _ | Forward _ | Enum _ -> ()
 
 
 let emit_impls basename cg cpp_types =

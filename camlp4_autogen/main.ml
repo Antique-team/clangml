@@ -67,6 +67,44 @@ let first_is_clang_pointer = function
   | _ -> false
 
 
+let rec translate_type ctx = let open Parse in let open Codegen in function
+  | NamedType "int" ->
+      TyInt
+  | NamedType "string" ->
+      TyString
+  | NamedType name ->
+      let ty = TyName (cpp_name name) in
+      (* Make sure enum/constant ADTs are passed and stored
+         by value, not by pointer. *)
+      if List.mem name ctx.enum_types then
+        ty
+      else if List.mem name ctx.class_types then
+        (* Automatic memory management in C++ bridge. *)
+        TyTemplate ("ptr", ty)
+      else (
+        Log.warn "Name '%s' is not an ADT in the same file"
+          name;
+        (* Plain pointers to anything unknown. *)
+        TyPointer (ty)
+      )
+  | ClangType name ->
+      (* Plain pointers to Clang AST nodes. *)
+      TyPointer (TyName ("clang::" ^ name))
+  | ListOfType ty ->
+      TyTemplate ("std::vector", translate_type ctx ty)
+
+
+(* Constructor arguments. *)
+let constructor_params ctx types =
+  let open Codegen in
+  List.mapi (fun i ty ->
+    { empty_decl with
+      decl_type = translate_type ctx ty;
+      decl_name = "arg" ^ string_of_int i;
+    }
+  ) types
+
+
 let class_intf_for_sum_type ctx (sum_type_name, branches) =
   let open Codegen in
 
@@ -94,75 +132,46 @@ let class_intf_for_sum_type ctx (sum_type_name, branches) =
             );
           ]
         in
-        MemberFunction ([Virtual], TyName "value", "ToValue", [], [Const], body)
+        MemberFunction {
+          flags  = [Virtual];
+          retty  = TyName "value";
+          name   = "ToValue";
+          params = [];
+          this_flags = [Const];
+          body;
+        }
       in
 
 
       let size_const =
-        MemberFunction (
-          [Virtual],
-          TyName "mlsize_t",
-          "size",
-          [],
-          [Const],
-          CompoundStmt [
+        MemberFunction {
+          flags  = [Virtual];
+          retty  = TyName "mlsize_t";
+          name   = "size";
+          params = [];
+          this_flags = [Const];
+          body   = CompoundStmt [
             Return (IntExpr (List.length types))
-          ]
-        )
+          ];
+        }
       in
 
       let tag_const =
-        MemberFunction (
-          [Virtual],
-          TyName "tag_t",
-          "tag",
-          [],
-          [Const],
-          CompoundStmt [
+        MemberFunction {
+          flags  = [Virtual];
+          retty  = TyName "tag_t";
+          name   = "tag";
+          params = [];
+          this_flags = [Const];
+          body   = CompoundStmt [
             Return (IntExpr tag)
-          ]
-        )
-      in
-
-      let rec translate_type = let open Parse in function
-        | NamedType "int" ->
-            TyInt
-        | NamedType "string" ->
-            TyString
-        | NamedType name ->
-            let ty = TyName (cpp_name name) in
-            (* Make sure enum/constant ADTs are passed and stored
-               by value, not by pointer. *)
-            if List.mem name ctx.enum_types then
-              ty
-            else if List.mem name ctx.class_types then
-              (* Automatic memory management in C++ bridge. *)
-              TyTemplate ("boost::intrusive_ptr", ty)
-            else (
-              Log.warn "Name '%s' is not an ADT in the same file"
-                name;
-              (* Plain pointers to anything unknown. *)
-              TyPointer (ty)
-            )
-        | ClangType name ->
-            TyPointer (TyName ("clang::" ^ name))
-        | ListOfType ty ->
-            TyTemplate ("std::vector", translate_type ty)
+          ];
+        }
       in
 
       (* Create 1 or 2 constructors, one with clang pointer (if requested),
          the other without, and defaulting it to NULL. *)
       let constructors =
-        (* Constructor arguments. *)
-        let args = 
-          List.mapi (fun i ty ->
-            { empty_decl with
-              decl_type = translate_type ty;
-              decl_name = "arg" ^ string_of_int i;
-            }
-          ) types
-        in
-
         (* Constructor initialiser list. *)
         let init =
           List.mapi (fun i ty ->
@@ -170,22 +179,24 @@ let class_intf_for_sum_type ctx (sum_type_name, branches) =
           ) types
         in
 
-        let constructor args init =
+        let constructor params init =
           let flags =
             (* Explicit constructor only if it's a unary constructor. *)
-            if List.length args = 1 then
+            if List.length params = 1 then
               explicit
             else
               []
           in
-          MemberConstructor (flags, args, init, empty_body)
+          MemberConstructor (flags, params, init, empty_body)
         in
 
+        let params = constructor_params ctx types in
+
         (* Constructor with pointer to clang object. *)
-        let ctors = [constructor args init] in
+        let ctors = [constructor params init] in
         if first_is_clang_pointer types then
           (* Constructor without clang object; pointer will be NULL. *)
-          constructor (List.tl args) (("field0", "NULL") :: List.tl init)
+          constructor (List.tl params) (("field0", "NULL") :: List.tl init)
           :: ctors
         else
           ctors
@@ -195,7 +206,7 @@ let class_intf_for_sum_type ctx (sum_type_name, branches) =
         List.mapi (fun i ty ->
           MemberField {
             empty_decl with
-            decl_type = translate_type ty;
+            decl_type = translate_type ctx ty;
             decl_name = "field" ^ string_of_int i;
           }
         ) types
@@ -230,8 +241,35 @@ let gen_code_for_sum_type ctx (sum_type : Parse.sum_type) =
   if sum_type_is_enum sum_type then
     [Codegen.Enum (enum_intf_for_constant_sum_type sum_type)]
   else
+    let (sum_type_name, branches) = sum_type in
+
     List.map (fun i -> Codegen.Class i)
       (class_intf_for_sum_type ctx sum_type)
+
+    @ List.map (fun (branch_name, types) ->
+        let open Codegen in
+        let ty =
+          TyName (cpp_name branch_name ^
+                  cpp_name sum_type_name)
+        in
+        let args =
+          List.mapi (fun i ty ->
+            IdExpr ("arg" ^ string_of_int i)
+          ) types
+        in
+        Function {
+          flags  = [Static; Inline];
+          retty  = TyTemplate ("ptr", ty);
+          name   = "mk" ^ cpp_name branch_name;
+          params = constructor_params ctx types;
+          this_flags = [];
+          body   = CompoundStmt [
+            Return (
+              New (ty, args)
+            )
+          ];
+        }
+      ) branches
 
 
 let gen_code_for_ocaml_type ctx = function

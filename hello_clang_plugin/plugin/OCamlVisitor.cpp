@@ -35,7 +35,7 @@ private:
 
   template<typename T, typename Derived>
   static void
-  push (std::vector<ptr<T>> &stack, Derived *p)
+  push (std::vector<ptr<T>> &stack, ptr<Derived> p)
   {
     stack.push_back (p);
   }
@@ -49,7 +49,7 @@ public:
     ptr<Expr> rhs = pop (expr_stack);
     ptr<Expr> lhs = pop (expr_stack);
 
-    push (expr_stack, new BinaryOpExpr
+    push (expr_stack, mkBinaryOp
           (BinaryOp_Add, lhs, rhs));
 
     return true;
@@ -62,7 +62,7 @@ public:
     ptr<Expr> rhs = pop (expr_stack);
     ptr<Expr> lhs = pop (expr_stack);
 
-    push (expr_stack, new BinaryOpExpr
+    push (expr_stack, mkBinaryOp
           (BinaryOp_Multiply, lhs, rhs));
 
     return true;
@@ -72,7 +72,7 @@ public:
   {
     Base::TraverseIntegerLiteral (lit);
 
-    push (expr_stack, new IntConstExpr
+    push (expr_stack, mkIntConst
           (lit->getValue ().getSExtValue ()));
 
     return true;
