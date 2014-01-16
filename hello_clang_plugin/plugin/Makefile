@@ -6,7 +6,8 @@ CXXFLAGS =	\
 	-D__STDC_CONSTANT_MACROS	\
 	-D__STDC_LIMIT_MACROS	\
 	-fPIC	\
-	-fno-rtti
+	-fno-rtti	\
+	-std=c++11
 
 LDFLAGS =	\
 	-Wl,-z,defs	\
@@ -36,7 +37,7 @@ $(PLUGIN): ../hello_lib.o HelloChecker.o OCamlVisitor.o PluginRegistration.o hel
 clean:
 	rm -f $(PLUGIN)
 
-%.o: %.cpp hello_cpp.h $(wildcard *.h)
+%.o: %.cpp hello_cpp.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
 	$(EXT)/bin/clang++ -c $< $(CXXFLAGS)
 
 hello_cpp.h: ../ocaml/hello_ast.ml ../../camlp4_autogen/main.byte

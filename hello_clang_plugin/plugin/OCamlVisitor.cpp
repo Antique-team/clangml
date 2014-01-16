@@ -10,74 +10,76 @@ extern "C" {
 
 #include "OCamlVisitor.h"
 
-using namespace clang;
+using namespace hello_cpp;
 
 
 struct OCamlVisitor
   : clang::RecursiveASTVisitor<OCamlVisitor>
 {
 private:
-  std::vector<hello_cpp::Expr *> expr_stack;
+  typedef clang::RecursiveASTVisitor<OCamlVisitor> Base;
+
+  std::vector<ptr<Expr>> expr_stack;
 
   template<typename T>
-  static T *
-  pop (std::vector<T *> &stack)
+  static ptr<T>
+  pop (std::vector<ptr<T>> &stack)
   {
     if (stack.empty ())
       failwith ("empty stack");
     assert (!stack.empty ());
-    T *p = stack.back ();
+    ptr<T> p = stack.back ();
     stack.pop_back ();
     return p;
   }
 
   template<typename T, typename Derived>
   static void
-  push (std::vector<T *> &stack, Derived *p)
+  push (std::vector<ptr<T>> &stack, Derived *p)
   {
     stack.push_back (p);
   }
 
 
 public:
-  bool TraverseBinAdd (BinaryOperator *op)
+  bool TraverseBinAdd (clang::BinaryOperator *op)
   {
-    RecursiveASTVisitor::TraverseBinAdd (op);
+    Base::TraverseBinAdd (op);
 
-    hello_cpp::Expr *rhs = pop (expr_stack);
-    hello_cpp::Expr *lhs = pop (expr_stack);
+    ptr<Expr> rhs = pop (expr_stack);
+    ptr<Expr> lhs = pop (expr_stack);
 
-    push (expr_stack, new hello_cpp::BinaryOpExpr
-          (hello_cpp::BinaryOp_Add, lhs, rhs));
+    push (expr_stack, new BinaryOpExpr
+          (BinaryOp_Add, lhs, rhs));
 
     return true;
   }
 
-  bool TraverseBinMul (BinaryOperator *op)
+  bool TraverseBinMul (clang::BinaryOperator *op)
   {
-    RecursiveASTVisitor::TraverseBinMul (op);
+    Base::TraverseBinMul (op);
 
-    hello_cpp::Expr *rhs = pop (expr_stack);
-    hello_cpp::Expr *lhs = pop (expr_stack);
+    ptr<Expr> rhs = pop (expr_stack);
+    ptr<Expr> lhs = pop (expr_stack);
 
-    push (expr_stack, new hello_cpp::BinaryOpExpr
-          (hello_cpp::BinaryOp_Multiply, lhs, rhs));
+    push (expr_stack, new BinaryOpExpr
+          (BinaryOp_Multiply, lhs, rhs));
 
     return true;
   }
 
-  bool TraverseIntegerLiteral (IntegerLiteral *lit)
+  bool TraverseIntegerLiteral (clang::IntegerLiteral *lit)
   {
-    RecursiveASTVisitor::TraverseIntegerLiteral (lit);
+    Base::TraverseIntegerLiteral (lit);
 
-    push (expr_stack, new hello_cpp::IntConstExpr
+    push (expr_stack, new IntConstExpr
           (lit->getValue ().getSExtValue ()));
 
     return true;
   }
 
 
-  hello_cpp::Expr *result () const
+  ptr<Expr> result () const
   {
     assert (expr_stack.size () == 1);
     return expr_stack.back ();
@@ -85,10 +87,10 @@ public:
 };
 
 
-hello_cpp::Expr *
-adt_of_clangAST (TranslationUnitDecl const *D)
+ptr<Expr>
+adt_of_clangAST (clang::TranslationUnitDecl const *D)
 {
   OCamlVisitor visitor;
-  visitor.TraverseDecl (const_cast<TranslationUnitDecl *> (D));
+  visitor.TraverseDecl (const_cast<clang::TranslationUnitDecl *> (D));
   return visitor.result ();
 }

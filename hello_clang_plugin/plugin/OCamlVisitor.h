@@ -5,6 +5,6 @@
 
 #include "hello_cpp.h"
 
-hello_cpp::Expr *adt_of_clangAST (clang::TranslationUnitDecl const *decl);
+ptr<hello_cpp::Expr> adt_of_clangAST (clang::TranslationUnitDecl const *decl);
 
 #endif /* OCAML_VISITOR_H */

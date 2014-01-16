@@ -4,6 +4,8 @@
 #include <cassert>
 #include <vector>
 
+#include <boost/intrusive_ptr.hpp>
+
 extern "C" {
 #include <caml/alloc.h>
 #include <caml/memory.h>
@@ -17,7 +19,29 @@ struct OCamlADTBase
   virtual mlsize_t size () const = 0;
   virtual tag_t tag () const = 0;
   virtual value ToValue () const = 0;
+
+  virtual ~OCamlADTBase () { }
+
+  int refcnt = 0;
 };
+
+
+template<typename T>
+using ptr = boost::intrusive_ptr<T>;
+
+
+static inline void
+intrusive_ptr_add_ref (OCamlADTBase *p)
+{
+  ++p->refcnt;
+}
+
+static inline void
+intrusive_ptr_release (OCamlADTBase *p)
+{
+  if (--p->refcnt == 0)
+    delete p;
+}
 
 
 /********************************************************
@@ -26,7 +50,7 @@ struct OCamlADTBase
 
 // Recursive entry-point for OCamlADTBase::ToValue.
 template<typename OCamlADT, typename... Args>
-value value_of_adt (OCamlADT const *self, Args const &...v);
+value value_of_adt (ptr<OCamlADTBase> self, Args const &...v);
 
 
 // Create an OCaml list from a C++ iterator range.
@@ -47,7 +71,7 @@ value_of (std::vector<T> const &v)
 
 
 static inline value
-value_of (OCamlADTBase const *ob)
+value_of (ptr<OCamlADTBase> ob)
 {
   return ob->ToValue ();
 }

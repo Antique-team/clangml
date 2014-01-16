@@ -130,12 +130,20 @@ let class_intf_for_sum_type ctx (sum_type_name, branches) =
         | NamedType "string" ->
             TyString
         | NamedType name ->
+            let ty = TyName (cpp_name name) in
             (* Make sure enum/constant ADTs are passed and stored
                by value, not by pointer. *)
             if List.mem name ctx.enum_types then
-              TyName (cpp_name name)
-            else
-              TyPointer (TyName (cpp_name name))
+              ty
+            else if List.mem name ctx.class_types then
+              (* Automatic memory management in C++ bridge. *)
+              TyTemplate ("boost::intrusive_ptr", ty)
+            else (
+              Log.warn "Name '%s' is not an ADT in the same file"
+                name;
+              (* Plain pointers to anything unknown. *)
+              TyPointer (ty)
+            )
         | ClangType name ->
             TyPointer (TyName ("clang::" ^ name))
         | ListOfType ty ->
