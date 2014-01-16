@@ -156,6 +156,7 @@ public:
    * Literals
    */
 
+#define INTEGERLITERAL(CLASS, BASE)
   bool TraverseIntegerLiteral (clang::IntegerLiteral *lit)
   {
     Base::TraverseIntegerLiteral (lit);
@@ -167,6 +168,7 @@ public:
   }
 
 
+#define CHARACTERLITERAL(CLASS, BASE)
   bool TraverseCharacterLiteral (clang::CharacterLiteral *lit)
   {
     Base::TraverseCharacterLiteral (lit);
@@ -178,6 +180,7 @@ public:
   }
 
 
+#define FLOATINGLITERAL(CLASS, BASE)
   bool TraverseFloatingLiteral (clang::FloatingLiteral *lit)
   {
     Base::TraverseFloatingLiteral (lit);
@@ -189,6 +192,7 @@ public:
   }
 
 
+#define STRINGLITERAL(CLASS, BASE)
   bool TraverseStringLiteral (clang::StringLiteral *lit)
   {
     Base::TraverseStringLiteral (lit);
@@ -199,6 +203,74 @@ public:
     return true;
   }
 
+
+  /****************************************************
+   * Statements
+   */
+
+#define ABSTRACT_STMT(STMT)
+#define STMT(CLASS, BASE)					\
+  bool Traverse##CLASS (clang::CLASS *stmt)			\
+  {								\
+    puts (__func__);						\
+    Base::Traverse##CLASS (stmt);				\
+    return true;						\
+  }
+#include <clang/AST/StmtNodes.inc>
+#undef TYPE
+
+
+  /****************************************************
+   * Types
+   */
+
+#define ABSTRACT_TYPE(CLASS, BASE)
+#define TYPE(CLASS, BASE)					\
+  bool Traverse##CLASS##Type (clang::CLASS##Type *type)		\
+  {								\
+    puts (__func__);						\
+    Base::Traverse##CLASS##Type (type);				\
+    return true;						\
+  }
+#include <clang/AST/TypeNodes.def>
+#undef TYPE
+
+
+  /****************************************************
+   * TypeLocs
+   */
+
+#define ABSTRACT_TYPELOC(CLASS, BASE)
+#define TYPELOC(CLASS, BASE)					\
+  bool Traverse##CLASS##TypeLoc (clang::CLASS##TypeLoc typeLoc)	\
+  {								\
+    puts (__func__);						\
+    Base::Traverse##CLASS##TypeLoc (typeLoc);			\
+    return true;						\
+  }
+#include <clang/AST/TypeLocNodes.def>
+#undef TYPE
+
+
+  /****************************************************
+   * Declarations
+   */
+
+#define ABSTRACT_DECL(DECL)
+#define DECL(CLASS, BASE)					\
+  bool Traverse##CLASS##Decl (clang::CLASS##Decl *decl)		\
+  {								\
+    puts (__func__);						\
+    Base::Traverse##CLASS##Decl (decl);				\
+    return true;						\
+  }
+#include <clang/AST/DeclNodes.inc>
+#undef DECL
+
+
+  /****************************************************
+   * Final result
+   */
 
   ptr<Expr> result ()
   {
