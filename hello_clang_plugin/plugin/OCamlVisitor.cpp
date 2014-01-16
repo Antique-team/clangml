@@ -7,6 +7,7 @@ extern "C" {
 }
 
 #include <cstdio>
+#include <stdexcept>
 #include <type_traits>
 
 #include "OCamlVisitor.h"
@@ -38,7 +39,7 @@ private:
   dynamic pop ()
   {
     if (stack.empty ())
-      failwith ("empty stack");
+      throw std::runtime_error ("empty stack");
     assert (!stack.empty ());
     adt_ptr p = stack.back ();
     stack.pop_back ();
