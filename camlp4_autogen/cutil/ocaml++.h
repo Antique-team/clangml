@@ -121,6 +121,7 @@ value_of_range (Iterator begin, Iterator end)
 
   cons_value = start_value;
 
+  ++begin;
   for (; begin != end; begin++)
     {
       tmp_value = caml_alloc (2, 0); 

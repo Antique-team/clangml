@@ -67,6 +67,28 @@ let first_is_clang_pointer = function
   | _ -> false
 
 
+let is_basic_type = function
+  | "char"
+  | "int"
+  | "float"
+  | "string" ->
+      true
+  | _ ->
+      false
+
+
+let is_nonnull_ptr ctx = function
+  | Parse.NamedType name ->
+      (* Basic types and enum types are no pointers. *)
+      if is_basic_type name || List.mem name ctx.enum_types then
+        false
+      else
+        true
+  | _ ->
+      (* Clang types are nullable and list types are no pointers. *)
+      false
+
+
 let rec translate_type ctx = let open Parse in let open Codegen in function
   | NamedType "char" ->
       TyChar
@@ -183,6 +205,20 @@ let class_intf_for_sum_type ctx (sum_type_name, branches) =
           ) types
         in
 
+        let assert_fn i =
+          Expression (FCall ("assert", [IdExpr ("arg" ^ string_of_int i)]))
+        in
+
+        let body =
+          (* Enforce invariants. *)
+          CompoundStmt (List.mapi (fun i ty ->
+            if is_nonnull_ptr ctx ty then
+              [assert_fn i]
+            else
+              []
+          ) types |> List.flatten)
+        in
+
         let constructor params init =
           let flags =
             (* Explicit constructor only if it's a unary constructor. *)
@@ -191,7 +227,7 @@ let class_intf_for_sum_type ctx (sum_type_name, branches) =
             else
               []
           in
-          MemberConstructor (flags, params, init, empty_body)
+          MemberConstructor (flags, params, init, body)
         in
 
         let params = constructor_params ctx types in

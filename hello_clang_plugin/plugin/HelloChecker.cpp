@@ -85,13 +85,13 @@ HelloChecker::checkASTDecl (const TranslationUnitDecl *D,
                             BugReporter &BR) const
 {
   CAMLparam0 ();
-  CAMLlocal1 (caml_expr);
+  CAMLlocal1 (result);
 
   initialize_caml ();
 
-  value *caml_print = caml_named_value ("Hello print expr");
-  caml_expr = adt_of_clangAST (D)->ToValue ();
-  caml_callback (*caml_print, caml_expr);
+  value *caml_print = caml_named_value ("Hello print decl");
+  result = adt_of_clangAST (D)->ToValue ();
+  caml_callback (*caml_print, result);
 
 #if 0
   clang::DeclContext::decl_iterator current;

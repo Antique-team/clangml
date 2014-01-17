@@ -7,7 +7,8 @@ CXXFLAGS =	\
 	-D__STDC_LIMIT_MACROS	\
 	-fPIC	\
 	-fno-rtti	\
-	-std=c++11
+	-std=c++11	\
+	-ggdb3
 
 LDFLAGS =	\
 	-Wl,-z,defs	\
@@ -25,6 +26,7 @@ LDFLAGS =	\
 	-lasmrun	\
 	-L$(HOME)/.opam/4.01.0+PIC/lib/ocaml	\
 	-Wl,-rpath,$(HOME)/.opam/4.01.0+PIC/lib/ocaml	\
+	-ggdb3
 
 PLUGIN = build/HelloClangPlugin/Build/Products/Debug/libHelloClangPlugin.dylib
 

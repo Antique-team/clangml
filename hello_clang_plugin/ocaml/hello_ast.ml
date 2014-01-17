@@ -1,3 +1,49 @@
+type builtin_type =
+  | BT_Void
+  | BT_Bool
+  | BT_Char_U
+  | BT_UChar
+  | BT_WChar_U
+  | BT_Char16
+  | BT_Char32
+  | BT_UShort
+  | BT_UInt
+  | BT_ULong
+  | BT_ULongLong
+  | BT_UInt128
+  | BT_Char_S
+  | BT_SChar
+  | BT_WChar_S
+  | BT_Short
+  | BT_Int
+  | BT_Long
+  | BT_LongLong
+  | BT_Int128
+  | BT_Half
+  | BT_Float
+  | BT_Double
+  | BT_LongDouble
+  | BT_NullPtr
+  | BT_ObjCId
+  | BT_ObjCClass
+  | BT_ObjCSel
+  | BT_OCLImage1d
+  | BT_OCLImage1dArray
+  | BT_OCLImage1dBuffer
+  | BT_OCLImage2d
+  | BT_OCLImage2dArray
+  | BT_OCLImage3d
+  | BT_OCLSampler
+  | BT_OCLEvent
+  | BT_Dependent
+  | BT_Overload
+  | BT_BoundMember
+  | BT_PseudoObject
+  | BT_UnknownAny
+  | BT_BuiltinFn
+  | BT_ARCUnbridgedCast
+
+
 type unary_op =
   | UO_PostInc	(* [C99 6.5.2.4] Postfix increment and decrement *)
   | UO_PostDec
@@ -63,14 +109,29 @@ and stmt =
 
 type expr =
   | Unit
-  | IntegerLiteral	of int
-  | CharacterLiteral	of char
-  | FloatingLiteral	of float
-  | StringLiteral	of string
-  | BinaryOperator	of binary_op * expr * expr
-  | UnaryOperator	of unary_op * expr
+
+  | IntegerLiteral		of int
+  | CharacterLiteral		of char
+  | FloatingLiteral		of float
+  | StringLiteral		of string
+  | BinaryOperator		of binary_op * expr * expr
+  | UnaryOperator		of unary_op * expr
 
 and stmt =
   | Skip
-  | Print	of expr
-  | Block	of stmt list
+  | Print			of expr
+  | Block			of stmt list
+
+  | CompoundStmt		of stmt list
+  | ReturnStmt			of expr
+
+type type_loc =
+  | BuiltinTypeLoc              of builtin_type
+  | TypedefTypeLoc
+  | FunctionNoProtoTypeLoc	of type_loc
+  | ConstantArrayTypeLoc	of type_loc
+
+type decl =
+  | TranslationUnitDecl		of decl list
+  | FunctionDecl		of (* type *)type_loc * (* name *)string * (* body *)stmt
+  | TypedefDecl			of type_loc

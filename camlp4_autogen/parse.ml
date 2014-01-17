@@ -77,9 +77,8 @@ let rec ast_type_to_type (ctyp: Ast.ctyp) =
 
 
 (* Flatten tree of Ast.TyOrs of types to list of types *)
-let flatten_ast_sum_type_branches (t : Ast.ctyp) : Ast.ctyp list =
-  match t with
-  | Ast.TyOr _ ->
+let flatten_ast_sum_type_branches = function
+  | Ast.TyOr _ as t ->
       begin
         let rec flatten_sum_type_contents_aux t flattened_contents =
           match t with
@@ -88,11 +87,14 @@ let flatten_ast_sum_type_branches (t : Ast.ctyp) : Ast.ctyp list =
                 flatten_sum_type_contents_aux right flattened_contents
               in
               flatten_sum_type_contents_aux left with_right_contents
-          | _  -> t :: flattened_contents
+          | t ->
+              t :: flattened_contents
         in
         flatten_sum_type_contents_aux t []
       end
-  | _ -> Log.err "Expected sum type contents to be Ast.TyOr"
+  | t ->
+      Log.warn "Expected sum type contents to be Ast.TyOr";
+      [t]
 
 
 (* Flatten tree of Ast.TyAnds of types to list of types *)

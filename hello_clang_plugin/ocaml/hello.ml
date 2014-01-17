@@ -3,8 +3,19 @@ open Hello_ast
 
 let print_expr (e: expr) : unit =
   Gc.compact ();
-  Format.printf "@[<v2>Statement is:@,%a@]@." Hello_pp.pp_expr e
+  Format.printf "@[<v2>Expression is:@,%a@]@." Hello_pp.pp_expr e
+
+let print_stmt (s: stmt) : unit =
+  Gc.compact ();
+  Format.printf "@[<v2>Statement is:@,%a@]@." Hello_pp.pp_stmt s
+
+let print_decl (d: decl) : unit =
+  Gc.compact ();
+  Format.printf "@[<v2>Declaration is:@,%a@]@." Hello_pp.pp_decl d
 
 
 let () =
   Callback.register "Hello print expr" print_expr; (*TODO: standardize convention for naming*)
+  Callback.register "Hello print stmt" print_stmt;
+  Callback.register "Hello print decl" print_decl;
+;;

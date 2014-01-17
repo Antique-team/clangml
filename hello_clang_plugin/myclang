@@ -30,5 +30,8 @@ ADDITIONAL_ARGS = [
         "-Xclang", "-analyzer-checker=coughlin.HelloChecker"
 ]
 
+CLANG = ["#{EXT_CLANG_PATH}"] + ARGV + ADDITIONAL_ARGS
+
 # Run analyzer version
-exec(*(["#{EXT_CLANG_PATH}"] + ARGV + ADDITIONAL_ARGS))
+#exec(*(["gdb", "--args"] + CLANG))
+exec(*(CLANG))
