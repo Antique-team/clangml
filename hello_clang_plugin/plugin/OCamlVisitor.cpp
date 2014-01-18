@@ -60,11 +60,10 @@ private:
     template<typename T>
     operator std::vector<ptr<T>> () const
     {
-      std::vector<ptr<T>> list (adt_list.size ());
-      std::transform (adt_list.begin (), adt_list.end (), list.begin (),
-                      [] (adt_ptr adt) {
-                        return adt_cast<T> (adt);
-                      });
+      std::vector<ptr<T>> list;
+      list.reserve (adt_list.size ());
+      std::transform (adt_list.begin (), adt_list.end (), std::back_inserter (list),
+                      [] (adt_ptr adt) { return adt_cast<T> (adt); });
       return list;
     }
   };
@@ -89,11 +88,13 @@ private:
   }
 
 
+  // Set a stack marker.
   void push_mark ()
   {
     markers.push_back (stack.size ());
   }
 
+  // Get the number of elements pushed since the last marker.
   size_t pop_mark ()
   {
     size_t marker = markers.back ();
@@ -102,6 +103,7 @@ private:
     return stack.size () - marker;
   }
 
+  // Get a list of everything that was pushed since the last marker.
   dynamic_list pop_shard ()
   {
     // Get last marker.
@@ -109,12 +111,13 @@ private:
 
     // Copy the last size-marker elements to the list.
     std::vector<adt_ptr> list;
+    list.reserve (marker);
     list.insert (list.begin (), stack.end () - marker, stack.end ());
 
     // Pop them off the stack.
     stack.erase (stack.end () - marker, stack.end ());
 
-    return dynamic_list { list };
+    return dynamic_list { move (list) };
   }
 
 
@@ -340,12 +343,14 @@ public:
     size_t marker = pop_mark ();
     if (marker == 0)
       {
-        printf ("WARNING: %s creates dummy TypeLoc, as derived function did not produce any\n", __func__);
+        printf ("WARNING: %s creates dummy TypeLoc, as derived function did not produce any\n",
+                __func__);
         push (mkBuiltinTypeLoc (BT_Void));
       }
     else if (marker > 1)
       {
-        printf ("WARNING: %s drops all but most recent (out of %lu) TypeLoc\n", __func__, marker);
+        printf ("WARNING: %s drops all but most recent (out of %lu) TypeLoc\n",
+                __func__, marker);
         // Keep the last one
         while (--marker) pop ();
       }
@@ -370,8 +375,7 @@ public:
   {
     Base::TraverseBuiltinTypeLoc (typeLoc);
 
-    clang::BuiltinType const *type = typeLoc.getTypePtr ();
-    BuiltinType bt = translate_builtin_type (type->getKind ());
+    BuiltinType bt = translate_builtin_type (typeLoc.getTypePtr ()->getKind ());
 
     push (mkBuiltinTypeLoc (bt));
 
