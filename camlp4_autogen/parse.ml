@@ -35,6 +35,7 @@ type sum_type = (* sum_type_name *)string * (* branches *)sum_type_branch list
 type ocaml_type =
   | SumType of sum_type
   | RecursiveType of sum_type list
+  | Version of string
   deriving (Show)
 
 
@@ -166,6 +167,9 @@ let ast_str_item_to_sum_type types (str_item : Ast.str_item) : ocaml_type list =
       let flattened = flatten_ast_rec_types ty1 [ty2] in
       let rec_types = List.map map_rec_type flattened in
       RecursiveType (rec_types) :: types
+
+  | <:str_item<value version = $str:version$>> ->
+      Version version :: types
 
   | _ ->
       types

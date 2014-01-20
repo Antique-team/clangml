@@ -328,6 +328,10 @@ let gen_code_for_ocaml_type ctx = function
         List.map (gen_code_for_sum_type ctx) rec_types
         |> List.flatten
       )
+  | Parse.Version version ->
+      let open Codegen in
+      let ty = TyConst (TyPointer (TyConst TyChar)) in
+      [Variable (ty, "version", StrLit version)]
 
 
 let code_gen basename (sum_types : Parse.ocaml_type list) =
@@ -337,6 +341,7 @@ let code_gen basename (sum_types : Parse.ocaml_type list) =
     List.map (function
       | Parse.SumType ty -> [ty]
       | Parse.RecursiveType tys -> tys
+      | Parse.Version version -> []
     ) sum_types
     |> List.flatten
     (* Partition by enum/class types. *)
@@ -348,6 +353,21 @@ let code_gen basename (sum_types : Parse.ocaml_type list) =
     enum_types  = List.map fst enum_types;
     class_types = List.map fst class_types;
   } in
+
+  (* Get AST version. *)
+  let version =
+    match
+      List.map (function
+        | Parse.Version version -> [version]
+        | _ -> []
+      ) sum_types
+      |> List.flatten
+    with
+    | [] -> None
+    | [version] -> Some version
+    | versions -> Log.err "Multiple versions found: [%a]"
+                   (Formatx.pp_list Formatx.pp_print_string) versions
+  in
 
   let cpp_types =
     List.map (gen_code_for_ocaml_type ctx) sum_types

@@ -1,5 +1,7 @@
 open Hello_ast
 
+external check_bridge_version : string -> unit = "check_bridge_version"
+
 
 let print_expr (e: expr) : unit =
   Gc.compact ();
@@ -15,7 +17,9 @@ let print_decl (d: decl) : unit =
 
 
 let () =
-  Callback.register "Hello print expr" print_expr; (*TODO: standardize convention for naming*)
+  check_bridge_version Hello_ast.version;
+  (*TODO: standardize convention for naming*)
+  Callback.register "Hello print expr" print_expr;
   Callback.register "Hello print stmt" print_stmt;
   Callback.register "Hello print decl" print_decl;
 ;;

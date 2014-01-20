@@ -37,7 +37,7 @@ $(PLUGIN): ../hello_lib.o HelloChecker.o OCamlVisitor.o PluginRegistration.o hel
 	$(MAKE) -C ../ocaml
 
 clean:
-	rm -f $(PLUGIN)
+	rm -f $(PLUGIN) *.o hello_cpp.cpp hello_cpp.h
 
 %.o: %.cpp hello_cpp.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
 	$(EXT)/bin/clang++ -c $< $(CXXFLAGS)

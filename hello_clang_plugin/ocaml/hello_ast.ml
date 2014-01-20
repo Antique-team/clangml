@@ -1,3 +1,5 @@
+let version = "20140120"
+
 type builtin_type =
   | BT_Void
   | BT_Bool

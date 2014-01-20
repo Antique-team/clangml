@@ -39,6 +39,7 @@ type cpp_type =
   (* Typedef-name *)
   | TyName of string
   (* Parameterised types *)
+  | TyConst of cpp_type
   | TyPointer of cpp_type
   | TyReference of cpp_type
   | TyTemplate of string * cpp_type
@@ -63,6 +64,7 @@ let empty_decl = {
 type expression =
   | IdExpr of string
   | IntLit of int
+  | StrLit of string
   | FCall of (* name *)string * (* arguments *)expression list
   | New of cpp_type * expression list
   deriving (Show)
@@ -112,6 +114,7 @@ type intf =
   | Class of class_intf
   | Forward of string
   | Function of member_function
+  | Variable of cpp_type * string * expression
   deriving (Show)
 
 
@@ -134,6 +137,7 @@ let rec string_of_cpp_type = function
   | TyFloat -> "float"
   | TyString -> "llvm::StringRef"
   | TyName name -> name
+  | TyConst ty -> string_of_cpp_type ty ^ " const"
   | TyPointer ty -> string_of_cpp_type ty ^ "*"
   | TyTemplate (template, ty) -> template ^ "<" ^ string_of_cpp_type ty ^ ">"
   | ty ->
@@ -293,6 +297,8 @@ let rec emit_expression fmt = function
       Formatx.pp_print_string fmt id
   | IntLit value ->
       Formatx.pp_print_int fmt value
+  | StrLit str ->
+      Formatx.fprintf fmt "\"%s\"" (String.escaped str)
   | FCall (name, params) ->
       Formatx.fprintf fmt "%s (%a)"
         name
@@ -325,6 +331,10 @@ let emit_intf fmt = function
   | Class i -> emit_class_intf fmt i
   | Forward name ->
       Formatx.fprintf fmt "struct %s;" name
+  | Variable (ty, name, init) ->
+      Formatx.fprintf fmt "extern %a %s;"
+        emit_type ty
+        name
   | Function { flags; retty; name; params; this_flags; body } ->
       Formatx.fprintf fmt "%a%a%a%a"
         pp_flag_list flags
@@ -397,6 +407,11 @@ let emit_class_impl fmt (i : class_intf) : unit =
 
 let emit_impl fmt = function
   | Class i -> emit_class_impl fmt i
+  | Variable (ty, name, init) ->
+      Formatx.fprintf fmt "%a %s = %a;"
+        emit_type ty
+        name
+        emit_expression init
   (* enums and forward declarations have no implementation *)
   | Function _ | Forward _ | Enum _ -> ()
 
