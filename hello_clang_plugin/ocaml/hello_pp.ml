@@ -7,28 +7,28 @@ let string_of_builtin_type = function
   | BT_Void -> "void"
   | BT_Bool -> "bool"
   | BT_Char_U -> "char_u"
-  | BT_UChar -> "uchar"
+  | BT_UChar -> "unsigned char"
   | BT_WChar_U -> "wchar_u"
-  | BT_Char16 -> "char16"
-  | BT_Char32 -> "char32"
-  | BT_UShort -> "ushort"
-  | BT_UInt -> "uint"
-  | BT_ULong -> "ulong"
-  | BT_ULongLong -> "ulonglong"
-  | BT_UInt128 -> "uint128"
+  | BT_Char16 -> "char16_t"
+  | BT_Char32 -> "char32_t"
+  | BT_UShort -> "unsigned short"
+  | BT_UInt -> "unsigned int"
+  | BT_ULong -> "unsigned long"
+  | BT_ULongLong -> "unsigned long long"
+  | BT_UInt128 -> "__uint128"
   | BT_Char_S -> "char_s"
-  | BT_SChar -> "schar"
+  | BT_SChar -> "signed char"
   | BT_WChar_S -> "wchar_s"
   | BT_Short -> "short"
   | BT_Int -> "int"
   | BT_Long -> "long"
-  | BT_LongLong -> "longlong"
-  | BT_Int128 -> "int128"
+  | BT_LongLong -> "long long"
+  | BT_Int128 -> "__int128"
   | BT_Half -> "half"
   | BT_Float -> "float"
   | BT_Double -> "double"
-  | BT_LongDouble -> "longdouble"
-  | BT_NullPtr -> "nullptr"
+  | BT_LongDouble -> "long double"
+  | BT_NullPtr -> "nullptr_t"
   | BT_ObjCId -> "objcid"
   | BT_ObjCClass -> "objcclass"
   | BT_ObjCSel -> "objcsel"
@@ -107,6 +107,11 @@ let string_of_binary_op = function
   | BO_XorAssign	-> "^*"
 
 
+let pp_option f ff = function
+  | None -> Format.pp_print_string ff "None"
+  | Some x -> f ff x
+
+
 let rec pp_expr ff = function
   | Unit -> Format.pp_print_string ff "Unit"
 
@@ -140,24 +145,27 @@ let rec pp_type ff = function
   | BuiltinTypeLoc bt ->
       Format.fprintf ff "%s"
         (string_of_builtin_type bt)
-  | TypedefTypeLoc ->
-      Format.fprintf ff "tdefty"
+  | TypedefTypeLoc name ->
+      Format.fprintf ff "%s"
+        name
   | FunctionNoProtoTypeLoc ty ->
       Format.fprintf ff "%a"
         pp_type ty
-  | ConstantArrayTypeLoc ty ->
-      Format.fprintf ff "%a[]"
+  | ConstantArrayTypeLoc (ty, size) ->
+      Format.fprintf ff "%a[%d]"
         pp_type ty
+        size
 
 
 let rec pp_decl ff = function
   | TranslationUnitDecl dd ->
       Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl ff dd
-  | TypedefDecl ty ->
-      Format.fprintf ff "typedef %a;"
+  | TypedefDecl (ty, name) ->
+      Format.fprintf ff "typedef %s : %a;"
+        name
         pp_type ty
   | FunctionDecl (ty, name, body) ->
       Format.fprintf ff "%s : %a %a"
         name
         pp_type ty
-        pp_stmt body
+        (pp_option pp_stmt) body

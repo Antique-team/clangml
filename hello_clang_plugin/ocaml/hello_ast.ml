@@ -129,11 +129,11 @@ and stmt =
 
 type type_loc =
   | BuiltinTypeLoc              of builtin_type
-  | TypedefTypeLoc
+  | TypedefTypeLoc		of string
   | FunctionNoProtoTypeLoc	of type_loc
-  | ConstantArrayTypeLoc	of type_loc
+  | ConstantArrayTypeLoc	of type_loc * int
 
 type decl =
   | TranslationUnitDecl		of decl list
-  | FunctionDecl		of (* type *)type_loc * (* name *)string * (* body *)stmt
-  | TypedefDecl			of type_loc
+  | FunctionDecl		of (* type *)type_loc * (* name *)string * (* body *)stmt option
+  | TypedefDecl			of type_loc * string

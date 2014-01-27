@@ -16,6 +16,27 @@ extern "C" {
 using namespace hello_cpp;
 
 
+static unsigned int level = 0;
+struct tracer
+{
+  tracer (char const *func)
+    : func (func)
+  {
+    printf ("%*s> %s\n", level++, "", func);
+  }
+
+  ~tracer ()
+  {
+    printf ("%*s< %s\n", --level, "", func);
+  }
+
+  char const *func;
+};
+
+#define TRACE tracer trace (__func__)
+#define TODO printf ("TODO: %s\n", __func__)
+
+
 struct OCamlVisitor
   : clang::RecursiveASTVisitor<OCamlVisitor>
 {
@@ -48,6 +69,12 @@ private:
 
     template<typename T>
     operator ptr<T> () const
+    {
+      return adt_cast<T> (adt);
+    }
+
+    template<typename T>
+    operator option<T> () const
     {
       return adt_cast<T> (adt);
     }
@@ -104,7 +131,7 @@ private:
   }
 
   // Get a list of everything that was pushed since the last marker.
-  dynamic_list pop_shard ()
+  dynamic_list pop_marked ()
   {
     // Get last marker.
     size_t marker = pop_mark ();
@@ -280,6 +307,7 @@ public:
 #define RETURNSTMT(CLASS, BASE)
   bool TraverseReturnStmt (clang::ReturnStmt *stmt)
   {
+    TRACE;
     Base::TraverseReturnStmt (stmt);
 
     ptr<Expr> expr = pop ();
@@ -292,10 +320,11 @@ public:
 #define COMPOUNDSTMT(CLASS, BASE)
   bool TraverseCompoundStmt (clang::CompoundStmt *stmt)
   {
+    TRACE;
     push_mark ();
     Base::TraverseCompoundStmt (stmt);
 
-    std::vector<ptr<Stmt>> stmts = pop_shard ();
+    std::vector<ptr<Stmt>> stmts = pop_marked ();
     push (mkCompoundStmt (stmts));
 
     return true;
@@ -306,7 +335,7 @@ public:
 #define STMT(CLASS, BASE)					\
   bool Traverse##CLASS (clang::CLASS *stmt)			\
   {								\
-    puts (__func__);						\
+    TRACE;							\
     Base::Traverse##CLASS (stmt);				\
     return true;						\
   }
@@ -323,7 +352,7 @@ public:
 #define TYPE(CLASS, BASE)					\
   bool Traverse##CLASS##Type (clang::CLASS##Type *type)		\
   {								\
-    puts (__func__);						\
+    TRACE;							\
     Base::Traverse##CLASS##Type (type);				\
     return true;						\
   }
@@ -336,10 +365,11 @@ public:
    * TypeLocs
    */
 
-  bool TraverseTypeLoc (clang::TypeLoc typeLoc)
+  bool TraverseTypeLoc (clang::TypeLoc TL)
   {
+    TRACE;
     push_mark ();
-    Base::TraverseTypeLoc (typeLoc);
+    Base::TraverseTypeLoc (TL);
     size_t marker = pop_mark ();
     if (marker == 0)
       {
@@ -349,10 +379,12 @@ public:
       }
     else if (marker > 1)
       {
+        ptr<TypeLoc> mostRecent = pop ();
         printf ("WARNING: %s drops all but most recent (out of %lu) TypeLoc\n",
                 __func__, marker);
         // Keep the last one
         while (--marker) pop ();
+        push (mostRecent);
       }
     return true;
   }
@@ -371,43 +403,74 @@ public:
   }
 
 #if 1
-  bool TraverseBuiltinTypeLoc (clang::BuiltinTypeLoc typeLoc)
+  bool TraverseBuiltinTypeLoc (clang::BuiltinTypeLoc TL)
   {
-    Base::TraverseBuiltinTypeLoc (typeLoc);
+    TRACE;
+    Base::TraverseBuiltinTypeLoc (TL);
 
-    BuiltinType bt = translate_builtin_type (typeLoc.getTypePtr ()->getKind ());
+    BuiltinType bt = translate_builtin_type (TL.getTypePtr ()->getKind ());
 
     push (mkBuiltinTypeLoc (bt));
 
     return true;
   }
 
-  bool TraverseConstantArrayTypeLoc (clang::ConstantArrayTypeLoc typeLoc)
+  bool TraverseConstantArrayTypeLoc (clang::ConstantArrayTypeLoc TL)
   {
-    Base::TraverseConstantArrayTypeLoc (typeLoc);
+    TRACE;
+    Base::TraverseConstantArrayTypeLoc (TL);
 
     ptr<TypeLoc> inner = pop ();
-    push (mkConstantArrayTypeLoc (inner));
+    uint64_t size = TL.getTypePtr ()->getSize ().getZExtValue ();
+
+    push (mkConstantArrayTypeLoc (inner, size));
 
     return true;
   }
 
-  bool TraverseFunctionNoProtoTypeLoc (clang::FunctionNoProtoTypeLoc typeLoc)
+  bool TraverseFunctionNoProtoTypeLoc (clang::FunctionNoProtoTypeLoc TL)
   {
-    Base::TraverseFunctionNoProtoTypeLoc (typeLoc);
+    TRACE;
+    TraverseTypeLoc (TL.getResultLoc ());
+    ptr<TypeLoc> result = pop ();
 
-    ptr<TypeLoc> inner = pop ();
-    push (mkFunctionNoProtoTypeLoc (inner));
+    push (mkFunctionNoProtoTypeLoc (result));
 
     return true;
   }
 
-  bool TraverseTypedefTypeLoc (clang::TypedefTypeLoc typeLoc)
+  bool TraverseFunctionProtoTypeLoc (clang::FunctionProtoTypeLoc TL)
   {
-    Base::TraverseTypedefTypeLoc (typeLoc);
+    TRACE;
 
-    //ptr<Stmt> stmt = pop ();
-    push (mkTypedefTypeLoc ());
+    TraverseTypeLoc (TL.getResultLoc ());
+    ptr<TypeLoc> result = pop ();
+
+    clang::FunctionProtoType const *T = TL.getTypePtr ();
+
+    for (unsigned I = 0, E = TL.getNumArgs (); I != E; ++I)
+      {
+        puts (">>");
+        clang::ParmVarDecl *Arg = TL.getArg (I);
+        assert (Arg);
+        TraverseDecl (TL.getArg (I));
+        puts ("<<");
+      }
+
+    // TODO: exceptions
+
+    push (mkFunctionNoProtoTypeLoc (result));
+
+    return true;
+  }
+
+  bool TraverseTypedefTypeLoc (clang::TypedefTypeLoc TL)
+  {
+    TRACE;
+    Base::TraverseTypedefTypeLoc (TL);
+
+    clang::StringRef name = TL.getTypedefNameDecl ()->getName ();
+    push (mkTypedefTypeLoc (name));
 
     return true;
   }
@@ -416,11 +479,11 @@ public:
 #else
 #define ABSTRACT_TYPELOC(CLASS, BASE)
 #define TYPELOC(CLASS, BASE)					\
-  bool Traverse##CLASS##TypeLoc (clang::CLASS##TypeLoc typeLoc)	\
+  bool Traverse##CLASS##TypeLoc (clang::CLASS##TypeLoc TL)	\
   {								\
-    puts (__func__);						\
+    TRACE;							\
     push_mark ();						\
-    Base::Traverse##CLASS##TypeLoc (typeLoc);			\
+    Base::Traverse##CLASS##TypeLoc (TL);			\
     size_t marker = pop_mark ();				\
     while (marker--) pop ();					\
     push (mkBuiltinTypeLoc (BT_Void));				\
@@ -437,13 +500,32 @@ public:
    */
 
 #define FUNCTION(CLASS, BASE)
-  bool TraverseFunctionDecl (clang::FunctionDecl *decl)
+  bool TraverseFunctionDecl (clang::FunctionDecl *D)
   {
-    Base::TraverseFunctionDecl (decl);
+    TRACE;
 
-    ptr<Stmt> body = pop ();
+    // XXX: what are these? probably irrelevant in C.
+    TraverseNestedNameSpecifierLoc (D->getQualifierLoc ());
+    TraverseDeclarationNameInfo (D->getNameInfo ());
+
+    // Function type, including parameters.
+    clang::TypeSourceInfo *TSI = D->getTypeSourceInfo ();
+    assert (TSI);
+    TraverseTypeLoc (TSI->getTypeLoc ());
     ptr<TypeLoc> type = pop ();
-    clang::IdentifierInfo *info = decl->getNameInfo ().getName ().getAsIdentifierInfo ();
+
+    // Function body, or None.
+    option<Stmt> body;
+    if (D->isThisDeclarationADefinition ())
+      {
+        TraverseStmt (D->getBody ());
+        body = pop ();
+      }
+
+    // TODO: Constructor initialisers.
+
+    // Function name.
+    clang::IdentifierInfo *info = D->getNameInfo ().getName ().getAsIdentifierInfo ();
     assert (info);
     clang::StringRef name = info->getName ();
 
@@ -454,25 +536,28 @@ public:
 
 
 #define TYPEDEF(CLASS, BASE)
-  bool TraverseTypedefDecl (clang::TypedefDecl *decl)
+  bool TraverseTypedefDecl (clang::TypedefDecl *D)
   {
-    Base::TraverseTypedefDecl (decl);
+    TRACE;
+    Base::TraverseTypedefDecl (D);
 
     ptr<TypeLoc> type = pop ();
+    clang::StringRef name = D->getName ();
 
-    push (mkTypedefDecl (type));
+    push (mkTypedefDecl (type, name));
 
     return true;
   }
 
 
 #define TRANSLATIONUNIT(CLASS, BASE)
-  bool TraverseTranslationUnitDecl (clang::TranslationUnitDecl *decl)
+  bool TraverseTranslationUnitDecl (clang::TranslationUnitDecl *D)
   {
+    TRACE;
     push_mark ();
-    Base::TraverseTranslationUnitDecl (decl);
+    Base::TraverseTranslationUnitDecl (D);
 
-    std::vector<ptr<Decl>> decls = pop_shard ();
+    std::vector<ptr<Decl>> decls = pop_marked ();
     push (mkTranslationUnitDecl (decls));
 
     return true;
@@ -481,10 +566,11 @@ public:
 
 #define ABSTRACT_DECL(DECL)
 #define DECL(CLASS, BASE)					\
-  bool Traverse##CLASS##Decl (clang::CLASS##Decl *decl)		\
+  bool Traverse##CLASS##Decl (clang::CLASS##Decl *D)		\
   {								\
-    puts (__func__);						\
-    Base::Traverse##CLASS##Decl (decl);				\
+    TRACE;							\
+    TODO;							\
+    Base::Traverse##CLASS##Decl (D);				\
     return true;						\
   }
 #include <clang/AST/DeclNodes.inc>
@@ -508,6 +594,7 @@ ptr<Decl>
 adt_of_clangAST (clang::TranslationUnitDecl const *D)
 {
   OCamlVisitor visitor;
+  D->dump ();
   visitor.TraverseDecl (const_cast<clang::TranslationUnitDecl *> (D));
   return visitor.result ();
 }
