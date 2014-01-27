@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <boost/intrusive_ptr.hpp>
+#include <type_traits>
 
 extern "C" {
 #include <caml/alloc.h>
@@ -32,6 +33,19 @@ template<typename T>
 using ptr = boost::intrusive_ptr<T>;
 
 typedef ptr<OCamlADTBase> adt_ptr;
+
+
+template<typename T, bool is_adt = std::is_base_of<OCamlADTBase, T>::value>
+struct option;
+
+template<typename T>
+struct option<T, true>
+  : ptr<T>
+{
+  using ptr<T>::ptr;
+};
+
+typedef option<OCamlADTBase> adt_option;
 
 
 static inline void
@@ -74,10 +88,31 @@ value_of (std::vector<T> const &v)
 }
 
 
-static inline value
-value_of (adt_ptr ob)
+// Non-null pointer.
+template<typename T>
+typename std::enable_if<std::is_base_of<OCamlADTBase, T>::value, value>::type // TODO: enable_if_t when C++14 arrives
+value_of (ptr<T> ob)
 {
+  assert (ob);
   return ob->ToValue ();
+}
+
+// Nullable pointer.
+template<typename T>
+typename std::enable_if<std::is_base_of<OCamlADTBase, T>::value, value>::type
+value_of (option<T> ob)
+{
+  CAMLparam0 ();
+  CAMLlocal1 (option);
+
+  option = Val_int (0);
+  if (ob)
+    {
+      option = caml_alloc (1, 0);
+      Store_field (option, 0, ob->ToValue ());
+    }
+
+  CAMLreturn (option);
 }
 
 

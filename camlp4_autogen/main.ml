@@ -85,7 +85,7 @@ let is_nonnull_ptr ctx = function
       else
         true
   | _ ->
-      (* Clang types are nullable and list types are no pointers. *)
+      (* Clang and option types are nullable and list types are no pointers. *)
       false
 
 
@@ -118,6 +118,10 @@ let rec translate_type ctx = let open Parse in let open Codegen in function
       TyPointer (TyName ("clang::" ^ name))
   | ListOfType ty ->
       TyTemplate ("std::vector", translate_type ctx ty)
+  | OptionType (NamedType name) ->
+      TyTemplate ("option", TyName (cpp_name name))
+  | OptionType ty ->
+      TyTemplate ("option", translate_type ctx ty)
 
 
 (* Constructor arguments. *)

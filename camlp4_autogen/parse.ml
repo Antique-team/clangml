@@ -23,6 +23,8 @@ type basic_type =
   | ClangType of string
   (* List of basic_type *)
   | ListOfType of basic_type
+  (* Optional basic_type *)
+  | OptionType of basic_type
   (* Will want others, eventually *)
   deriving (Show)
 
@@ -64,11 +66,16 @@ let print_expanded_str_item str_item =
 
 let rec ast_type_to_type (ctyp: Ast.ctyp) =
   match ctyp with
-  | Ast.TyId (_, Ast.IdLid (_, identifier)) ->
+  | <:ctyp<$lid:identifier$>> ->
       NamedType (identifier)
-  | Ast.TyApp (_, (Ast.TyId (_, Ast.IdLid (_, "list"))), list_of_ast_type) ->
-      let list_of_type = ast_type_to_type list_of_ast_type in
+
+  | <:ctyp<list $ty$>> ->
+      let list_of_type = ast_type_to_type ty in
       ListOfType (list_of_type)
+
+  | <:ctyp<option $ty$>> ->
+      let list_of_type = ast_type_to_type ty in
+      OptionType (list_of_type)
 
   | <:ctyp<Clang.$uid:node_type$.t>> ->
       ClangType (node_type)
