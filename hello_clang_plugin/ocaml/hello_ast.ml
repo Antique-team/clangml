@@ -110,7 +110,7 @@ and stmt =
 *)
 
 type expr =
-  | Unit
+  | UnimpExpr			of string
 
   | IntegerLiteral		of int
   | CharacterLiteral		of char
@@ -119,15 +119,19 @@ type expr =
   | BinaryOperator		of binary_op * expr * expr
   | UnaryOperator		of unary_op * expr
 
+  | DeclRefExpr			of (* name *)string
+  | ImplicitCastExpr		of expr
+  | ParenExpr			of expr
+
 and stmt =
-  | Skip
-  | Print			of expr
-  | Block			of stmt list
+  | UnimpStmt			of string
 
   | CompoundStmt		of stmt list
   | ReturnStmt			of expr
+  | IfStmt			of expr * stmt * stmt option
+  | DeclStmt			of decl
 
-type type_loc =
+and type_loc =
   | BuiltinTypeLoc              of builtin_type
   | TypedefTypeLoc		of (* name *)string
   | PointerTypeLoc		of (* pointee *)type_loc
@@ -136,7 +140,10 @@ type type_loc =
   | ConstantArrayTypeLoc	of (* member-type *)type_loc * (* size *)int
 
 and decl =
+  | UnimpDecl			of string
+
   | TranslationUnitDecl		of decl list
   | FunctionDecl		of (* type *)type_loc * (* name *)string * (* body *)stmt option
   | TypedefDecl			of type_loc * string
+  | VarDecl			of type_loc * string
   | ParmVarDecl			of type_loc * string

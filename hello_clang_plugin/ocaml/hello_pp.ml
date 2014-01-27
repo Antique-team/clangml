@@ -113,7 +113,8 @@ let pp_option f ff = function
 
 
 let rec pp_expr ff = function
-  | Unit -> Format.pp_print_string ff "Unit"
+  | UnimpExpr name ->
+      Format.fprintf ff "<%s>" name
 
   | CharacterLiteral c -> Format.pp_print_string ff (Char.escaped c)
   | IntegerLiteral i -> Format.pp_print_int ff i
@@ -124,24 +125,47 @@ let rec pp_expr ff = function
         Format.fprintf ff "(%s %a)" (string_of_unary_op op) pp_expr e
       else
         Format.fprintf ff "(%a %s)" pp_expr e (string_of_unary_op op)
-  | BinaryOperator (op, e1, e2) -> Format.fprintf ff "(%a %s %a)"
-                                     pp_expr e1
-                                     (string_of_binary_op op)
-                                     pp_expr e2
+  | BinaryOperator (op, e1, e2) ->
+      Format.fprintf ff "(%a %s %a)"
+        pp_expr e1
+        (string_of_binary_op op)
+        pp_expr e2
+
+  | DeclRefExpr name ->
+      Format.pp_print_string ff name
+  | ImplicitCastExpr expr ->
+      Format.fprintf ff "%a"
+        pp_expr expr
+  | ParenExpr expr ->
+      Format.fprintf ff "(%a)"
+        pp_expr expr
 
 
 let rec pp_stmt ff = function
-  | Skip -> Format.pp_print_string ff "Skip"
-  | Print e -> Format.fprintf ff "Print %a" pp_expr e
-  | Block ss -> Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_stmt ff ss
+  | UnimpStmt name ->
+      Format.fprintf ff "<%s>" name
 
   | CompoundStmt ss ->
       Format.fprintf ff "{ %a }"
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_stmt) ss
-  | ReturnStmt e -> Format.fprintf ff "return %a;" pp_expr e
+  | ReturnStmt e ->
+      Format.fprintf ff "return %a;"
+        pp_expr e
+  | IfStmt (cond, thn, None) ->
+      Format.fprintf ff "if (%a) %a"
+        pp_expr cond
+        pp_stmt thn
+  | IfStmt (cond, thn, Some els) ->
+      Format.fprintf ff "if (%a) %a else %a"
+        pp_expr cond
+        pp_stmt thn
+        pp_stmt els
+  | DeclStmt decl ->
+      Format.fprintf ff "%a;"
+        pp_decl decl
 
 
-let rec pp_type ff = function
+and pp_type ff = function
   | BuiltinTypeLoc bt ->
       Format.fprintf ff "%s"
         (string_of_builtin_type bt)
@@ -165,6 +189,9 @@ let rec pp_type ff = function
 
 
 and pp_decl ff = function
+  | UnimpDecl name ->
+      Format.fprintf ff "<%s>" name
+
   | TranslationUnitDecl dd ->
       Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl ff dd
   | TypedefDecl (ty, name) ->
@@ -175,6 +202,7 @@ and pp_decl ff = function
       Format.fprintf ff "@[<v2>%a@]@, = %a"
         pp_named_arg (name, ty)
         (pp_option pp_stmt) body
+  | VarDecl (ty, name)
   | ParmVarDecl (ty, name) ->
       pp_named_arg ff (name, ty)
 

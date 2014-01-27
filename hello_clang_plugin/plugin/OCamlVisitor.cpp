@@ -16,6 +16,45 @@ extern "C" {
 using namespace hello_cpp;
 
 
+#include <cxxabi.h>
+
+static std::string
+demangle (std::type_info const &ti)
+{
+  size_t length;
+  int status;
+  if (char *name = __cxxabiv1::__cxa_demangle (ti.name (), NULL, &length, &status))
+    {
+      std::string result (name, length);
+      free (name);
+      return result;
+    }
+#if 0
+  switch (status)
+    {
+    case -1: return "A memory allocation failure occurred.";
+    case -2: return "Type name is not a valid name under the C++ ABI mangling rules.";
+    case -3: return "One of the arguments is invalid.";
+    }
+#endif
+  return ti.name ();
+}
+
+template<typename T>
+static std::string
+name (T const &p)
+{
+  return demangle (typeid (p));
+}
+
+template<typename T>
+static std::string
+name ()
+{
+  return demangle (typeid (T));
+}
+
+
 static unsigned int level = 0;
 struct tracer
 {
@@ -35,7 +74,6 @@ struct tracer
 
 #define TRACE tracer trace (__func__)
 #define TODO printf ("TODO: %s\n", __func__)
-
 
 struct OCamlVisitor
   : clang::RecursiveASTVisitor<OCamlVisitor>
@@ -57,7 +95,7 @@ private:
     if (!p)
       {
         printf ("Expected type %s, but actually type %s\n",
-                typeid (T).name (), typeid (*adt).name ());
+                name<T> ().c_str (), name (*adt).c_str ());
         throw std::bad_cast ();
       }
     return p;
@@ -70,12 +108,15 @@ private:
     template<typename T>
     operator ptr<T> () const
     {
+      assert (adt);
       return adt_cast<T> (adt);
     }
 
     template<typename T>
     operator option<T> () const
     {
+      if (!adt)
+        return nullptr;
       return adt_cast<T> (adt);
     }
   };
@@ -153,6 +194,31 @@ private:
     stack.erase (stack.end () - marker, stack.end ());
 
     return dynamic_list { move (list) };
+  }
+
+
+  // Return null if p is null, otherwise call fun and return
+  // its result.
+  template<typename T, typename Fun>
+  static dynamic maybe (T *p, Fun fun)
+  {
+    if (!p)
+      return dynamic { };
+    return dynamic { fun (p) };
+  }
+
+
+  /****************************************************
+   * Helpers
+   */
+
+  // works for NameDecls and DeclRefExpr
+  template<typename DeclT>
+  static clang::StringRef getName (DeclT const *D)
+  {
+    clang::IdentifierInfo *info = D->getNameInfo ().getName ().getAsIdentifierInfo ();
+    assert (info);
+    return info->getName ();
   }
 
 
@@ -309,14 +375,80 @@ public:
 
 
   /****************************************************
+   * Expressions
+   */
+
+#define DECLREFEXPR(CLASS, BASE)
+  bool TraverseDeclRefExpr (clang::DeclRefExpr *S)
+  {
+    TRACE;
+    Base::TraverseDeclRefExpr (S);
+
+    clang::StringRef name = getName (S);
+    push (mkDeclRefExpr (name));
+
+    return true;
+  }
+
+
+#define IMPLICITCASTEXPR(CLASS, BASE)
+  bool TraverseImplicitCastExpr (clang::ImplicitCastExpr *S)
+  {
+    TRACE;
+    Base::TraverseImplicitCastExpr (S);
+
+    ptr<Expr> inner = pop ();
+
+    push (mkImplicitCastExpr (inner));
+
+    return true;
+  }
+
+
+#define PARENEXPR(CLASS, BASE)
+  bool TraverseParenExpr (clang::ParenExpr *S)
+  {
+    TRACE;
+    Base::TraverseParenExpr (S);
+
+    ptr<Expr> inner = pop ();
+
+    push (mkParenExpr (inner));
+
+    return true;
+  }
+
+  /****************************************************
    * Statements
    */
 
-#define RETURNSTMT(CLASS, BASE)
-  bool TraverseReturnStmt (clang::ReturnStmt *stmt)
+#define IFSTMT(CLASS, BASE)
+  bool TraverseIfStmt (clang::IfStmt *S)
   {
     TRACE;
-    Base::TraverseReturnStmt (stmt);
+
+    TraverseStmt (S->getCond ());
+    ptr<Expr> cond = pop ();
+
+    TraverseStmt (S->getThen ());
+    ptr<Stmt> thenBranch = pop ();
+
+    option<Stmt> elseBranch =
+      maybe (S->getElse (), [this] (clang::Stmt *S) {
+               TraverseStmt (S);
+               return pop ();
+             });
+
+    push (mkIfStmt (cond, thenBranch, elseBranch));
+
+    return true;
+  }
+
+#define RETURNSTMT(CLASS, BASE)
+  bool TraverseReturnStmt (clang::ReturnStmt *S)
+  {
+    TRACE;
+    Base::TraverseReturnStmt (S);
 
     ptr<Expr> expr = pop ();
     push (mkReturnStmt (expr));
@@ -326,11 +458,11 @@ public:
 
 
 #define COMPOUNDSTMT(CLASS, BASE)
-  bool TraverseCompoundStmt (clang::CompoundStmt *stmt)
+  bool TraverseCompoundStmt (clang::CompoundStmt *S)
   {
     TRACE;
     push_mark ();
-    Base::TraverseCompoundStmt (stmt);
+    Base::TraverseCompoundStmt (S);
 
     std::vector<ptr<Stmt>> stmts = pop_marked ();
     push (mkCompoundStmt (stmts));
@@ -339,17 +471,45 @@ public:
   }
 
 
+#define DECLSTMT(CLASS, BASE)
+  bool TraverseDeclStmt (clang::DeclStmt *S)
+  {
+    TRACE;
+    Base::TraverseDeclStmt (S);
+
+    ptr<Decl> decl = pop ();
+    push (mkDeclStmt (decl));
+
+    return true;
+  }
+
+
+#define IGNORE_ADT(CLASS, VAR)					\
+    push_mark ();						\
+    Base::Traverse##CLASS (VAR);				\
+    /* Drop everything made by previous calls. */		\
+    size_t marker = pop_mark ();				\
+    while (marker--) pop ();
+
+
 #define ABSTRACT_STMT(STMT)
 #define STMT(CLASS, BASE)					\
-  bool Traverse##CLASS (clang::CLASS *stmt)			\
+  bool Traverse##CLASS (clang::CLASS *S)			\
   {								\
     TRACE;							\
-    Base::Traverse##CLASS (stmt);				\
+    IGNORE_ADT (CLASS, S);					\
+    push (mkUnimpStmt (#CLASS));				\
+    return true;						\
+  }
+#define EXPR(CLASS, BASE)					\
+  bool Traverse##CLASS (clang::CLASS *S)			\
+  {								\
+    TRACE;							\
+    IGNORE_ADT (CLASS, S);					\
+    push (mkUnimpExpr (#CLASS));				\
     return true;						\
   }
 #include <clang/AST/StmtNodes.inc>
-#undef STMT
-#undef ABSTRACT_STMT
 
 
   /****************************************************
@@ -365,8 +525,6 @@ public:
     return true;						\
   }
 #include <clang/AST/TypeNodes.def>
-#undef TYPE
-#undef ABSTRACT_TYPE
 
 
   /****************************************************
@@ -405,7 +563,6 @@ public:
       case clang::BuiltinType::Id:	\
         return BT_##Id;
 #include <clang/AST/BuiltinTypes.def>
-#undef BUILTIN_TYPE
       }
     throw std::runtime_error ("invalid builtin type");
   }
@@ -496,25 +653,18 @@ public:
     return true;
   }
 
-
 #else
 #define ABSTRACT_TYPELOC(CLASS, BASE)
 #define TYPELOC(CLASS, BASE)					\
   bool Traverse##CLASS##TypeLoc (clang::CLASS##TypeLoc TL)	\
   {								\
     TRACE;							\
-    push_mark ();						\
-    Base::Traverse##CLASS##TypeLoc (TL);			\
-    /* Drop everything made by previous calls. */		\
-    size_t marker = pop_mark ();				\
-    while (marker--) pop ();					\
+    IGNORE_ADT (CLASS##TypeLoc, TL);				\
     /* Default to void type. */					\
     push (mkBuiltinTypeLoc (BT_Void));				\
     return true;						\
   }
 #include <clang/AST/TypeLocNodes.def>
-#undef TYPELOC
-#undef ABSTRACT_TYPELOC
 #endif
 
 
@@ -548,9 +698,7 @@ public:
     // TODO: Constructor initialisers.
 
     // Function name.
-    clang::IdentifierInfo *info = D->getNameInfo ().getName ().getAsIdentifierInfo ();
-    assert (info);
-    clang::StringRef name = info->getName ();
+    clang::StringRef name = getName (D);
 
     push (mkFunctionDecl (type, name, body));
 
@@ -593,6 +741,26 @@ public:
   }
 
 
+#define VAR(CLASS, BASE)
+  bool TraverseVarDecl (clang::VarDecl *D)
+  {
+    TRACE;
+
+    TraverseNestedNameSpecifierLoc (D->getQualifierLoc ());
+
+    clang::TypeSourceInfo *TSI = D->getTypeSourceInfo ();
+    assert (TSI);
+    TraverseTypeLoc (TSI->getTypeLoc ());
+    ptr<TypeLoc> type = pop ();
+
+    clang::StringRef name = D->getName ();
+
+    push (mkVarDecl (type, name));
+
+    return true;
+  }
+
+
 #define TRANSLATIONUNIT(CLASS, BASE)
   bool TraverseTranslationUnitDecl (clang::TranslationUnitDecl *D)
   {
@@ -612,13 +780,12 @@ public:
   bool Traverse##CLASS##Decl (clang::CLASS##Decl *D)		\
   {								\
     TRACE;							\
-    TODO;							\
     Base::Traverse##CLASS##Decl (D);				\
+    IGNORE_ADT (CLASS##Decl, D);				\
+    push (mkUnimpDecl (#CLASS));				\
     return true;						\
   }
 #include <clang/AST/DeclNodes.inc>
-#undef DECL
-#undef ABSTRACT_DECL
 
 
   /****************************************************
