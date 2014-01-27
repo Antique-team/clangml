@@ -89,8 +89,9 @@ private:
     {
       std::vector<ptr<T>> list;
       list.reserve (adt_list.size ());
-      std::transform (adt_list.begin (), adt_list.end (), std::back_inserter (list),
-                      [] (adt_ptr adt) { return adt_cast<T> (adt); });
+      std::transform (adt_list.begin (), adt_list.end (),
+                      std::back_inserter (list),
+                      adt_cast<T>);
       return list;
     }
   };
@@ -106,11 +107,18 @@ private:
     return dynamic { p };
   }
 
-  template<typename Derived>
-  void push (ptr<Derived> p)
+  template<template<typename> class Ptr, typename Derived>
+  void push (Ptr<Derived> p)
   {
+    // Requiring this specific template already makes pushing option
+    // impossible, because it's option<typename, bool>, but just in case
+    // that changes in the future, we explicitly check for it here.
+    static_assert (!std::is_base_of<option<Derived>, Ptr<Derived>>::value,
+                   "cannot push option types");
+    // The push_back below would fail if this is not the case, but this
+    // gives a more descriptive error message.
     static_assert (std::is_base_of<OCamlADTBase, Derived>::value,
-                   "can only push OCamlADTBase derived instances");
+                   "can only push OCaml bridge types");
     stack.push_back (p);
   }
 
