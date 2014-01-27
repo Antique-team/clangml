@@ -489,26 +489,22 @@ public:
     Base::Traverse##CLASS (VAR);				\
     /* Drop everything made by previous calls. */		\
     size_t marker = pop_mark ();				\
-    while (marker--) pop ();
+    while (marker--) pop ()
+
+
+#define UNIMP(TYPE, CLASS)					\
+  bool Traverse##CLASS (clang::CLASS *N)			\
+  {								\
+    TRACE;							\
+    IGNORE_ADT (CLASS, N);					\
+    push (mkUnimp##TYPE (#CLASS));				\
+    return true;						\
+  }
 
 
 #define ABSTRACT_STMT(STMT)
-#define STMT(CLASS, BASE)					\
-  bool Traverse##CLASS (clang::CLASS *S)			\
-  {								\
-    TRACE;							\
-    IGNORE_ADT (CLASS, S);					\
-    push (mkUnimpStmt (#CLASS));				\
-    return true;						\
-  }
-#define EXPR(CLASS, BASE)					\
-  bool Traverse##CLASS (clang::CLASS *S)			\
-  {								\
-    TRACE;							\
-    IGNORE_ADT (CLASS, S);					\
-    push (mkUnimpExpr (#CLASS));				\
-    return true;						\
-  }
+#define STMT(CLASS, BASE)	UNIMP (Stmt, CLASS)
+#define EXPR(CLASS, BASE)	UNIMP (Expr, CLASS)
 #include <clang/AST/StmtNodes.inc>
 
 
@@ -776,15 +772,7 @@ public:
 
 
 #define ABSTRACT_DECL(DECL)
-#define DECL(CLASS, BASE)					\
-  bool Traverse##CLASS##Decl (clang::CLASS##Decl *D)		\
-  {								\
-    TRACE;							\
-    Base::Traverse##CLASS##Decl (D);				\
-    IGNORE_ADT (CLASS##Decl, D);				\
-    push (mkUnimpDecl (#CLASS));				\
-    return true;						\
-  }
+#define DECL(CLASS, BASE)	UNIMP (Decl, CLASS##Decl)
 #include <clang/AST/DeclNodes.inc>
 
 
