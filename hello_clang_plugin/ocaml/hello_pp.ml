@@ -148,8 +148,15 @@ let rec pp_type ff = function
   | TypedefTypeLoc name ->
       Format.fprintf ff "%s"
         name
+  | PointerTypeLoc ty ->
+      Format.fprintf ff "%a ptr"
+        pp_type ty
   | FunctionNoProtoTypeLoc ty ->
-      Format.fprintf ff "%a"
+      Format.fprintf ff "? -> %a"
+        pp_type ty
+  | FunctionProtoTypeLoc (ty, args) ->
+      Format.fprintf ff "(%a) -> %a"
+        (Formatx.pp_list pp_decl) args
         pp_type ty
   | ConstantArrayTypeLoc (ty, size) ->
       Format.fprintf ff "%a[%d]"
@@ -157,7 +164,7 @@ let rec pp_type ff = function
         size
 
 
-let rec pp_decl ff = function
+and pp_decl ff = function
   | TranslationUnitDecl dd ->
       Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl ff dd
   | TypedefDecl (ty, name) ->
@@ -165,7 +172,17 @@ let rec pp_decl ff = function
         name
         pp_type ty
   | FunctionDecl (ty, name, body) ->
-      Format.fprintf ff "%s : %a %a"
+      Format.fprintf ff "@[<v2>%a@]@, = %a"
+        pp_named_arg (name, ty)
+        (pp_option pp_stmt) body
+  | ParmVarDecl (ty, name) ->
+      pp_named_arg ff (name, ty)
+
+
+and pp_named_arg ff = function
+  | ("", ty) ->
+      pp_type ff ty
+  | (name, ty) ->
+      Format.fprintf ff "%s : %a"
         name
         pp_type ty
-        (pp_option pp_stmt) body

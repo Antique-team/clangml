@@ -428,6 +428,17 @@ public:
     return true;
   }
 
+  bool TraversePointerTypeLoc (clang::PointerTypeLoc TL)
+  {
+    TRACE;
+    Base::TraversePointerTypeLoc (TL);
+
+    ptr<TypeLoc> inner = pop ();
+    push (mkPointerTypeLoc (inner));
+
+    return true;
+  }
+
   bool TraverseFunctionNoProtoTypeLoc (clang::FunctionNoProtoTypeLoc TL)
   {
     TRACE;
@@ -448,18 +459,20 @@ public:
 
     clang::FunctionProtoType const *T = TL.getTypePtr ();
 
+    push_mark ();
+
     for (unsigned I = 0, E = TL.getNumArgs (); I != E; ++I)
       {
-        puts (">>");
         clang::ParmVarDecl *Arg = TL.getArg (I);
         assert (Arg);
-        TraverseDecl (TL.getArg (I));
-        puts ("<<");
+        TraverseDecl (Arg);
       }
+
+    std::vector<ptr<Decl>> args = pop_marked ();
 
     // TODO: exceptions
 
-    push (mkFunctionNoProtoTypeLoc (result));
+    push (mkFunctionProtoTypeLoc (result, args));
 
     return true;
   }
@@ -484,8 +497,10 @@ public:
     TRACE;							\
     push_mark ();						\
     Base::Traverse##CLASS##TypeLoc (TL);			\
+    /* Drop everything made by previous calls. */		\
     size_t marker = pop_mark ();				\
     while (marker--) pop ();					\
+    /* Default to void type. */					\
     push (mkBuiltinTypeLoc (BT_Void));				\
     return true;						\
   }
@@ -504,7 +519,7 @@ public:
   {
     TRACE;
 
-    // XXX: what are these? probably irrelevant in C.
+    // TODO: what are these? probably irrelevant in C.
     TraverseNestedNameSpecifierLoc (D->getQualifierLoc ());
     TraverseDeclarationNameInfo (D->getNameInfo ());
 
@@ -545,6 +560,26 @@ public:
     clang::StringRef name = D->getName ();
 
     push (mkTypedefDecl (type, name));
+
+    return true;
+  }
+
+
+#define PARMVAR(CLASS, BASE)
+  bool TraverseParmVarDecl (clang::ParmVarDecl *D)
+  {
+    TRACE;
+
+    TraverseNestedNameSpecifierLoc (D->getQualifierLoc ());
+
+    clang::TypeSourceInfo *TSI = D->getTypeSourceInfo ();
+    assert (TSI);
+    TraverseTypeLoc (TSI->getTypeLoc ());
+    ptr<TypeLoc> type = pop ();
+
+    clang::StringRef name = D->getName ();
+
+    push (mkParmVarDecl (type, name));
 
     return true;
   }
