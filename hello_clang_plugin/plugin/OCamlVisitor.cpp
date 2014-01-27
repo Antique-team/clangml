@@ -627,7 +627,7 @@ public:
 
   ptr<Decl> result ()
   {
-    //assert (stack.size () == 1);
+    assert (stack.size () == 1);
     return pop ();
   }
 };
