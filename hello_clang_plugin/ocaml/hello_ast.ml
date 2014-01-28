@@ -126,9 +126,16 @@ type expr =
 and stmt =
   | UnimpStmt			of string
 
+  | NullStmt
+  | BreakStmt
+  | ContinueStmt
+  | ExprStmt			of expr
   | CompoundStmt		of stmt list
-  | ReturnStmt			of expr
+  | ReturnStmt			of expr option
+  | CaseStmt			of expr * expr option * stmt
   | IfStmt			of expr * stmt * stmt option
+  | ForStmt			of stmt option * expr option * expr option * stmt
+  | SwitchStmt			of expr * stmt
   | DeclStmt			of decl
 
 and type_loc =

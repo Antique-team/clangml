@@ -108,7 +108,7 @@ let string_of_binary_op = function
 
 
 let pp_option f ff = function
-  | None -> Format.pp_print_string ff "None"
+  | None -> Format.pp_print_string ff "<null>"
   | Some x -> f ff x
 
 
@@ -145,12 +145,38 @@ let rec pp_stmt ff = function
   | UnimpStmt name ->
       Format.fprintf ff "<%s>" name
 
+  | NullStmt ->
+      Format.pp_print_string ff ";"
+  | BreakStmt ->
+      Format.pp_print_string ff "break;"
+  | ContinueStmt ->
+      Format.pp_print_string ff "continue;"
+  | ExprStmt e ->
+      Format.fprintf ff "%a;"
+        pp_expr e
   | CompoundStmt ss ->
       Format.fprintf ff "{ %a }"
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_stmt) ss
-  | ReturnStmt e ->
+  | ReturnStmt None ->
+      Format.fprintf ff "return;"
+  | ReturnStmt (Some e) ->
       Format.fprintf ff "return %a;"
         pp_expr e
+  | CaseStmt (lhs, rhs, sub) ->
+      Format.fprintf ff "case %a ... %a: %a"
+        pp_expr lhs
+        (pp_option pp_expr) rhs
+        pp_stmt sub
+  | ForStmt (init, cond, inc, body) ->
+      Format.fprintf ff "for (%a%a;%a) %a"
+        (pp_option pp_stmt) init
+        (pp_option pp_expr) cond
+        (pp_option pp_expr) inc
+        pp_stmt body
+  | SwitchStmt (cond, body) ->
+      Format.fprintf ff "switch (%a) %a"
+        pp_expr cond
+        pp_stmt body
   | IfStmt (cond, thn, None) ->
       Format.fprintf ff "if (%a) %a"
         pp_expr cond

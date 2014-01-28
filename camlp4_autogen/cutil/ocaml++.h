@@ -9,6 +9,8 @@
 
 extern "C" {
 #include <caml/alloc.h>
+#include <caml/callback.h>
+#include <caml/fail.h>
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
 }
@@ -40,9 +42,11 @@ struct option;
 
 template<typename T>
 struct option<T, true>
-  : ptr<T>
+  : private ptr<T> // don't allow conversion from option to ptr
 {
   using ptr<T>::ptr;
+  using ptr<T>::operator bool;
+  using ptr<T>::operator ->;
 };
 
 typedef option<OCamlADTBase> adt_option;
