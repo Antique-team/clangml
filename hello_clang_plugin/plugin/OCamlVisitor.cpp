@@ -11,10 +11,6 @@ struct OCamlVisitor
 private:
   typedef clang::RecursiveASTVisitor<OCamlVisitor> Base;
 
-  /****************************************************
-   * Stack management
-   */
-
   dynamic_stack stack;
 
 

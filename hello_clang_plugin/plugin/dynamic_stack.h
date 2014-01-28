@@ -78,6 +78,10 @@ namespace dynamic_stack_detail
 }
 
 
+/****************************************************
+ * Stack management
+ */
+
 class dynamic_stack
 {
   std::vector<adt_ptr> stack;
