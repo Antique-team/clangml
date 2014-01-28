@@ -76,6 +76,13 @@ private:
     return info->getName ();
   }
 
+  ptr<TypeLoc> getTypeLoc (clang::DeclaratorDecl const *D)
+  {
+    clang::TypeSourceInfo *TSI = D->getTypeSourceInfo ();
+    assert (TSI);
+    return must_traverse (TSI->getTypeLoc ());
+  }
+
 
 public:
   /****************************************************
@@ -582,10 +589,7 @@ public:
     TraverseDeclarationNameInfo (D->getNameInfo ());
 
     // Function type, including parameters.
-    clang::TypeSourceInfo *TSI = D->getTypeSourceInfo ();
-    assert (TSI);
-    TraverseTypeLoc (TSI->getTypeLoc ());
-    ptr<TypeLoc> type = stack.pop ();
+    ptr<TypeLoc> type = getTypeLoc (D);
 
     // Function body, or None.
     option<Stmt> body;
@@ -625,10 +629,7 @@ public:
 
     TraverseNestedNameSpecifierLoc (D->getQualifierLoc ());
 
-    clang::TypeSourceInfo *TSI = D->getTypeSourceInfo ();
-    assert (TSI);
-    TraverseTypeLoc (TSI->getTypeLoc ());
-    ptr<TypeLoc> type = stack.pop ();
+    ptr<TypeLoc> type = getTypeLoc (D);
 
     clang::StringRef name = D->getName ();
 
@@ -645,10 +646,7 @@ public:
 
     TraverseNestedNameSpecifierLoc (D->getQualifierLoc ());
 
-    clang::TypeSourceInfo *TSI = D->getTypeSourceInfo ();
-    assert (TSI);
-    TraverseTypeLoc (TSI->getTypeLoc ());
-    ptr<TypeLoc> type = stack.pop ();
+    ptr<TypeLoc> type = getTypeLoc (D);
 
     clang::StringRef name = D->getName ();
 
