@@ -162,10 +162,14 @@ let rec pp_stmt ff = function
   | ReturnStmt (Some e) ->
       Format.fprintf ff "return %a;"
         pp_expr e
-  | CaseStmt (lhs, rhs, sub) ->
+  | CaseStmt (lhs, None, sub) ->
+      Format.fprintf ff "case %a: %a"
+        pp_expr lhs
+        pp_stmt sub
+  | CaseStmt (lhs, Some rhs, sub) ->
       Format.fprintf ff "case %a ... %a: %a"
         pp_expr lhs
-        (pp_option pp_expr) rhs
+        pp_expr rhs
         pp_stmt sub
   | ForStmt (init, cond, inc, body) ->
       Format.fprintf ff "for (%a%a;%a) %a"
@@ -212,6 +216,9 @@ and pp_type ff = function
       Format.fprintf ff "%a[%d]"
         pp_type ty
         size
+  | IncompleteArrayTypeLoc (ty) ->
+      Format.fprintf ff "%a[]"
+        pp_type ty
 
 
 and pp_decl ff = function

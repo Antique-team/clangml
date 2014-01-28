@@ -7,6 +7,28 @@
 using namespace hello_cpp;
 
 
+template<typename DeclT>
+auto
+decl_range (DeclT const *D)
+    -> decltype (boost::make_iterator_range (D->decls_begin (),
+                                             D->decls_end ()))
+{
+  return boost::make_iterator_range (D->decls_begin (),
+                                     D->decls_end ());
+}
+
+
+template<typename DeclT>
+auto
+decl_range (DeclT const *D)
+    -> decltype (boost::make_iterator_range (D->decl_begin (),
+                                             D->decl_end ()))
+{
+  return boost::make_iterator_range (D->decl_begin (),
+                                     D->decl_end ());
+}
+
+
 struct OCamlVisitor
   : clang::RecursiveASTVisitor<OCamlVisitor>
 {
@@ -17,9 +39,14 @@ private:
 
 
   // Traverse a clang object, but keep it on the stack.
+  // Requires that p is not null.
   template<typename T, bool (OCamlVisitor::*Fun) (T p)>
   void traverse (T p)
   {
+    // Require clang pointer to be non-null.
+    // In case of TypeLoc, require the contained Type pointer
+    // to be non-null.
+    assert (p);
     // Require stack to increase by exactly 1 (one value was pushed).
     size_t size_before = stack.size ();
     (this->*Fun) (p);
@@ -46,10 +73,6 @@ private:
   template<typename T>
   dynamic_stack::element must_traverse (T p)
   {
-    // Require clang pointer to be non-null.
-    // In case of TypeLoc, require the contained Type pointer
-    // to be non-null.
-    assert (p);
     // Traverse, which does not pop.
     traverse (p);
     // Now, get the bridge pointer.
@@ -378,11 +401,8 @@ public:
 
     stack.push_mark ();
     for (clang::Stmt *sub : S->children ())
-      {
-        assert (sub);
-        // Traverse, but do not pop yet.
-        traverse (sub);
-      }
+      // Traverse, but do not pop yet.
+      traverse (sub);
     list<Stmt> stmts = stack.pop_marked ();
 
     stack.push (mkCompoundStmt (stmts));
@@ -397,11 +417,8 @@ public:
     TRACE;
 
     stack.push_mark ();
-    for (clang::Stmt *child : S->children ())
-      {
-        assert (child);
-        traverse (child);
-      }
+    for (clang::Decl *decl : decl_range (S))
+      traverse (decl);
     list<Decl> decls = stack.pop_marked ();
 
     stack.push (mkDeclStmt (decls));
@@ -515,6 +532,17 @@ public:
     return true;
   }
 
+  bool TraverseIncompleteArrayTypeLoc (clang::IncompleteArrayTypeLoc TL)
+  {
+    TRACE;
+
+    ptr<TypeLoc> inner = must_traverse (TL.getElementLoc ());
+
+    stack.push (mkIncompleteArrayTypeLoc (inner));
+
+    return true;
+  }
+
   bool TraversePointerTypeLoc (clang::PointerTypeLoc TL)
   {
     TRACE;
@@ -547,10 +575,7 @@ public:
     stack.push_mark ();
 
     for (clang::ParmVarDecl *param : TL.getParams ())
-      {
-        assert (param);
-        traverse (param);
-      }
+      traverse (param);
 
     list<Decl> args = stack.pop_marked ();
 
@@ -672,8 +697,7 @@ public:
     TRACE;
 
     stack.push_mark ();
-    for (clang::Decl *decl : boost::make_iterator_range (D->decls_begin (),
-                                                         D->decls_end ()))
+    for (clang::Decl *decl : decl_range (D))
       traverse (decl);
     list<Decl> decls = stack.pop_marked ();
 

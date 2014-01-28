@@ -145,6 +145,7 @@ and type_loc =
   | FunctionNoProtoTypeLoc	of (* result *)type_loc
   | FunctionProtoTypeLoc	of (* result *)type_loc * decl list
   | ConstantArrayTypeLoc	of (* member-type *)type_loc * (* size *)int
+  | IncompleteArrayTypeLoc	of (* member-type *)type_loc
 
 and decl =
   | UnimpDecl			of string
