@@ -31,15 +31,25 @@ struct OCamlADTBase
 };
 
 
+// OCaml bridge object.
 template<typename T>
 using ptr = boost::intrusive_ptr<T>;
 
 typedef ptr<OCamlADTBase> adt_ptr;
 
 
+// List of OCaml bridge objects.
+template<typename T>
+using list = std::vector<ptr<T>>;
+
+typedef list<OCamlADTBase> adt_list;
+
+
+// OCaml option type.
 template<typename T, bool is_adt = std::is_base_of<OCamlADTBase, T>::value>
 struct option;
 
+// Specialisation for OCaml bridge object options.
 template<typename T>
 struct option<T, true>
   : private ptr<T> // don't allow conversion from option to ptr

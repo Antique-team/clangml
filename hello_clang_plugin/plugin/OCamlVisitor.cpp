@@ -2,6 +2,8 @@
 #include "dynamic_stack.h"
 #include "trace.h"
 
+#include <boost/range/iterator_range.hpp>
+
 using namespace hello_cpp;
 
 
@@ -28,6 +30,9 @@ private:
 
 
   // Overloads to call appropriate traversal functions.
+  void traverse (clang::Decl *D)
+  { traverse<clang::Decl *, &OCamlVisitor::TraverseDecl> (D); }
+
   void traverse (clang::Stmt *S)
   { traverse<clang::Stmt *, &OCamlVisitor::TraverseStmt> (S); }
 
@@ -36,6 +41,8 @@ private:
 
 
   // May take a pointer or an object.
+  // This function and maybe_traverse both pop and return the
+  // translation result (OCaml bridge object).
   template<typename T>
   dynamic_stack::element must_traverse (T p)
   {
@@ -67,7 +74,8 @@ private:
    * Helpers
    */
 
-  // works for NameDecls and DeclRefExpr
+  // Works for FunctionDecl and DeclRefExpr, who don't share an
+  // interface containing getNameInfo (hence the template).
   template<typename DeclT>
   static clang::StringRef getName (DeclT const *D)
   {
@@ -253,11 +261,9 @@ public:
    * Statements
    */
 
-  // Simple forward so passing it as template argument in `maybe' works.
-  bool TraverseStmt (clang::Stmt *S)
-  {
-    return Base::TraverseStmt (S);
-  }
+  // Simple forwards so passing it as template argument in `maybe' works.
+  bool TraverseDecl (clang::Decl *D) { return Base::TraverseDecl (D); }
+  bool TraverseStmt (clang::Stmt *S) { return Base::TraverseStmt (S); }
 
 #define NULLSTMT(CLASS, BASE)
   bool TraverseNullStmt (clang::NullStmt *S)
@@ -372,9 +378,12 @@ public:
 
     stack.push_mark ();
     for (clang::Stmt *sub : S->children ())
-      // Traverse, but do not pop yet.
-      traverse (sub);
-    std::vector<ptr<Stmt>> stmts = stack.pop_marked ();
+      {
+        assert (sub);
+        // Traverse, but do not pop yet.
+        traverse (sub);
+      }
+    list<Stmt> stmts = stack.pop_marked ();
 
     stack.push (mkCompoundStmt (stmts));
 
@@ -386,10 +395,16 @@ public:
   bool TraverseDeclStmt (clang::DeclStmt *S)
   {
     TRACE;
-    Base::TraverseDeclStmt (S);
 
-    ptr<Decl> decl = stack.pop ();
-    stack.push (mkDeclStmt (decl));
+    stack.push_mark ();
+    for (clang::Stmt *child : S->children ())
+      {
+        assert (child);
+        traverse (child);
+      }
+    list<Decl> decls = stack.pop_marked ();
+
+    stack.push (mkDeclStmt (decls));
 
     return true;
   }
@@ -441,9 +456,11 @@ public:
   bool TraverseTypeLoc (clang::TypeLoc TL)
   {
     TRACE;
+
     stack.push_mark ();
     Base::TraverseTypeLoc (TL);
     size_t marker = stack.pop_mark ();
+
     if (marker == 0)
       {
         printf ("WARNING: %s creates dummy TypeLoc, as derived function did not produce any\n",
@@ -478,7 +495,6 @@ public:
   bool TraverseBuiltinTypeLoc (clang::BuiltinTypeLoc TL)
   {
     TRACE;
-    Base::TraverseBuiltinTypeLoc (TL);
 
     BuiltinType bt = translate_builtin_type (TL.getTypePtr ()->getKind ());
 
@@ -490,9 +506,8 @@ public:
   bool TraverseConstantArrayTypeLoc (clang::ConstantArrayTypeLoc TL)
   {
     TRACE;
-    Base::TraverseConstantArrayTypeLoc (TL);
 
-    ptr<TypeLoc> inner = stack.pop ();
+    ptr<TypeLoc> inner = must_traverse (TL.getElementLoc ());
     uint64_t size = TL.getTypePtr ()->getSize ().getZExtValue ();
 
     stack.push (mkConstantArrayTypeLoc (inner, size));
@@ -503,9 +518,8 @@ public:
   bool TraversePointerTypeLoc (clang::PointerTypeLoc TL)
   {
     TRACE;
-    Base::TraversePointerTypeLoc (TL);
 
-    ptr<TypeLoc> inner = stack.pop ();
+    ptr<TypeLoc> inner = must_traverse (TL.getPointeeLoc ());
     stack.push (mkPointerTypeLoc (inner));
 
     return true;
@@ -514,8 +528,8 @@ public:
   bool TraverseFunctionNoProtoTypeLoc (clang::FunctionNoProtoTypeLoc TL)
   {
     TRACE;
-    TraverseTypeLoc (TL.getResultLoc ());
-    ptr<TypeLoc> result = stack.pop ();
+
+    ptr<TypeLoc> result = must_traverse (TL.getResultLoc ());
 
     stack.push (mkFunctionNoProtoTypeLoc (result));
 
@@ -526,21 +540,19 @@ public:
   {
     TRACE;
 
-    TraverseTypeLoc (TL.getResultLoc ());
-    ptr<TypeLoc> result = stack.pop ();
+    ptr<TypeLoc> result = must_traverse (TL.getResultLoc ());
 
     clang::FunctionProtoType const *T = TL.getTypePtr ();
 
     stack.push_mark ();
 
-    for (unsigned I = 0, E = TL.getNumArgs (); I != E; ++I)
+    for (clang::ParmVarDecl *param : TL.getParams ())
       {
-        clang::ParmVarDecl *Arg = TL.getArg (I);
-        assert (Arg);
-        TraverseDecl (Arg);
+        assert (param);
+        traverse (param);
       }
 
-    std::vector<ptr<Decl>> args = stack.pop_marked ();
+    list<Decl> args = stack.pop_marked ();
 
     // TODO: exceptions
 
@@ -552,7 +564,6 @@ public:
   bool TraverseTypedefTypeLoc (clang::TypedefTypeLoc TL)
   {
     TRACE;
-    Base::TraverseTypedefTypeLoc (TL);
 
     clang::StringRef name = TL.getTypedefNameDecl ()->getName ();
     stack.push (mkTypedefTypeLoc (name));
@@ -611,9 +622,8 @@ public:
   bool TraverseTypedefDecl (clang::TypedefDecl *D)
   {
     TRACE;
-    Base::TraverseTypedefDecl (D);
 
-    ptr<TypeLoc> type = stack.pop ();
+    ptr<TypeLoc> type = must_traverse (D->getTypeSourceInfo ()->getTypeLoc ());
     clang::StringRef name = D->getName ();
 
     stack.push (mkTypedefDecl (type, name));
@@ -660,10 +670,13 @@ public:
   bool TraverseTranslationUnitDecl (clang::TranslationUnitDecl *D)
   {
     TRACE;
-    stack.push_mark ();
-    Base::TraverseTranslationUnitDecl (D);
 
-    std::vector<ptr<Decl>> decls = stack.pop_marked ();
+    stack.push_mark ();
+    for (clang::Decl *decl : boost::make_iterator_range (D->decls_begin (),
+                                                         D->decls_end ()))
+      traverse (decl);
+    list<Decl> decls = stack.pop_marked ();
+
     stack.push (mkTranslationUnitDecl (decls));
 
     return true;

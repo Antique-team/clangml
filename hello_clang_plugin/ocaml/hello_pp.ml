@@ -186,9 +186,9 @@ let rec pp_stmt ff = function
         pp_expr cond
         pp_stmt thn
         pp_stmt els
-  | DeclStmt decl ->
+  | DeclStmt decls ->
       Format.fprintf ff "%a;"
-        pp_decl decl
+        (Formatx.pp_list pp_decl) decls
 
 
 and pp_type ff = function

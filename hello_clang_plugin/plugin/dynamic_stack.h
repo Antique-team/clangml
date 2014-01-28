@@ -84,7 +84,7 @@ namespace dynamic_stack_detail
 
 class dynamic_stack
 {
-  std::vector<adt_ptr> stack;
+  adt_list stack;
   std::vector<size_t> markers;
 
 public:
@@ -112,17 +112,17 @@ public:
 
   struct range
   {
-    std::vector<adt_ptr> adt_list;
+    adt_list data;
 
     template<typename T>
-    operator std::vector<ptr<T>> () const
+    operator list<T> () const
     {
-      std::vector<ptr<T>> list;
-      list.reserve (adt_list.size ());
-      std::transform (adt_list.begin (), adt_list.end (),
-                      std::back_inserter (list),
+      list<T> l;
+      l.reserve (data.size ());
+      std::transform (data.begin (), data.end (),
+                      std::back_inserter (l),
                       dynamic_stack_detail::adt_cast<T>);
-      return list;
+      return l;
     }
   };
 
@@ -176,14 +176,14 @@ public:
     size_t marker = pop_mark ();
 
     // Copy the last size-marker elements to the list.
-    std::vector<adt_ptr> list;
-    list.reserve (marker);
-    list.insert (list.begin (), stack.end () - marker, stack.end ());
+    adt_list l;
+    l.reserve (marker);
+    l.insert (l.begin (), stack.end () - marker, stack.end ());
 
     // Pop them off the stack.
     stack.erase (stack.end () - marker, stack.end ());
 
-    return range { move (list) };
+    return range { move (l) };
   }
 
   size_t size () const

@@ -136,7 +136,7 @@ and stmt =
   | IfStmt			of expr * stmt * stmt option
   | ForStmt			of stmt option * expr option * expr option * stmt
   | SwitchStmt			of expr * stmt
-  | DeclStmt			of decl
+  | DeclStmt			of decl list
 
 and type_loc =
   | BuiltinTypeLoc              of builtin_type
