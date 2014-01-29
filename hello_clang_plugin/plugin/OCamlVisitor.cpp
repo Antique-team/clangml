@@ -7,10 +7,15 @@
 using namespace hello_cpp;
 
 
+/********************************************************
+ * <HACKS FOR CLANG INELEGANCES>
+ * TODO: Remove when clang interfaces improve.
+ ********************************************************/
+
 template<typename DeclT>
 auto
 decl_range (DeclT const *D)
-    -> decltype (boost::make_iterator_range (D->decls_begin (),
+    -> decltype (boost::make_iterator_range (D->decls_begin (), // sometimes it's called decls
                                              D->decls_end ()))
 {
   return boost::make_iterator_range (D->decls_begin (),
@@ -21,12 +26,25 @@ decl_range (DeclT const *D)
 template<typename DeclT>
 auto
 decl_range (DeclT const *D)
-    -> decltype (boost::make_iterator_range (D->decl_begin (),
+    -> decltype (boost::make_iterator_range (D->decl_begin (), // and sometimes it's decl
                                              D->decl_end ()))
 {
   return boost::make_iterator_range (D->decl_begin (),
                                      D->decl_end ());
 }
+
+
+static const auto
+arg_range = [] (clang::CallExpr *S)
+{
+  return boost::make_iterator_range (S->getArgs (), // ExprIterator is completely useless
+                                     S->getArgs () + S->getNumArgs ());
+};
+
+/********************************************************
+ * </HACKS FOR CLANG INELEGANCES>
+ ********************************************************/
+
 
 
 struct OCamlVisitor
@@ -93,6 +111,17 @@ private:
   }
 
 
+  template<typename Range>
+  dynamic_stack::range traverse_list (Range const &range)
+  {
+    stack.push_mark ();
+    for (auto child : range)
+      traverse (child);
+    return stack.pop_marked ();
+  }
+
+
+
   /****************************************************
    * Helpers
    */
@@ -116,6 +145,13 @@ private:
 
 
 public:
+  /****************************************************
+   * Visitor settings
+   */
+
+  bool shouldVisitImplicitCode () const { return true; }
+
+
   /****************************************************
    * Unary/binary operators
    */
@@ -260,9 +296,9 @@ public:
   {
     TRACE;
 
-    ptr<Expr> inner = must_traverse (S->getSubExpr ());
+    ptr<Expr> sub = must_traverse (S->getSubExpr ());
 
-    stack.push (mkImplicitCastExpr (inner));
+    stack.push (mkImplicitCastExpr (sub));
 
     return true;
   }
@@ -273,9 +309,37 @@ public:
   {
     TRACE;
 
-    ptr<Expr> inner = must_traverse (S->getSubExpr ());
+    ptr<Expr> sub = must_traverse (S->getSubExpr ());
 
-    stack.push (mkParenExpr (inner));
+    stack.push (mkParenExpr (sub));
+
+    return true;
+  }
+
+
+#define CALLEXPR(CLASS, BASE)
+  bool TraverseCallExpr (clang::CallExpr *S)
+  {
+    TRACE;
+
+    ptr<Expr> callee = must_traverse (S->getCallee ());
+    list<Expr> args = traverse_list (arg_range (S));
+
+    stack.push (mkCallExpr (callee, args));
+
+    return true;
+  }
+
+
+#define MEMBEREXPR(CLASS, BASE)
+  bool TraverseMemberExpr (clang::MemberExpr *S)
+  {
+    TRACE;
+
+    ptr<Expr> base = must_traverse (S->getBase ());
+    clang::StringRef member = S->getMemberDecl ()->getName ();
+
+    stack.push (mkMemberExpr (base, member));
 
     return true;
   }
@@ -284,7 +348,7 @@ public:
    * Statements
    */
 
-  // Simple forwards so passing it as template argument in `maybe' works.
+  // Simple forwards so passing it as template argument in `traverse' works.
   bool TraverseDecl (clang::Decl *D) { return Base::TraverseDecl (D); }
   bool TraverseStmt (clang::Stmt *S) { return Base::TraverseStmt (S); }
 
@@ -416,10 +480,7 @@ public:
   {
     TRACE;
 
-    stack.push_mark ();
-    for (clang::Decl *decl : decl_range (S))
-      traverse (decl);
-    list<Decl> decls = stack.pop_marked ();
+    list<Decl> decls = traverse_list (decl_range (S));
 
     stack.push (mkDeclStmt (decls));
 
@@ -439,6 +500,7 @@ public:
   bool Traverse##CLASS (clang::CLASS *N)			\
   {								\
     TRACE;							\
+    TODO;							\
     IGNORE_ADT (CLASS, N);					\
     stack.push (mkUnimp##TYPE (#CLASS));			\
     return true;						\
@@ -508,7 +570,7 @@ public:
     throw std::runtime_error ("invalid builtin type");
   }
 
-#if 1
+#if 0
   bool TraverseBuiltinTypeLoc (clang::BuiltinTypeLoc TL)
   {
     TRACE;
@@ -524,10 +586,22 @@ public:
   {
     TRACE;
 
-    ptr<TypeLoc> inner = must_traverse (TL.getElementLoc ());
+    ptr<TypeLoc> element = must_traverse (TL.getElementLoc ());
     uint64_t size = TL.getTypePtr ()->getSize ().getZExtValue ();
 
-    stack.push (mkConstantArrayTypeLoc (inner, size));
+    stack.push (mkConstantArrayTypeLoc (element, size));
+
+    return true;
+  }
+
+  bool TraverseVariableArrayTypeLoc (clang::VariableArrayTypeLoc TL)
+  {
+    TRACE;
+
+    ptr<TypeLoc> element = must_traverse (TL.getElementLoc ());
+    ptr<Expr> size = must_traverse (TL.getSizeExpr ());
+
+    stack.push (mkVariableArrayTypeLoc (element, size));
 
     return true;
   }
@@ -536,9 +610,9 @@ public:
   {
     TRACE;
 
-    ptr<TypeLoc> inner = must_traverse (TL.getElementLoc ());
+    ptr<TypeLoc> element = must_traverse (TL.getElementLoc ());
 
-    stack.push (mkIncompleteArrayTypeLoc (inner));
+    stack.push (mkIncompleteArrayTypeLoc (element));
 
     return true;
   }
@@ -547,8 +621,9 @@ public:
   {
     TRACE;
 
-    ptr<TypeLoc> inner = must_traverse (TL.getPointeeLoc ());
-    stack.push (mkPointerTypeLoc (inner));
+    ptr<TypeLoc> pointee = must_traverse (TL.getPointeeLoc ());
+
+    stack.push (mkPointerTypeLoc (pointee));
 
     return true;
   }
@@ -657,6 +732,34 @@ public:
   }
 
 
+#define RECORD(CLASS, BASE)
+  bool TraverseRecordDecl (clang::RecordDecl *D)
+  {
+    TRACE;
+
+    list<Decl> members = traverse_list (decl_range (D));
+    clang::StringRef name = D->getName ();
+
+    stack.push (mkRecordDecl (name, members));
+
+    return true;
+  }
+
+
+#define FIELD(CLASS, BASE)
+  bool TraverseFieldDecl (clang::FieldDecl *D)
+  {
+    TRACE;
+
+    // TODO
+    clang::StringRef name = D->getName ();
+
+    stack.push (mkFieldDecl (name));
+
+    return true;
+  }
+
+
 #define PARMVAR(CLASS, BASE)
   bool TraverseParmVarDecl (clang::ParmVarDecl *D)
   {
@@ -696,10 +799,7 @@ public:
   {
     TRACE;
 
-    stack.push_mark ();
-    for (clang::Decl *decl : decl_range (D))
-      traverse (decl);
-    list<Decl> decls = stack.pop_marked ();
+    list<Decl> decls = traverse_list (decl_range (D));
 
     stack.push (mkTranslationUnitDecl (decls));
 
@@ -716,10 +816,10 @@ public:
    * Final result
    */
 
-  ptr<Decl> result ()
+  ptr<Decl> translate (clang::TranslationUnitDecl const *D)
   {
-    assert (stack.size () == 1);
-    return stack.pop ();
+    assert (stack.empty ());
+    return must_traverse (const_cast<clang::TranslationUnitDecl *> (D));
   }
 };
 
@@ -729,6 +829,5 @@ adt_of_clangAST (clang::TranslationUnitDecl const *D)
 {
   OCamlVisitor visitor;
   D->dump ();
-  visitor.TraverseDecl (const_cast<clang::TranslationUnitDecl *> (D));
-  return visitor.result ();
+  return visitor.translate (D);
 }

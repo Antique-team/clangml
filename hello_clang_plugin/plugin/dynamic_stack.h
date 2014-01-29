@@ -186,10 +186,8 @@ public:
     return range { move (l) };
   }
 
-  size_t size () const
-  {
-    return stack.size ();
-  }
+  size_t size () const { return stack.size (); }
+  bool empty () const { return stack.empty (); }
 };
 
 

@@ -107,3 +107,7 @@ clean:
 
 check: all myclang test.c
 	./myclang test.c
+
+TESTSUITE := $(wildcard testsuite/*.c)
+check-testsuite: all myclang
+	./myclang $(TESTSUITE)

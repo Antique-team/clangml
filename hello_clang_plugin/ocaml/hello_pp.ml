@@ -139,6 +139,14 @@ let rec pp_expr ff = function
   | ParenExpr expr ->
       Format.fprintf ff "(%a)"
         pp_expr expr
+  | CallExpr (callee, args) ->
+      Format.fprintf ff "%a (%a)"
+        pp_expr callee
+        (Formatx.pp_list pp_expr) args
+  | MemberExpr (base, member) ->
+      Format.fprintf ff "%a.%s"
+        pp_expr base
+        member
 
 
 let rec pp_stmt ff = function
@@ -216,6 +224,10 @@ and pp_type ff = function
       Format.fprintf ff "%a[%d]"
         pp_type ty
         size
+  | VariableArrayTypeLoc (ty, size) ->
+      Format.fprintf ff "%a[%a]"
+        pp_type ty
+        pp_expr size
   | IncompleteArrayTypeLoc (ty) ->
       Format.fprintf ff "%a[]"
         pp_type ty
@@ -238,6 +250,13 @@ and pp_decl ff = function
   | VarDecl (ty, name)
   | ParmVarDecl (ty, name) ->
       pp_named_arg ff (name, ty)
+  | RecordDecl (name, members) ->
+      Format.fprintf ff "struct %s { %a };"
+        name
+        (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) members
+  | FieldDecl (name) ->
+      Format.fprintf ff "%s : field;"
+        name
 
 
 and pp_named_arg ff = function

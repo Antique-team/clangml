@@ -122,8 +122,10 @@ type expr =
   | DeclRefExpr			of (* name *)string
   | ImplicitCastExpr		of expr
   | ParenExpr			of expr
+  | CallExpr			of (* callee *)expr * (* args *)expr list
+  | MemberExpr			of (* base *)expr * (* member *)string
 
-and stmt =
+type stmt =
   | UnimpStmt			of string
 
   | NullStmt
@@ -145,6 +147,7 @@ and type_loc =
   | FunctionNoProtoTypeLoc	of (* result *)type_loc
   | FunctionProtoTypeLoc	of (* result *)type_loc * decl list
   | ConstantArrayTypeLoc	of (* member-type *)type_loc * (* size *)int
+  | VariableArrayTypeLoc	of (* member-type *)type_loc * (* size *)expr
   | IncompleteArrayTypeLoc	of (* member-type *)type_loc
 
 and decl =
@@ -155,3 +158,5 @@ and decl =
   | TypedefDecl			of type_loc * string
   | VarDecl			of type_loc * string
   | ParmVarDecl			of type_loc * string
+  | RecordDecl			of (* name *)string * (* members *)decl list
+  | FieldDecl			of (* name *)string
