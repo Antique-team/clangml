@@ -121,8 +121,14 @@ let rec translate_type ctx = let open Parse in let open Codegen in function
       TyPointer (TyName ("clang::" ^ name))
   | ListOfType ty ->
       TyTemplate ("std::vector", translate_type ctx ty)
-  | OptionType (NamedType name) ->
-      TyTemplate ("option", TyName (cpp_name name))
+  | OptionType (NamedType name as ty) ->
+      let ty =
+        if is_basic_type name then
+          translate_type ctx ty
+        else
+          TyName (cpp_name name)
+      in
+      TyTemplate ("option", ty)
   | OptionType ty ->
       TyTemplate ("option", translate_type ctx ty)
 

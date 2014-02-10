@@ -1,5 +1,19 @@
 let version = "20140120"
 
+type qualifier =
+  (* CVR *)
+  | TQ_Const
+  | TQ_Volatile
+  | TQ_Restrict
+  (* ObjCGC *)
+  | TQ_Weak
+  | TQ_Strong
+  (* ObjCLifetime *)
+  | TQ_OCL_ExplicitNone
+  | TQ_OCL_Strong
+  | TQ_OCL_Weak
+  | TQ_OCL_Autoreleasing
+
 type predefined_ident =
   | PI_Func
   | PI_Function
@@ -193,9 +207,10 @@ and stmt =
 and type_loc =
   | UnimpTypeLoc		of string
 
-  | BuiltinTypeLoc              of builtin_type
+  | BuiltinTypeLoc		of builtin_type
   | TypeOfExprTypeLoc		of expr
   | TypeOfTypeLoc		of type_loc
+  | QualifiedTypeLoc		of type_loc * qualifier list * int option
   | TypedefTypeLoc		of (* name *)string
   | PointerTypeLoc		of (* pointee *)type_loc
   | FunctionNoProtoTypeLoc	of (* result *)type_loc

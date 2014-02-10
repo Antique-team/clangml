@@ -18,6 +18,8 @@ struct delayed_exit
 
 #include "clang_hacks.h"
 
+#undef TRACE
+#define TRACE
 
 struct OCamlVisitor
   : clang::RecursiveASTVisitor<OCamlVisitor>
@@ -1040,17 +1042,59 @@ OCamlVisitor::TraverseElaboratedTypeLoc (clang::ElaboratedTypeLoc TL)
 }
 
 
-//bool
-//OCamlVisitor::TraverseQualifiedTypeLoc (clang::QualifiedTypeLoc TL)
-//{
-  //TRACE;
+bool
+OCamlVisitor::TraverseQualifiedTypeLoc (clang::QualifiedTypeLoc TL)
+{
+  TRACE;
 
-  //clang::StringRef name = TL.getDecl ()->getName ();
+  ptr<TypeLoc> unqual = must_traverse (TL.getUnqualifiedLoc ());
+  clang::Qualifiers quals = TL.getType ().getLocalQualifiers ();
 
-  //stack.push (mkQualifiedTypeLoc (name));
+  std::vector<Qualifier> qualifiers;
+  if (quals.hasConst ())	qualifiers.push_back (TQ_Const);
+  if (quals.hasVolatile ())	qualifiers.push_back (TQ_Volatile);
+  if (quals.hasRestrict ())	qualifiers.push_back (TQ_Restrict);
 
-  //return true;
-//}
+  switch (quals.getObjCGCAttr ())
+    {
+    case clang::Qualifiers::GCNone:
+      // Nothing to add.
+      break;
+    case clang::Qualifiers::Weak:
+      qualifiers.push_back (TQ_Weak);
+      break;
+    case clang::Qualifiers::Strong:
+      qualifiers.push_back (TQ_Strong);
+      break;
+    }
+
+  switch (quals.getObjCLifetime ())
+    {
+    case clang::Qualifiers::OCL_None:
+      // Nothing to add.
+      break;
+    case clang::Qualifiers::OCL_ExplicitNone:
+      qualifiers.push_back (TQ_OCL_ExplicitNone);
+      break;
+    case clang::Qualifiers::OCL_Strong:
+      qualifiers.push_back (TQ_OCL_Strong);
+      break;
+    case clang::Qualifiers::OCL_Weak:
+      qualifiers.push_back (TQ_OCL_Weak);
+      break;
+    case clang::Qualifiers::OCL_Autoreleasing:
+      qualifiers.push_back (TQ_OCL_Autoreleasing);
+      break;
+    }
+
+  option<int> addressSpace;
+  if (quals.hasAddressSpace ())
+    addressSpace = quals.getAddressSpace ();
+
+  stack.push (mkQualifiedTypeLoc (unqual, qualifiers, addressSpace));
+
+  return true;
+}
 
 
 bool
@@ -1150,7 +1194,6 @@ UNIMP_TYPE (ObjCObject)
 UNIMP_TYPE (ObjCObjectPointer)
 UNIMP_TYPE (PackExpansion)
 UNIMP_TYPE (Paren)
-UNIMP_TYPE (Qualified)
 UNIMP_TYPE (RValueReference)
 UNIMP_TYPE (SubstTemplateTypeParm)
 UNIMP_TYPE (SubstTemplateTypeParmPack)
@@ -1401,6 +1444,7 @@ UNIMP_IMPL (Decl, VarTemplateDecl)
 ptr<Decl>
 adt_of_clangAST (clang::TranslationUnitDecl const *D)
 {
+  TIME;
   OCamlVisitor visitor;
   //D->dump ();
   return visitor.translate (D);

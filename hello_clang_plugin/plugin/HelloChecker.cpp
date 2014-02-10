@@ -18,6 +18,7 @@ extern "C" {
 
 #include "HelloChecker.h"
 #include "OCamlVisitor.h"
+#include "trace.h"
 
 #include "hello_cpp.h"
 
@@ -56,6 +57,7 @@ HelloChecker::checkASTDecl (const TranslationUnitDecl *D,
 {
   CAMLparam0 ();
   CAMLlocal1 (result);
+  value *cb;
 
   initialize_caml ();
 
@@ -63,20 +65,19 @@ HelloChecker::checkASTDecl (const TranslationUnitDecl *D,
   try
 #endif
   {
+    TIME;
     result = adt_of_clangAST (D)->ToValue ();
-
-    value *print_decl = caml_named_value ("Hello print decl");
-    caml_callback (*print_decl, result);
+    cb = caml_named_value ("Hello print decl");
   }
 #if HANDLE_CXX_EXN
   catch (std::exception const &e)
   {
     result = caml_copy_string (e.what ());
-
-    value *failure = caml_named_value ("Hello failure");
-    caml_callback (*failure, result);
+    cb = caml_named_value ("Hello failure");
   }
 #endif
+
+  caml_callback (*cb, result);
 
   CAMLreturn0;
 }

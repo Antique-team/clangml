@@ -2,6 +2,17 @@
 
 open Hello_ast
 
+let string_of_qualifier = function
+  | TQ_Const -> "const"
+  | TQ_Volatile -> "volatile"
+  | TQ_Restrict -> "restrict"
+  | TQ_Weak -> "weak"
+  | TQ_Strong -> "strong"
+  | TQ_OCL_ExplicitNone -> "no_lifetime"
+  | TQ_OCL_Strong -> "strong_lifetime"
+  | TQ_OCL_Weak -> "weak_lifetime"
+  | TQ_OCL_Autoreleasing -> "autoreleasing"
+
 let string_of_predefined_ident = function
   | PI_Func -> "__func__"
   | PI_Function -> "__FUNCTION__"
@@ -307,6 +318,14 @@ and pp_type ff = function
   | UnimpTypeLoc name ->
       Format.fprintf ff "<%s>" name
 
+  | QualifiedTypeLoc (unqual, quals, addr_space) ->
+      Format.fprintf ff "%a %a%s"
+        pp_type unqual
+        Formatx.(pp_list ~sep:(pp_sep "") pp_print_string)
+          (List.map string_of_qualifier quals)
+        (match addr_space with
+         | None -> ""
+         | Some aspace -> " addr_space_" ^ string_of_int aspace)
   | BuiltinTypeLoc bt ->
       Format.fprintf ff "%s"
         (string_of_builtin_type bt)

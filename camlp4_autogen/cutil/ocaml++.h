@@ -57,10 +57,41 @@ struct option<T, true>
   using ptr<T>::ptr;
   using ptr<T>::operator bool;
   using ptr<T>::operator ->;
+
+  value ToValue () const { return (*this)->ToValue (); }
+};
+
+// Implementation for all other option types.
+template<typename T>
+struct option<T, false>
+{
+private:
+  T ob;
+  bool some;
+
+public:
+  option ()
+    : some (false)
+  { }
+
+  option (T value)
+    : ob (value)
+    , some (true)
+  { }
+
+  option &operator = (T value)
+  {
+    ob = value;
+    some = true;
+    return *this;
+  }
+
+  explicit operator bool () const { return some; }
+
+  value ToValue () const;
 };
 
 typedef option<OCamlADTBase> adt_option;
-
 
 static inline void
 intrusive_ptr_add_ref (OCamlADTBase *p)
@@ -113,7 +144,7 @@ value_of (ptr<T> ob)
 
 // Nullable pointer.
 template<typename T>
-typename std::enable_if<std::is_base_of<OCamlADTBase, T>::value, value>::type
+value
 value_of (option<T> ob)
 {
   CAMLparam0 ();
@@ -123,7 +154,7 @@ value_of (option<T> ob)
   if (ob)
     {
       option = caml_alloc (1, 0);
-      Store_field (option, 0, ob->ToValue ());
+      Store_field (option, 0, ob.ToValue ());
     }
 
   CAMLreturn (option);
@@ -229,5 +260,17 @@ value_of_adt (OCamlADT const *self)
   return Val_int (self->tag ());
 }
 
+
+/********************************************************
+ * option<non-adt>::ToValue implementation.
+ * Comes last, so all value_ofs are in scope.
+ */
+
+template<typename T>
+value
+option<T, false>::ToValue () const
+{
+  return value_of (ob);
+}
 
 #endif /* OCAMLPP_H */
