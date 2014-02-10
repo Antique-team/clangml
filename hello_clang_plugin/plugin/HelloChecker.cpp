@@ -46,38 +46,8 @@ initialize_caml ()
     }
 }
 
-#if 0
-hello_cpp::Expr *
-HelloChecker::convertExpr (const clang::Expr *in) const
-{
-  //Check for binary operator
-  const BinaryOperator *binOp = dyn_cast<BinaryOperator> (in);
 
-  if (binOp)
-    {
-      if (binOp->getOpcode () == BO_Add)
-        {
-          hello_cpp::BinaryOp oper = hello_cpp::BinaryOp_Add;
-          return new hello_cpp::BinaryOpExpr (oper, convertExpr (binOp->getLHS ()), convertExpr (binOp->getRHS ()));
-        }
-      if (binOp->getOpcode () == BO_Mul)
-        {
-          hello_cpp::BinaryOp oper = hello_cpp::BinaryOp_Multiply;
-          return new hello_cpp::BinaryOpExpr (oper, convertExpr (binOp->getLHS ()), convertExpr (binOp->getRHS ()));
-        }
-      return NULL;    //Return null if not defined
-    }
-
-  //Check for integer literal
-  const IntegerLiteral *intLit = dyn_cast<IntegerLiteral> (in);
-  if (intLit)
-    {
-      int value = intLit->getValue ().getSExtValue ();
-      return new hello_cpp::IntConstExpr (value);
-    }
-  return NULL;   //Return null if something other than int lit or binop is encountered
-}
-#endif
+#define HANDLE_CXX_EXN 0
 
 void
 HelloChecker::checkASTDecl (const TranslationUnitDecl *D,
@@ -89,44 +59,23 @@ HelloChecker::checkASTDecl (const TranslationUnitDecl *D,
 
   initialize_caml ();
 
-  value *caml_print = caml_named_value ("Hello print decl");
-  result = adt_of_clangAST (D)->ToValue ();
-  caml_callback (*caml_print, result);
+#if HANDLE_CXX_EXN
+  try
+#endif
+  {
+    result = adt_of_clangAST (D)->ToValue ();
 
-#if 0
-  clang::DeclContext::decl_iterator current;
-  current = D->decls_begin ();
-  for (current = D->decls_begin (); current != D->decls_end (); current++)
-    {
-      Decl *c = *current;
-      FunctionDecl *fCastTry = dyn_cast<FunctionDecl> (c);
-      if (fCastTry)
-        //Get main function
-        if (fCastTry->isMain ())
-          {
-            clang::Stmt *mainBody = fCastTry->getBody ();
-            CompoundStmt *compoundStmt = dyn_cast<CompoundStmt> (mainBody);
+    value *print_decl = caml_named_value ("Hello print decl");
+    caml_callback (*print_decl, result);
+  }
+#if HANDLE_CXX_EXN
+  catch (std::exception const &e)
+  {
+    result = caml_copy_string (e.what ());
 
-            if (compoundStmt)
-              {
-                clang::Stmt **currentSt;
-                for (currentSt = compoundStmt->body_begin (); currentSt != compoundStmt->body_end (); currentSt++)
-                  {
-                    ReturnStmt *returnStmt = dyn_cast<ReturnStmt> (*currentSt);
-                    if (returnStmt)
-                      {
-                        clang::Expr *retVal = returnStmt->getRetValue ();
-                        value *caml_print;
-                        caml_print = caml_named_value ("Hello print expr");
-                        hello_cpp::Expr *val = convertExpr (retVal);
-                        caml_expr = val->ToValue ();
-                        printf ("%p\n", caml_print);
-                        caml_callback (*caml_print, caml_expr);
-                      }
-                  }
-              }
-          }
-    }
+    value *failure = caml_named_value ("Hello failure");
+    caml_callback (*failure, result);
+  }
 #endif
 
   CAMLreturn0;

@@ -22,6 +22,5 @@ struct tracer
 };
 
 #define TRACE tracer trace (__func__)
-#define TODO std::printf ("TODO: %s\n", __func__)
 
 #endif /* TRACE_H */

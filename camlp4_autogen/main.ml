@@ -68,6 +68,7 @@ let first_is_clang_pointer = function
 
 
 let is_basic_type = function
+  | "bool"
   | "char"
   | "int"
   | "float"
@@ -90,6 +91,8 @@ let is_nonnull_ptr ctx = function
 
 
 let rec translate_type ctx = let open Parse in let open Codegen in function
+  | NamedType "bool" ->
+      TyBool
   | NamedType "char" ->
       TyChar
   | NamedType "int" ->

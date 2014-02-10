@@ -149,6 +149,9 @@ public:
     // gives a more descriptive error message.
     static_assert (std::is_base_of<OCamlADTBase, Derived>::value,
                    "can only push OCaml bridge types");
+    // While members of a sum type may contain options, they can never
+    // be null, themselves.
+    assert (p);
     stack.push_back (p);
   }
 

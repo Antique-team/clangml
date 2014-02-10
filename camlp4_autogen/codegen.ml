@@ -32,6 +32,7 @@ type flag =
 type cpp_type =
   (* Built-in basic types (or std:: types) *)
   | TyVoid
+  | TyBool
   | TyChar
   | TyInt
   | TyFloat
@@ -132,6 +133,7 @@ let string_of_flag = function
   | Const -> "const"
 
 let rec string_of_cpp_type = function
+  | TyBool -> "bool"
   | TyChar -> "char"
   | TyInt -> "int"
   | TyFloat -> "float"

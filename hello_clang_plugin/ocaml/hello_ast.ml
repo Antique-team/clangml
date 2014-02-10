@@ -1,5 +1,29 @@
 let version = "20140120"
 
+type predefined_ident =
+  | PI_Func
+  | PI_Function
+  | PI_LFunction
+  | PI_FuncDName
+  | PI_PrettyFunction
+  | PI_PrettyFunctionNoVirtual
+
+type tag_type_kind =
+  | TTK_Struct
+  | TTK_Interface
+  | TTK_Union
+  | TTK_Class
+  | TTK_Enum
+
+type elaborated_type_keyword =
+  | ETK_Struct
+  | ETK_Interface
+  | ETK_Union
+  | ETK_Class
+  | ETK_Enum
+  | ETK_Typename
+  | ETK_None
+
 type builtin_type =
   | BT_Void
   | BT_Bool
@@ -109,7 +133,12 @@ and stmt =
   | Block of Clang.Block.t		* stmt list
 *)
 
-type expr =
+type designator =
+  | FieldDesignator		of string
+  | ArrayDesignator		of expr
+  | ArrayRangeDesignator	of expr * expr
+
+and expr =
   | UnimpExpr			of string
 
   | IntegerLiteral		of int
@@ -120,28 +149,53 @@ type expr =
   | UnaryOperator		of unary_op * expr
 
   | DeclRefExpr			of (* name *)string
+  | PredefinedExpr		of (* kind *)predefined_ident
   | ImplicitCastExpr		of expr
+  | CStyleCastExpr		of type_loc * expr
+  | CompoundLiteralExpr		of type_loc * (* init *)expr
   | ParenExpr			of expr
   | CallExpr			of (* callee *)expr * (* args *)expr list
-  | MemberExpr			of (* base *)expr * (* member *)string
+  | MemberExpr			of (* base *)expr * (* member *)string * (* is_arrow *)bool
+  | ConditionalOperator		of expr * expr * expr
+  | DesignatedInitExpr		of designator list * expr
+  | InitListExpr		of expr list
+  | ImplicitValueInitExpr
+  | ArraySubscriptExpr		of expr * expr
+  | StmtExpr			of stmt
 
-type stmt =
+  | SizeOfExpr			of expr
+  | SizeOfType			of type_loc
+  | AlignOfExpr			of expr
+  | AlignOfType			of type_loc
+  | VecStepExpr			of expr
+  | VecStepType			of type_loc
+
+and stmt =
   | UnimpStmt			of string
 
   | NullStmt
   | BreakStmt
   | ContinueStmt
+  | LabelStmt			of string * stmt
+  | CaseStmt			of expr * expr option * stmt
+  | DefaultStmt			of stmt
+  | GotoStmt			of string
   | ExprStmt			of expr
   | CompoundStmt		of stmt list
   | ReturnStmt			of expr option
-  | CaseStmt			of expr * expr option * stmt
   | IfStmt			of expr * stmt * stmt option
-  | ForStmt			of stmt option * expr option * expr option * stmt
+  | ForStmt			of (* init *)stmt option * (* cond *)expr option * (* incr *)expr option * (* body *)stmt
+  | WhileStmt			of (* cond *)expr * (* body *)stmt
+  | DoStmt			of (* body *)stmt * (* cond *)expr
   | SwitchStmt			of expr * stmt
   | DeclStmt			of decl list
 
 and type_loc =
+  | UnimpTypeLoc		of string
+
   | BuiltinTypeLoc              of builtin_type
+  | TypeOfExprTypeLoc		of expr
+  | TypeOfTypeLoc		of type_loc
   | TypedefTypeLoc		of (* name *)string
   | PointerTypeLoc		of (* pointee *)type_loc
   | FunctionNoProtoTypeLoc	of (* result *)type_loc
@@ -149,14 +203,20 @@ and type_loc =
   | ConstantArrayTypeLoc	of (* member-type *)type_loc * (* size *)int
   | VariableArrayTypeLoc	of (* member-type *)type_loc * (* size *)expr
   | IncompleteArrayTypeLoc	of (* member-type *)type_loc
+  | ElaboratedTypeLoc		of (* named-type *)type_loc
+  | EnumTypeLoc			of (* name *)string
+  | RecordTypeLoc		of (* kind *)tag_type_kind * (* name *)string
 
 and decl =
   | UnimpDecl			of string
 
+  | EmptyDecl
   | TranslationUnitDecl		of decl list
   | FunctionDecl		of (* type *)type_loc * (* name *)string * (* body *)stmt option
-  | TypedefDecl			of type_loc * string
-  | VarDecl			of type_loc * string
-  | ParmVarDecl			of type_loc * string
+  | TypedefDecl			of (* type *)type_loc * (* name *)string
+  | VarDecl			of (* type *)type_loc * (* name *)string * (* init *)expr option
+  | ParmVarDecl			of (* type *)type_loc * (* name *)string
   | RecordDecl			of (* name *)string * (* members *)decl list
-  | FieldDecl			of (* name *)string
+  | FieldDecl			of (* type *)type_loc * (* name *)string * (* bitwidth *)expr option * (* initialiser *)expr option
+  | EnumDecl			of (* name *)string * (* enumerators *)decl list
+  | EnumConstantDecl		of (* name *)string * (* init *)expr option

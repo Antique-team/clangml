@@ -2,6 +2,29 @@
 
 open Hello_ast
 
+let string_of_predefined_ident = function
+  | PI_Func -> "__func__"
+  | PI_Function -> "__FUNCTION__"
+  | PI_LFunction -> "__LFUNCTION__"
+  | PI_FuncDName -> "__FUNCDNAME__"
+  | PI_PrettyFunction -> "__PRETTY_FUNCTION__"
+  | PI_PrettyFunctionNoVirtual -> "__PRETTY_FUNCTION_NO_VIRTUAL__"
+
+let string_of_tag_type_kind = function
+  | TTK_Struct -> "struct"
+  | TTK_Interface -> "__interface"
+  | TTK_Union -> "union"
+  | TTK_Class -> "class"
+  | TTK_Enum -> "enum"
+
+let string_of_elaborated_type_keyword = function
+  | ETK_Struct -> "struct"
+  | ETK_Interface -> "__interface"
+  | ETK_Union -> "union"
+  | ETK_Class -> "class"
+  | ETK_Enum -> "enum"
+  | ETK_Typename -> "typename"
+  | ETK_None -> ""
 
 let string_of_builtin_type = function
   | BT_Void -> "void"
@@ -112,7 +135,19 @@ let pp_option f ff = function
   | Some x -> f ff x
 
 
-let rec pp_expr ff = function
+let rec pp_designator ff = function
+  | FieldDesignator (name) ->
+      Format.fprintf ff ".%s" name
+  | ArrayDesignator (index) ->
+      Format.fprintf ff "[%a]"
+        pp_expr index
+  | ArrayRangeDesignator (left, right) ->
+      Format.fprintf ff "[%a ... %a]"
+        pp_expr left
+        pp_expr right
+
+
+and pp_expr ff = function
   | UnimpExpr name ->
       Format.fprintf ff "<%s>" name
 
@@ -133,8 +168,15 @@ let rec pp_expr ff = function
 
   | DeclRefExpr name ->
       Format.pp_print_string ff name
+  | PredefinedExpr kind ->
+      Format.pp_print_string ff (string_of_predefined_ident kind)
   | ImplicitCastExpr expr ->
       Format.fprintf ff "%a"
+        pp_expr expr
+  | CompoundLiteralExpr (ty, expr)
+  | CStyleCastExpr (ty, expr) ->
+      Format.fprintf ff "(%a)%a"
+        pp_type ty
         pp_expr expr
   | ParenExpr expr ->
       Format.fprintf ff "(%a)"
@@ -143,13 +185,53 @@ let rec pp_expr ff = function
       Format.fprintf ff "%a (%a)"
         pp_expr callee
         (Formatx.pp_list pp_expr) args
-  | MemberExpr (base, member) ->
-      Format.fprintf ff "%a.%s"
+  | MemberExpr (base, member, is_arrow) ->
+      Format.fprintf ff "%a%s%s"
         pp_expr base
+        (if is_arrow then "->" else ".")
         member
+  | ConditionalOperator (cond, true_expr, false_expr) ->
+      Format.fprintf ff "%a ? %a : %a"
+        pp_expr cond
+        pp_expr true_expr
+        pp_expr false_expr
+  | DesignatedInitExpr (designators, init) ->
+      Format.fprintf ff "%a = %a"
+        (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_designator) designators
+        pp_expr init
+  | InitListExpr (inits) ->
+      Format.fprintf ff "{ %a }"
+        (Formatx.pp_list pp_expr) inits
+  | ImplicitValueInitExpr ->
+      Format.pp_print_string ff "<implicit value>"
+  | ArraySubscriptExpr (base, idx) ->
+      Format.fprintf ff "%a[%a]"
+        pp_expr base
+        pp_expr idx
+  | StmtExpr (stmt) ->
+      Format.fprintf ff "(%a)"
+        pp_stmt stmt
+  | SizeOfExpr expr ->
+      Format.fprintf ff "sizeof %a"
+        pp_expr expr
+  | SizeOfType ty ->
+      Format.fprintf ff "sizeof (%a)"
+        pp_type ty
+  | AlignOfExpr expr ->
+      Format.fprintf ff "alignof %a"
+        pp_expr expr
+  | AlignOfType ty ->
+      Format.fprintf ff "alignof (%a)"
+        pp_type ty
+  | VecStepExpr expr ->
+      Format.fprintf ff "vec_step %a"
+        pp_expr expr
+  | VecStepType ty ->
+      Format.fprintf ff "vec_step (%a)"
+        pp_type ty
 
 
-let rec pp_stmt ff = function
+and pp_stmt ff = function
   | UnimpStmt name ->
       Format.fprintf ff "<%s>" name
 
@@ -159,6 +241,13 @@ let rec pp_stmt ff = function
       Format.pp_print_string ff "break;"
   | ContinueStmt ->
       Format.pp_print_string ff "continue;"
+  | LabelStmt (name, sub) ->
+      Format.fprintf ff "%s: %a"
+        name
+        pp_stmt sub
+  | GotoStmt (name) ->
+      Format.fprintf ff "goto %s;"
+        name
   | ExprStmt e ->
       Format.fprintf ff "%a;"
         pp_expr e
@@ -170,6 +259,9 @@ let rec pp_stmt ff = function
   | ReturnStmt (Some e) ->
       Format.fprintf ff "return %a;"
         pp_expr e
+  | DefaultStmt sub ->
+      Format.fprintf ff "default: %a"
+        pp_stmt sub
   | CaseStmt (lhs, None, sub) ->
       Format.fprintf ff "case %a: %a"
         pp_expr lhs
@@ -185,6 +277,14 @@ let rec pp_stmt ff = function
         (pp_option pp_expr) cond
         (pp_option pp_expr) inc
         pp_stmt body
+  | WhileStmt (cond, body) ->
+      Format.fprintf ff "while (%a) %a"
+        pp_expr cond
+        pp_stmt body
+  | DoStmt (body, cond) ->
+      Format.fprintf ff "do %a while (%a)"
+        pp_stmt body
+        pp_expr cond
   | SwitchStmt (cond, body) ->
       Format.fprintf ff "switch (%a) %a"
         pp_expr cond
@@ -204,12 +304,21 @@ let rec pp_stmt ff = function
 
 
 and pp_type ff = function
+  | UnimpTypeLoc name ->
+      Format.fprintf ff "<%s>" name
+
   | BuiltinTypeLoc bt ->
       Format.fprintf ff "%s"
         (string_of_builtin_type bt)
   | TypedefTypeLoc name ->
       Format.fprintf ff "%s"
         name
+  | TypeOfExprTypeLoc expr ->
+      Format.fprintf ff "typeof (%a)"
+        pp_expr expr
+  | TypeOfTypeLoc ty ->
+      Format.fprintf ff "typeof (%a)"
+        pp_type ty
   | PointerTypeLoc ty ->
       Format.fprintf ff "%a ptr"
         pp_type ty
@@ -231,12 +340,24 @@ and pp_type ff = function
   | IncompleteArrayTypeLoc (ty) ->
       Format.fprintf ff "%a[]"
         pp_type ty
+  | ElaboratedTypeLoc (ty) ->
+      Format.fprintf ff "%a"
+        pp_type ty
+  | RecordTypeLoc (kind, name) ->
+      Format.fprintf ff "%s %s"
+        (string_of_tag_type_kind kind)
+        (if name = "" then "<anonymous>" else name)
+  | EnumTypeLoc (name) ->
+      Format.pp_print_string ff
+        (if name = "" then "<anonymous>" else name)
 
 
 and pp_decl ff = function
   | UnimpDecl name ->
       Format.fprintf ff "<%s>" name
 
+  | EmptyDecl ->
+      Format.pp_print_string ff ";"
   | TranslationUnitDecl dd ->
       Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl ff dd
   | TypedefDecl (ty, name) ->
@@ -247,16 +368,31 @@ and pp_decl ff = function
       Format.fprintf ff "@[<v2>%a@]@, = %a"
         pp_named_arg (name, ty)
         (pp_option pp_stmt) body
-  | VarDecl (ty, name)
+  | VarDecl (ty, name, Some init) ->
+      Format.fprintf ff "%a = %a"
+        pp_named_arg (name, ty)
+        pp_expr init
+  | VarDecl (ty, name, None)
   | ParmVarDecl (ty, name) ->
       pp_named_arg ff (name, ty)
   | RecordDecl (name, members) ->
       Format.fprintf ff "struct %s { %a };"
         name
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) members
-  | FieldDecl (name) ->
-      Format.fprintf ff "%s : field;"
+  | FieldDecl (ty, name, bitwidth, init) ->
+      Format.fprintf ff "%a;"
+        pp_named_arg (name, ty)
+  | EnumDecl (name, enumerators) ->
+      Format.fprintf ff "enum %s { %a };"
         name
+        (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) enumerators
+  | EnumConstantDecl (name, None) ->
+      Format.fprintf ff "%s;"
+        name
+  | EnumConstantDecl (name, Some init) ->
+      Format.fprintf ff "%s = %a;"
+        name
+        pp_expr init
 
 
 and pp_named_arg ff = function

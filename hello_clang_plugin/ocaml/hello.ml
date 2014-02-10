@@ -22,4 +22,5 @@ let () =
   Callback.register "Hello print expr" print_expr;
   Callback.register "Hello print stmt" print_stmt;
   Callback.register "Hello print decl" print_decl;
+  Callback.register "Hello failure" failwith;
 ;;
