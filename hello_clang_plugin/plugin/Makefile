@@ -8,7 +8,8 @@ CXXFLAGS =	\
 	-fPIC	\
 	-fno-rtti	\
 	-std=c++11	\
-	-ggdb3
+	-ggdb3		\
+	-O3
 
 LDFLAGS =	\
 	-Wl,-z,defs	\
@@ -30,7 +31,7 @@ LDFLAGS =	\
 
 PLUGIN = build/HelloClangPlugin/Build/Products/Debug/libHelloClangPlugin.dylib
 
-$(PLUGIN): ../hello_lib.o HelloChecker.o OCamlVisitor.o PluginRegistration.o hello_cpp.o
+$(PLUGIN): ../hello_lib.o ../../camlp4_autogen/cutil/ocaml++.o trace.o OCamlVisitor.o HelloChecker.o PluginRegistration.o hello_cpp.o
 	$(EXT)/bin/clang++ $^ -o $@ $(LDFLAGS)
 
 ../hello_lib.o: $(shell find ../ocaml -name "*.ml*")
@@ -40,7 +41,7 @@ clean:
 	rm -f $(PLUGIN) *.o hello_cpp.cpp hello_cpp.h
 
 %.o: %.cpp hello_cpp.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
-	$(EXT)/bin/clang++ -c $< $(CXXFLAGS)
+	$(EXT)/bin/clang++ -c $< $(CXXFLAGS) -o $@
 
 OCamlVisitor.o: OCamlVisitor.cpp hello_cpp.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
 	$(EXT)/bin/clang++ -c $< $(CXXFLAGS) -frtti

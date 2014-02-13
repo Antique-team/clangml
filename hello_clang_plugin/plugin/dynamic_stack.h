@@ -137,6 +137,11 @@ public:
     return element { p };
   }
 
+  adt_ptr top () const
+  {
+    return stack.back ();
+  }
+
   template<template<typename> class Ptr, typename Derived>
   void push (Ptr<Derived> p)
   {

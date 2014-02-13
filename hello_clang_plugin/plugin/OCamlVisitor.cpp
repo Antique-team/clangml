@@ -3,6 +3,9 @@
 #include "trace.h"
 
 #include <boost/range/iterator_range.hpp>
+#include <boost/range/adaptor/filtered.hpp>
+
+#include <map>
 
 using namespace hello_cpp;
 
@@ -21,9 +24,59 @@ struct delayed_exit
 #undef TRACE
 #define TRACE
 
+template<typename T>
+struct clang_compare
+{
+  typedef T type;
+  bool operator () (T a, T b);
+};
+
+template<typename T>
+struct clang_compare<T *>
+{
+  typedef T type;
+  bool operator () (T *a, T *b) { return a < b; }
+};
+
+
+template<>
+bool
+clang_compare<clang::TypeLoc>::operator () (type a, type b)
+{
+  return a.getTypePtr () < b.getTypePtr ();
+}
+
+
+static bool
+operator < (clang::Qualifiers a, clang::Qualifiers b)
+{
+  return a == b ? 0 : b.isStrictSupersetOf (a);
+}
+
+template<>
+bool
+clang_compare<clang::QualType>::operator () (type a, type b)
+{
+  return a.getTypePtr () < b.getTypePtr ()
+      || a.getLocalQualifiers () < b.getLocalQualifiers ();
+}
+
+
+template<>
+bool
+clang_compare<clang::DesignatedInitExpr::Designator>::operator () (type a, type b)
+{
+  return memcmp (&a, &b, sizeof a) < 0;
+}
+
+
 struct OCamlVisitor
   : clang::RecursiveASTVisitor<OCamlVisitor>
 {
+  bool sharing = true;
+  bool share_types = true;
+  bool share_type_locs = true;
+
 private:
   typedef clang::RecursiveASTVisitor<OCamlVisitor> Base;
 
@@ -33,41 +86,83 @@ private:
    * {{{1 Traversal dispatch functions
    */
 
+  template<typename T>
+  adt_ptr cached_value (T p, adt_ptr value)
+  {
+    if (!sharing)
+      return nullptr;
 
-  // Traverse a clang object, but keep it on the stack.
-  // Requires that if p is a pointer or TypeLoc, it is not null.
-  // If Dense is true, this function checks that the called
-  // traversal function pushes exactly one element on the stack
-  // (potentially after pushing and popping many others).
-  template<bool Dense, typename T, bool (OCamlVisitor::*Fun) (T p)>
+    static std::map<T, adt_ptr, clang_compare<T>> cache;
+    if (value)
+      {
+        cache.insert (std::make_pair (p, value));
+        return value;
+      }
+    else
+      {
+        auto found = cache.find (p);
+        if (found == cache.end ())
+          return nullptr;
+        return found->second;
+      }
+  }
+
+  adt_ptr cached (clang::QualType p, adt_ptr value = nullptr)
+  { return share_types ? cached_value (p, value) : nullptr; }
+
+  adt_ptr cached (clang::TypeLoc p, adt_ptr value = nullptr)
+  { return share_type_locs ? cached_value (p, value) : nullptr; }
+
+  adt_ptr cached (clang::DesignatedInitExpr::Designator p, adt_ptr value = nullptr)
+  { return nullptr; }
+
+  adt_ptr cached (clang::Decl *p, adt_ptr value = nullptr)
+  { return nullptr; }
+
+  adt_ptr cached (clang::Stmt *p, adt_ptr value = nullptr)
+  { return nullptr; }
+
+
+  // Traverse a clang object, but keep the result (if any) on
+  // the stack. Requires that if p is a pointer or TypeLoc, it
+  // is not null.
+  template<typename T, bool (OCamlVisitor::*Fun) (T p)>
   void traverse (T p)
   {
-    size_t size_before = stack.size ();
-    (this->*Fun) (p);
-    size_t size_after = stack.size ();
-
-    if (Dense)
-      // Require stack to increase by exactly 1 (one value was pushed).
-      assert (size_after == size_before + 1);
+    adt_ptr result = cached (p);
+    if (result)
+      stack.push (result);
     else
-      // Require zero or one.
-      assert (size_after <= size_before + 1);
+      {
+        size_t size_before = stack.size ();
+        (this->*Fun) (p);
+        size_t size_after = stack.size ();
+
+        // Require stack to increase by exactly 1 (one value was pushed).
+        assert (size_after == size_before + 1);
+
+        cached (p, stack.top ());
+      }
   }
 
   // TODO: unify this with the above
-  template<bool Dense, typename T, typename A1, bool (OCamlVisitor::*Fun) (T p, A1 a1)>
+  template<typename T, typename A1, bool (OCamlVisitor::*Fun) (T p, A1 a1)>
   void traverse (T p, A1 a1)
   {
-    size_t size_before = stack.size ();
-    (this->*Fun) (p, a1);
-    size_t size_after = stack.size ();
-
-    if (Dense)
-      // Require stack to increase by exactly 1 (one value was pushed).
-      assert (size_after == size_before + 1);
+    adt_ptr result = cached (p);
+    if (result)
+      stack.push (result);
     else
-      // Require zero or one.
-      assert (size_after <= size_before + 1);
+      {
+        size_t size_before = stack.size ();
+        (this->*Fun) (p, a1);
+        size_t size_after = stack.size ();
+
+        // Require stack to increase by exactly 1 (one value was pushed).
+        assert (size_after == size_before + 1);
+
+        cached (p, stack.top ());
+      }
   }
 
   // These functions require the clang pointer to be non-null.
@@ -75,23 +170,22 @@ private:
   // to be non-null.
 
   // Overloads to call appropriate traversal functions.
-  template<bool Dense = true>
   void traverse (clang::Decl *D)
-  { assert (D); traverse<Dense, clang::Decl *, &OCamlVisitor::TraverseDecl> (D); }
+  { assert (D); traverse<clang::Decl *, &OCamlVisitor::TraverseDecl> (D); }
 
-  template<bool Dense = true>
   void traverse (clang::Stmt *S)
-  { assert (S); traverse<Dense, clang::Stmt *, &OCamlVisitor::TraverseStmt> (S); }
+  { assert (S); traverse<clang::Stmt *, &OCamlVisitor::TraverseStmt> (S); }
 
-  template<bool Dense = true>
   void traverse (clang::TypeLoc TL)
-  { assert (TL); traverse<Dense, clang::TypeLoc, &OCamlVisitor::TraverseTypeLoc> (TL); }
+  { assert (TL); traverse<clang::TypeLoc, &OCamlVisitor::TraverseTypeLoc> (TL); }
+
+  void traverse (clang::QualType T)
+  { assert (!T.isNull ()); traverse<clang::QualType, &OCamlVisitor::TraverseType> (T); }
 
   // This is an object without a notion of nullability, so the
   // assert is missing.
-  template<bool Dense = true>
   void traverse (clang::DesignatedInitExpr::Designator const &D, clang::DesignatedInitExpr *S)
-  { traverse<Dense, clang::DesignatedInitExpr::Designator, clang::DesignatedInitExpr *, &OCamlVisitor::TraverseDesignator> (D, S); }
+  { traverse<clang::DesignatedInitExpr::Designator, clang::DesignatedInitExpr *, &OCamlVisitor::TraverseDesignator> (D, S); }
 
 
   // May take a pointer or an object.
@@ -101,7 +195,7 @@ private:
   dynamic_stack::element must_traverse (T p)
   {
     // Traverse, which does not pop.
-    traverse<true> (p);
+    traverse (p);
     // Now, get the bridge pointer.
     dynamic_stack::element result = stack.pop ();
     // Require OCaml bridge pointer to be non-null.
@@ -120,12 +214,12 @@ private:
   }
 
 
-  template<bool Dense = true, typename Range, typename... Args>
+  template<typename Range, typename... Args>
   dynamic_stack::range traverse_list (Range const &range, Args... args)
   {
     stack.push_mark ();
     for (auto child : range)
-      traverse<Dense> (child, args...);
+      traverse (child, args...);
     return stack.pop_marked ();
   }
 
@@ -310,6 +404,30 @@ public:
   /****************************************************
    * {{{1 Expressions
    */
+
+
+  bool TraverseStmt (clang::Stmt *S)
+  {
+    TRACE;
+
+    Base::TraverseStmt (S);
+    auto exprOrStmt = stack.pop ();
+
+    if (clang::Expr *E = clang::dyn_cast<clang::Expr> (S))
+      {
+        ptr<Expr> expr = exprOrStmt;
+        ptr<Ctyp> type = must_traverse (E->getType ());
+
+        stack.push (mkTypedExpr (expr, type));
+      }
+    else
+      {
+        ptr<Stmt> stmt = exprOrStmt;
+        stack.push (stmt);
+      }
+
+    return true;
+  }
 
 
 #define IMPLICITVALUEINITEXPR(CLASS, BASE)
@@ -558,9 +676,8 @@ public:
    * {{{1 Statements
    */
 
-  // Simple forwards so passing it as template argument in `traverse' works.
+  // Simple forward so passing it as template argument in `traverse' works.
   bool TraverseDecl (clang::Decl *D) { return Base::TraverseDecl (D); }
-  bool TraverseStmt (clang::Stmt *S) { return Base::TraverseStmt (S); }
 
 #define NULLSTMT(CLASS, BASE)
   bool TraverseNullStmt (clang::NullStmt *S)
@@ -822,14 +939,11 @@ public:
    * {{{1 Types
    */
 
+  bool TraverseType (clang::QualType T);
+
 #define ABSTRACT_TYPE(CLASS, BASE)
 #define TYPE(CLASS, BASE)					\
-  bool Traverse##CLASS##Type (clang::CLASS##Type *type)		\
-  {								\
-    TRACE;							\
-    Base::Traverse##CLASS##Type (type);				\
-    return true;						\
-  }
+  bool Traverse##CLASS##Type (clang::CLASS##Type *type);
 #include <clang/AST/TypeNodes.def>
 
   // }}}
@@ -898,6 +1012,213 @@ public:
   }
 };
 
+
+/****************************************************
+ * {{{1 Types
+ */
+
+
+bool
+OCamlVisitor::TraverseType (clang::QualType T)
+{
+  TRACE;
+
+  Base::TraverseType (T);
+  ptr<Ctyp> unqual = stack.pop ();
+
+  clang::Qualifiers quals = T.getLocalQualifiers ();
+
+  std::vector<Qualifier> qualifiers;
+  if (quals.hasConst ())	qualifiers.push_back (TQ_Const);
+  if (quals.hasVolatile ())	qualifiers.push_back (TQ_Volatile);
+  if (quals.hasRestrict ())	qualifiers.push_back (TQ_Restrict);
+
+  switch (quals.getObjCGCAttr ())
+    {
+    case clang::Qualifiers::GCNone:
+      // Nothing to add.
+      break;
+    case clang::Qualifiers::Weak:
+      qualifiers.push_back (TQ_Weak);
+      break;
+    case clang::Qualifiers::Strong:
+      qualifiers.push_back (TQ_Strong);
+      break;
+    }
+
+  switch (quals.getObjCLifetime ())
+    {
+    case clang::Qualifiers::OCL_None:
+      // Nothing to add.
+      break;
+    case clang::Qualifiers::OCL_ExplicitNone:
+      qualifiers.push_back (TQ_OCL_ExplicitNone);
+      break;
+    case clang::Qualifiers::OCL_Strong:
+      qualifiers.push_back (TQ_OCL_Strong);
+      break;
+    case clang::Qualifiers::OCL_Weak:
+      qualifiers.push_back (TQ_OCL_Weak);
+      break;
+    case clang::Qualifiers::OCL_Autoreleasing:
+      qualifiers.push_back (TQ_OCL_Autoreleasing);
+      break;
+    }
+
+  option<int> addressSpace;
+  if (quals.hasAddressSpace ())
+    addressSpace = quals.getAddressSpace ();
+
+  stack.push (mkQualifiedType (unqual, qualifiers, addressSpace));
+
+  return true;
+}
+
+
+bool
+OCamlVisitor::TraverseBuiltinType (clang::BuiltinType *T)
+{
+  TRACE;
+
+  BuiltinType bt = translate_builtin_type (T->getKind ());
+
+  stack.push (mkBuiltinType (bt));
+
+  return true;
+}
+
+
+
+bool
+OCamlVisitor::TraversePointerType (clang::PointerType *T)
+{
+  TRACE;
+
+  ptr<Ctyp> pointee = must_traverse (T->getPointeeType ());
+
+  stack.push (mkPointerType (pointee));
+
+  return true;
+}
+
+
+bool
+OCamlVisitor::TraverseFunctionProtoType (clang::FunctionProtoType *T)
+{
+  TRACE;
+
+  ptr<Ctyp> result = must_traverse (T->getResultType ());
+  list<Ctyp> args = traverse_list (arg_type_range (T));
+
+  // TODO: exceptions
+
+  stack.push (mkFunctionProtoType (result, args));
+
+  return true;
+}
+
+
+#define UNIMP_TYPE(CLASS)					\
+bool								\
+OCamlVisitor::Traverse##CLASS##Type (clang::CLASS##Type *type)	\
+{								\
+  TODO;								\
+  Base::Traverse##CLASS##Type (type);				\
+  return true;							\
+}
+
+UNIMP_TYPE(Atomic)
+UNIMP_TYPE(Attributed)
+UNIMP_TYPE(Auto)
+UNIMP_TYPE(BlockPointer)
+UNIMP_TYPE(Complex)
+bool
+OCamlVisitor::TraverseConstantArrayType (clang::ConstantArrayType *T)
+{
+  TRACE;
+
+  ptr<Ctyp> element = must_traverse (T->getElementType ());
+  uint64_t size = T->getSize ().getZExtValue ();
+
+  stack.push (mkConstantArrayType (element, size));
+
+  return true;
+}
+
+
+UNIMP_TYPE(Decayed)
+UNIMP_TYPE(Decltype)
+UNIMP_TYPE(DependentName)
+UNIMP_TYPE(DependentSizedArray)
+UNIMP_TYPE(DependentSizedExtVector)
+UNIMP_TYPE(DependentTemplateSpecialization)
+bool
+OCamlVisitor::TraverseElaboratedType (clang::ElaboratedType *T)
+{
+  TRACE;
+
+  TraverseNestedNameSpecifier (T->getQualifier ());
+  ptr<Ctyp> type = must_traverse (T->getNamedType ());
+
+  stack.push (mkElaboratedType (type));
+
+  return true;
+}
+
+
+UNIMP_TYPE(Enum)
+UNIMP_TYPE(ExtVector)
+UNIMP_TYPE(FunctionNoProto)
+UNIMP_TYPE(IncompleteArray)
+UNIMP_TYPE(InjectedClassName)
+UNIMP_TYPE(LValueReference)
+UNIMP_TYPE(MemberPointer)
+UNIMP_TYPE(ObjCInterface)
+UNIMP_TYPE(ObjCObjectPointer)
+UNIMP_TYPE(ObjCObject)
+UNIMP_TYPE(PackExpansion)
+UNIMP_TYPE(Paren)
+bool
+OCamlVisitor::TraverseRecordType (clang::RecordType *T)
+{
+  TRACE;
+
+  TagTypeKind kind = translate_tag_type_kind (T->getDecl ()->getTagKind ());
+  clang::StringRef name = T->getDecl ()->getName ();
+
+  stack.push (mkRecordType (kind, name));
+
+  return true;
+}
+
+
+UNIMP_TYPE(RValueReference)
+UNIMP_TYPE(SubstTemplateTypeParmPack)
+UNIMP_TYPE(SubstTemplateTypeParm)
+UNIMP_TYPE(TemplateSpecialization)
+UNIMP_TYPE(TemplateTypeParm)
+bool
+OCamlVisitor::TraverseTypedefType (clang::TypedefType *T)
+{
+  TRACE;
+
+  clang::StringRef name = T->getDecl ()->getName ();
+
+  stack.push (mkTypedefType (name));
+
+  return true;
+}
+
+
+UNIMP_TYPE(TypeOfExpr)
+UNIMP_TYPE(TypeOf)
+UNIMP_TYPE(UnaryTransform)
+UNIMP_TYPE(UnresolvedUsing)
+UNIMP_TYPE(VariableArray)
+UNIMP_TYPE(Vector)
+
+
+// }}}
 
 /****************************************************
  * {{{1 TypeLocs
@@ -1159,49 +1480,63 @@ OCamlVisitor::TraverseTypedefTypeLoc (clang::TypedefTypeLoc TL)
   TRACE;
 
   clang::StringRef name = TL.getTypedefNameDecl ()->getName ();
+
   stack.push (mkTypedefTypeLoc (name));
 
   return true;
 }
 
 
-#define UNIMP_TYPE(CLASS)						\
+bool
+OCamlVisitor::TraverseParenTypeLoc (clang::ParenTypeLoc TL)
+{
+  TRACE;
+
+  ptr<TypeLoc> inner = must_traverse (TL.getInnerLoc ());
+
+  stack.push (mkParenTypeLoc (inner));
+
+  return true;
+}
+
+
+#define UNIMP_TYPE_LOC(CLASS)						\
 bool									\
 OCamlVisitor::Traverse##CLASS##TypeLoc (clang::CLASS##TypeLoc TL)	\
 {									\
+  TODO;									\
   TRACE;								\
   stack.push (mkUnimpTypeLoc (#CLASS));					\
   return true;								\
 }
 
-UNIMP_TYPE (Atomic)
-UNIMP_TYPE (Attributed)
-UNIMP_TYPE (Auto)
-UNIMP_TYPE (BlockPointer)
-UNIMP_TYPE (Complex)
-UNIMP_TYPE (Decayed)
-UNIMP_TYPE (Decltype)
-UNIMP_TYPE (DependentName)
-UNIMP_TYPE (DependentSizedArray)
-UNIMP_TYPE (DependentSizedExtVector)
-UNIMP_TYPE (DependentTemplateSpecialization)
-UNIMP_TYPE (ExtVector)
-UNIMP_TYPE (InjectedClassName)
-UNIMP_TYPE (LValueReference)
-UNIMP_TYPE (MemberPointer)
-UNIMP_TYPE (ObjCInterface)
-UNIMP_TYPE (ObjCObject)
-UNIMP_TYPE (ObjCObjectPointer)
-UNIMP_TYPE (PackExpansion)
-UNIMP_TYPE (Paren)
-UNIMP_TYPE (RValueReference)
-UNIMP_TYPE (SubstTemplateTypeParm)
-UNIMP_TYPE (SubstTemplateTypeParmPack)
-UNIMP_TYPE (TemplateSpecialization)
-UNIMP_TYPE (TemplateTypeParm)
-UNIMP_TYPE (UnaryTransform)
-UNIMP_TYPE (UnresolvedUsing)
-UNIMP_TYPE (Vector)
+UNIMP_TYPE_LOC (Atomic)
+UNIMP_TYPE_LOC (Attributed)
+UNIMP_TYPE_LOC (Auto)
+UNIMP_TYPE_LOC (BlockPointer)
+UNIMP_TYPE_LOC (Complex)
+UNIMP_TYPE_LOC (Decayed)
+UNIMP_TYPE_LOC (Decltype)
+UNIMP_TYPE_LOC (DependentName)
+UNIMP_TYPE_LOC (DependentSizedArray)
+UNIMP_TYPE_LOC (DependentSizedExtVector)
+UNIMP_TYPE_LOC (DependentTemplateSpecialization)
+UNIMP_TYPE_LOC (ExtVector)
+UNIMP_TYPE_LOC (InjectedClassName)
+UNIMP_TYPE_LOC (LValueReference)
+UNIMP_TYPE_LOC (MemberPointer)
+UNIMP_TYPE_LOC (ObjCInterface)
+UNIMP_TYPE_LOC (ObjCObject)
+UNIMP_TYPE_LOC (ObjCObjectPointer)
+UNIMP_TYPE_LOC (PackExpansion)
+UNIMP_TYPE_LOC (RValueReference)
+UNIMP_TYPE_LOC (SubstTemplateTypeParm)
+UNIMP_TYPE_LOC (SubstTemplateTypeParmPack)
+UNIMP_TYPE_LOC (TemplateSpecialization)
+UNIMP_TYPE_LOC (TemplateTypeParm)
+UNIMP_TYPE_LOC (UnaryTransform)
+UNIMP_TYPE_LOC (UnresolvedUsing)
+UNIMP_TYPE_LOC (Vector)
 
 // }}}
 
@@ -1227,7 +1562,8 @@ OCamlVisitor::TraverseFunctionDecl (clang::FunctionDecl *D)
     {
       // TODO: implement this
 
-      // Some special functions such as printf don't have a valid TSI.
+      // Built-in implicit function declarations such as
+      // printf don't have a valid TSI.
       ptr<TypeLoc> result = mkBuiltinTypeLoc (BT_Void);
       list<Decl> args;// = traverse_list (param_range (D));
 
@@ -1388,11 +1724,14 @@ OCamlVisitor::TraverseVarDecl (clang::VarDecl *D)
 bool
 OCamlVisitor::TraverseTranslationUnitDecl (clang::TranslationUnitDecl *D)
 {
+  using namespace boost::adaptors;
   TRACE;
 
-  // Dense is false for this call, because TranslationUnitDecls
-  // may contain implicit declarations, which we skip here.
-  list<Decl> decls = traverse_list<false> (decl_range (D));
+  // We filter out implicit declarations before iterating.
+  list<Decl> decls = traverse_list (decl_range (D)
+    | filtered ([] (clang::Decl *D) {
+        return !D->isImplicit ();
+      }));
 
   stack.push (mkTranslationUnitDecl (decls));
 
@@ -1441,11 +1780,40 @@ UNIMP_IMPL (Decl, VarTemplateDecl)
 // }}}
 
 
+size_t
+adt_of_clangAST_sharing (clang::TranslationUnitDecl const *D, ptr<Decl> &decl)
+{
+  //TIME;
+
+  OCamlADTBase::ids_assigned = 0;
+  OCamlVisitor visitor;
+  visitor.sharing = true;
+  decl = visitor.translate (D);
+  return OCamlADTBase::ids_assigned;
+}
+
+
+size_t
+adt_of_clangAST_no_sharing (clang::TranslationUnitDecl const *D, ptr<Decl> &decl)
+{
+  //TIME;
+
+  OCamlADTBase::ids_assigned = 0;
+  OCamlVisitor visitor;
+  visitor.sharing = false;
+  decl = visitor.translate (D);
+  return OCamlADTBase::ids_assigned;
+}
+
+
 ptr<Decl>
 adt_of_clangAST (clang::TranslationUnitDecl const *D)
 {
-  TIME;
-  OCamlVisitor visitor;
-  //D->dump ();
-  return visitor.translate (D);
+  ptr<Decl> decl1;
+  adt_of_clangAST_no_sharing (D, decl1);
+
+  ptr<Decl> decl2;
+  adt_of_clangAST_sharing (D, decl2);
+
+  return decl1;
 }

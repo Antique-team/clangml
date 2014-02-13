@@ -141,6 +141,7 @@ let rec string_of_cpp_type = function
   | TyName name -> name
   | TyConst ty -> string_of_cpp_type ty ^ " const"
   | TyPointer ty -> string_of_cpp_type ty ^ "*"
+  | TyReference ty -> string_of_cpp_type ty ^ "&"
   | TyTemplate (template, ty) -> template ^ "<" ^ string_of_cpp_type ty ^ ">"
   | ty ->
       Log.unimp "type: %a"

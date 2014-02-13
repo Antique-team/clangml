@@ -165,7 +165,8 @@ let class_intf_for_sum_type ctx (sum_type_name, branches) =
             Return (
               FCall (
                 "value_of_adt",
-                IdExpr "this"
+                IdExpr "ctx"
+                :: IdExpr "this"
                 :: List.mapi (fun i ty -> IdExpr ("field" ^ string_of_int i)) types
               )
             );
@@ -175,7 +176,11 @@ let class_intf_for_sum_type ctx (sum_type_name, branches) =
           flags  = [Virtual];
           retty  = TyName "value";
           name   = "ToValue";
-          params = [];
+          params = [{
+            empty_decl with
+            decl_type = TyReference (TyName "value_of_context");
+            decl_name = "ctx";
+          }];
           this_flags = [Const];
           body;
         }

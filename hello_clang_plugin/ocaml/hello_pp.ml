@@ -162,6 +162,15 @@ and pp_expr ff = function
   | UnimpExpr name ->
       Format.fprintf ff "<%s>" name
 
+  (*
+  | TypedExpr (expr, ctyp) ->
+      Format.fprintf ff "(%a : %a)"
+        pp_expr expr
+        pp_type ctyp
+  *)
+  | TypedExpr (expr, ctyp) ->
+      pp_expr ff expr
+
   | CharacterLiteral c -> Format.pp_print_string ff (Char.escaped c)
   | IntegerLiteral i -> Format.pp_print_int ff i
   | FloatingLiteral f -> Format.pp_print_float ff f
@@ -187,7 +196,7 @@ and pp_expr ff = function
   | CompoundLiteralExpr (ty, expr)
   | CStyleCastExpr (ty, expr) ->
       Format.fprintf ff "(%a)%a"
-        pp_type ty
+        pp_tloc ty
         pp_expr expr
   | ParenExpr expr ->
       Format.fprintf ff "(%a)"
@@ -227,19 +236,19 @@ and pp_expr ff = function
         pp_expr expr
   | SizeOfType ty ->
       Format.fprintf ff "sizeof (%a)"
-        pp_type ty
+        pp_tloc ty
   | AlignOfExpr expr ->
       Format.fprintf ff "alignof %a"
         pp_expr expr
   | AlignOfType ty ->
       Format.fprintf ff "alignof (%a)"
-        pp_type ty
+        pp_tloc ty
   | VecStepExpr expr ->
       Format.fprintf ff "vec_step %a"
         pp_expr expr
   | VecStepType ty ->
       Format.fprintf ff "vec_step (%a)"
-        pp_type ty
+        pp_tloc ty
 
 
 and pp_stmt ff = function
@@ -314,13 +323,13 @@ and pp_stmt ff = function
         (Formatx.pp_list pp_decl) decls
 
 
-and pp_type ff = function
+and pp_tloc ff = function
   | UnimpTypeLoc name ->
       Format.fprintf ff "<%s>" name
 
   | QualifiedTypeLoc (unqual, quals, addr_space) ->
       Format.fprintf ff "%a %a%s"
-        pp_type unqual
+        pp_tloc unqual
         Formatx.(pp_list ~sep:(pp_sep "") pp_print_string)
           (List.map string_of_qualifier quals)
         (match addr_space with
@@ -337,36 +346,99 @@ and pp_type ff = function
         pp_expr expr
   | TypeOfTypeLoc ty ->
       Format.fprintf ff "typeof (%a)"
-        pp_type ty
+        pp_tloc ty
+  | ParenTypeLoc ty ->
+      Format.fprintf ff "(%a)"
+        pp_tloc ty
   | PointerTypeLoc ty ->
       Format.fprintf ff "%a ptr"
-        pp_type ty
+        pp_tloc ty
   | FunctionNoProtoTypeLoc ty ->
       Format.fprintf ff "? -> %a"
-        pp_type ty
+        pp_tloc ty
   | FunctionProtoTypeLoc (ty, args) ->
       Format.fprintf ff "(%a) -> %a"
         (Formatx.pp_list pp_decl) args
-        pp_type ty
+        pp_tloc ty
   | ConstantArrayTypeLoc (ty, size) ->
       Format.fprintf ff "%a[%d]"
-        pp_type ty
+        pp_tloc ty
         size
   | VariableArrayTypeLoc (ty, size) ->
       Format.fprintf ff "%a[%a]"
-        pp_type ty
+        pp_tloc ty
         pp_expr size
   | IncompleteArrayTypeLoc (ty) ->
       Format.fprintf ff "%a[]"
-        pp_type ty
+        pp_tloc ty
   | ElaboratedTypeLoc (ty) ->
       Format.fprintf ff "%a"
-        pp_type ty
+        pp_tloc ty
   | RecordTypeLoc (kind, name) ->
       Format.fprintf ff "%s %s"
         (string_of_tag_type_kind kind)
         (if name = "" then "<anonymous>" else name)
   | EnumTypeLoc (name) ->
+      Format.pp_print_string ff
+        (if name = "" then "<anonymous>" else name)
+
+
+and pp_type ff = function
+  | UnimpType name ->
+      Format.fprintf ff "<%s>" name
+
+  | QualifiedType (unqual, quals, addr_space) ->
+      Format.fprintf ff "%a %a%s"
+        pp_type unqual
+        Formatx.(pp_list ~sep:(pp_sep "") pp_print_string)
+          (List.map string_of_qualifier quals)
+        (match addr_space with
+         | None -> ""
+         | Some aspace -> " addr_space_" ^ string_of_int aspace)
+  | BuiltinType bt ->
+      Format.fprintf ff "%s"
+        (string_of_builtin_type bt)
+  | TypedefType name ->
+      Format.fprintf ff "%s"
+        name
+  | TypeOfExprType expr ->
+      Format.fprintf ff "typeof (%a)"
+        pp_expr expr
+  | TypeOfType ty ->
+      Format.fprintf ff "typeof (%a)"
+        pp_type ty
+  | ParenType ty ->
+      Format.fprintf ff "(%a)"
+        pp_type ty
+  | PointerType ty ->
+      Format.fprintf ff "%a ptr"
+        pp_type ty
+  | FunctionNoProtoType ty ->
+      Format.fprintf ff "? -> %a"
+        pp_type ty
+  | FunctionProtoType (ty, args) ->
+      Format.fprintf ff "(%a) -> %a"
+        (Formatx.pp_list pp_type) args
+        pp_type ty
+  | ConstantArrayType (ty, size) ->
+      Format.fprintf ff "%a[%d]"
+        pp_type ty
+        size
+  | VariableArrayType (ty, size) ->
+      Format.fprintf ff "%a[%a]"
+        pp_type ty
+        pp_expr size
+  | IncompleteArrayType (ty) ->
+      Format.fprintf ff "%a[]"
+        pp_type ty
+  | ElaboratedType (ty) ->
+      Format.fprintf ff "%a"
+        pp_type ty
+  | RecordType (kind, name) ->
+      Format.fprintf ff "%s %s"
+        (string_of_tag_type_kind kind)
+        (if name = "" then "<anonymous>" else name)
+  | EnumType (name) ->
       Format.pp_print_string ff
         (if name = "" then "<anonymous>" else name)
 
@@ -382,7 +454,7 @@ and pp_decl ff = function
   | TypedefDecl (ty, name) ->
       Format.fprintf ff "typedef %s : %a;"
         name
-        pp_type ty
+        pp_tloc ty
   | FunctionDecl (ty, name, body) ->
       Format.fprintf ff "@[<v2>%a@]@, = %a"
         pp_named_arg (name, ty)
@@ -416,8 +488,8 @@ and pp_decl ff = function
 
 and pp_named_arg ff = function
   | ("", ty) ->
-      pp_type ff ty
+      pp_tloc ff ty
   | (name, ty) ->
       Format.fprintf ff "%s : %a"
         name
-        pp_type ty
+        pp_tloc ty

@@ -155,6 +155,8 @@ type designator =
 and expr =
   | UnimpExpr			of string
 
+  | TypedExpr			of expr * ctyp
+
   | IntegerLiteral		of int
   | CharacterLiteral		of char
   | FloatingLiteral		of float
@@ -210,6 +212,7 @@ and type_loc =
   | BuiltinTypeLoc		of builtin_type
   | TypeOfExprTypeLoc		of expr
   | TypeOfTypeLoc		of type_loc
+  | ParenTypeLoc		of type_loc
   | QualifiedTypeLoc		of type_loc * qualifier list * int option
   | TypedefTypeLoc		of (* name *)string
   | PointerTypeLoc		of (* pointee *)type_loc
@@ -221,6 +224,25 @@ and type_loc =
   | ElaboratedTypeLoc		of (* named-type *)type_loc
   | EnumTypeLoc			of (* name *)string
   | RecordTypeLoc		of (* kind *)tag_type_kind * (* name *)string
+
+and ctyp =
+  | UnimpType			of string
+
+  | BuiltinType			of builtin_type
+  | TypeOfExprType		of expr
+  | TypeOfType			of ctyp
+  | ParenType			of ctyp
+  | QualifiedType		of ctyp * qualifier list * int option
+  | TypedefType			of (* name *)string
+  | PointerType			of (* pointee *)ctyp
+  | FunctionNoProtoType		of (* result *)ctyp
+  | FunctionProtoType		of (* result *)ctyp * ctyp list
+  | ConstantArrayType		of (* member-type *)ctyp * (* size *)int
+  | VariableArrayType		of (* member-type *)ctyp * (* size *)expr
+  | IncompleteArrayType		of (* member-type *)ctyp
+  | ElaboratedType		of (* named-type *)ctyp
+  | EnumType			of (* name *)string
+  | RecordType			of (* kind *)tag_type_kind * (* name *)string
 
 and decl =
   | UnimpDecl			of string

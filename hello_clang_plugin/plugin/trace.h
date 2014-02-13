@@ -5,9 +5,10 @@
 #include <sys/time.h>
 
 
-static unsigned int level = 0;
 struct tracer
 {
+  static unsigned int level;
+
   tracer (char const *func, bool timing)
     : func (func)
     , timing (timing)
