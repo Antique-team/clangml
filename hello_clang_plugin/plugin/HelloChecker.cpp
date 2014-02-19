@@ -57,7 +57,7 @@ to_value (adt_ptr ob)
   OCamlADTBase::values_created = 0;
   value_of_context ctx (ob->id);
   value result = ob->to_value (ctx);
-  //printf ("%lu values created\n", OCamlADTBase::values_created);
+  printf ("%lu values created\n", OCamlADTBase::values_created);
 
   return result;
 }
@@ -70,12 +70,12 @@ HelloChecker::checkASTDecl (const TranslationUnitDecl *D,
 {
   CAMLparam0 ();
   CAMLlocal1 (result);
-  value *cb;
 
   initialize_caml ();
 
-  for (size_t loops = 0;; loops++)
+  for (size_t loops = 0; loops < 1; loops++)
     {
+      value *cb;
 #if HANDLE_CXX_EXN
       try
 #endif

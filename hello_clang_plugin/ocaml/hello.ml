@@ -5,17 +5,30 @@ external check_bridge_version : string -> unit = "check_bridge_version"
 let null =
   Format.formatter_of_out_channel (open_out "/dev/null")
 
-let print_expr (e: expr) : unit =
+
+let run_processor name arg pp value =
   Gc.compact ();
-  Format.fprintf null "@[<v2>Expression is:@,%a@]@." Hello_pp.pp_expr e
+  Format.fprintf null "@[<v2>%s is:@,%a@]@."
+    name pp value;
+  let proc = Unix.open_process_out ("../ast-processor/main.byte " ^ arg) in
+
+  Marshal.to_channel proc value [];
+
+  match Unix.close_process_out proc with
+  | Unix.WEXITED 0 -> (* all went fine *) ()
+  | Unix.WEXITED   status -> failwith ("WEXITED "   ^ string_of_int status)
+  | Unix.WSIGNALED status -> failwith ("WSIGNALED " ^ string_of_int status)
+  | Unix.WSTOPPED  status -> failwith ("WSTOPPED "  ^ string_of_int status)
+
+
+let print_expr (e: expr) : unit =
+  run_processor "Expression" "expr" Hello_pp.pp_expr e
 
 let print_stmt (s: stmt) : unit =
-  Gc.compact ();
-  Format.fprintf null "@[<v2>Statement is:@,%a@]@." Hello_pp.pp_stmt s
+  run_processor "Statement" "stmt" Hello_pp.pp_stmt s
 
 let print_decl (d: decl) : unit =
-  Gc.compact ();
-  Format.fprintf null "@[<v2>Declaration is:@,%a@]@." Hello_pp.pp_decl d
+  run_processor "Declaration" "decl" Hello_pp.pp_decl d
 
 
 let () =

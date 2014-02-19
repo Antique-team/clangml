@@ -1,0 +1,12 @@
+# camlp4
+<*.ml{,i}>: package(deriving-ocsigen.syntax), syntax(camlp4o), package(apron)
+<*/*/*.ml{,i}>: package(apron)
+<*.byte>: package(deriving-ocsigen), package(unix)
+
+true: annot
+
+"common": include
+"memcad/c": include
+"memcad/lib": include
+"memcad/nd": include
+"memcad/sd": include

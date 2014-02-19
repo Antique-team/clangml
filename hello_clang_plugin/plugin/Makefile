@@ -25,6 +25,7 @@ LDFLAGS =	\
 	-ldl	\
 	-ltinfo	\
 	-lasmrun	\
+	-lunix	\
 	-L$(HOME)/.opam/4.01.0+PIC/lib/ocaml	\
 	-Wl,-rpath,$(HOME)/.opam/4.01.0+PIC/lib/ocaml	\
 	-ggdb3
@@ -49,7 +50,7 @@ OCamlVisitor.o: OCamlVisitor.cpp hello_cpp.h $(wildcard *.h ../../camlp4_autogen
 hello_cpp.o: hello_cpp.cpp hello_cpp.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
 	$(EXT)/bin/clang++ -c $< $(CXXFLAGS) -frtti
 
-hello_cpp.h: ../ocaml/hello_ast.ml ../../camlp4_autogen/main.byte
+hello_cpp.h: ../../common/hello_ast.ml ../../camlp4_autogen/main.byte
 	../../camlp4_autogen/main.byte hello_cpp $<
 
 ../../camlp4_autogen/main.byte: $(wildcard ../../camlp4_autogen/*.ml*)

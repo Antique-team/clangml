@@ -28,23 +28,8 @@ template<typename T>
 struct clang_compare
 {
   typedef T type;
-  bool operator () (T a, T b);
+  bool operator () (T a, T b) { return a < b; }
 };
-
-template<typename T>
-struct clang_compare<T *>
-{
-  typedef T type;
-  bool operator () (T *a, T *b) { return a < b; }
-};
-
-
-template<>
-bool
-clang_compare<clang::TypeLoc>::operator () (type a, type b)
-{
-  return a.getTypePtr () < b.getTypePtr ();
-}
 
 
 static bool
@@ -64,18 +49,22 @@ clang_compare<clang::QualType>::operator () (type a, type b)
 
 template<>
 bool
-clang_compare<clang::DesignatedInitExpr::Designator>::operator () (type a, type b)
+clang_compare<clang::TypeLoc>::operator () (type a, type b)
 {
-  return memcmp (&a, &b, sizeof a) < 0;
+  return clang_compare<clang::QualType> () (a.getType (), b.getType ());
 }
 
 
 struct OCamlVisitor
   : clang::RecursiveASTVisitor<OCamlVisitor>
 {
+  // Enable caching (and sharing) of bridge AST objects.
   bool sharing = true;
+  // Enable sharing for Type (and Ctyp) objects.
   bool share_types = true;
-  bool share_type_locs = true;
+  // Also enable sharing for TypeLoc objects, ignoring source
+  // locations, thus making source locations for TypeLocs useless.
+  bool share_type_locs = false;
 
 private:
   typedef clang::RecursiveASTVisitor<OCamlVisitor> Base;
@@ -1815,5 +1804,5 @@ adt_of_clangAST (clang::TranslationUnitDecl const *D)
   ptr<Decl> decl2;
   adt_of_clangAST_sharing (D, decl2);
 
-  return decl1;
+  return decl2;
 }

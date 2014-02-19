@@ -59,7 +59,7 @@ CLANG_BUILD_DIR = $(CLANG_DOWNLOAD_DIR)/build
 
 .PHONY: ocamlbuild_stage
 
-all: hello_lib.o
+all: hello_lib.o ../ast-processor/main.byte
 	$(MAKE) -C plugin
 
 %.o : %.c
@@ -68,12 +68,16 @@ all: hello_lib.o
 %.o : %.cpp
 	$(CPP) $(CPP_FLAGS) $(C_INCLUDES) -c $<  -o $@
 
- %.o : ocaml/_build/%.cmxa
-	ocamlopt $< -output-obj -o $@ -linkall
+%.o : ocaml/_build/%.cmxa
+	ocamlfind ocamlopt $< -output-obj -o $@ -linkall -package unix -linkpkg
 
 
 ocaml/_build/%.cmxa : ocaml/%.mllib ocamlbuild_stage
 	cd ocaml && ocamlbuild $(OCAMLBUILD_FLAGS) $(shell basename $@)
+
+
+../ast-processor/main.byte: $(wildcard ../ast-processor/*.ml)
+	$(MAKE) -C $(@D)
 
 
 # Build all the .cmxa files need to make the library specified in $(OCAML_LIBRARY_MODULE_LIST_FILE_BASE).mllib
