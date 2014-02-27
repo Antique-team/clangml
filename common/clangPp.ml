@@ -1,6 +1,6 @@
-(* Hello pretty printer *)
+(* Clang AST pretty printer *)
 
-open Hello_ast
+open ClangAst
 
 let string_of_qualifier = function
   | TQ_Const -> "const"
@@ -145,21 +145,29 @@ let pp_option f ff = function
   | None -> Format.pp_print_string ff "<null>"
   | Some x -> f ff x
 
+let pp_sloc ff sloc =
+  if ClangSloc.is_valid sloc then
+    Format.fprintf ff "# %d \"%s\"\n"
+      sloc.loc_s_line
+      sloc.loc_s_filename
+  else
+    Format.pp_print_string ff "# <invalid sloc>\n"
+
 
 let rec pp_designator ff = function
-  | FieldDesignator (name) ->
+  | FieldDesignator (_, name) ->
       Format.fprintf ff ".%s" name
-  | ArrayDesignator (index) ->
+  | ArrayDesignator (_, index) ->
       Format.fprintf ff "[%a]"
         pp_expr index
-  | ArrayRangeDesignator (left, right) ->
+  | ArrayRangeDesignator (_, left, right) ->
       Format.fprintf ff "[%a ... %a]"
         pp_expr left
         pp_expr right
 
 
 and pp_expr ff = function
-  | UnimpExpr name ->
+  | UnimpExpr (_, name) ->
       Format.fprintf ff "<%s>" name
 
   (*
@@ -168,166 +176,170 @@ and pp_expr ff = function
         pp_expr expr
         pp_type ctyp
   *)
-  | TypedExpr (expr, ctyp) ->
+  | TypedExpr (_, expr, ctyp) ->
       pp_expr ff expr
 
-  | CharacterLiteral c -> Format.pp_print_string ff (Char.escaped c)
-  | IntegerLiteral i -> Format.pp_print_int ff i
-  | FloatingLiteral f -> Format.pp_print_float ff f
-  | StringLiteral s -> Format.fprintf ff "\"%s\"" (String.escaped s)
-  | UnaryOperator (op, e) ->
+  | CharacterLiteral (_, c) -> Format.pp_print_string ff (Char.escaped c)
+  | IntegerLiteral (_, i) -> Format.pp_print_int ff i
+  | FloatingLiteral (_, f) -> Format.pp_print_float ff f
+  | StringLiteral (_, s) -> Format.fprintf ff "\"%s\"" (String.escaped s)
+  | UnaryOperator (_, op, e) ->
       if is_prefix op then
         Format.fprintf ff "(%s %a)" (string_of_unary_op op) pp_expr e
       else
         Format.fprintf ff "(%a %s)" pp_expr e (string_of_unary_op op)
-  | BinaryOperator (op, e1, e2) ->
+  | BinaryOperator (_, op, e1, e2) ->
       Format.fprintf ff "(%a %s %a)"
         pp_expr e1
         (string_of_binary_op op)
         pp_expr e2
 
-  | DeclRefExpr name ->
+  | DeclRefExpr (_, name) ->
       Format.pp_print_string ff name
-  | PredefinedExpr kind ->
+  | PredefinedExpr (_, kind) ->
       Format.pp_print_string ff (string_of_predefined_ident kind)
-  | ImplicitCastExpr expr ->
+  | ImplicitCastExpr (_, expr) ->
       Format.fprintf ff "%a"
         pp_expr expr
-  | CompoundLiteralExpr (ty, expr)
-  | CStyleCastExpr (ty, expr) ->
+  | CompoundLiteralExpr (_, ty, expr)
+  | CStyleCastExpr (_, ty, expr) ->
       Format.fprintf ff "(%a)%a"
         pp_tloc ty
         pp_expr expr
-  | ParenExpr expr ->
+  | ParenExpr (_, expr) ->
       Format.fprintf ff "(%a)"
         pp_expr expr
-  | CallExpr (callee, args) ->
+  | VAArgExpr (_, sub, ty) ->
+      Format.fprintf ff "va_arg (%a, %a)"
+        pp_expr sub
+        pp_tloc ty
+  | CallExpr (_, callee, args) ->
       Format.fprintf ff "%a (%a)"
         pp_expr callee
         (Formatx.pp_list pp_expr) args
-  | MemberExpr (base, member, is_arrow) ->
+  | MemberExpr (_, base, member, is_arrow) ->
       Format.fprintf ff "%a%s%s"
         pp_expr base
         (if is_arrow then "->" else ".")
         member
-  | ConditionalOperator (cond, true_expr, false_expr) ->
+  | ConditionalOperator (_, cond, true_expr, false_expr) ->
       Format.fprintf ff "%a ? %a : %a"
         pp_expr cond
         pp_expr true_expr
         pp_expr false_expr
-  | DesignatedInitExpr (designators, init) ->
+  | DesignatedInitExpr (_, designators, init) ->
       Format.fprintf ff "%a = %a"
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_designator) designators
         pp_expr init
-  | InitListExpr (inits) ->
+  | InitListExpr (_, inits) ->
       Format.fprintf ff "{ %a }"
         (Formatx.pp_list pp_expr) inits
-  | ImplicitValueInitExpr ->
+  | ImplicitValueInitExpr (_) ->
       Format.pp_print_string ff "<implicit value>"
-  | ArraySubscriptExpr (base, idx) ->
+  | ArraySubscriptExpr (_, base, idx) ->
       Format.fprintf ff "%a[%a]"
         pp_expr base
         pp_expr idx
-  | StmtExpr (stmt) ->
+  | StmtExpr (_, stmt) ->
       Format.fprintf ff "(%a)"
         pp_stmt stmt
-  | SizeOfExpr expr ->
+  | SizeOfExpr (_, expr) ->
       Format.fprintf ff "sizeof %a"
         pp_expr expr
-  | SizeOfType ty ->
+  | SizeOfType (_, ty) ->
       Format.fprintf ff "sizeof (%a)"
         pp_tloc ty
-  | AlignOfExpr expr ->
+  | AlignOfExpr (_, expr) ->
       Format.fprintf ff "alignof %a"
         pp_expr expr
-  | AlignOfType ty ->
+  | AlignOfType (_, ty) ->
       Format.fprintf ff "alignof (%a)"
         pp_tloc ty
-  | VecStepExpr expr ->
+  | VecStepExpr (_, expr) ->
       Format.fprintf ff "vec_step %a"
         pp_expr expr
-  | VecStepType ty ->
+  | VecStepType (_, ty) ->
       Format.fprintf ff "vec_step (%a)"
         pp_tloc ty
 
 
 and pp_stmt ff = function
-  | UnimpStmt name ->
+  | UnimpStmt (_, name) ->
       Format.fprintf ff "<%s>" name
 
-  | NullStmt ->
+  | NullStmt (_) ->
       Format.pp_print_string ff ";"
-  | BreakStmt ->
+  | BreakStmt (_) ->
       Format.pp_print_string ff "break;"
-  | ContinueStmt ->
+  | ContinueStmt (_) ->
       Format.pp_print_string ff "continue;"
-  | LabelStmt (name, sub) ->
+  | LabelStmt (_, name, sub) ->
       Format.fprintf ff "%s: %a"
         name
         pp_stmt sub
-  | GotoStmt (name) ->
+  | GotoStmt (_, name) ->
       Format.fprintf ff "goto %s;"
         name
   | ExprStmt e ->
       Format.fprintf ff "%a;"
         pp_expr e
-  | CompoundStmt ss ->
+  | CompoundStmt (_, ss) ->
       Format.fprintf ff "{ %a }"
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_stmt) ss
-  | ReturnStmt None ->
+  | ReturnStmt (_, None) ->
       Format.fprintf ff "return;"
-  | ReturnStmt (Some e) ->
+  | ReturnStmt (_, Some e) ->
       Format.fprintf ff "return %a;"
         pp_expr e
-  | DefaultStmt sub ->
+  | DefaultStmt (_, sub) ->
       Format.fprintf ff "default: %a"
         pp_stmt sub
-  | CaseStmt (lhs, None, sub) ->
+  | CaseStmt (_, lhs, None, sub) ->
       Format.fprintf ff "case %a: %a"
         pp_expr lhs
         pp_stmt sub
-  | CaseStmt (lhs, Some rhs, sub) ->
+  | CaseStmt (_, lhs, Some rhs, sub) ->
       Format.fprintf ff "case %a ... %a: %a"
         pp_expr lhs
         pp_expr rhs
         pp_stmt sub
-  | ForStmt (init, cond, inc, body) ->
+  | ForStmt (_, init, cond, inc, body) ->
       Format.fprintf ff "for (%a%a;%a) %a"
         (pp_option pp_stmt) init
         (pp_option pp_expr) cond
         (pp_option pp_expr) inc
         pp_stmt body
-  | WhileStmt (cond, body) ->
+  | WhileStmt (_, cond, body) ->
       Format.fprintf ff "while (%a) %a"
         pp_expr cond
         pp_stmt body
-  | DoStmt (body, cond) ->
+  | DoStmt (_, body, cond) ->
       Format.fprintf ff "do %a while (%a)"
         pp_stmt body
         pp_expr cond
-  | SwitchStmt (cond, body) ->
+  | SwitchStmt (_, cond, body) ->
       Format.fprintf ff "switch (%a) %a"
         pp_expr cond
         pp_stmt body
-  | IfStmt (cond, thn, None) ->
+  | IfStmt (_, cond, thn, None) ->
       Format.fprintf ff "if (%a) %a"
         pp_expr cond
         pp_stmt thn
-  | IfStmt (cond, thn, Some els) ->
+  | IfStmt (_, cond, thn, Some els) ->
       Format.fprintf ff "if (%a) %a else %a"
         pp_expr cond
         pp_stmt thn
         pp_stmt els
-  | DeclStmt decls ->
+  | DeclStmt (_, decls) ->
       Format.fprintf ff "%a;"
         (Formatx.pp_list pp_decl) decls
 
 
 and pp_tloc ff = function
-  | UnimpTypeLoc name ->
+  | UnimpTypeLoc (_, name) ->
       Format.fprintf ff "<%s>" name
 
-  | QualifiedTypeLoc (unqual, quals, addr_space) ->
+  | QualifiedTypeLoc (_, unqual, quals, addr_space) ->
       Format.fprintf ff "%a %a%s"
         pp_tloc unqual
         Formatx.(pp_list ~sep:(pp_sep "") pp_print_string)
@@ -335,50 +347,50 @@ and pp_tloc ff = function
         (match addr_space with
          | None -> ""
          | Some aspace -> " addr_space_" ^ string_of_int aspace)
-  | BuiltinTypeLoc bt ->
+  | BuiltinTypeLoc (_, bt) ->
       Format.fprintf ff "%s"
         (string_of_builtin_type bt)
-  | TypedefTypeLoc name ->
+  | TypedefTypeLoc (_, name) ->
       Format.fprintf ff "%s"
         name
-  | TypeOfExprTypeLoc expr ->
+  | TypeOfExprTypeLoc (_, expr) ->
       Format.fprintf ff "typeof (%a)"
         pp_expr expr
-  | TypeOfTypeLoc ty ->
+  | TypeOfTypeLoc (_, ty) ->
       Format.fprintf ff "typeof (%a)"
         pp_tloc ty
-  | ParenTypeLoc ty ->
+  | ParenTypeLoc (_, ty) ->
       Format.fprintf ff "(%a)"
         pp_tloc ty
-  | PointerTypeLoc ty ->
+  | PointerTypeLoc (_, ty) ->
       Format.fprintf ff "%a ptr"
         pp_tloc ty
-  | FunctionNoProtoTypeLoc ty ->
+  | FunctionNoProtoTypeLoc (_, ty) ->
       Format.fprintf ff "? -> %a"
         pp_tloc ty
-  | FunctionProtoTypeLoc (ty, args) ->
+  | FunctionProtoTypeLoc (_, ty, args) ->
       Format.fprintf ff "(%a) -> %a"
         (Formatx.pp_list pp_decl) args
         pp_tloc ty
-  | ConstantArrayTypeLoc (ty, size) ->
+  | ConstantArrayTypeLoc (_, ty, size) ->
       Format.fprintf ff "%a[%d]"
         pp_tloc ty
         size
-  | VariableArrayTypeLoc (ty, size) ->
+  | VariableArrayTypeLoc (_, ty, size) ->
       Format.fprintf ff "%a[%a]"
         pp_tloc ty
         pp_expr size
-  | IncompleteArrayTypeLoc (ty) ->
+  | IncompleteArrayTypeLoc (_, ty) ->
       Format.fprintf ff "%a[]"
         pp_tloc ty
-  | ElaboratedTypeLoc (ty) ->
+  | ElaboratedTypeLoc (_, ty) ->
       Format.fprintf ff "%a"
         pp_tloc ty
-  | RecordTypeLoc (kind, name) ->
+  | RecordTypeLoc (_, kind, name) ->
       Format.fprintf ff "%s %s"
         (string_of_tag_type_kind kind)
         (if name = "" then "<anonymous>" else name)
-  | EnumTypeLoc (name) ->
+  | EnumTypeLoc (_, name) ->
       Format.pp_print_string ff
         (if name = "" then "<anonymous>" else name)
 
@@ -441,46 +453,49 @@ and pp_type ff = function
   | EnumType (name) ->
       Format.pp_print_string ff
         (if name = "" then "<anonymous>" else name)
+  | DecayedType (decayed, original) ->
+      Format.fprintf ff "%a"
+        pp_type decayed
 
 
 and pp_decl ff = function
-  | UnimpDecl name ->
+  | UnimpDecl (_, name) ->
       Format.fprintf ff "<%s>" name
 
-  | EmptyDecl ->
+  | EmptyDecl (_) ->
       Format.pp_print_string ff ";"
-  | TranslationUnitDecl dd ->
+  | TranslationUnitDecl (_, dd) ->
       Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl ff dd
-  | TypedefDecl (ty, name) ->
+  | TypedefDecl (_, ty, name) ->
       Format.fprintf ff "typedef %s : %a;"
         name
         pp_tloc ty
-  | FunctionDecl (ty, name, body) ->
+  | FunctionDecl { fd_type; fd_name; fd_body; } ->
       Format.fprintf ff "@[<v2>%a@]@, = %a"
-        pp_named_arg (name, ty)
-        (pp_option pp_stmt) body
-  | VarDecl (ty, name, Some init) ->
+        pp_named_arg (fd_name, fd_type)
+        (pp_option pp_stmt) fd_body
+  | VarDecl (_, ty, name, Some init) ->
       Format.fprintf ff "%a = %a"
         pp_named_arg (name, ty)
         pp_expr init
-  | VarDecl (ty, name, None)
-  | ParmVarDecl (ty, name) ->
+  | VarDecl (_, ty, name, None)
+  | ParmVarDecl (_, ty, name) ->
       pp_named_arg ff (name, ty)
-  | RecordDecl (name, members) ->
+  | RecordDecl (_, name, members) ->
       Format.fprintf ff "struct %s { %a };"
         name
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) members
-  | FieldDecl (ty, name, bitwidth, init) ->
+  | FieldDecl (_, ty, name, bitwidth, init) ->
       Format.fprintf ff "%a;"
         pp_named_arg (name, ty)
-  | EnumDecl (name, enumerators) ->
+  | EnumDecl (_, name, enumerators) ->
       Format.fprintf ff "enum %s { %a };"
         name
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) enumerators
-  | EnumConstantDecl (name, None) ->
+  | EnumConstantDecl (_, name, None) ->
       Format.fprintf ff "%s;"
         name
-  | EnumConstantDecl (name, Some init) ->
+  | EnumConstantDecl (_, name, Some init) ->
       Format.fprintf ff "%s = %a;"
         name
         pp_expr init

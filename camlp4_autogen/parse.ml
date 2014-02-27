@@ -1,5 +1,6 @@
 open Camlp4.PreCast
 
+let (%) f g x = f (g x)
 
 (* The P4 AST is specified and sort of documented where it is defined.*)
 (* See: https://github.com/def-lkb/ocaml-tyr/blob/8e1296b0802c28b99d16b975310c8abbcd76e9e9/camlp4/Camlp4/Camlp4Ast.partial.ml*)
@@ -34,9 +35,16 @@ type sum_type_branch = (* branch_name *)string * (* types *)basic_type list
 type sum_type = (* sum_type_name *)string * (* branches *)sum_type_branch list
   deriving (Show)
 
+type record_member = (* name *)string * (* type *)basic_type
+  deriving (Show)
+
+type record_type = (* name *)string * (* members *)record_member list
+  deriving (Show)
+
 type ocaml_type =
   | SumType of sum_type
-  | RecursiveType of sum_type list
+  | RecordType of record_type
+  | RecursiveType of ocaml_type list
   | Version of string
   deriving (Show)
 
@@ -52,7 +60,7 @@ let print_str_item_as_meta (str_item : Ast.str_item) : unit =
   print_meta_expr meta_e
 
 let print_ctyp (t : Ast.ctyp) =
-  P4Printer.print None (fun o -> fun f t -> Format.fprintf f "@[<v 2> stuff: %a@]@\n" o#ctyp t) t
+  P4Printer.print None (fun o f t -> Format.fprintf f "@[<v2>ctyp: <%a>@]@\n" o#ctyp t) t
 
 let print_ctyp_as_meta (t : Ast.ctyp) : unit =
   let meta_t = Quotation.MetaAst.Expr.meta_ctyp Ast.Loc.ghost t in
@@ -87,19 +95,16 @@ let rec ast_type_to_type (ctyp: Ast.ctyp) =
 (* Flatten tree of Ast.TyOrs of types to list of types *)
 let flatten_ast_sum_type_branches = function
   | Ast.TyOr _ as t ->
-      begin
-        let rec flatten_sum_type_contents_aux t flattened_contents =
-          match t with
-          | Ast.TyOr (_, left, right) ->
-              let with_right_contents =
-                flatten_sum_type_contents_aux right flattened_contents
-              in
-              flatten_sum_type_contents_aux left with_right_contents
-          | t ->
-              t :: flattened_contents
-        in
-        flatten_sum_type_contents_aux t []
-      end
+      let rec flatten_sum_type_contents_aux t flattened_contents =
+        match t with
+        | Ast.TyOr (_, left, right) ->
+            flattened_contents
+            |> flatten_sum_type_contents_aux left
+            |> flatten_sum_type_contents_aux right
+        | t ->
+            t :: flattened_contents
+      in
+      flatten_sum_type_contents_aux t []
   | t ->
       Log.warn "Expected sum type contents to be Ast.TyOr";
       [t]
@@ -115,10 +120,9 @@ let flatten_ast_tuple_type_components (t : Ast.ctyp) : Ast.ctyp list =
         let rec flatten_tuple_type_contents_aux t flattened_contents =
           match t with
           | Ast.TyAnd (_, left, right) ->
-              let with_right_contents =
-                flatten_tuple_type_contents_aux right flattened_contents
-              in
-              flatten_tuple_type_contents_aux left with_right_contents
+              flattened_contents
+              |> flatten_tuple_type_contents_aux right
+              |> flatten_tuple_type_contents_aux left
           | _  -> t :: flattened_contents
         in
         flatten_tuple_type_contents_aux t []
@@ -132,10 +136,14 @@ let ast_sum_type_branch_to_branch (ctyp: Ast.ctyp) : sum_type_branch =
     | Ast.TyId (_, Ast.IdUid (_, identifier)) ->
         (identifier, [])
     | Ast.TyOf (_, Ast.TyId (_, Ast.IdUid (_, identifier)), of_components) ->
-        let n_ary_components = match of_components with
-        | Ast.TyAnd _ -> 	(* Multiple components *)
-            flatten_ast_tuple_type_components of_components
-        | _ ->  [of_components] (* Single component *)
+        let n_ary_components =
+          match of_components with
+          | Ast.TyAnd _ ->
+              (* Multiple components *)
+              flatten_ast_tuple_type_components of_components
+          | _ ->
+              (* Single component *)
+              [of_components]
         in
         (identifier, n_ary_components)
     | _ -> Log.err "Unhandled sum type branch"
@@ -143,23 +151,42 @@ let ast_sum_type_branch_to_branch (ctyp: Ast.ctyp) : sum_type_branch =
   (identifier, List.map ast_type_to_type ast_branch_components)
 
 
-let rec flatten_ast_rec_types types list =
-  match types with
+let rec flatten_ast_rec_types list = function
   | <:ctyp<$ty1$ and $ty2$>> ->
-      flatten_ast_rec_types ty1 (ty2 :: list)
+      flatten_ast_rec_types (ty2 :: list) ty1
   | ty ->
       ty :: list
 
 
-let map_sum_type name ast_branches =
-  let flattened = flatten_ast_sum_type_branches ast_branches in
-  let sum_branches = List.map ast_sum_type_branch_to_branch flattened  in
-  (name, sum_branches)
+let rec flatten_ast_record_members list = function
+  | <:ctyp<$decl$; $rest$>> ->
+      flatten_ast_record_members (decl :: list) rest
+  | ty ->
+      ty :: list
+
+
+let map_sum_type =
+  List.rev_map ast_sum_type_branch_to_branch
+  % flatten_ast_sum_type_branches
+
+
+let map_record_member = function
+  | <:ctyp<$lid:name$ : $ty$>> ->
+      (name, ast_type_to_type ty)
+  | ty ->
+      Log.err "unhandled record member format"
+
+
+let map_record_members =
+  List.rev_map map_record_member
+  % flatten_ast_record_members []
 
 
 let map_rec_type = function
   | Ast.TyDcl (_, name, [], <:ctyp<[ $ast_branches$ ]>>, []) ->
-      map_sum_type name ast_branches
+      SumType (name, map_sum_type ast_branches)
+  | Ast.TyDcl (_, name, [], <:ctyp<{ $members$ }>>, []) ->
+      RecordType (name, map_record_members members)
   | ty ->
       (* Perhaps ignore this instead. *)
       Log.unimp "only sum types are supported"
@@ -168,10 +195,13 @@ let map_rec_type = function
 let ast_str_item_to_sum_type types (str_item : Ast.str_item) : ocaml_type list =
   match str_item with
   | <:str_item<type $lid:name$ = [ $ast_branches$ ]>> ->
-      SumType (map_sum_type name ast_branches) :: types
+      SumType (name, map_sum_type ast_branches) :: types
+
+  | <:str_item<type $lid:name$ = { $members$ }>> ->
+      RecordType (name, map_record_members members) :: types
 
   | <:str_item<type $ty1$ and $ty2$>> ->
-      let flattened = flatten_ast_rec_types ty1 [ty2] in
+      let flattened = flatten_ast_rec_types [ty2] ty1 in
       let rec_types = List.map map_rec_type flattened in
       RecursiveType (rec_types) :: types
 

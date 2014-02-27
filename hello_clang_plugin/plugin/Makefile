@@ -32,26 +32,26 @@ LDFLAGS =	\
 
 PLUGIN = build/HelloClangPlugin/Build/Products/Debug/libHelloClangPlugin.dylib
 
-$(PLUGIN): ../hello_lib.o ../../camlp4_autogen/cutil/ocaml++.o trace.o OCamlVisitor.o HelloChecker.o PluginRegistration.o hello_cpp.o
+$(PLUGIN): ../hello_lib.o ../../camlp4_autogen/cutil/ocaml++.o trace.o OCamlVisitor.o HelloChecker.o PluginRegistration.o bridge_ast.o
 	$(EXT)/bin/clang++ $^ -o $@ $(LDFLAGS)
 
 ../hello_lib.o: $(shell find ../ocaml -name "*.ml*")
 	$(MAKE) -C ../ocaml
 
 clean:
-	rm -f $(PLUGIN) *.o hello_cpp.cpp hello_cpp.h
+	rm -f $(PLUGIN) *.o bridge_ast.cpp bridge_ast.h
 
-%.o: %.cpp hello_cpp.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
+%.o: %.cpp clastAst.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
 	$(EXT)/bin/clang++ -c $< $(CXXFLAGS) -o $@
 
-OCamlVisitor.o: OCamlVisitor.cpp hello_cpp.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
+OCamlVisitor.o: OCamlVisitor.cpp bridge_ast.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
 	$(EXT)/bin/clang++ -c $< $(CXXFLAGS) -frtti
 
-hello_cpp.o: hello_cpp.cpp hello_cpp.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
+bridge_ast.o: bridge_ast.cpp bridge_ast.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
 	$(EXT)/bin/clang++ -c $< $(CXXFLAGS) -frtti
 
-hello_cpp.h: ../../common/hello_ast.ml ../../camlp4_autogen/main.byte
-	../../camlp4_autogen/main.byte hello_cpp $<
+bridge_ast.h: ../../common/clangAst.ml ../../camlp4_autogen/main.byte
+	../../camlp4_autogen/main.byte bridge_ast $<
 
 ../../camlp4_autogen/main.byte: $(wildcard ../../camlp4_autogen/*.ml*)
 	$(MAKE) -C ../../camlp4_autogen

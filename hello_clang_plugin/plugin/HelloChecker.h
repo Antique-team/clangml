@@ -18,13 +18,11 @@
 #include <clang/AST/ExprObjC.h>
 #include <clang/AST/StmtObjC.h>
 
-#include "hello_cpp.h"
+#include "bridge_ast.h"
 
-class HelloChecker
-  : public clang::ento::Checker<clang::ento::check::ASTDecl<clang::TranslationUnitDecl> >
+struct HelloChecker
+  : clang::ento::Checker<clang::ento::check::ASTDecl<clang::TranslationUnitDecl> >
 {
-public:
-  hello_cpp::Expr *convertExpr (const clang::Expr *in) const;
   void checkASTDecl (const clang::TranslationUnitDecl *D,
                      clang::ento::AnalysisManager &Mgr,
                      clang::ento::BugReporter &BR) const;

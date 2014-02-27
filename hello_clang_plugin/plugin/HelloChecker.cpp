@@ -20,7 +20,7 @@ extern "C" {
 #include "OCamlVisitor.h"
 #include "trace.h"
 
-#include "hello_cpp.h"
+#include "bridge_ast.h"
 
 using namespace clang;
 using namespace ento;
@@ -33,10 +33,7 @@ initialize_caml ()
 
   if (!already_initialized)
     {
-      // Create fake argv on heap
-      // We leak this, but since we do not know what ocaml
-      // is doing with this array, it is not safe to stack-allocated
-      // or free after we are done.
+      // Create fake argv
       static char *argv[] = {
         const_cast<char *> ("clang"),
         NULL
@@ -48,16 +45,11 @@ initialize_caml ()
 }
 
 
-#define HANDLE_CXX_EXN 0
-
-
 static value
 to_value (adt_ptr ob)
 {
-  OCamlADTBase::values_created = 0;
   value_of_context ctx (ob->id);
   value result = ob->to_value (ctx);
-  printf ("%lu values created\n", OCamlADTBase::values_created);
 
   return result;
 }
@@ -73,34 +65,38 @@ HelloChecker::checkASTDecl (const TranslationUnitDecl *D,
 
   initialize_caml ();
 
-  for (size_t loops = 0; loops < 1; loops++)
+#define HANDLE_CXX_EXN 0
+#if HANDLE_CXX_EXN
+  try
+#endif
     {
-      value *cb;
-#if HANDLE_CXX_EXN
-      try
-#endif
-        {
-          //TIME;
-          ptr<hello_cpp::Decl> decl = adt_of_clangAST (D);
+      //TIME;
 
-          result = to_value (decl);
+      OCamlADTBase::reset_statistics ();
 
-          cb = caml_named_value ("Hello print decl");
-        }
-#if HANDLE_CXX_EXN
-      catch (std::exception const &e)
-        {
-          result = caml_copy_string (e.what ());
-          cb = caml_named_value ("Hello failure");
-        }
-#endif
+      SourceManager &SM = BR.getSourceManager ();
+      ptr<bridge_ast::Decl> decl = adt_of_clangAST (D, SM);
 
-      caml_callback (*cb, result);
+      result = to_value (decl);
 
-      printf ("\r%lu loops", loops + 1);
-      fflush (stdout);
+      OCamlADTBase::print_statistics ();
+
+      // If this fails, then sharing didn't work.
+      assert (OCamlADTBase::values_created == OCamlADTBase::ids_assigned);
+
+      char const *filename = SM.getFileEntryForID (SM.getMainFileID ())->getName ();
+
+      value *cb = caml_named_value ("Hello print decl");
+      caml_callback2 (*cb, result, caml_copy_string (filename));
     }
-  printf ("\n");
+#if HANDLE_CXX_EXN
+  catch (std::exception const &e)
+    {
+      result = caml_copy_string (e.what ());
+      value *cb = caml_named_value ("Hello failure");
+      caml_callback (*cb, result);
+    }
+#endif
 
   CAMLreturn0;
 }

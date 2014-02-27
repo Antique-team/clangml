@@ -3,8 +3,9 @@
 
 #include <clang/AST/RecursiveASTVisitor.h>
 
-#include "hello_cpp.h"
+#include "bridge_ast.h"
 
-ptr<hello_cpp::Decl> adt_of_clangAST (clang::TranslationUnitDecl const *decl);
+ptr<bridge_ast::Decl> adt_of_clangAST (clang::TranslationUnitDecl const *D,
+                                      clang::SourceManager &SM);
 
 #endif /* OCAML_VISITOR_H */

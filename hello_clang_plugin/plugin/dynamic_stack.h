@@ -62,7 +62,7 @@ namespace dynamic_stack_detail
   }
 
 
-  using namespace hello_cpp;
+  using namespace bridge_ast;
 
   // Special case for Expr -> Stmt
   template<>

@@ -17,8 +17,6 @@ extern "C" {
 
 #include <llvm/ADT/StringRef.h>
 
-#define UNIQUE_IDS 1
-
 /********************************************************
  * Value construction context.
  */
@@ -54,31 +52,20 @@ public:
 
   int refcnt = 0;
 
-#if UNIQUE_IDS
-  static size_t ids_assigned;
-  size_t id = ids_assigned++;
-  size_t hash () const { return id; }
-#else
-  size_t hash () const { return reinterpret_cast<size_t> (this); }
-#endif
+  static void reset_statistics ();
+  static void print_statistics ();
 
   static size_t values_created;
+
+  static size_t ids_assigned;
+  size_t id = ids_assigned++;
+
+  static size_t bytes_allocated;
+
   value to_value (value_of_context &ctx);
 
-#if STATIC_MEMORY
-  void *operator new (size_t size)
-  {
-    static char mem[20 * 1024 * 1024];
-    static char *cur = mem;
-    void *ptr = cur;
-    cur += size;
-    return ptr;
-  }
-
-  void operator delete (void *ptr)
-  {
-  }
-#endif
+  void *operator new (size_t size);
+  void operator delete (void *ptr);
 };
 
 

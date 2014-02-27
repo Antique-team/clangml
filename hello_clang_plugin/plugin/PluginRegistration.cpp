@@ -35,11 +35,11 @@ extern "C"
 CAMLprim value
 check_bridge_version (value version)
 {
-  if (strcmp (String_val (version), hello_cpp::version) != 0)
+  if (strcmp (String_val (version), bridge_ast::version) != 0)
     {
       char buf[128];
       snprintf (buf, sizeof buf, "Bridge version mismatch: OCaml side is \"%s\", C++ side is \"%s\"",
-                String_val (version), hello_cpp::version);
+                String_val (version), bridge_ast::version);
       failwith (buf);
     }
   return Val_unit;

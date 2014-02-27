@@ -1,18 +1,24 @@
-open Hello_ast
+open ClangAst
+
+
+let memcad_parse file =
+  let fh = open_in file in
+  let lexbuf = Lexing.from_channel fh in
+  let ast = C_parser.entry C_lexer.token lexbuf in
+  close_in fh;
+  C_utils.ppi_c_prog "" stdout ast;
+;;
+
 
 let () =
-  match Sys.argv with
-  | [|_; "expr"|] ->
-      let value : expr = Marshal.from_channel stdin in
-      ()
+  let open ClangApi in
 
-  | [|_; "stmt"|] ->
-      let value : stmt = Marshal.from_channel stdin in
-      ()
-
-  | [|_; "decl"|] ->
-      let value : decl = Marshal.from_channel stdin in
-      C_utils.ppi_c_prog "" stdout (Transform.c_prog_from_decl value)
+  match ClangApi.recv () with
+  | List [Filename file; AstNode (Decl decl)] ->
+      memcad_parse file;
+      Format.printf "@[<v2>Declaration:@,%a@]@."
+        ClangPp.pp_decl decl;
+      C_utils.ppi_c_prog "" stdout (Transform.c_prog_from_decl decl)
 
   | _ ->
-      failwith ("Usage: " ^ Sys.argv.(0) ^ " <expr|stmt|decl>")
+      failwith "Unhandled message type"
