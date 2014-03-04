@@ -32,12 +32,22 @@ LDFLAGS =	\
 
 PLUGIN = build/HelloClangPlugin/Build/Products/Debug/libHelloClangPlugin.dylib
 
-$(PLUGIN): ../hello_lib.o ../../camlp4_autogen/cutil/ocaml++.o trace.o OCamlVisitor.o HelloChecker.o PluginRegistration.o bridge_ast.o
+OBJECTS =					\
+	../ocaml/_build/clangLib.o		\
+	../../camlp4_autogen/cutil/ocaml++.o	\
+	HelloChecker.o				\
+	OCamlVisitor.o				\
+	PluginRegistration.o			\
+	bridge_ast.o				\
+	trace.o
+
+$(PLUGIN): $(OBJECTS)
 	$(EXT)/bin/clang++ $^ -o $@ $(LDFLAGS)
 
-../hello_lib.o: $(shell find ../ocaml -name "*.ml*")
+../ocaml/_build/clangLib.o: $(wildcard ../ocaml/*.ml* ../ocaml/*/*.ml* ../ocaml/*/*/*.ml*)
 	$(MAKE) -C ../ocaml
 
+.PHONY: clean
 clean:
 	rm -f $(PLUGIN) *.o bridge_ast.cpp bridge_ast.h
 

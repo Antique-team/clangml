@@ -176,7 +176,7 @@ and pp_expr ff = function
         pp_expr expr
         pp_type ctyp
   *)
-  | TypedExpr (_, expr, ctyp) ->
+  | TypedExpr (expr, ctyp) ->
       pp_expr ff expr
 
   | CharacterLiteral (_, c) -> Format.pp_print_string ff (Char.escaped c)

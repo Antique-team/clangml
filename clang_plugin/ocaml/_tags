@@ -1,0 +1,6 @@
+<*.cmxa>: package(unix)
+
+"common": include
+"common/util": include
+
+true: annot

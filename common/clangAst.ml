@@ -171,7 +171,7 @@ type designator =
 and expr =
   | UnimpExpr			of sloc * string
 
-  | TypedExpr			of sloc * expr * ctyp
+  | TypedExpr			of expr * ctyp
 
   | IntegerLiteral		of sloc * int
   | CharacterLiteral		of sloc * char
@@ -249,7 +249,7 @@ and ctyp =
   | TypeOfExprType		of expr
   | TypeOfType			of ctyp
   | ParenType			of ctyp
-  | QualifiedType		of ctyp * qualifier list * int option
+  | QualifiedType		of (* unqualified *)ctyp * (* qualifiers *)qualifier list * (* address-space *)int option
   | TypedefType			of (* name *)string
   | PointerType			of (* pointee *)ctyp
   | FunctionNoProtoType		of (* result *)ctyp

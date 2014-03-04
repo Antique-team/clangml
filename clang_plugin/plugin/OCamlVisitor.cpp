@@ -490,7 +490,7 @@ public:
         ptr<Expr> expr = exprOrStmt;
         ptr<Ctyp> type = must_traverse (E->getType ());
 
-        stack.push (mkTypedExpr (sloc (S), expr, type));
+        stack.push (mkTypedExpr (expr, type));
       }
     else
       {

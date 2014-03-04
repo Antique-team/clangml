@@ -1,5 +1,6 @@
 all:
 
 %:
+	$(MAKE) -C ast-processor $@
 	$(MAKE) -C camlp4_autogen $@
-	$(MAKE) -C hello_clang_plugin $@
+	$(MAKE) -C clang_plugin $@
