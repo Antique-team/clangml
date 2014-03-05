@@ -107,46 +107,46 @@ let rec c_type_of_type = function
 
 
 let rec c_type_of_type_loc = function
-  | BuiltinTypeLoc (_, bt) ->
+  | { tl = BuiltinTypeLoc bt } ->
       c_type_of_builtin_type bt
 
-  | ConstantArrayTypeLoc (_, memty, size) ->
+  | { tl = ConstantArrayTypeLoc (memty, size) } ->
       Ctarray (c_type_of_type_loc memty, size)
 
-  | TypedefTypeLoc (_, name) ->
+  | { tl = TypedefTypeLoc name } ->
       Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
 
-  | ElaboratedTypeLoc (_, ty) ->
+  | { tl = ElaboratedTypeLoc ty } ->
       c_type_of_type_loc ty
 
-  | EnumTypeLoc (_, name)
-  | RecordTypeLoc (_, _, name) ->
+  | { tl = EnumTypeLoc name }
+  | { tl = RecordTypeLoc (_, name) } ->
       Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
 
-  | PointerTypeLoc (_, pointee) ->
+  | { tl = PointerTypeLoc (pointee) } ->
       Ctptr (Some (c_type_of_type_loc pointee))
 
-  | ParenTypeLoc (_, inner) ->
+  | { tl = ParenTypeLoc (inner) } ->
       c_type_of_type_loc inner
 
-  | FunctionProtoTypeLoc (sloc, _, _) as ty ->
+  | { tl = FunctionProtoTypeLoc (_, _); tl_sloc = sloc; } as ty ->
       Format.fprintf Format.std_formatter "%a%a\n"
         ClangPp.pp_sloc sloc
         ClangPp.pp_tloc ty;
       failwith "FunctionProtoTypeLoc"
 
-  | TypeOfExprTypeLoc _ -> failwith "TypeOfExprTypeLoc"
-  | TypeOfTypeLoc _ -> failwith "TypeOfTypeLoc"
-  | QualifiedTypeLoc _ -> failwith "QualifiedTypeLoc"
-  | FunctionNoProtoTypeLoc _ -> failwith "FunctionNoProtoTypeLoc"
-  | VariableArrayTypeLoc _ -> failwith "VariableArrayTypeLoc"
-  | IncompleteArrayTypeLoc _ -> failwith "IncompleteArrayTypeLoc"
+  | { tl = TypeOfExprTypeLoc _ } -> failwith "TypeOfExprTypeLoc"
+  | { tl = TypeOfTypeLoc _ } -> failwith "TypeOfTypeLoc"
+  | { tl = QualifiedTypeLoc _ } -> failwith "QualifiedTypeLoc"
+  | { tl = FunctionNoProtoTypeLoc _ } -> failwith "FunctionNoProtoTypeLoc"
+  | { tl = VariableArrayTypeLoc _ } -> failwith "VariableArrayTypeLoc"
+  | { tl = IncompleteArrayTypeLoc _ } -> failwith "IncompleteArrayTypeLoc"
 
-  | UnimpTypeLoc (_, name) -> failwith ("Unimplemented: " ^ name)
+   | { tl = UnimpTypeLoc name } -> failwith ("Unimplemented: " ^ name)
 
 
 let c_agg_field_of_decl = function
-  | FieldDecl (_, ty, name, bitwidth, init) ->
+  | { d = FieldDecl (ty, name, bitwidth, init) } ->
       if bitwidth <> None then failwith "Bit fields not implemented";
       if init <> None then failwith "Member initialisers not implemented";
       {
@@ -159,7 +159,7 @@ let c_agg_field_of_decl = function
 
 
 let c_var_of_parm_decl = function
-  | ParmVarDecl (_, ty, name) ->
+  | { d = ParmVarDecl (ty, name) } ->
       {
         cv_name     = name;
         cv_uid      = -1;
@@ -169,8 +169,9 @@ let c_var_of_parm_decl = function
   | _ -> failwith "only ParmVarDecls allowed in function argument list"
 
 
-let c_decl_of_decl = function
-  | VarDecl ({ loc_s_line }, ty, name, init) ->
+let c_decl_of_decl { d_sloc = { loc_s_line }; d } =
+  match d with
+  | VarDecl (ty, name, init) ->
       if init <> None then
         failwith "Unsupported: initialiser in declaration";
       loc_s_line, {
@@ -180,15 +181,15 @@ let c_decl_of_decl = function
         cv_volatile = false (* TODO: ClangQuery.is_volatile_tloc ty *);
       }
 
-  | EmptyDecl _ ->
+  | EmptyDecl ->
       failwith "empty declaration within function body"
   | FunctionDecl _ ->
       failwith "local function declarations are not supported by memcad AST"
-  | TypedefDecl (_, ty, name) ->
+  | TypedefDecl (ty, name) ->
       failwith "local typedefs are not supported by memcad AST"
-  | EnumDecl (_, name, enumerators) ->
+  | EnumDecl (name, enumerators) ->
       failwith "local enums are not supported by memcad AST"
-  | RecordDecl (_, name, members) ->
+  | RecordDecl (name, members) ->
       failwith "local structs are not supported by memcad AST"
 
   | EnumConstantDecl    _ -> failwith "EnumConstantDecl found in function"
@@ -196,7 +197,7 @@ let c_decl_of_decl = function
   | ParmVarDecl         _ -> failwith "ParmVarDecl found in function"
   | TranslationUnitDecl _ -> failwith "TranslationUnitDecl found in function"
 
-  | UnimpDecl (_, name) -> failwith ("Unimplemented: " ^ name)
+  | UnimpDecl name -> failwith ("Unimplemented: " ^ name)
 
 
 let rec c_lvalk_of_expr prog env = function
@@ -316,9 +317,9 @@ and c_expr_of_expr prog env = function
   (* (( void * )0) => null *)
   | TypedExpr (
       CStyleCastExpr (_,
-        PointerTypeLoc (_,
-          BuiltinTypeLoc (_, BT_Void)
-        ),
+        { tl = PointerTypeLoc
+          { tl = BuiltinTypeLoc BT_Void }
+        },
         TypedExpr (IntegerLiteral (_, 0), _)
       ),
     _) ->
@@ -365,6 +366,8 @@ let rec c_stat_of_expr prog env = function
             Cs_memcad (Mc_comstring str)
         | "assert", [_] ->
             Csassert (List.hd args |> c_expr_of_expr prog env)
+        | "free", [_] ->
+            Csfree (List.hd args |> c_lval_of_expr prog env)
         | _ ->
             Cspcall {
               cc_fun = c_expr_of_expr prog env callee;
@@ -487,10 +490,10 @@ let rec c_stats_of_stmts prog env stmts =
 let c_fun_of_decl prog env ty name body =
   let stmts = ClangQuery.body_of_stmt body in
   {
-    cf_type = c_type_of_type_loc (ClangQuery.return_type_of_tloc ty);
+    cf_type = c_type_of_type_loc (ClangQuery.return_type_of_tloc ty.tl);
     cf_uid  = -1;
     cf_name = name;
-    cf_args = List.map c_var_of_parm_decl (ClangQuery.args_of_tloc ty);
+    cf_args = List.map c_var_of_parm_decl (ClangQuery.args_of_tloc ty.tl);
     cf_body = c_stats_of_stmts prog env stmts;
   }
 
@@ -498,14 +501,14 @@ let c_fun_of_decl prog env ty name body =
 let rec collect_decls prog env = function
   | [] -> prog
 
-  | EmptyDecl _ :: tl ->
+  | { d = EmptyDecl } :: tl ->
       collect_decls prog env tl
 
-  | FunctionDecl (_, _, _, None) :: tl ->
+  | { d = FunctionDecl (_, _, None) } :: tl ->
       (* Function declarations (without definition) do nothing. *)
       collect_decls prog env tl
 
-  | FunctionDecl (_, fd_type, fd_name, Some body) :: tl ->
+  | { d = FunctionDecl (fd_type, fd_name, Some body) } :: tl ->
       let c_fun = c_fun_of_decl prog env fd_type fd_name body in
       collect_decls (add_fun fd_name c_fun prog) env tl
 
@@ -519,10 +522,10 @@ let rec collect_decls prog env = function
     and the memcad parser doesn't parse it, so we match this construct
     explicitly and transform it to the appropriate memcad AST.
    *)
-  | RecordDecl (_, name1, members)
-    :: TypedefDecl (_, ElaboratedTypeLoc
-                      (_, RecordTypeLoc (_, kind,
-                                         name2)), name)
+  |   { d = RecordDecl (name1, members) }
+    :: { d = TypedefDecl ({ tl = ElaboratedTypeLoc {
+        tl = RecordTypeLoc (kind, name2)
+      } }, name) }
     :: tl
     when name1 = name2 ->
       let c_type =
@@ -539,26 +542,26 @@ let rec collect_decls prog env = function
       in
       collect_decls (add_type name c_type prog) env tl
 
-  | TypedefDecl (_, ty, name) :: tl ->
+  | { d = TypedefDecl (ty, name) } :: tl ->
       let c_type = c_type_of_type_loc ty in
       collect_decls (add_type name c_type prog) env tl
 
-  | VarDecl (_, ty, name, init) :: tl ->
+  | { d = VarDecl (ty, name, init) } :: tl ->
       collect_decls prog env tl
-  | EnumDecl (_, name, enumerators) :: tl ->
+  | { d = EnumDecl (name, enumerators) } :: tl ->
       collect_decls prog env tl
-  | RecordDecl (_, name, members) :: tl ->
+  | { d = RecordDecl (name, members) } :: tl ->
       failwith "RecordDecl without TypedefDecl not supported by memcad AST"
 
-  | EnumConstantDecl    _ :: _ -> failwith "EnumConstantDecl found at file scope"
-  | FieldDecl           _ :: _ -> failwith "FieldDecl found at file scope"
-  | ParmVarDecl         _ :: _ -> failwith "ParmVarDecl found at file scope"
-  | TranslationUnitDecl _ :: _ -> failwith "nested TranslationUnitDecl found"
+  | { d = EnumConstantDecl    _ } :: _ -> failwith "EnumConstantDecl found at file scope"
+  | { d = FieldDecl           _ } :: _ -> failwith "FieldDecl found at file scope"
+  | { d = ParmVarDecl         _ } :: _ -> failwith "ParmVarDecl found at file scope"
+  | { d = TranslationUnitDecl _ } :: _ -> failwith "nested TranslationUnitDecl found"
 
-  | UnimpDecl (_, name) :: _ -> failwith ("Unimplemented: " ^ name)
+  | { d = UnimpDecl name } :: _ -> failwith ("Unimplemented: " ^ name)
 
 
 let c_prog_from_decl = function
-  | TranslationUnitDecl (_, decls) ->
+  | { d = TranslationUnitDecl decls } ->
       collect_decls C_utils.empty_unit empty_env decls
   | _ -> failwith "c_prog_from_decl requires a translation unit"

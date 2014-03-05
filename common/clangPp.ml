@@ -336,10 +336,10 @@ and pp_stmt ff = function
 
 
 and pp_tloc ff = function
-  | UnimpTypeLoc (_, name) ->
+  | { tl = UnimpTypeLoc (name) } ->
       Format.fprintf ff "<%s>" name
 
-  | QualifiedTypeLoc (_, unqual, quals, addr_space) ->
+  | { tl = QualifiedTypeLoc (unqual, quals, addr_space) } ->
       Format.fprintf ff "%a %a%s"
         pp_tloc unqual
         Formatx.(pp_list ~sep:(pp_sep "") pp_print_string)
@@ -347,50 +347,50 @@ and pp_tloc ff = function
         (match addr_space with
          | None -> ""
          | Some aspace -> " addr_space_" ^ string_of_int aspace)
-  | BuiltinTypeLoc (_, bt) ->
+  | { tl = BuiltinTypeLoc (bt) } ->
       Format.fprintf ff "%s"
         (string_of_builtin_type bt)
-  | TypedefTypeLoc (_, name) ->
+  | { tl = TypedefTypeLoc (name) } ->
       Format.fprintf ff "%s"
         name
-  | TypeOfExprTypeLoc (_, expr) ->
+  | { tl = TypeOfExprTypeLoc (expr) } ->
       Format.fprintf ff "typeof (%a)"
         pp_expr expr
-  | TypeOfTypeLoc (_, ty) ->
+  | { tl = TypeOfTypeLoc (ty) } ->
       Format.fprintf ff "typeof (%a)"
         pp_tloc ty
-  | ParenTypeLoc (_, ty) ->
+  | { tl = ParenTypeLoc (ty) } ->
       Format.fprintf ff "(%a)"
         pp_tloc ty
-  | PointerTypeLoc (_, ty) ->
+  | { tl = PointerTypeLoc (ty) } ->
       Format.fprintf ff "%a ptr"
         pp_tloc ty
-  | FunctionNoProtoTypeLoc (_, ty) ->
+  | { tl = FunctionNoProtoTypeLoc (ty) } ->
       Format.fprintf ff "? -> %a"
         pp_tloc ty
-  | FunctionProtoTypeLoc (_, ty, args) ->
+  | { tl = FunctionProtoTypeLoc (ty, args) } ->
       Format.fprintf ff "(%a) -> %a"
         (Formatx.pp_list pp_decl) args
         pp_tloc ty
-  | ConstantArrayTypeLoc (_, ty, size) ->
+  | { tl = ConstantArrayTypeLoc (ty, size) } ->
       Format.fprintf ff "%a[%d]"
         pp_tloc ty
         size
-  | VariableArrayTypeLoc (_, ty, size) ->
+  | { tl = VariableArrayTypeLoc (ty, size) } ->
       Format.fprintf ff "%a[%a]"
         pp_tloc ty
         pp_expr size
-  | IncompleteArrayTypeLoc (_, ty) ->
+  | { tl = IncompleteArrayTypeLoc (ty) } ->
       Format.fprintf ff "%a[]"
         pp_tloc ty
-  | ElaboratedTypeLoc (_, ty) ->
+  | { tl = ElaboratedTypeLoc (ty) } ->
       Format.fprintf ff "%a"
         pp_tloc ty
-  | RecordTypeLoc (_, kind, name) ->
+  | { tl = RecordTypeLoc (kind, name) } ->
       Format.fprintf ff "%s %s"
         (string_of_tag_type_kind kind)
         (if name = "" then "<anonymous>" else name)
-  | EnumTypeLoc (_, name) ->
+  | { tl = EnumTypeLoc (name) } ->
       Format.pp_print_string ff
         (if name = "" then "<anonymous>" else name)
 
@@ -459,43 +459,43 @@ and pp_type ff = function
 
 
 and pp_decl ff = function
-  | UnimpDecl (_, name) ->
+  | { d = UnimpDecl name } ->
       Format.fprintf ff "<%s>" name
 
-  | EmptyDecl (_) ->
+  | { d = EmptyDecl } ->
       Format.pp_print_string ff ";"
-  | TranslationUnitDecl (_, dd) ->
-      Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl ff dd
-  | TypedefDecl (_, ty, name) ->
+  | { d = TranslationUnitDecl decls } ->
+      Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl ff decls
+  | { d = TypedefDecl (ty, name) } ->
       Format.fprintf ff "typedef %s : %a;"
         name
         pp_tloc ty
-  | FunctionDecl (_, fd_type, fd_name, fd_body) ->
+  | { d = FunctionDecl (fd_type, fd_name, fd_body) } ->
       Format.fprintf ff "@[<v2>%a@]@, = %a"
         pp_named_arg (fd_name, fd_type)
         (pp_option pp_stmt) fd_body
-  | VarDecl (_, ty, name, Some init) ->
+  | { d = VarDecl (ty, name, Some init) } ->
       Format.fprintf ff "%a = %a"
         pp_named_arg (name, ty)
         pp_expr init
-  | VarDecl (_, ty, name, None)
-  | ParmVarDecl (_, ty, name) ->
+  | { d = VarDecl (ty, name, None) }
+  | { d = ParmVarDecl (ty, name) } ->
       pp_named_arg ff (name, ty)
-  | RecordDecl (_, name, members) ->
+  | { d = RecordDecl (name, members) } ->
       Format.fprintf ff "struct %s { %a };"
         name
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) members
-  | FieldDecl (_, ty, name, bitwidth, init) ->
+  | { d = FieldDecl (ty, name, bitwidth, init) } ->
       Format.fprintf ff "%a;"
         pp_named_arg (name, ty)
-  | EnumDecl (_, name, enumerators) ->
+  | { d = EnumDecl (name, enumerators) } ->
       Format.fprintf ff "enum %s { %a };"
         name
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) enumerators
-  | EnumConstantDecl (_, name, None) ->
+  | { d = EnumConstantDecl (name, None) } ->
       Format.fprintf ff "%s;"
         name
-  | EnumConstantDecl (_, name, Some init) ->
+  | { d = EnumConstantDecl (name, Some init) } ->
       Format.fprintf ff "%s = %a;"
         name
         pp_expr init

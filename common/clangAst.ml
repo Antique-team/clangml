@@ -210,6 +210,12 @@ and expr = ClangBridge.expr =
   | VecStepExpr			of sloc * expr
   | VecStepType			of sloc * type_loc
 
+and expr_ = ClangBridge.expr_ = {
+  e : expr;
+  e_sloc : sloc;
+  e_type : ctyp;
+}
+
 and stmt = ClangBridge.stmt =
   | UnimpStmt			of sloc * string
 
@@ -230,24 +236,34 @@ and stmt = ClangBridge.stmt =
   | SwitchStmt			of sloc * expr * stmt
   | DeclStmt			of sloc * decl list
 
-and type_loc = ClangBridge.type_loc =
-  | UnimpTypeLoc		of sloc * string
+and stmt_ = ClangBridge.stmt_ = {
+  s : stmt;
+  s_sloc : sloc;
+}
 
-  | BuiltinTypeLoc		of sloc * builtin_type
-  | TypeOfExprTypeLoc		of sloc * expr
-  | TypeOfTypeLoc		of sloc * type_loc
-  | ParenTypeLoc		of sloc * type_loc
-  | QualifiedTypeLoc		of sloc * type_loc * qualifier list * int option
-  | TypedefTypeLoc		of sloc * (* name *)string
-  | PointerTypeLoc		of sloc * (* pointee *)type_loc
-  | FunctionNoProtoTypeLoc	of sloc * (* result *)type_loc
-  | FunctionProtoTypeLoc	of sloc * (* result *)type_loc * (* args *)decl list
-  | ConstantArrayTypeLoc	of sloc * (* member-type *)type_loc * (* size *)int
-  | VariableArrayTypeLoc	of sloc * (* member-type *)type_loc * (* size *)expr
-  | IncompleteArrayTypeLoc	of sloc * (* member-type *)type_loc
-  | ElaboratedTypeLoc		of sloc * (* named-type *)type_loc
-  | EnumTypeLoc			of sloc * (* name *)string
-  | RecordTypeLoc		of sloc * (* kind *)tag_type_kind * (* name *)string
+and type_loc_ = ClangBridge.type_loc_ =
+  | UnimpTypeLoc		of string
+
+  | BuiltinTypeLoc		of builtin_type
+  | TypeOfExprTypeLoc		of expr
+  | TypeOfTypeLoc		of type_loc
+  | ParenTypeLoc		of type_loc
+  | QualifiedTypeLoc		of type_loc * qualifier list * int option
+  | TypedefTypeLoc		of (* name *)string
+  | PointerTypeLoc		of (* pointee *)type_loc
+  | FunctionNoProtoTypeLoc	of (* result *)type_loc
+  | FunctionProtoTypeLoc	of (* result *)type_loc * (* args *)decl list
+  | ConstantArrayTypeLoc	of (* member-type *)type_loc * (* size *)int
+  | VariableArrayTypeLoc	of (* member-type *)type_loc * (* size *)expr
+  | IncompleteArrayTypeLoc	of (* member-type *)type_loc
+  | ElaboratedTypeLoc		of (* named-type *)type_loc
+  | EnumTypeLoc			of (* name *)string
+  | RecordTypeLoc		of (* kind *)tag_type_kind * (* name *)string
+
+and type_loc = ClangBridge.type_loc = {
+  tl : type_loc_;
+  tl_sloc : sloc;
+}
 
 and ctyp = ClangBridge.ctyp =
   | UnimpType			of string
@@ -269,40 +285,24 @@ and ctyp = ClangBridge.ctyp =
   | RecordType			of (* kind *)tag_type_kind * (* name *)string
   | DecayedType			of (* decayed *)ctyp * (* original *)ctyp
 
-and decl = ClangBridge.decl =
-  | UnimpDecl			of sloc * string
+and decl_ = ClangBridge.decl_ =
+  | UnimpDecl			of string
 
-  | EmptyDecl			of sloc
-  | TranslationUnitDecl		of sloc * decl list
-  | FunctionDecl		of sloc * (* type *)type_loc * (* name *)string * (* body *)stmt option
-  | TypedefDecl			of sloc * (* type *)type_loc * (* name *)string
-  | VarDecl			of sloc * (* type *)type_loc * (* name *)string * (* init *)expr option
-  | ParmVarDecl			of sloc * (* type *)type_loc * (* name *)string
-  | RecordDecl			of sloc * (* name *)string * (* members *)decl list
-  | FieldDecl			of sloc * (* type *)type_loc * (* name *)string * (* bitwidth *)expr option * (* initialiser *)expr option
-  | EnumDecl			of sloc * (* name *)string * (* enumerators *)decl list
-  | EnumConstantDecl		of sloc * (* name *)string * (* init *)expr option
+  | EmptyDecl
+  | TranslationUnitDecl		of decl list
+  | FunctionDecl		of (* type *)type_loc * (* name *)string * (* body *)stmt option
+  | TypedefDecl			of (* type *)type_loc * (* name *)string
+  | VarDecl			of (* type *)type_loc * (* name *)string * (* init *)expr option
+  | ParmVarDecl			of (* type *)type_loc * (* name *)string
+  | RecordDecl			of (* name *)string * (* members *)decl list
+  | FieldDecl			of (* type *)type_loc * (* name *)string * (* bitwidth *)expr option * (* initialiser *)expr option
+  | EnumDecl			of (* name *)string * (* enumerators *)decl list
+  | EnumConstantDecl		of (* name *)string * (* init *)expr option
 
-  (* All of the above derive Show. *)
-  deriving (Show)
-
-type expr_ = {
-  e : expr;
-  e_sloc : sloc;
-  e_type : ctyp;
-}
-
-type stmt_ = {
-  s : stmt;
-  s_sloc : sloc;
-}
-
-type decl_ = {
-  d : decl;
+and decl = ClangBridge.decl = {
+  d : decl_;
   d_sloc : sloc;
 }
 
-type tloc_ = {
-  tl_sloc : sloc;
-  tl : type_loc;
-}
+  (* All of the above derive Show. *)
+  deriving (Show)

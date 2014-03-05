@@ -21,8 +21,9 @@ let cpp_name name =
       (* If the name starts with an underscore,
          keep that first underscore. *)
       let underscore = String.index_from name 1 '_' in
-      if underscore = String.length name - 1 then
-        name
+      (* If it ends with one, also keep that. *)
+      if underscore = length - 1 then
+        raise Not_found
       else (
         String.blit
           name (underscore + 1)

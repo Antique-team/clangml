@@ -12,10 +12,13 @@ $(PLUGIN): $(wildcard plugin/*.cpp plugin/*.h) ocaml/_build/clangLib.o ../ast-pr
 %.o: %.cmxa
 	ocamlfind ocamlopt $< -output-obj -o $@ -linkall -package unix -linkpkg
 
-ocaml/_build/clangLib.cmxa: $(wildcard ocaml/*.ml* ocaml/*/*.ml* ocaml/*/*/*.ml*)
+ocaml/_build/clangLib.cmxa: $(wildcard ocaml/*.ml* ocaml/*/*.ml* ocaml/*/*/*.ml* ../common/*.ml)
 	$(MAKE) -C ocaml
 
 ../ast-processor/main.byte: $(shell find ../ast-processor ../common -name "*.ml*")
+	$(MAKE) -C $(@D)
+
+../common/clangBridge.ml: ../common/clangAst.ml
 	$(MAKE) -C $(@D)
 
 

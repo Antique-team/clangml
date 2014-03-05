@@ -316,6 +316,22 @@ private:
     return sloc;
   }
 
+  ptr<Decl> amend (clang::Decl *D, ptr<Decl_> d)
+  {
+    ptr<Decl> decl = mkDecl ();
+    decl->d = d;
+    decl->d_sloc = sloc (D);
+    return decl;
+  }
+
+  ptr<TypeLoc> amend (clang::TypeLoc TL, ptr<TypeLoc_> tl)
+  {
+    ptr<TypeLoc> type_loc = mkTypeLoc ();
+    type_loc->tl = tl;
+    type_loc->tl_sloc = sloc (TL);
+    return type_loc;
+  }
+
   // }}}
 
 
@@ -1000,17 +1016,6 @@ public:
   }
 
 
-#define UNIMP_IMPL(TYPE, CLASS)					\
-  bool OCamlVisitor::Traverse##CLASS (clang::CLASS *Node)	\
-  {								\
-    TODO;							\
-    TRACE;							\
-    IGNORE_ADT (CLASS, Node);					\
-    stack.push (mkUnimp##TYPE (sloc (Node), #CLASS));		\
-    return true;						\
-  }
-
-
 #define ABSTRACT_STMT(STMT)
 #define STMT(CLASS, BASE)	UNIMP (Stmt, CLASS)
 #define EXPR(CLASS, BASE)	UNIMP (Expr, CLASS)
@@ -1419,7 +1424,7 @@ OCamlVisitor::TraverseTypeLoc (clang::TypeLoc TL)
     {
       printf ("WARNING: %s creates dummy TypeLoc, as derived function did not produce any\n",
               __func__);
-      stack.push (mkBuiltinTypeLoc (sloc (TL), BT_Void));
+      stack.push (amend (TL, mkBuiltinTypeLoc (BT_Void)));
     }
   else if (marker > 1)
     {
@@ -1447,7 +1452,7 @@ OCamlVisitor::TraverseBuiltinTypeLoc (clang::BuiltinTypeLoc TL)
 
   BuiltinType bt = translate_builtin_type (TL.getTypePtr ()->getKind ());
 
-  stack.push (mkBuiltinTypeLoc (sloc (TL), bt));
+  stack.push (amend (TL, mkBuiltinTypeLoc (bt)));
 
   return true;
 }
@@ -1460,7 +1465,7 @@ OCamlVisitor::TraverseTypeOfExprTypeLoc (clang::TypeOfExprTypeLoc TL)
 
   ptr<Expr> expr = must_traverse (TL.getUnderlyingExpr ());
 
-  stack.push (mkTypeOfExprTypeLoc (sloc (TL), expr));
+  stack.push (amend (TL, mkTypeOfExprTypeLoc (expr)));
 
   return true;
 }
@@ -1473,7 +1478,7 @@ OCamlVisitor::TraverseTypeOfTypeLoc (clang::TypeOfTypeLoc TL)
 
   ptr<TypeLoc> type = must_traverse (TL.getUnderlyingTInfo ()->getTypeLoc ());
 
-  stack.push (mkTypeOfTypeLoc (sloc (TL), type));
+  stack.push (amend (TL, mkTypeOfTypeLoc (type)));
 
   return true;
 }
@@ -1487,7 +1492,7 @@ OCamlVisitor::TraverseConstantArrayTypeLoc (clang::ConstantArrayTypeLoc TL)
   ptr<TypeLoc> element = must_traverse (TL.getElementLoc ());
   uint64_t size = TL.getTypePtr ()->getSize ().getZExtValue ();
 
-  stack.push (mkConstantArrayTypeLoc (sloc (TL), element, size));
+  stack.push (amend (TL, mkConstantArrayTypeLoc (element, size)));
 
   return true;
 }
@@ -1501,7 +1506,7 @@ OCamlVisitor::TraverseVariableArrayTypeLoc (clang::VariableArrayTypeLoc TL)
   ptr<TypeLoc> element = must_traverse (TL.getElementLoc ());
   ptr<Expr> size = must_traverse (TL.getSizeExpr ());
 
-  stack.push (mkVariableArrayTypeLoc (sloc (TL), element, size));
+  stack.push (amend (TL, mkVariableArrayTypeLoc (element, size)));
 
   return true;
 }
@@ -1514,7 +1519,7 @@ OCamlVisitor::TraverseIncompleteArrayTypeLoc (clang::IncompleteArrayTypeLoc TL)
 
   ptr<TypeLoc> element = must_traverse (TL.getElementLoc ());
 
-  stack.push (mkIncompleteArrayTypeLoc (sloc (TL), element));
+  stack.push (amend (TL, mkIncompleteArrayTypeLoc (element)));
 
   return true;
 }
@@ -1527,7 +1532,7 @@ OCamlVisitor::TraversePointerTypeLoc (clang::PointerTypeLoc TL)
 
   ptr<TypeLoc> pointee = must_traverse (TL.getPointeeLoc ());
 
-  stack.push (mkPointerTypeLoc (sloc (TL), pointee));
+  stack.push (amend (TL, mkPointerTypeLoc (pointee)));
 
   return true;
 }
@@ -1541,7 +1546,7 @@ OCamlVisitor::TraverseElaboratedTypeLoc (clang::ElaboratedTypeLoc TL)
   TraverseNestedNameSpecifierLoc (TL.getQualifierLoc ());
   ptr<TypeLoc> type = must_traverse (TL.getNamedTypeLoc ());
 
-  stack.push (mkElaboratedTypeLoc (sloc (TL), type));
+  stack.push (amend (TL, mkElaboratedTypeLoc (type)));
 
   return true;
 }
@@ -1596,7 +1601,7 @@ OCamlVisitor::TraverseQualifiedTypeLoc (clang::QualifiedTypeLoc TL)
   if (quals.hasAddressSpace ())
     addressSpace = quals.getAddressSpace ();
 
-  stack.push (mkQualifiedTypeLoc (sloc (TL), unqual, qualifiers, addressSpace));
+  stack.push (amend (TL, mkQualifiedTypeLoc (unqual, qualifiers, addressSpace)));
 
   return true;
 }
@@ -1609,7 +1614,7 @@ OCamlVisitor::TraverseEnumTypeLoc (clang::EnumTypeLoc TL)
 
   clang::StringRef name = TL.getDecl ()->getName ();
 
-  stack.push (mkEnumTypeLoc (sloc (TL), name));
+  stack.push (amend (TL, mkEnumTypeLoc (name)));
 
   return true;
 }
@@ -1623,7 +1628,7 @@ OCamlVisitor::TraverseRecordTypeLoc (clang::RecordTypeLoc TL)
   TagTypeKind kind = translate_tag_type_kind (TL.getDecl ()->getTagKind ());
   clang::StringRef name = TL.getDecl ()->getName ();
 
-  stack.push (mkRecordTypeLoc (sloc (TL), kind, name));
+  stack.push (amend (TL, mkRecordTypeLoc (kind, name)));
 
   return true;
 }
@@ -1636,7 +1641,7 @@ OCamlVisitor::TraverseFunctionNoProtoTypeLoc (clang::FunctionNoProtoTypeLoc TL)
 
   ptr<TypeLoc> result = must_traverse (TL.getResultLoc ());
 
-  stack.push (mkFunctionNoProtoTypeLoc (sloc (TL), result));
+  stack.push (amend (TL, mkFunctionNoProtoTypeLoc (result)));
 
   return true;
 }
@@ -1652,7 +1657,7 @@ OCamlVisitor::TraverseFunctionProtoTypeLoc (clang::FunctionProtoTypeLoc TL)
 
   // TODO: exceptions
 
-  stack.push (mkFunctionProtoTypeLoc (sloc (TL), result, args));
+  stack.push (amend (TL, mkFunctionProtoTypeLoc (result, args)));
 
   return true;
 }
@@ -1665,7 +1670,7 @@ OCamlVisitor::TraverseTypedefTypeLoc (clang::TypedefTypeLoc TL)
 
   clang::StringRef name = TL.getTypedefNameDecl ()->getName ();
 
-  stack.push (mkTypedefTypeLoc (sloc (TL), name));
+  stack.push (amend (TL, mkTypedefTypeLoc (name)));
 
   return true;
 }
@@ -1678,7 +1683,7 @@ OCamlVisitor::TraverseParenTypeLoc (clang::ParenTypeLoc TL)
 
   ptr<TypeLoc> inner = must_traverse (TL.getInnerLoc ());
 
-  stack.push (mkParenTypeLoc (sloc (TL), inner));
+  stack.push (amend (TL, mkParenTypeLoc (inner)));
 
   return true;
 }
@@ -1690,7 +1695,7 @@ OCamlVisitor::Traverse##CLASS##TypeLoc (clang::CLASS##TypeLoc TL)	\
 {									\
   TODO;									\
   TRACE;								\
-  stack.push (mkUnimpTypeLoc (sloc (TL), #CLASS));			\
+  stack.push (amend (TL, mkUnimpTypeLoc (#CLASS)));			\
   return true;								\
 }
 
@@ -1747,12 +1752,12 @@ OCamlVisitor::TraverseFunctionDecl (clang::FunctionDecl *D)
 
       // Built-in implicit function declarations such as
       // printf don't have a valid TSI.
-      ptr<TypeLoc> result = mkBuiltinTypeLoc (sloc (D), BT_Void);
-      list<Decl> args;// = traverse_list (param_range (D));
+      //ptr<TypeLoc> result = mkBuiltinTypeLoc (sloc (D), BT_Void);
+      //list<Decl> args;// = traverse_list (param_range (D));
 
       // TODO: exceptions
 
-      type = mkFunctionProtoTypeLoc (sloc (D), result, args);
+      //type = mkFunctionProtoTypeLoc (sloc (D), result, args);
 
       throw std::runtime_error ("unsupported built-in function declaration");
     }
@@ -1767,7 +1772,7 @@ OCamlVisitor::TraverseFunctionDecl (clang::FunctionDecl *D)
   // Function name.
   clang::StringRef name = getName (D);
 
-  stack.push (mkFunctionDecl (sloc (D), type, name, body));
+  stack.push (amend (D, mkFunctionDecl (type, name, body)));
 
   return true;
 }
@@ -1777,7 +1782,7 @@ OCamlVisitor::TraverseEmptyDecl (clang::EmptyDecl *D)
 {
   TRACE;
 
-  stack.push (mkEmptyDecl (sloc (D)));
+  stack.push (amend (D, mkEmptyDecl ()));
 
   return true;
 }
@@ -1791,7 +1796,7 @@ OCamlVisitor::TraverseTypedefDecl (clang::TypedefDecl *D)
   ptr<TypeLoc> type = getTypeLoc (D);
   clang::StringRef name = D->getName ();
 
-  stack.push (mkTypedefDecl (sloc (D), type, name));
+  stack.push (amend (D, mkTypedefDecl (type, name)));
 
   return true;
 }
@@ -1806,7 +1811,7 @@ OCamlVisitor::TraverseRecordDecl (clang::RecordDecl *D)
   list<Decl> members = traverse_explicit_decls (D);
   clang::StringRef name = D->getName ();
 
-  stack.push (mkRecordDecl (sloc (D), name, members));
+  stack.push (amend (D, mkRecordDecl (name, members)));
 
   return true;
 }
@@ -1829,7 +1834,7 @@ OCamlVisitor::TraverseFieldDecl (clang::FieldDecl *D)
 
   clang::StringRef name = D->getName ();
 
-  stack.push (mkFieldDecl (sloc (D), type, name, bitwidth, init));
+  stack.push (amend (D, mkFieldDecl (type, name, bitwidth, init)));
 
   return true;
 }
@@ -1843,7 +1848,7 @@ OCamlVisitor::TraverseEnumDecl (clang::EnumDecl *D)
   clang::StringRef name = D->getName ();
   list<Decl> enumerators = traverse_list (decl_range (D));
 
-  stack.push (mkEnumDecl (sloc (D), name, enumerators));
+  stack.push (amend (D, mkEnumDecl (name, enumerators)));
 
   return true;
 }
@@ -1857,7 +1862,7 @@ OCamlVisitor::TraverseEnumConstantDecl (clang::EnumConstantDecl *D)
   clang::StringRef name = D->getName ();
   option<Expr> init = maybe_traverse (D->getInitExpr ());
 
-  stack.push (mkEnumConstantDecl (sloc (D), name, init));
+  stack.push (amend (D, mkEnumConstantDecl (name, init)));
 
   return true;
 }
@@ -1873,7 +1878,7 @@ OCamlVisitor::TraverseParmVarDecl (clang::ParmVarDecl *D)
   ptr<TypeLoc> type = getTypeLoc (D);
   clang::StringRef name = D->getName ();
 
-  stack.push (mkParmVarDecl (sloc (D), type, name));
+  stack.push (amend (D, mkParmVarDecl (type, name)));
 
   return true;
 }
@@ -1890,7 +1895,7 @@ OCamlVisitor::TraverseVarDecl (clang::VarDecl *D)
   clang::StringRef name = D->getName ();
   option<Expr> init = maybe_traverse (D->getInit ());
 
-  stack.push (mkVarDecl (sloc (D), type, name, init));
+  stack.push (amend (D, mkVarDecl (type, name, init)));
 
   return true;
 }
@@ -1904,49 +1909,60 @@ OCamlVisitor::TraverseTranslationUnitDecl (clang::TranslationUnitDecl *D)
   // We filter out implicit declarations before iterating.
   list<Decl> decls = traverse_explicit_decls (D);
 
-  stack.push (mkTranslationUnitDecl (sloc (D), decls));
+  stack.push (amend (D, mkTranslationUnitDecl (decls)));
 
   return true;
 }
 
-UNIMP_IMPL (Decl, AccessSpecDecl)
-UNIMP_IMPL (Decl, BlockDecl)
-UNIMP_IMPL (Decl, CapturedDecl)
-UNIMP_IMPL (Decl, ClassScopeFunctionSpecializationDecl)
-UNIMP_IMPL (Decl, ClassTemplateDecl)
-UNIMP_IMPL (Decl, FileScopeAsmDecl)
-UNIMP_IMPL (Decl, FriendDecl)
-UNIMP_IMPL (Decl, FriendTemplateDecl)
-UNIMP_IMPL (Decl, FunctionTemplateDecl)
-UNIMP_IMPL (Decl, ImportDecl)
-UNIMP_IMPL (Decl, IndirectFieldDecl)
-UNIMP_IMPL (Decl, LabelDecl)
-UNIMP_IMPL (Decl, LinkageSpecDecl)
-UNIMP_IMPL (Decl, MSPropertyDecl)
-UNIMP_IMPL (Decl, NamespaceAliasDecl)
-UNIMP_IMPL (Decl, NamespaceDecl)
-UNIMP_IMPL (Decl, NonTypeTemplateParmDecl)
-UNIMP_IMPL (Decl, ObjCCategoryDecl)
-UNIMP_IMPL (Decl, ObjCCategoryImplDecl)
-UNIMP_IMPL (Decl, ObjCCompatibleAliasDecl)
-UNIMP_IMPL (Decl, ObjCImplementationDecl)
-UNIMP_IMPL (Decl, ObjCInterfaceDecl)
-UNIMP_IMPL (Decl, ObjCMethodDecl)
-UNIMP_IMPL (Decl, ObjCPropertyDecl)
-UNIMP_IMPL (Decl, ObjCPropertyImplDecl)
-UNIMP_IMPL (Decl, ObjCProtocolDecl)
-UNIMP_IMPL (Decl, OMPThreadPrivateDecl)
-UNIMP_IMPL (Decl, StaticAssertDecl)
-UNIMP_IMPL (Decl, TemplateTemplateParmDecl)
-UNIMP_IMPL (Decl, TemplateTypeParmDecl)
-UNIMP_IMPL (Decl, TypeAliasDecl)
-UNIMP_IMPL (Decl, TypeAliasTemplateDecl)
-UNIMP_IMPL (Decl, UnresolvedUsingTypenameDecl)
-UNIMP_IMPL (Decl, UnresolvedUsingValueDecl)
-UNIMP_IMPL (Decl, UsingDecl)
-UNIMP_IMPL (Decl, UsingDirectiveDecl)
-UNIMP_IMPL (Decl, UsingShadowDecl)
-UNIMP_IMPL (Decl, VarTemplateDecl)
+#define UNIMP_DECL(CLASS)					\
+  bool OCamlVisitor::Traverse##CLASS (clang::CLASS *D)		\
+  {								\
+    TODO;							\
+    TRACE;							\
+    IGNORE_ADT (CLASS, D);					\
+    stack.push (amend (D, mkUnimpDecl (#CLASS)));		\
+    return true;						\
+  }
+
+
+UNIMP_DECL (AccessSpecDecl)
+UNIMP_DECL (BlockDecl)
+UNIMP_DECL (CapturedDecl)
+UNIMP_DECL (ClassScopeFunctionSpecializationDecl)
+UNIMP_DECL (ClassTemplateDecl)
+UNIMP_DECL (FileScopeAsmDecl)
+UNIMP_DECL (FriendDecl)
+UNIMP_DECL (FriendTemplateDecl)
+UNIMP_DECL (FunctionTemplateDecl)
+UNIMP_DECL (ImportDecl)
+UNIMP_DECL (IndirectFieldDecl)
+UNIMP_DECL (LabelDecl)
+UNIMP_DECL (LinkageSpecDecl)
+UNIMP_DECL (MSPropertyDecl)
+UNIMP_DECL (NamespaceAliasDecl)
+UNIMP_DECL (NamespaceDecl)
+UNIMP_DECL (NonTypeTemplateParmDecl)
+UNIMP_DECL (ObjCCategoryDecl)
+UNIMP_DECL (ObjCCategoryImplDecl)
+UNIMP_DECL (ObjCCompatibleAliasDecl)
+UNIMP_DECL (ObjCImplementationDecl)
+UNIMP_DECL (ObjCInterfaceDecl)
+UNIMP_DECL (ObjCMethodDecl)
+UNIMP_DECL (ObjCPropertyDecl)
+UNIMP_DECL (ObjCPropertyImplDecl)
+UNIMP_DECL (ObjCProtocolDecl)
+UNIMP_DECL (OMPThreadPrivateDecl)
+UNIMP_DECL (StaticAssertDecl)
+UNIMP_DECL (TemplateTemplateParmDecl)
+UNIMP_DECL (TemplateTypeParmDecl)
+UNIMP_DECL (TypeAliasDecl)
+UNIMP_DECL (TypeAliasTemplateDecl)
+UNIMP_DECL (UnresolvedUsingTypenameDecl)
+UNIMP_DECL (UnresolvedUsingValueDecl)
+UNIMP_DECL (UsingDecl)
+UNIMP_DECL (UsingDirectiveDecl)
+UNIMP_DECL (UsingShadowDecl)
+UNIMP_DECL (VarTemplateDecl)
 
 // }}}
 
