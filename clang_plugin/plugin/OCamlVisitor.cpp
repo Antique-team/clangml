@@ -57,6 +57,7 @@ template<>
 bool
 clang_compare<clang::TypeLoc>::operator () (type a, type b)
 {
+  // This ignores the source locations.
   return clang_compare<clang::QualType> () (a.getType (), b.getType ());
 }
 
