@@ -3,7 +3,7 @@ open ClangBridge
 external check_bridge_version : string -> unit = "check_bridge_version"
 
 
-let run_processor (tu : decl) (file : string) =
+let run_processor (tu : decl) (file : string) (ctx : ClangApi.context) =
   Gc.compact ();
   let (input, output) = Unix.open_process "../ast-processor/main.byte" in
 

@@ -93,7 +93,10 @@ HelloChecker::checkASTDecl (TranslationUnitDecl const *D,
       char const *filename = ctx.SM.getFileEntryForID (ctx.SM.getMainFileID ())->getName ();
 
       value *cb = caml_named_value ("success");
-      caml_callback2 (*cb, result, caml_copy_string (filename));
+      caml_callback3 (*cb,
+                      result,
+                      caml_copy_string (filename),
+                      Val_bp (&ctx));
       // After the above call, all C++ values will be destroyed and
       // should no longer be used.
     }

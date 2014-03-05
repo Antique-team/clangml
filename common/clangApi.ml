@@ -1,3 +1,7 @@
+(* Opaque C++ side context. This type is not serialisable. *)
+type context
+
+
 (* Messages prefixed with R_ are requests, the ones prefixed
    with S_ are responses.
 
