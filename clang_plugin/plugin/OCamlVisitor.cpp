@@ -534,7 +534,7 @@ public:
   {
     TRACE;
 
-    PredefinedIdent kind = translate_predefined_ident (S->getIdentType ());
+    PredefinedExpr kind = translate_predefined_expr (S->getIdentType ());
 
     stack.push (mkPredefinedExpr (kind));
 
@@ -547,10 +547,11 @@ public:
   {
     TRACE;
 
+    CastKind kind = translate_cast_kind (S->getCastKind ());
     ptr<TypeLoc> type = must_traverse (S->getTypeInfoAsWritten ()->getTypeLoc ());
     ptr<Expr> sub = must_traverse (S->getSubExpr ());
 
-    stack.push (mkCStyleCastExpr (type, sub));
+    stack.push (mkCStyleCastExpr (kind, type, sub));
 
     return true;
   }
@@ -561,9 +562,10 @@ public:
   {
     TRACE;
 
+    CastKind kind = translate_cast_kind (S->getCastKind ());
     ptr<Expr> sub = must_traverse (S->getSubExpr ());
 
-    stack.push (mkImplicitCastExpr (sub));
+    stack.push (mkImplicitCastExpr (kind, sub));
 
     return true;
   }

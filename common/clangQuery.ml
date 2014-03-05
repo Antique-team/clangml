@@ -2,7 +2,7 @@ open ClangAst
 
 let return_type_of_tloc = function
   | FunctionProtoTypeLoc (result, _)
-  | FunctionNoProtoTypeLoc (result) ->
+  | FunctionNoProtoTypeLoc result ->
       result
   | _ -> failwith "return_type_of_tloc: non-function type"
 
@@ -19,11 +19,11 @@ let body_of_stmt = function
 
 
 let rec identifier_of_expr = function
-  | DeclRefExpr (name) -> name
+  | DeclRefExpr name -> name
 
-  | UnimpExpr (name) -> failwith ("unimplemented expr: " ^ name)
+  | UnimpExpr name -> failwith ("unimplemented expr: " ^ name)
 
-  | ImplicitCastExpr (expr)
-  | ParenExpr (expr) -> identifier_of_expr expr.e
+  | ImplicitCastExpr (_, expr)
+  | ParenExpr expr -> identifier_of_expr expr.e
 
   | _ -> failwith "invalid expression (not an identifier)"
