@@ -1,4 +1,4 @@
-let version = "20140120"
+let version = "$Id$"
 
 (* clang/AST/Type.h *)
 type qualifier = ClangBridge.qualifier =
