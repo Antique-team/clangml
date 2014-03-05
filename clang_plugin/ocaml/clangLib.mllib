@@ -3,7 +3,7 @@ Formatx
 
 # common
 ClangApi
-ClangAst
+ClangBridge
 ClangPp
 ClangSloc
 

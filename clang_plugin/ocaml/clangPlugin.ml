@@ -1,4 +1,4 @@
-open ClangAst
+open ClangBridge
 
 external check_bridge_version : string -> unit = "check_bridge_version"
 
@@ -33,7 +33,7 @@ let print_decl : decl -> string -> unit =
 
 
 let () =
-  check_bridge_version ClangAst.version;
+  check_bridge_version ClangBridge.version;
   (*TODO: standardize convention for naming*)
   Callback.register "Hello print expr" print_expr;
   Callback.register "Hello print stmt" print_stmt;

@@ -51,7 +51,7 @@ $(PLUGIN): $(OBJECTS)
 clean:
 	rm -f $(PLUGIN) *.o bridge_ast.cpp bridge_ast.h
 
-%.o: %.cpp clastAst.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
+%.o: %.cpp bridge_ast.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
 	$(EXT)/bin/clang++ -c $< $(CXXFLAGS) -o $@
 
 OCamlVisitor.o: OCamlVisitor.cpp bridge_ast.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
@@ -60,8 +60,11 @@ OCamlVisitor.o: OCamlVisitor.cpp bridge_ast.h $(wildcard *.h ../../camlp4_autoge
 bridge_ast.o: bridge_ast.cpp bridge_ast.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
 	$(EXT)/bin/clang++ -c $< $(CXXFLAGS) -frtti
 
-bridge_ast.h: ../../common/clangAst.ml ../../camlp4_autogen/main.byte
+bridge_ast.h: ../../common/clangBridge.ml ../../camlp4_autogen/main.byte
 	../../camlp4_autogen/main.byte bridge_ast $<
+
+../../common/clangBridge.ml: ../../common/clangAst.ml
+	$(MAKE) -C $(@D)
 
 ../../camlp4_autogen/main.byte: $(wildcard ../../camlp4_autogen/*.ml*)
 	$(MAKE) -C ../../camlp4_autogen

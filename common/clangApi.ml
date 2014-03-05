@@ -1,9 +1,9 @@
 type ast_node =
-  | Decl of ClangAst.decl
-  | Expr of ClangAst.expr
-  | Stmt of ClangAst.stmt
-  | Type of ClangAst.ctyp
-  | TypeLoc of ClangAst.type_loc
+  | Decl of ClangBridge.decl
+  | Expr of ClangBridge.expr
+  | Stmt of ClangBridge.stmt
+  | Type of ClangBridge.ctyp
+  | TypeLoc of ClangBridge.type_loc
 
 type message =
   | List of message list

@@ -13,6 +13,8 @@ let memcad_parse file =
 let () =
   let open ClangApi in
 
+  Printexc.record_backtrace true;
+
   match ClangApi.recv () with
   | List [Filename file; AstNode (Decl decl)] ->
       memcad_parse file;

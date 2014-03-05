@@ -1767,13 +1767,7 @@ OCamlVisitor::TraverseFunctionDecl (clang::FunctionDecl *D)
   // Function name.
   clang::StringRef name = getName (D);
 
-  ptr<_FunctionDecl> data = mk_FunctionDecl ();
-  data->fd_loc = sloc (D);
-  data->fd_type = type;
-  data->fd_name = name;
-  data->fd_body = body;
-
-  stack.push (mkFunctionDecl (data));
+  stack.push (mkFunctionDecl (sloc (D), type, name, body));
 
   return true;
 }

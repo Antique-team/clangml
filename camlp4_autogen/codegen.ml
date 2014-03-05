@@ -354,17 +354,19 @@ let emit_intfs basename cg cpp_types =
   Formatx.fprintf cg.output
     "@[<v0>#ifndef %s_H@,\
      #define %s_H@,\
-     #include \"ocaml++.h\"@,\
+     #include \"clang_ref.h\"@,\
+     //#include \"ocaml++.h\"@,\
      @,\
      namespace %s {@,\
      %a@,\
      }@,\
      @,\
      #endif /* %s_H */@]@."
-    ucasename ucasename
-    basename
+    (* #ifndef *) ucasename
+    (* #define *) ucasename
+    (* namespace *) basename
     pp_intf_list cpp_types
-    ucasename
+    (* #endif *) ucasename
 
 
 (*****************************************************

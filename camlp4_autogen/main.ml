@@ -21,12 +21,16 @@ let cpp_name name =
       (* If the name starts with an underscore,
          keep that first underscore. *)
       let underscore = String.index_from name 1 '_' in
-      String.blit
-        name (underscore + 1)
-        name underscore
-        (length - underscore - 1);
-      name.[underscore] <- Char.uppercase name.[underscore];
-      to_camelcase (length - 1) name
+      if underscore = String.length name - 1 then
+        name
+      else (
+        String.blit
+          name (underscore + 1)
+          name underscore
+          (length - underscore - 1);
+        name.[underscore] <- Char.uppercase name.[underscore];
+        to_camelcase (length - 1) name
+      )
     with Not_found ->
       (* Second copy here. *)
       String.sub name 0 length
@@ -69,11 +73,6 @@ let type_is_enum = let open Parse in function
 (*****************************************************
  * Class (some of the tycons have arguments)
  *****************************************************)
-
-
-let first_is_clang_pointer = function
-  | Parse.ClangType _ :: _ -> true
-  | _ -> false
 
 
 let is_basic_type = function
@@ -127,7 +126,7 @@ let rec translate_type ctx = let open Parse in let open Codegen in function
       )
   | ClangType name ->
       (* Plain pointers to Clang AST nodes. *)
-      TyPointer (TyName ("clang::" ^ name))
+      TyName ("clang_ref")
   | ListOfType ty ->
       TyTemplate ("std::vector", translate_type ctx ty)
   | OptionType (NamedType name as ty) ->
@@ -218,9 +217,7 @@ let class_intf_for_sum_type ctx (sum_type_name, branches) =
         toValue (List.mapi (fun i ty -> IdExpr ("field" ^ string_of_int i)) types)
       in
 
-      (* Create 1 or 2 constructors, one with clang pointer (if requested),
-         the other without, and defaulting it to NULL. *)
-      let constructors =
+      let constructor =
         (* Constructor initialiser list. *)
         let init =
           List.mapi (fun i ty ->
@@ -242,27 +239,16 @@ let class_intf_for_sum_type ctx (sum_type_name, branches) =
           ) types |> List.flatten)
         in
 
-        let constructor params init =
-          let flags =
-            (* Explicit constructor only if it's a unary constructor. *)
-            if List.length params = 1 then
-              explicit
-            else
-              []
-          in
-          MemberConstructor (flags, params, init, body)
-        in
-
         let params = constructor_params ctx types in
 
-        (* Constructor with pointer to clang object. *)
-        let ctors = [constructor params init] in
-        if first_is_clang_pointer types then
-          (* Constructor without clang object; pointer will be NULL. *)
-          constructor (List.tl params) (("field0", "NULL") :: List.tl init)
-          :: ctors
-        else
-          ctors
+        let flags =
+          (* Explicit constructor only if it's a unary constructor. *)
+          if List.length params = 1 then
+            explicit
+          else
+            []
+        in
+        MemberConstructor (flags, params, init, body)
       in
 
       let fields =
@@ -279,7 +265,12 @@ let class_intf_for_sum_type ctx (sum_type_name, branches) =
         class_name = branch_name ^ base.class_name;
         class_bases = [base.class_name];
         class_fields = fields;
-        class_methods = size_const (List.length types) :: tag_const tag :: toValue :: constructors;
+        class_methods = [
+          size_const (List.length types);
+          tag_const tag;
+          toValue;
+          constructor;
+        ]
       }
     in
 

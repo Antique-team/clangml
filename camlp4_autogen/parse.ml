@@ -85,7 +85,7 @@ let rec ast_type_to_type (ctyp: Ast.ctyp) =
       let list_of_type = ast_type_to_type ty in
       OptionType (list_of_type)
 
-  | <:ctyp<Clang.$uid:node_type$.t>> ->
+  | <:ctyp<Clang.t $lid:node_type$>> ->
       ClangType (node_type)
 
   | _ ->

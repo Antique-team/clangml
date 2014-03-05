@@ -4,6 +4,7 @@
 <*.byte>: package(deriving-ocsigen), package(unix)
 
 true: annot
+true: debug
 
 "common": include
 "common/util": include

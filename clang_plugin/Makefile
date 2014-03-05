@@ -15,7 +15,7 @@ $(PLUGIN): $(wildcard plugin/*.cpp plugin/*.h) ocaml/_build/clangLib.o ../ast-pr
 ocaml/_build/clangLib.cmxa: $(wildcard ocaml/*.ml* ocaml/*/*.ml* ocaml/*/*/*.ml*)
 	$(MAKE) -C ocaml
 
-../ast-processor/main.byte: $(shell find ../ast-processor -name "*.ml*")
+../ast-processor/main.byte: $(shell find ../ast-processor ../common -name "*.ml*")
 	$(MAKE) -C $(@D)
 
 

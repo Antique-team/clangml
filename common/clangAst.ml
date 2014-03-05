@@ -1,6 +1,6 @@
 let version = "20140120"
 
-type qualifier =
+type qualifier = ClangBridge.qualifier =
   (* CVR *)
   | TQ_Const
   | TQ_Volatile
@@ -13,23 +13,26 @@ type qualifier =
   | TQ_OCL_Strong
   | TQ_OCL_Weak
   | TQ_OCL_Autoreleasing
+  deriving (Show)
 
-type predefined_ident =
+type predefined_ident = ClangBridge.predefined_ident =
   | PI_Func
   | PI_Function
   | PI_LFunction
   | PI_FuncDName
   | PI_PrettyFunction
   | PI_PrettyFunctionNoVirtual
+  deriving (Show)
 
-type tag_type_kind =
+type tag_type_kind = ClangBridge.tag_type_kind =
   | TTK_Struct
   | TTK_Interface
   | TTK_Union
   | TTK_Class
   | TTK_Enum
+  deriving (Show)
 
-type elaborated_type_keyword =
+type elaborated_type_keyword = ClangBridge.elaborated_type_keyword =
   | ETK_Struct
   | ETK_Interface
   | ETK_Union
@@ -37,8 +40,9 @@ type elaborated_type_keyword =
   | ETK_Enum
   | ETK_Typename
   | ETK_None
+  deriving (Show)
 
-type builtin_type =
+type builtin_type = ClangBridge.builtin_type =
   | BT_Void
   | BT_Bool
 
@@ -89,9 +93,10 @@ type builtin_type =
   | BT_UnknownAny
   | BT_BuiltinFn
   | BT_ARCUnbridgedCast
+  deriving (Show)
 
 
-type unary_op =
+type unary_op = ClangBridge.unary_op =
   | UO_PostInc	(* [C99 6.5.2.4] Postfix increment and decrement *)
   | UO_PostDec
   | UO_PreInc	(* [C99 6.5.3.1] Prefix increment and decrement *)
@@ -105,9 +110,10 @@ type unary_op =
   | UO_Real	(* "__real expr"/"__imag expr" Extension. *)
   | UO_Imag
   | UO_Extension(* __extension__ marker. *)
+  deriving (Show)
 
 
-type binary_op =
+type binary_op = ClangBridge.binary_op =
   | BO_PtrMemD	(* [C++ 5.5] Pointer-to-member operators. *)
   | BO_PtrMemI
   | BO_Mul	(* [C99 6.5.5] Multiplicative operators. *)
@@ -140,35 +146,36 @@ type binary_op =
   | BO_OrAssign
   | BO_XorAssign
   | BO_Comma	(* [C99 6.5.17] Comma operator. *)
+  deriving (Show)
 
 
 (*
-type expr =
+type expr = ClangBridge.expr =
   | Unit of Clang.Unit.t
   | IntConst of Clang.IntConst.t	* int
   | BinaryOp of Clang.BinaryOp.t	* binary_op * expr * expr
 
-and stmt =
+and stmt = ClangBridge.stmt =
   | Skip of Clang.Skip.t
   | Print of Clang.Print.t		* expr
   | Block of Clang.Block.t		* stmt list
 *)
 
-type sloc = {
+type sloc = ClangBridge.sloc = {
   loc_s_filename : string;
   loc_s_line     : int;
   loc_s_column   : int;
   loc_e_filename : string;
   loc_e_line     : int;
   loc_e_column   : int;
-}
+} deriving (Show)
 
-type designator =
+type designator = ClangBridge.designator =
   | FieldDesignator		of sloc * string
   | ArrayDesignator		of sloc * expr
   | ArrayRangeDesignator	of sloc * expr * expr
 
-and expr =
+and expr = ClangBridge.expr =
   | UnimpExpr			of sloc * string
 
   | TypedExpr			of expr * ctyp
@@ -203,7 +210,7 @@ and expr =
   | VecStepExpr			of sloc * expr
   | VecStepType			of sloc * type_loc
 
-and stmt =
+and stmt = ClangBridge.stmt =
   | UnimpStmt			of sloc * string
 
   | NullStmt			of sloc
@@ -223,7 +230,7 @@ and stmt =
   | SwitchStmt			of sloc * expr * stmt
   | DeclStmt			of sloc * decl list
 
-and type_loc =
+and type_loc = ClangBridge.type_loc =
   | UnimpTypeLoc		of sloc * string
 
   | BuiltinTypeLoc		of sloc * builtin_type
@@ -242,7 +249,7 @@ and type_loc =
   | EnumTypeLoc			of sloc * (* name *)string
   | RecordTypeLoc		of sloc * (* kind *)tag_type_kind * (* name *)string
 
-and ctyp =
+and ctyp = ClangBridge.ctyp =
   | UnimpType			of string
 
   | BuiltinType			of builtin_type
@@ -262,12 +269,12 @@ and ctyp =
   | RecordType			of (* kind *)tag_type_kind * (* name *)string
   | DecayedType			of (* decayed *)ctyp * (* original *)ctyp
 
-and decl =
+and decl = ClangBridge.decl =
   | UnimpDecl			of sloc * string
 
   | EmptyDecl			of sloc
   | TranslationUnitDecl		of sloc * decl list
-  | FunctionDecl		of _FunctionDecl
+  | FunctionDecl		of sloc * (* type *)type_loc * (* name *)string * (* body *)stmt option
   | TypedefDecl			of sloc * (* type *)type_loc * (* name *)string
   | VarDecl			of sloc * (* type *)type_loc * (* name *)string * (* init *)expr option
   | ParmVarDecl			of sloc * (* type *)type_loc * (* name *)string
@@ -276,9 +283,26 @@ and decl =
   | EnumDecl			of sloc * (* name *)string * (* enumerators *)decl list
   | EnumConstantDecl		of sloc * (* name *)string * (* init *)expr option
 
-and _FunctionDecl = {
-  fd_loc : sloc;
-  fd_type : type_loc;
-  fd_name : string;
-  fd_body : stmt option;
+  (* All of the above derive Show. *)
+  deriving (Show)
+
+type expr_ = {
+  e : expr;
+  e_sloc : sloc;
+  e_type : ctyp;
+}
+
+type stmt_ = {
+  s : stmt;
+  s_sloc : sloc;
+}
+
+type decl_ = {
+  d : decl;
+  d_sloc : sloc;
+}
+
+type tloc_ = {
+  tl_sloc : sloc;
+  tl : type_loc;
 }

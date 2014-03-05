@@ -13,6 +13,18 @@ let args_of_tloc = function
   | _ -> failwith "args_of_tloc: non-function type"
 
 
-let body_of_compound_stmt = function
+let body_of_stmt = function
   | CompoundStmt (_, stmts) -> stmts
-  | _ -> failwith "body_of_compound_stmt: requires CompoundStmt"
+  | stmt -> [stmt]
+
+
+let rec identifier_of_expr = function
+  | DeclRefExpr (_, name) -> name
+
+  | UnimpExpr (_, name) -> failwith ("unimplemented expr: " ^ name)
+
+  | ImplicitCastExpr (_, expr)
+  | ParenExpr (_, expr)
+  | TypedExpr (expr, _) -> identifier_of_expr expr
+
+  | _ -> failwith "invalid expression (not an identifier)"

@@ -470,7 +470,7 @@ and pp_decl ff = function
       Format.fprintf ff "typedef %s : %a;"
         name
         pp_tloc ty
-  | FunctionDecl { fd_type; fd_name; fd_body; } ->
+  | FunctionDecl (_, fd_type, fd_name, fd_body) ->
       Format.fprintf ff "@[<v2>%a@]@, = %a"
         pp_named_arg (fd_name, fd_type)
         (pp_option pp_stmt) fd_body
