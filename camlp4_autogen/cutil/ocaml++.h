@@ -7,13 +7,16 @@
 #include <boost/intrusive_ptr.hpp>
 #include <type_traits>
 
-extern "C" {
+#define O_BEGIN_DECLS	extern "C" {
+#define O_END_DECLS	}
+
+O_BEGIN_DECLS
 #include <caml/alloc.h>
 #include <caml/callback.h>
 #include <caml/fail.h>
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
-}
+O_END_DECLS
 
 #include <llvm/ADT/StringRef.h>
 
@@ -199,9 +202,10 @@ value_of (value_of_context &ctx, option<T> ob)
 }
 
 
-static inline value value_of (value_of_context &ctx, int v) { return Val_int (v); }
+static inline value value_of (value_of_context &ctx, int    v) { return Val_int (v); }
+static inline value value_of (value_of_context &ctx, size_t v) { return Val_int (v); }
 static inline value value_of (value_of_context &ctx, double v) { return caml_copy_double (v); }
-static inline value value_of (value_of_context &ctx, int64 v) { return caml_copy_int64 (v); }
+static inline value value_of (value_of_context &ctx, int64  v) { return caml_copy_int64 (v); }
 
 static inline value
 value_of (value_of_context &ctx, llvm::StringRef v)

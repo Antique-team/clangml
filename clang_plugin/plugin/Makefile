@@ -35,6 +35,9 @@ PLUGIN = build/HelloClangPlugin/Build/Products/Debug/libHelloClangPlugin.dylib
 OBJECTS =					\
 	../ocaml/_build/clangLib.o		\
 	../../camlp4_autogen/cutil/ocaml++.o	\
+	clang_context.o				\
+	clang_operations.o			\
+	clang_ref_holder.o			\
 	HelloChecker.o				\
 	OCamlVisitor.o				\
 	PluginRegistration.o			\

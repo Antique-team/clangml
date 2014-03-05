@@ -241,7 +241,7 @@ and designator_ = ClangBridge.designator_ =
 
 and expr = ClangBridge.expr = {
   e      : expr_;
-  e_ptr  : expr Clang.t;
+  e_cref : expr Clang.t;
   e_sloc : sloc;
   e_type : ctyp;
 }
@@ -281,7 +281,7 @@ and expr_ = ClangBridge.expr_ =
 
 and stmt = ClangBridge.stmt = {
   s      : stmt_;
-  s_ptr  : stmt Clang.t;
+  s_cref : stmt Clang.t;
   s_sloc : sloc;
 }
 
@@ -307,7 +307,7 @@ and stmt_ = ClangBridge.stmt_ =
 
 and type_loc = ClangBridge.type_loc = {
   tl      : type_loc_;
-  tl_ptr  : type_loc Clang.t;
+  tl_cref : type_loc Clang.t;
   tl_sloc : sloc;
 }
 
@@ -332,7 +332,7 @@ and type_loc_ = ClangBridge.type_loc_ =
 
 and ctyp = ClangBridge.ctyp = {
   t        : ctyp_;
-  t_ptr    : ctyp Clang.t;
+  t_cref   : ctyp Clang.t;
   t_qual   : qualifier list;
   t_aspace : int option;
 }
@@ -358,7 +358,7 @@ and ctyp_ = ClangBridge.ctyp_ =
 
 and decl = ClangBridge.decl = {
   d      : decl_;
-  d_ptr  : decl Clang.t;
+  d_cref : decl Clang.t;
   d_sloc : sloc;
 }
 

@@ -21,6 +21,7 @@ extern "C" {
 #include "trace.h"
 
 #include "bridge_ast.h"
+#include "clang_context.h"
 
 using namespace clang;
 using namespace ento;
@@ -56,7 +57,7 @@ to_value (adt_ptr ob)
 
 
 void
-HelloChecker::checkASTDecl (const TranslationUnitDecl *D,
+HelloChecker::checkASTDecl (TranslationUnitDecl const *D,
                             AnalysisManager &Mgr,
                             BugReporter &BR) const
 {
@@ -74,8 +75,13 @@ HelloChecker::checkASTDecl (const TranslationUnitDecl *D,
 
       OCamlADTBase::reset_statistics ();
 
-      SourceManager &SM = BR.getSourceManager ();
-      ptr<bridge_ast::Decl> decl = adt_of_clangAST (D, SM);
+      clang_context ctx = {
+        BR.getSourceManager (),
+      };
+
+      ptr<bridge_ast::Decl> decl
+        = bridge_ast_of<bridge_ast::Decl>
+            (const_cast<TranslationUnitDecl *> (D), ctx);
 
       result = to_value (decl);
 
@@ -84,10 +90,12 @@ HelloChecker::checkASTDecl (const TranslationUnitDecl *D,
       // If this fails, then sharing didn't work.
       assert (OCamlADTBase::values_created == OCamlADTBase::ids_assigned);
 
-      char const *filename = SM.getFileEntryForID (SM.getMainFileID ())->getName ();
+      char const *filename = ctx.SM.getFileEntryForID (ctx.SM.getMainFileID ())->getName ();
 
       value *cb = caml_named_value ("success");
       caml_callback2 (*cb, result, caml_copy_string (filename));
+      // After the above call, all C++ values will be destroyed and
+      // should no longer be used.
     }
 #if HANDLE_CXX_EXN
   catch (std::exception const &e)

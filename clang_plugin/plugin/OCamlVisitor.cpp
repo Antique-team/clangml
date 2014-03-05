@@ -1,13 +1,16 @@
 #include "OCamlVisitor.h"
 #include "dynamic_stack.h"
+#include "clang_context.h"
 #include "trace.h"
 
+#include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/Basic/SourceManager.h>
 
 #include <boost/range/iterator_range.hpp>
 #include <boost/range/adaptor/filtered.hpp>
 
 #include <map>
+#include <memory>
 #include <sstream>
 
 using namespace bridge_ast;
@@ -78,7 +81,7 @@ struct OCamlVisitor
 private:
   typedef clang::RecursiveASTVisitor<OCamlVisitor> Base;
 
-  clang::SourceManager &SM;
+  clang_context &ctx;
   dynamic_stack stack;
 
   /****************************************************
@@ -296,8 +299,8 @@ private:
     if (!with_sloc)
       return empty_sloc;
 
-    clang::PresumedLoc start = SM.getPresumedLoc (deref (p).getLocStart ());
-    clang::PresumedLoc end   = SM.getPresumedLoc (deref (p).getLocEnd   ());
+    clang::PresumedLoc start = ctx.SM.getPresumedLoc (deref (p).getLocStart ());
+    clang::PresumedLoc end   = ctx.SM.getPresumedLoc (deref (p).getLocEnd   ());
 
     assert (start.isValid () == end.isValid ());
 
@@ -319,9 +322,41 @@ private:
   // }}}
 
 
+  /****************************************************
+   * {{{1 Clang reference management
+   */
+
+  clang_ref<Decl> ref (clang::Decl *D)
+  {
+    return ctx.refs.create<Decl> (D);
+  }
+
+  clang_ref<Stmt> ref (clang::Stmt *S)
+  {
+    return ctx.refs.create<Stmt> (S);
+  }
+
+  clang_ref<Expr> ref (clang::Expr *E)
+  {
+    return ctx.refs.create<Expr> (E);
+  }
+
+  clang_ref<Ctyp> ref (clang::QualType T)
+  {
+    return ctx.refs.create<Ctyp> (T);
+  }
+
+  clang_ref<TypeLoc> ref (clang::TypeLoc TL)
+  {
+    return ctx.refs.create<TypeLoc> (TL);
+  }
+
+
+  // }}}
+
 public:
-  OCamlVisitor (clang::SourceManager &SM)
-    : SM (SM)
+  OCamlVisitor (clang_context &ctx)
+    : ctx (ctx)
   {
   }
 
@@ -754,7 +789,8 @@ public:
     if (clang::Expr *E = clang::dyn_cast<clang::Expr> (S))
       {
         ptr<Expr> expr = mkExpr ();
-        expr->e = stack.pop ();
+        expr->e      = stack.pop ();
+        expr->e_cref = ref (E);
         expr->e_sloc = sloc (E);
         expr->e_type = must_traverse (E->getType ());
         stack.push (expr);
@@ -762,7 +798,8 @@ public:
     else
       {
         ptr<Stmt> stmt = mkStmt ();
-        stmt->s = stack.pop ();
+        stmt->s      = stack.pop ();
+        stmt->s_cref = ref (S);
         stmt->s_sloc = sloc (S);
         stack.push (stmt);
       }
@@ -1085,10 +1122,12 @@ public:
    * Final result
    */
 
-  ptr<Decl> translate (clang::TranslationUnitDecl const *D)
+  template<typename T>
+  ptr<typename bridge_type<T>::type>
+  translate (T Node)
   {
     assert (stack.empty ());
-    return must_traverse (const_cast<clang::TranslationUnitDecl *> (D));
+    return must_traverse (Node);
   }
 };
 
@@ -1151,6 +1190,7 @@ OCamlVisitor::TraverseType (clang::QualType T)
 
   ptr<Ctyp> ctyp = mkCtyp ();
   ctyp->t = unqual;
+  ctyp->t_cref = ref (T);
   ctyp->t_qual = qualifiers;
   ctyp->t_aspace = addressSpace;
   stack.push (ctyp);
@@ -1433,7 +1473,8 @@ OCamlVisitor::TraverseTypeLoc (clang::TypeLoc TL)
 
   // Amend with source locations.
   ptr<TypeLoc> type_loc = mkTypeLoc ();
-  type_loc->tl = stack.pop ();
+  type_loc->tl      = stack.pop ();
+  type_loc->tl_cref = ref (TL);
   type_loc->tl_sloc = sloc (TL);
   stack.push (type_loc);
 
@@ -1735,7 +1776,8 @@ OCamlVisitor::TraverseDecl (clang::Decl *D)
   Base::TraverseDecl (D);
 
   ptr<Decl> decl = mkDecl ();
-  decl->d = stack.pop ();
+  decl->d      = stack.pop ();
+  decl->d_cref = ref (D);
   decl->d_sloc = sloc (D);
   stack.push (decl);
 
@@ -1975,48 +2017,21 @@ UNIMP_DECL (VarTemplateDecl)
 
 // }}}
 
-
-size_t
-adt_of_clangAST_sharing (clang::TranslationUnitDecl const *D, ptr<Decl> &decl,
-                         clang::SourceManager &SM)
-{
-  TIME;
-
-  OCamlADTBase::ids_assigned = 0;
-  OCamlVisitor visitor (SM);
-  visitor.sharing = true;
-  decl = visitor.translate (D);
-  return OCamlADTBase::ids_assigned;
-}
-
-
-size_t
-adt_of_clangAST_no_sharing (clang::TranslationUnitDecl const *D, ptr<Decl> &decl,
-                            clang::SourceManager &SM)
-{
-  //TIME;
-
-  OCamlADTBase::ids_assigned = 0;
-  OCamlVisitor visitor (SM);
-  visitor.sharing = false;
-  decl = visitor.translate (D);
-  return OCamlADTBase::ids_assigned;
-}
-
-
-ptr<Decl>
-adt_of_clangAST (clang::TranslationUnitDecl const *D,
-                 clang::SourceManager &SM)
+template<typename T>
+ptr<T>
+bridge_ast_of (typename clang_type<T>::type N,
+               clang_context &ctx)
 {
   //D->dump ();
 
-#if 0
-  ptr<Decl> decl;
-  adt_of_clangAST_no_sharing (D, decl, SM);
-#else
-  ptr<Decl> decl;
-  adt_of_clangAST_sharing (D, decl, SM);
-#endif
+  TIME;
 
-  return decl;
+  OCamlVisitor visitor (ctx);
+  return visitor.translate (N);
 }
+
+template ptr<Decl>	bridge_ast_of<Decl>	(clang::Decl *  , clang_context &ctx);
+template ptr<Expr>	bridge_ast_of<Expr>	(clang::Expr *  , clang_context &ctx);
+template ptr<Stmt>	bridge_ast_of<Stmt>	(clang::Stmt *  , clang_context &ctx);
+template ptr<Ctyp>	bridge_ast_of<Ctyp>	(clang::QualType, clang_context &ctx);
+template ptr<TypeLoc>	bridge_ast_of<TypeLoc>	(clang::TypeLoc , clang_context &ctx);

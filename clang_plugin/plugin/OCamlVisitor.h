@@ -1,11 +1,11 @@
 #ifndef OCAML_VISITOR_H
 #define OCAML_VISITOR_H
 
-#include <clang/AST/RecursiveASTVisitor.h>
+#include "clang_context.h"
+#include "clang_type_traits.h"
 
-#include "bridge_ast.h"
-
-ptr<bridge_ast::Decl> adt_of_clangAST (clang::TranslationUnitDecl const *D,
-                                      clang::SourceManager &SM);
+template<typename T>
+ptr<T> bridge_ast_of (typename clang_type<T>::type D,
+                      clang_context &ctx);
 
 #endif /* OCAML_VISITOR_H */

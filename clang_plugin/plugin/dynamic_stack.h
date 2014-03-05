@@ -7,6 +7,8 @@
 
 #include <cxxabi.h>
 
+#include "bridge_ast.h"
+
 namespace dynamic_stack_detail
 {
 
@@ -61,14 +63,13 @@ namespace dynamic_stack_detail
     return p;
   }
 
-
-  using namespace bridge_ast;
-
   // Special case for Expr -> Stmt
   template<>
-  ptr<Stmt>
+  ptr<bridge_ast::Stmt>
   adt_cast (adt_ptr adt)
   {
+    using namespace bridge_ast;
+
     ptr<Stmt> p = boost::dynamic_pointer_cast<Stmt> (adt);
     if (!p)
       {
