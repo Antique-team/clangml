@@ -12,7 +12,8 @@ let memcad_parse file =
 ;;
 
 
-let process = function
+let process () =
+  match request @@ R_List [R_Filename; R_TranslationUnit] with
   | S_List [S_Filename file; S_TranslationUnit decl] ->
       (*prerr_endline (Show.show<ClangAst.decl> decl);*)
       memcad_parse file;
@@ -28,10 +29,10 @@ let process = function
 
 
 let initialise () =
-  match request (R_Handshake ClangAst.version) with
+  match request @@ R_Handshake ClangAst.version with
   | S_Handshake None ->
       (* Handshake OK; request filename and translation unit. *)
-      process (request (R_List [R_Filename; R_TranslationUnit]))
+      process ()
 
   | S_Handshake (Some version) ->
       failwith (
