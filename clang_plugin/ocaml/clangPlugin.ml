@@ -1,6 +1,4 @@
-open ClangBridge
-
-external check_bridge_version : string -> unit = "check_bridge_version"
+open ClangAst
 
 
 let run_processor (tu : decl) (file : string) (ctx : ClangApi.context) =
@@ -12,10 +10,10 @@ let run_processor (tu : decl) (file : string) (ctx : ClangApi.context) =
         S_List (List.map respond msgs)
 
     | R_Handshake version ->
-        if version = ClangBridge.version then
+        if version = ClangAst.version then
           S_Handshake None
         else
-          S_Handshake (Some ClangBridge.version)
+          S_Handshake (Some ClangAst.version)
 
     | R_TranslationUnit ->
         S_TranslationUnit tu
@@ -43,7 +41,11 @@ let run_processor (tu : decl) (file : string) (ctx : ClangApi.context) =
     | Unix.WSTOPPED  status -> failwith ("WSTOPPED "  ^ string_of_int status)
 
 
+external check_bridge_version : string -> unit = "check_bridge_version"
+
 let () =
+  (* Check that Ast and Bridge are the same version. *)
+  assert (ClangAst.version = ClangBridge.version);
   (* Check C++ side of bridge. *)
   check_bridge_version ClangBridge.version;
   Callback.register "success" run_processor;

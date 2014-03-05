@@ -3,10 +3,7 @@ type context
 
 
 (* Messages prefixed with R_ are requests, the ones prefixed
-   with S_ are responses.
-
-   We use the node types from ClangBridge instead of ClangAst,
-   so we don't pull in deriving. *)
+   with S_ are responses. *)
 type request =
   (* Handshake:
      - client sends its AST version
@@ -26,7 +23,7 @@ type request =
 type response =
   | S_Handshake of (* version *)string option
   | S_List of response list
-  | S_TranslationUnit of ClangBridge.decl
+  | S_TranslationUnit of ClangAst.decl
   | S_Filename of string
 
 

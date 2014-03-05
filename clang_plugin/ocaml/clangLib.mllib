@@ -2,7 +2,9 @@
 Formatx
 
 # common
+Clang
 ClangApi
+ClangAst
 ClangBridge
 ClangPp
 ClangSloc

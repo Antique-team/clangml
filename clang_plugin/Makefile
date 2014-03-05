@@ -10,7 +10,7 @@ $(PLUGIN): $(wildcard plugin/*.cpp plugin/*.h) ocaml/_build/clangLib.o ../ast-pr
 	$(MAKE) -C plugin
 
 %.o: %.cmxa
-	ocamlfind ocamlopt $< -output-obj -o $@ -linkall -package unix -linkpkg
+	ocamlfind ocamlopt $< -output-obj -o $@ -linkall -package unix -package deriving-ocsigen -linkpkg
 
 ocaml/_build/clangLib.cmxa: $(wildcard ocaml/*.ml* ocaml/*/*.ml* ocaml/*/*/*.ml* ../common/*.ml)
 	$(MAKE) -C ocaml
