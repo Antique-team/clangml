@@ -316,22 +316,6 @@ private:
     return sloc;
   }
 
-  ptr<Decl> amend (clang::Decl *D, ptr<Decl_> d)
-  {
-    ptr<Decl> decl = mkDecl ();
-    decl->d = d;
-    decl->d_sloc = sloc (D);
-    return decl;
-  }
-
-  ptr<TypeLoc> amend (clang::TypeLoc TL, ptr<TypeLoc_> tl)
-  {
-    ptr<TypeLoc> type_loc = mkTypeLoc ();
-    type_loc->tl = tl;
-    type_loc->tl_sloc = sloc (TL);
-    return type_loc;
-  }
-
   // }}}
 
 
@@ -390,7 +374,7 @@ public:
   bool TraverseUnary##OP (clang::UnaryOperator *S)			\
   {									\
     ptr<Expr> sub = must_traverse (S->getSubExpr ());			\
-    stack.push (mkUnaryOperator (sloc (S), UO_##OP, sub));		\
+    stack.push (mkUnaryOperator (UO_##OP, sub));			\
     return true;							\
   }
 
@@ -403,7 +387,7 @@ public:
   {									\
     ptr<Expr> lhs = must_traverse (S->getLHS ());			\
     ptr<Expr> rhs = must_traverse (S->getRHS ());			\
-    stack.push (mkBinaryOperator (sloc (S), BO_##OP, lhs, rhs));	\
+    stack.push (mkBinaryOperator (BO_##OP, lhs, rhs));			\
     return true;							\
   }
 
@@ -416,7 +400,7 @@ public:
   {									\
     ptr<Expr> lhs = must_traverse (S->getLHS ());			\
     ptr<Expr> rhs = must_traverse (S->getRHS ());			\
-    stack.push (mkBinaryOperator (sloc (S), BO_##OP##Assign, lhs, rhs));\
+    stack.push (mkBinaryOperator (BO_##OP##Assign, lhs, rhs));		\
     return true;							\
   }
 
@@ -437,7 +421,7 @@ public:
     ptr<Expr> trueExpr = must_traverse (S->getTrueExpr ());
     ptr<Expr> falseExpr = must_traverse (S->getFalseExpr ());
 
-    stack.push (mkConditionalOperator (sloc (S), cond, trueExpr, falseExpr));
+    stack.push (mkConditionalOperator (cond, trueExpr, falseExpr));
 
     return true;
   }
@@ -452,7 +436,7 @@ public:
   bool TraverseIntegerLiteral (clang::IntegerLiteral *S)
   {
     stack.push (mkIntegerLiteral
-                (sloc (S), S->getValue ().getSExtValue ()));
+                (S->getValue ().getSExtValue ()));
 
     return true;
   }
@@ -462,7 +446,7 @@ public:
   bool TraverseCharacterLiteral (clang::CharacterLiteral *S)
   {
     stack.push (mkCharacterLiteral
-                (sloc (S), S->getValue ()));
+                (S->getValue ()));
 
     return true;
   }
@@ -472,7 +456,7 @@ public:
   bool TraverseFloatingLiteral (clang::FloatingLiteral *S)
   {
     stack.push (mkFloatingLiteral
-                (sloc (S), S->getValue ().convertToDouble ()));
+                (S->getValue ().convertToDouble ()));
 
     return true;
   }
@@ -482,7 +466,7 @@ public:
   bool TraverseStringLiteral (clang::StringLiteral *S)
   {
     stack.push (mkStringLiteral
-                (sloc (S), S->getString ()));
+                (S->getString ()));
 
     return true;
   }
@@ -494,36 +478,12 @@ public:
    */
 
 
-  bool TraverseStmt (clang::Stmt *S)
-  {
-    TRACE;
-
-    Base::TraverseStmt (S);
-    auto exprOrStmt = stack.pop ();
-
-    if (clang::Expr *E = clang::dyn_cast<clang::Expr> (S))
-      {
-        ptr<Expr> expr = exprOrStmt;
-        ptr<Ctyp> type = must_traverse (E->getType ());
-
-        stack.push (mkTypedExpr (expr, type));
-      }
-    else
-      {
-        ptr<Stmt> stmt = exprOrStmt;
-        stack.push (stmt);
-      }
-
-    return true;
-  }
-
-
 #define IMPLICITVALUEINITEXPR(CLASS, BASE)
   bool TraverseImplicitValueInitExpr (clang::ImplicitValueInitExpr *S)
   {
     TRACE;
 
-    stack.push (mkImplicitValueInitExpr (sloc (S)));
+    stack.push (mkImplicitValueInitExpr ());
 
     return true;
   }
@@ -537,7 +497,7 @@ public:
     ptr<Expr> base = must_traverse (S->getBase ());
     ptr<Expr> idx = must_traverse (S->getIdx ());
 
-    stack.push (mkArraySubscriptExpr (sloc (S), base, idx));
+    stack.push (mkArraySubscriptExpr (base, idx));
 
     return true;
   }
@@ -550,7 +510,7 @@ public:
 
     ptr<Stmt> stmt = must_traverse (S->getSubStmt ());
 
-    stack.push (mkStmtExpr (sloc (S), stmt));
+    stack.push (mkStmtExpr (stmt));
 
     return true;
   }
@@ -563,7 +523,7 @@ public:
 
     clang::StringRef name = getName (S);
 
-    stack.push (mkDeclRefExpr (sloc (S), name));
+    stack.push (mkDeclRefExpr (name));
 
     return true;
   }
@@ -576,7 +536,7 @@ public:
 
     PredefinedIdent kind = translate_predefined_ident (S->getIdentType ());
 
-    stack.push (mkPredefinedExpr (sloc (S), kind));
+    stack.push (mkPredefinedExpr (kind));
 
     return true;
   }
@@ -590,7 +550,7 @@ public:
     ptr<TypeLoc> type = must_traverse (S->getTypeInfoAsWritten ()->getTypeLoc ());
     ptr<Expr> sub = must_traverse (S->getSubExpr ());
 
-    stack.push (mkCStyleCastExpr (sloc (S), type, sub));
+    stack.push (mkCStyleCastExpr (type, sub));
 
     return true;
   }
@@ -603,7 +563,7 @@ public:
 
     ptr<Expr> sub = must_traverse (S->getSubExpr ());
 
-    stack.push (mkImplicitCastExpr (sloc (S), sub));
+    stack.push (mkImplicitCastExpr (sub));
 
     return true;
   }
@@ -616,7 +576,7 @@ public:
 
     ptr<Expr> sub = must_traverse (S->getSubExpr ());
 
-    stack.push (mkParenExpr (sloc (S), sub));
+    stack.push (mkParenExpr (sub));
 
     return true;
   }
@@ -630,7 +590,7 @@ public:
     ptr<TypeLoc> type = getTypeLoc (S);
     ptr<Expr> init = must_traverse (S->getInitializer ());
 
-    stack.push (mkCompoundLiteralExpr (sloc (S), type, init));
+    stack.push (mkCompoundLiteralExpr (type, init));
 
     return true;
   }
@@ -641,29 +601,36 @@ public:
   {
     TRACE;
 
+    ptr<Designator_> dr;
+
     if (D.isFieldDesignator ())
       {
         clang::FieldDecl *field = D.getField ();
         assert (field);
         clang::StringRef name = field->getName ();
 
-        stack.push (mkFieldDesignator (sloc (S), name));
+        dr = mkFieldDesignator (name);
       }
     else if (D.isArrayDesignator ())
       {
         ptr<Expr> index = must_traverse (S->getArrayIndex (D));
 
-        stack.push (mkArrayDesignator (sloc (S), index));
+        dr = mkArrayDesignator (index);
       }
     else if (D.isArrayRangeDesignator ())
       {
         ptr<Expr> start = must_traverse (S->getArrayRangeStart (D));
         ptr<Expr> end   = must_traverse (S->getArrayRangeEnd (D));
 
-        stack.push (mkArrayRangeDesignator (sloc (S), start, end));
+        dr = mkArrayRangeDesignator (start, end);
       }
     else
       assert (!"Invalid or unknown designator");
+
+    ptr<Designator> designator = mkDesignator ();
+    designator->dr = dr;
+    designator->dr_sloc = sloc (S);
+    stack.push (designator);
 
     return true;
   }
@@ -676,7 +643,7 @@ public:
     list<Designator> designators = traverse_list (designator_range (S), S);
     ptr<Expr> init = must_traverse (S->getInit ());
 
-    stack.push (mkDesignatedInitExpr (sloc (S), designators, init));
+    stack.push (mkDesignatedInitExpr (designators, init));
 
     return true;
   }
@@ -689,7 +656,7 @@ public:
 
     list<Expr> inits = traverse_list (S->children ());
 
-    stack.push (mkInitListExpr (sloc (S), inits));
+    stack.push (mkInitListExpr (inits));
 
     return true;
   }
@@ -703,7 +670,7 @@ public:
     ptr<Expr> sub = must_traverse (S->getSubExpr ());
     ptr<TypeLoc> type = must_traverse (S->getWrittenTypeInfo ()->getTypeLoc ());
 
-    stack.push (mkVAArgExpr (sloc (S), sub, type));
+    stack.push (mkVAArgExpr (sub, type));
 
     return true;
   }
@@ -717,7 +684,7 @@ public:
     ptr<Expr> callee = must_traverse (S->getCallee ());
     list<Expr> args = traverse_list (arg_range (S));
 
-    stack.push (mkCallExpr (sloc (S), callee, args));
+    stack.push (mkCallExpr (callee, args));
 
     return true;
   }
@@ -732,7 +699,7 @@ public:
     clang::StringRef member = S->getMemberDecl ()->getName ();
     bool isArrow = S->isArrow ();
 
-    stack.push (mkMemberExpr (sloc (S), base, member, isArrow));
+    stack.push (mkMemberExpr (base, member, isArrow));
 
     return true;
   }
@@ -742,11 +709,11 @@ public:
   void pushUnaryExprOrTypeTraitExpr (clang::UnaryExprOrTypeTraitExpr *S,
                                      TypeFactory mkOfType, ExprFactory mkOfExpr)
   {
-    ptr<Expr> expr;
+    ptr<Expr_> expr;
     if (S->isArgumentType ())
-      expr = mkSizeOfType (sloc (S), must_traverse (S->getArgumentTypeInfo ()->getTypeLoc ()));
+      expr = mkOfType (must_traverse (S->getArgumentTypeInfo ()->getTypeLoc ()));
     else
-      expr = mkSizeOfExpr (sloc (S), must_traverse (S->getArgumentExpr ()));
+      expr = mkOfExpr (must_traverse (S->getArgumentExpr ()));
     stack.push (expr);
   }
 
@@ -778,15 +745,35 @@ public:
    * {{{1 Statements
    */
 
-  // Simple forward so passing it as template argument in `traverse' works.
-  bool TraverseDecl (clang::Decl *D) { return Base::TraverseDecl (D); }
+  bool TraverseStmt (clang::Stmt *S)
+  {
+    Base::TraverseStmt (S);
+
+    if (clang::Expr *E = clang::dyn_cast<clang::Expr> (S))
+      {
+        ptr<Expr> expr = mkExpr ();
+        expr->e = stack.pop ();
+        expr->e_sloc = sloc (E);
+        expr->e_type = must_traverse (E->getType ());
+        stack.push (expr);
+      }
+    else
+      {
+        ptr<Stmt> stmt = mkStmt ();
+        stmt->s = stack.pop ();
+        stmt->s_sloc = sloc (S);
+        stack.push (stmt);
+      }
+
+    return true;
+  }
 
 #define NULLSTMT(CLASS, BASE)
   bool TraverseNullStmt (clang::NullStmt *S)
   {
     TRACE;
 
-    stack.push (mkNullStmt (sloc (S)));
+    stack.push (mkNullStmt ());
 
     return true;
   }
@@ -797,7 +784,7 @@ public:
   {
     TRACE;
 
-    stack.push (mkBreakStmt (sloc (S)));
+    stack.push (mkBreakStmt ());
 
     return true;
   }
@@ -808,7 +795,7 @@ public:
   {
     TRACE;
 
-    stack.push (mkContinueStmt (sloc (S)));
+    stack.push (mkContinueStmt ());
 
     return true;
   }
@@ -822,7 +809,7 @@ public:
     clang::StringRef name = S->getDecl ()->getName ();
     ptr<Stmt> sub = must_traverse (S->getSubStmt ());
 
-    stack.push (mkLabelStmt (sloc (S), name, sub));
+    stack.push (mkLabelStmt (name, sub));
 
     return true;
   }
@@ -837,7 +824,7 @@ public:
     option<Expr> rhs = maybe_traverse (S->getRHS ());
     ptr<Stmt> sub = must_traverse (S->getSubStmt ());
 
-    stack.push (mkCaseStmt (sloc (S), lhs, rhs, sub));
+    stack.push (mkCaseStmt (lhs, rhs, sub));
 
     return true;
   }
@@ -850,7 +837,7 @@ public:
 
     ptr<Stmt> sub = must_traverse (S->getSubStmt ());
 
-    stack.push (mkDefaultStmt (sloc (S), sub));
+    stack.push (mkDefaultStmt (sub));
 
     return true;
   }
@@ -863,7 +850,7 @@ public:
 
     clang::StringRef name = S->getLabel ()->getName ();
 
-    stack.push (mkGotoStmt (sloc (S), name));
+    stack.push (mkGotoStmt (name));
 
     return true;
   }
@@ -878,7 +865,7 @@ public:
     ptr<Stmt> thenBranch = must_traverse (S->getThen ());
     option<Stmt> elseBranch = maybe_traverse (S->getElse ());
 
-    stack.push (mkIfStmt (sloc (S), cond, thenBranch, elseBranch));
+    stack.push (mkIfStmt (cond, thenBranch, elseBranch));
 
     return true;
   }
@@ -894,7 +881,7 @@ public:
     option<Expr> inc = maybe_traverse (S->getInc ());
     ptr<Stmt> body = must_traverse (S->getBody ());
 
-    stack.push (mkForStmt (sloc (S), init, cond, inc, body));
+    stack.push (mkForStmt (init, cond, inc, body));
 
     return true;
   }
@@ -908,7 +895,7 @@ public:
     ptr<Expr> cond = maybe_traverse (S->getCond ());
     ptr<Stmt> body = must_traverse (S->getBody ());
 
-    stack.push (mkWhileStmt (sloc (S), cond, body));
+    stack.push (mkWhileStmt (cond, body));
 
     return true;
   }
@@ -922,7 +909,7 @@ public:
     ptr<Stmt> body = must_traverse (S->getBody ());
     ptr<Expr> cond = maybe_traverse (S->getCond ());
 
-    stack.push (mkDoStmt (sloc (S), body, cond));
+    stack.push (mkDoStmt (body, cond));
 
     return true;
   }
@@ -936,7 +923,7 @@ public:
     ptr<Expr> cond = must_traverse (S->getCond ());
     ptr<Stmt> body = must_traverse (S->getBody ());
 
-    stack.push (mkSwitchStmt (sloc (S), cond, body));
+    stack.push (mkSwitchStmt (cond, body));
 
     return true;
   }
@@ -949,7 +936,7 @@ public:
 
     option<Expr> expr = maybe_traverse (S->getRetValue ());
 
-    stack.push (mkReturnStmt (sloc (S), expr));
+    stack.push (mkReturnStmt (expr));
 
     return true;
   }
@@ -966,7 +953,7 @@ public:
       traverse (sub);
     list<Stmt> stmts = stack.pop_marked ();
 
-    stack.push (mkCompoundStmt (sloc (S), stmts));
+    stack.push (mkCompoundStmt (stmts));
 
     return true;
   }
@@ -978,7 +965,7 @@ public:
     TRACE;
 
     // TODO: implement
-    stack.push (mkUnimpStmt (sloc (S), "GCCAsmStmt"));
+    stack.push (bridge_ast::mkUnimpStmt ("GCCAsmStmt"));
 
     return true;
   }
@@ -991,7 +978,7 @@ public:
 
     list<Decl> decls = traverse_list (decl_range (S));
 
-    stack.push (mkDeclStmt (sloc (S), decls));
+    stack.push (mkDeclStmt (decls));
 
     return true;
   }
@@ -1006,12 +993,12 @@ public:
 
 
 #define UNIMP(TYPE, CLASS)					\
-  bool Traverse##CLASS (clang::CLASS *Node)			\
+  bool Traverse##CLASS (clang::CLASS *S)			\
   {								\
     TODO;							\
     TRACE;							\
-    IGNORE_ADT (CLASS, Node);					\
-    stack.push (mkUnimp##TYPE (sloc (Node), #CLASS));		\
+    IGNORE_ADT (CLASS, S);					\
+    stack.push (mkUnimp##TYPE (#CLASS));			\
     return true;						\
   }
 
@@ -1052,6 +1039,8 @@ public:
   /****************************************************
    * {{{1 Declarations
    */
+
+  bool TraverseDecl (clang::Decl *D);
 
 #define FUNCTION(CLASS, BASE)
   bool TraverseFunctionDecl (clang::FunctionDecl *D);
@@ -1113,7 +1102,7 @@ OCamlVisitor::TraverseType (clang::QualType T)
   TRACE;
 
   Base::TraverseType (T);
-  ptr<Ctyp> unqual = stack.pop ();
+  ptr<Ctyp_> unqual = stack.pop ();
 
   clang::Qualifiers quals = T.getLocalQualifiers ();
 
@@ -1158,7 +1147,11 @@ OCamlVisitor::TraverseType (clang::QualType T)
   if (quals.hasAddressSpace ())
     addressSpace = quals.getAddressSpace ();
 
-  stack.push (mkQualifiedType (unqual, qualifiers, addressSpace));
+  ptr<Ctyp> ctyp = mkCtyp ();
+  ctyp->t = unqual;
+  ctyp->t_qual = qualifiers;
+  ctyp->t_aspace = addressSpace;
+  stack.push (ctyp);
 
   return true;
 }
@@ -1424,7 +1417,7 @@ OCamlVisitor::TraverseTypeLoc (clang::TypeLoc TL)
     {
       printf ("WARNING: %s creates dummy TypeLoc, as derived function did not produce any\n",
               __func__);
-      stack.push (amend (TL, mkBuiltinTypeLoc (BT_Void)));
+      stack.push (mkBuiltinTypeLoc (BT_Void));
     }
   else if (marker > 1)
     {
@@ -1436,10 +1429,11 @@ OCamlVisitor::TraverseTypeLoc (clang::TypeLoc TL)
       stack.push (mostRecent);
     }
 
-  // Validate that a TypeLoc was actually created, not some other
-  // kind of node (such as Expr).
-  ptr<TypeLoc> type = stack.pop ();
-  stack.push (type);
+  // Amend with source locations.
+  ptr<TypeLoc> type_loc = mkTypeLoc ();
+  type_loc->tl = stack.pop ();
+  type_loc->tl_sloc = sloc (TL);
+  stack.push (type_loc);
 
   return true;
 }
@@ -1452,7 +1446,7 @@ OCamlVisitor::TraverseBuiltinTypeLoc (clang::BuiltinTypeLoc TL)
 
   BuiltinType bt = translate_builtin_type (TL.getTypePtr ()->getKind ());
 
-  stack.push (amend (TL, mkBuiltinTypeLoc (bt)));
+  stack.push (mkBuiltinTypeLoc (bt));
 
   return true;
 }
@@ -1465,7 +1459,7 @@ OCamlVisitor::TraverseTypeOfExprTypeLoc (clang::TypeOfExprTypeLoc TL)
 
   ptr<Expr> expr = must_traverse (TL.getUnderlyingExpr ());
 
-  stack.push (amend (TL, mkTypeOfExprTypeLoc (expr)));
+  stack.push (mkTypeOfExprTypeLoc (expr));
 
   return true;
 }
@@ -1478,7 +1472,7 @@ OCamlVisitor::TraverseTypeOfTypeLoc (clang::TypeOfTypeLoc TL)
 
   ptr<TypeLoc> type = must_traverse (TL.getUnderlyingTInfo ()->getTypeLoc ());
 
-  stack.push (amend (TL, mkTypeOfTypeLoc (type)));
+  stack.push (mkTypeOfTypeLoc (type));
 
   return true;
 }
@@ -1492,7 +1486,7 @@ OCamlVisitor::TraverseConstantArrayTypeLoc (clang::ConstantArrayTypeLoc TL)
   ptr<TypeLoc> element = must_traverse (TL.getElementLoc ());
   uint64_t size = TL.getTypePtr ()->getSize ().getZExtValue ();
 
-  stack.push (amend (TL, mkConstantArrayTypeLoc (element, size)));
+  stack.push (mkConstantArrayTypeLoc (element, size));
 
   return true;
 }
@@ -1506,7 +1500,7 @@ OCamlVisitor::TraverseVariableArrayTypeLoc (clang::VariableArrayTypeLoc TL)
   ptr<TypeLoc> element = must_traverse (TL.getElementLoc ());
   ptr<Expr> size = must_traverse (TL.getSizeExpr ());
 
-  stack.push (amend (TL, mkVariableArrayTypeLoc (element, size)));
+  stack.push (mkVariableArrayTypeLoc (element, size));
 
   return true;
 }
@@ -1519,7 +1513,7 @@ OCamlVisitor::TraverseIncompleteArrayTypeLoc (clang::IncompleteArrayTypeLoc TL)
 
   ptr<TypeLoc> element = must_traverse (TL.getElementLoc ());
 
-  stack.push (amend (TL, mkIncompleteArrayTypeLoc (element)));
+  stack.push (mkIncompleteArrayTypeLoc (element));
 
   return true;
 }
@@ -1532,7 +1526,7 @@ OCamlVisitor::TraversePointerTypeLoc (clang::PointerTypeLoc TL)
 
   ptr<TypeLoc> pointee = must_traverse (TL.getPointeeLoc ());
 
-  stack.push (amend (TL, mkPointerTypeLoc (pointee)));
+  stack.push (mkPointerTypeLoc (pointee));
 
   return true;
 }
@@ -1546,7 +1540,7 @@ OCamlVisitor::TraverseElaboratedTypeLoc (clang::ElaboratedTypeLoc TL)
   TraverseNestedNameSpecifierLoc (TL.getQualifierLoc ());
   ptr<TypeLoc> type = must_traverse (TL.getNamedTypeLoc ());
 
-  stack.push (amend (TL, mkElaboratedTypeLoc (type)));
+  stack.push (mkElaboratedTypeLoc (type));
 
   return true;
 }
@@ -1601,7 +1595,7 @@ OCamlVisitor::TraverseQualifiedTypeLoc (clang::QualifiedTypeLoc TL)
   if (quals.hasAddressSpace ())
     addressSpace = quals.getAddressSpace ();
 
-  stack.push (amend (TL, mkQualifiedTypeLoc (unqual, qualifiers, addressSpace)));
+  stack.push (mkQualifiedTypeLoc (unqual, qualifiers, addressSpace));
 
   return true;
 }
@@ -1614,7 +1608,7 @@ OCamlVisitor::TraverseEnumTypeLoc (clang::EnumTypeLoc TL)
 
   clang::StringRef name = TL.getDecl ()->getName ();
 
-  stack.push (amend (TL, mkEnumTypeLoc (name)));
+  stack.push (mkEnumTypeLoc (name));
 
   return true;
 }
@@ -1628,7 +1622,7 @@ OCamlVisitor::TraverseRecordTypeLoc (clang::RecordTypeLoc TL)
   TagTypeKind kind = translate_tag_type_kind (TL.getDecl ()->getTagKind ());
   clang::StringRef name = TL.getDecl ()->getName ();
 
-  stack.push (amend (TL, mkRecordTypeLoc (kind, name)));
+  stack.push (mkRecordTypeLoc (kind, name));
 
   return true;
 }
@@ -1641,7 +1635,7 @@ OCamlVisitor::TraverseFunctionNoProtoTypeLoc (clang::FunctionNoProtoTypeLoc TL)
 
   ptr<TypeLoc> result = must_traverse (TL.getResultLoc ());
 
-  stack.push (amend (TL, mkFunctionNoProtoTypeLoc (result)));
+  stack.push (mkFunctionNoProtoTypeLoc (result));
 
   return true;
 }
@@ -1657,7 +1651,7 @@ OCamlVisitor::TraverseFunctionProtoTypeLoc (clang::FunctionProtoTypeLoc TL)
 
   // TODO: exceptions
 
-  stack.push (amend (TL, mkFunctionProtoTypeLoc (result, args)));
+  stack.push (mkFunctionProtoTypeLoc (result, args));
 
   return true;
 }
@@ -1670,7 +1664,7 @@ OCamlVisitor::TraverseTypedefTypeLoc (clang::TypedefTypeLoc TL)
 
   clang::StringRef name = TL.getTypedefNameDecl ()->getName ();
 
-  stack.push (amend (TL, mkTypedefTypeLoc (name)));
+  stack.push (mkTypedefTypeLoc (name));
 
   return true;
 }
@@ -1683,7 +1677,7 @@ OCamlVisitor::TraverseParenTypeLoc (clang::ParenTypeLoc TL)
 
   ptr<TypeLoc> inner = must_traverse (TL.getInnerLoc ());
 
-  stack.push (amend (TL, mkParenTypeLoc (inner)));
+  stack.push (mkParenTypeLoc (inner));
 
   return true;
 }
@@ -1695,7 +1689,7 @@ OCamlVisitor::Traverse##CLASS##TypeLoc (clang::CLASS##TypeLoc TL)	\
 {									\
   TODO;									\
   TRACE;								\
-  stack.push (amend (TL, mkUnimpTypeLoc (#CLASS)));			\
+  stack.push (mkUnimpTypeLoc (#CLASS));					\
   return true;								\
 }
 
@@ -1732,6 +1726,19 @@ UNIMP_TYPE_LOC (Vector)
 /****************************************************
  * {{{1 Declarations
  */
+
+bool
+OCamlVisitor::TraverseDecl (clang::Decl *D)
+{
+  Base::TraverseDecl (D);
+
+  ptr<Decl> decl = mkDecl ();
+  decl->d = stack.pop ();
+  decl->d_sloc = sloc (D);
+  stack.push (decl);
+
+  return true;
+}
 
 bool
 OCamlVisitor::TraverseFunctionDecl (clang::FunctionDecl *D)
@@ -1772,7 +1779,7 @@ OCamlVisitor::TraverseFunctionDecl (clang::FunctionDecl *D)
   // Function name.
   clang::StringRef name = getName (D);
 
-  stack.push (amend (D, mkFunctionDecl (type, name, body)));
+  stack.push (mkFunctionDecl (type, name, body));
 
   return true;
 }
@@ -1782,7 +1789,7 @@ OCamlVisitor::TraverseEmptyDecl (clang::EmptyDecl *D)
 {
   TRACE;
 
-  stack.push (amend (D, mkEmptyDecl ()));
+  stack.push (mkEmptyDecl ());
 
   return true;
 }
@@ -1796,7 +1803,7 @@ OCamlVisitor::TraverseTypedefDecl (clang::TypedefDecl *D)
   ptr<TypeLoc> type = getTypeLoc (D);
   clang::StringRef name = D->getName ();
 
-  stack.push (amend (D, mkTypedefDecl (type, name)));
+  stack.push (mkTypedefDecl (type, name));
 
   return true;
 }
@@ -1811,7 +1818,7 @@ OCamlVisitor::TraverseRecordDecl (clang::RecordDecl *D)
   list<Decl> members = traverse_explicit_decls (D);
   clang::StringRef name = D->getName ();
 
-  stack.push (amend (D, mkRecordDecl (name, members)));
+  stack.push (mkRecordDecl (name, members));
 
   return true;
 }
@@ -1834,7 +1841,7 @@ OCamlVisitor::TraverseFieldDecl (clang::FieldDecl *D)
 
   clang::StringRef name = D->getName ();
 
-  stack.push (amend (D, mkFieldDecl (type, name, bitwidth, init)));
+  stack.push (mkFieldDecl (type, name, bitwidth, init));
 
   return true;
 }
@@ -1848,7 +1855,7 @@ OCamlVisitor::TraverseEnumDecl (clang::EnumDecl *D)
   clang::StringRef name = D->getName ();
   list<Decl> enumerators = traverse_list (decl_range (D));
 
-  stack.push (amend (D, mkEnumDecl (name, enumerators)));
+  stack.push (mkEnumDecl (name, enumerators));
 
   return true;
 }
@@ -1862,7 +1869,7 @@ OCamlVisitor::TraverseEnumConstantDecl (clang::EnumConstantDecl *D)
   clang::StringRef name = D->getName ();
   option<Expr> init = maybe_traverse (D->getInitExpr ());
 
-  stack.push (amend (D, mkEnumConstantDecl (name, init)));
+  stack.push (mkEnumConstantDecl (name, init));
 
   return true;
 }
@@ -1878,7 +1885,7 @@ OCamlVisitor::TraverseParmVarDecl (clang::ParmVarDecl *D)
   ptr<TypeLoc> type = getTypeLoc (D);
   clang::StringRef name = D->getName ();
 
-  stack.push (amend (D, mkParmVarDecl (type, name)));
+  stack.push (mkParmVarDecl (type, name));
 
   return true;
 }
@@ -1895,7 +1902,7 @@ OCamlVisitor::TraverseVarDecl (clang::VarDecl *D)
   clang::StringRef name = D->getName ();
   option<Expr> init = maybe_traverse (D->getInit ());
 
-  stack.push (amend (D, mkVarDecl (type, name, init)));
+  stack.push (mkVarDecl (type, name, init));
 
   return true;
 }
@@ -1909,7 +1916,7 @@ OCamlVisitor::TraverseTranslationUnitDecl (clang::TranslationUnitDecl *D)
   // We filter out implicit declarations before iterating.
   list<Decl> decls = traverse_explicit_decls (D);
 
-  stack.push (amend (D, mkTranslationUnitDecl (decls)));
+  stack.push (mkTranslationUnitDecl (decls));
 
   return true;
 }
@@ -1920,7 +1927,7 @@ OCamlVisitor::TraverseTranslationUnitDecl (clang::TranslationUnitDecl *D)
     TODO;							\
     TRACE;							\
     IGNORE_ADT (CLASS, D);					\
-    stack.push (amend (D, mkUnimpDecl (#CLASS)));		\
+    stack.push (mkUnimpDecl (#CLASS));				\
     return true;						\
   }
 

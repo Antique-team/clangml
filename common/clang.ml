@@ -1,1 +1,1 @@
-type 'a t
+type 'a t = private int

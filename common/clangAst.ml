@@ -170,75 +170,84 @@ type sloc = ClangBridge.sloc = {
   loc_e_column   : int;
 } deriving (Show)
 
-type designator = ClangBridge.designator =
-  | FieldDesignator		of sloc * string
-  | ArrayDesignator		of sloc * expr
-  | ArrayRangeDesignator	of sloc * expr * expr
 
-and expr = ClangBridge.expr =
-  | UnimpExpr			of sloc * string
+type designator = ClangBridge.designator = {
+  dr : designator_;
+  dr_sloc : sloc;
+}
 
-  | TypedExpr			of expr * ctyp
+and designator_ = ClangBridge.designator_ =
+  | FieldDesignator		of string
+  | ArrayDesignator		of expr
+  | ArrayRangeDesignator	of expr * expr
 
-  | IntegerLiteral		of sloc * int
-  | CharacterLiteral		of sloc * char
-  | FloatingLiteral		of sloc * float
-  | StringLiteral		of sloc * string
-  | BinaryOperator		of sloc * binary_op * expr * expr
-  | UnaryOperator		of sloc * unary_op * expr
-
-  | DeclRefExpr			of sloc * (* name *)string
-  | PredefinedExpr		of sloc * (* kind *)predefined_ident
-  | ImplicitCastExpr		of sloc * expr
-  | CStyleCastExpr		of sloc * type_loc * expr
-  | CompoundLiteralExpr		of sloc * type_loc * (* init *)expr
-  | ParenExpr			of sloc * expr
-  | VAArgExpr			of sloc * (* sub *)expr * (* type *)type_loc
-  | CallExpr			of sloc * (* callee *)expr * (* args *)expr list
-  | MemberExpr			of sloc * (* base *)expr * (* member *)string * (* is_arrow *)bool
-  | ConditionalOperator		of sloc * expr * expr * expr
-  | DesignatedInitExpr		of sloc * designator list * expr
-  | InitListExpr		of sloc * expr list
-  | ImplicitValueInitExpr	of sloc
-  | ArraySubscriptExpr		of sloc * expr * expr
-  | StmtExpr			of sloc * stmt
-
-  | SizeOfExpr			of sloc * expr
-  | SizeOfType			of sloc * type_loc
-  | AlignOfExpr			of sloc * expr
-  | AlignOfType			of sloc * type_loc
-  | VecStepExpr			of sloc * expr
-  | VecStepType			of sloc * type_loc
-
-and expr_ = ClangBridge.expr_ = {
-  e : expr;
+and expr = ClangBridge.expr = {
+  e : expr_;
   e_sloc : sloc;
   e_type : ctyp;
 }
 
-and stmt = ClangBridge.stmt =
-  | UnimpStmt			of sloc * string
+and expr_ = ClangBridge.expr_ =
+  | UnimpExpr			of string
 
-  | NullStmt			of sloc
-  | BreakStmt			of sloc
-  | ContinueStmt		of sloc
-  | LabelStmt			of sloc * string * stmt
-  | CaseStmt			of sloc * expr * expr option * stmt
-  | DefaultStmt			of sloc * stmt
-  | GotoStmt			of sloc * string
-  | ExprStmt			of (* no sloc *) expr
-  | CompoundStmt		of sloc * stmt list
-  | ReturnStmt			of sloc * expr option
-  | IfStmt			of sloc * expr * stmt * stmt option
-  | ForStmt			of sloc * (* init *)stmt option * (* cond *)expr option * (* incr *)expr option * (* body *)stmt
-  | WhileStmt			of sloc * (* cond *)expr * (* body *)stmt
-  | DoStmt			of sloc * (* body *)stmt * (* cond *)expr
-  | SwitchStmt			of sloc * expr * stmt
-  | DeclStmt			of sloc * decl list
+  | IntegerLiteral		of int
+  | CharacterLiteral		of char
+  | FloatingLiteral		of float
+  | StringLiteral		of string
+  | BinaryOperator		of binary_op * expr * expr
+  | UnaryOperator		of unary_op * expr
 
-and stmt_ = ClangBridge.stmt_ = {
-  s : stmt;
+  | DeclRefExpr			of (* name *)string
+  | PredefinedExpr		of (* kind *)predefined_ident
+  | ImplicitCastExpr		of expr
+  | CStyleCastExpr		of type_loc * expr
+  | CompoundLiteralExpr		of type_loc * (* init *)expr
+  | ParenExpr			of expr
+  | VAArgExpr			of (* sub *)expr * (* type *)type_loc
+  | CallExpr			of (* callee *)expr * (* args *)expr list
+  | MemberExpr			of (* base *)expr * (* member *)string * (* is_arrow *)bool
+  | ConditionalOperator		of expr * expr * expr
+  | DesignatedInitExpr		of designator list * expr
+  | InitListExpr		of expr list
+  | ImplicitValueInitExpr
+  | ArraySubscriptExpr		of expr * expr
+  | StmtExpr			of stmt
+
+  | SizeOfExpr			of expr
+  | SizeOfType			of type_loc
+  | AlignOfExpr			of expr
+  | AlignOfType			of type_loc
+  | VecStepExpr			of expr
+  | VecStepType			of type_loc
+
+and stmt = ClangBridge.stmt = {
+  s : stmt_;
   s_sloc : sloc;
+}
+
+and stmt_ = ClangBridge.stmt_ =
+  | UnimpStmt			of string
+
+  | NullStmt
+  | BreakStmt
+  | ContinueStmt
+  | LabelStmt			of string * stmt
+  | CaseStmt			of expr * expr option * stmt
+  | DefaultStmt			of stmt
+  | GotoStmt			of string
+  | ExprStmt			of expr
+  | CompoundStmt		of stmt list
+  | ReturnStmt			of expr option
+  | IfStmt			of expr * stmt * stmt option
+  | ForStmt			of (* init *)stmt option * (* cond *)expr option * (* incr *)expr option * (* body *)stmt
+  | WhileStmt			of (* cond *)expr * (* body *)stmt
+  | DoStmt			of (* body *)stmt * (* cond *)expr
+  | SwitchStmt			of expr * stmt
+  | DeclStmt			of decl list
+
+and type_loc = ClangBridge.type_loc = {
+  tl : type_loc_;
+  tl_sloc : sloc;
 }
 
 and type_loc_ = ClangBridge.type_loc_ =
@@ -260,19 +269,19 @@ and type_loc_ = ClangBridge.type_loc_ =
   | EnumTypeLoc			of (* name *)string
   | RecordTypeLoc		of (* kind *)tag_type_kind * (* name *)string
 
-and type_loc = ClangBridge.type_loc = {
-  tl : type_loc_;
-  tl_sloc : sloc;
+and ctyp = ClangBridge.ctyp = {
+  t : ctyp_;
+  t_qual : qualifier list;
+  t_aspace : int option;
 }
 
-and ctyp = ClangBridge.ctyp =
+and ctyp_ = ClangBridge.ctyp_ =
   | UnimpType			of string
 
   | BuiltinType			of builtin_type
   | TypeOfExprType		of expr
   | TypeOfType			of ctyp
   | ParenType			of ctyp
-  | QualifiedType		of (* unqualified *)ctyp * (* qualifiers *)qualifier list * (* address-space *)int option
   | TypedefType			of (* name *)string
   | PointerType			of (* pointee *)ctyp
   | FunctionNoProtoType		of (* result *)ctyp
@@ -284,6 +293,11 @@ and ctyp = ClangBridge.ctyp =
   | EnumType			of (* name *)string
   | RecordType			of (* kind *)tag_type_kind * (* name *)string
   | DecayedType			of (* decayed *)ctyp * (* original *)ctyp
+
+and decl = ClangBridge.decl = {
+  d : decl_;
+  d_sloc : sloc;
+}
 
 and decl_ = ClangBridge.decl_ =
   | UnimpDecl			of string
@@ -298,11 +312,6 @@ and decl_ = ClangBridge.decl_ =
   | FieldDecl			of (* type *)type_loc * (* name *)string * (* bitwidth *)expr option * (* initialiser *)expr option
   | EnumDecl			of (* name *)string * (* enumerators *)decl list
   | EnumConstantDecl		of (* name *)string * (* init *)expr option
-
-and decl = ClangBridge.decl = {
-  d : decl_;
-  d_sloc : sloc;
-}
 
   (* All of the above derive Show. *)
   deriving (Show)

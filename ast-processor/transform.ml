@@ -74,26 +74,23 @@ let rec c_type_of_type = function
       c_type_of_builtin_type bt
 
   | ConstantArrayType (memty, size) ->
-      Ctarray (c_type_of_type memty, size)
+      Ctarray (c_type_of_type memty.t, size)
 
   | TypedefType (name) ->
       Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
 
   | ElaboratedType (ty) ->
-      c_type_of_type ty
+      c_type_of_type ty.t
 
   | EnumType (name)
   | RecordType (_, name) ->
       Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
 
   | PointerType (pointee) ->
-      Ctptr (Some (c_type_of_type pointee))
+      Ctptr (Some (c_type_of_type pointee.t))
 
   | ParenType (inner) ->
-      c_type_of_type inner
-
-  | QualifiedType (unqual, quals, aspace) ->
-      c_type_of_type unqual
+      c_type_of_type inner.t
 
   | TypeOfExprType _ -> failwith "TypeOfExprType"
   | TypeOfType _ -> failwith "TypeOfType"
@@ -201,28 +198,21 @@ let c_decl_of_decl { d_sloc = { loc_s_line }; d } =
 
 
 let rec c_lvalk_of_expr prog env = function
-  | TypedExpr (expr, ty) ->
-      (* Ignore type within sub-expressions. *)
-      c_lvalk_of_expr prog env expr
-
-  | DeclRefExpr (_, name) ->
+  | DeclRefExpr (name) ->
       Clvar (lookup_var prog env name)
 
-  | MemberExpr (_, (TypedExpr (_, ty) as base), member, true) ->
+  | MemberExpr (({ e_type = ty } as base), member, true) ->
       (*print_endline (Show.show<ClangShow.ctyp> ty);*)
       let deref =
         {
           clk = Clderef (c_expr_of_expr prog env base);
-          clt = c_type_of_type ty;
+          clt = c_type_of_type ty.t;
         }
       in
       Clfield (deref, member)
 
-  | MemberExpr (_, _, _, false) ->
+  | MemberExpr (_, _, false) ->
       failwith "field access of (non-pointer) object in lval"
-
-  | MemberExpr (_, _, _, _) ->
-      failwith "invalid base of MemberExpr"
 
   | IntegerLiteral _ -> failwith "lvalk IntegerLiteral"
   | CharacterLiteral _ -> failwith "lvalk CharacterLiteral"
@@ -241,7 +231,7 @@ let rec c_lvalk_of_expr prog env = function
   | ConditionalOperator _ -> failwith "lvalk ConditionalOperator"
   | DesignatedInitExpr _ -> failwith "lvalk DesignatedInitExpr"
   | InitListExpr _ -> failwith "lvalk InitListExpr"
-  | ImplicitValueInitExpr _ -> failwith "lvalk ImplicitValueInitExpr"
+  | ImplicitValueInitExpr -> failwith "lvalk ImplicitValueInitExpr"
   | ArraySubscriptExpr _ -> failwith "lvalk ArraySubscriptExpr"
   | StmtExpr _ -> failwith "lvalk StmtExpr"
 
@@ -252,36 +242,34 @@ let rec c_lvalk_of_expr prog env = function
   | VecStepExpr _ -> failwith "lvalk VecStepExpr"
   | VecStepType _ -> failwith "lvalk VecStepType"
 
-  | UnimpExpr (_, name) -> failwith ("Unimplemented expr: " ^ name)
+  | UnimpExpr (name) -> failwith ("Unimplemented expr: " ^ name)
 
 
 and c_lval_of_expr prog env = function
-  | TypedExpr (expr, ty) ->
+  | { e = expr; e_type = ty; } ->
       {
         clk = c_lvalk_of_expr prog env expr;
-        clt = c_type_of_type ty;
+        clt = c_type_of_type ty.t;
       }
-  | _ -> failwith "typed expression required in lvalue"
 
 
 and c_exprk_of_expr prog env = function
-  | ImplicitCastExpr (_, expr)
-  | TypedExpr (expr, _) ->
-      (* Ignore type within sub-expressions. *)
-      c_exprk_of_expr prog env expr
+  | ImplicitCastExpr (expr) ->
+      (* Ignore implicit casts within sub-expressions. *)
+      c_exprk_of_expr prog env expr.e
 
-  | IntegerLiteral (_, i) ->
+  | IntegerLiteral (i) ->
       Ceconst (Ccint i)
 
-  | BinaryOperator (_, op, lhs, rhs) ->
+  | BinaryOperator (op, lhs, rhs) ->
       Cebin (
         c_binop_of_binop op,
         c_expr_of_expr prog env lhs,
         c_expr_of_expr prog env rhs
       )
 
-  | ParenExpr (_, expr) ->
-      c_exprk_of_expr prog env expr
+  | ParenExpr (expr) ->
+      c_exprk_of_expr prog env expr.e
 
   | CStyleCastExpr _ -> failwith "exprk CStyleCastExpr"
 
@@ -298,7 +286,7 @@ and c_exprk_of_expr prog env = function
   | ConditionalOperator _ -> failwith "exprk ConditionalOperator"
   | DesignatedInitExpr _ -> failwith "exprk DesignatedInitExpr"
   | InitListExpr _ -> failwith "exprk InitListExpr"
-  | ImplicitValueInitExpr _ -> failwith "exprk ImplicitValueInitExpr"
+  | ImplicitValueInitExpr -> failwith "exprk ImplicitValueInitExpr"
   | ArraySubscriptExpr _ -> failwith "exprk ArraySubscriptExpr"
   | StmtExpr _ -> failwith "exprk StmtExpr"
   | DeclRefExpr _ -> failwith "exprk DeclRefExpr"
@@ -310,64 +298,63 @@ and c_exprk_of_expr prog env = function
   | VecStepExpr _ -> failwith "exprk VecStepExpr"
   | VecStepType _ -> failwith "exprk VecStepType"
 
-  | UnimpExpr (_, name) -> failwith ("Unimplemented expr: " ^ name)
+  | UnimpExpr (name) -> failwith ("Unimplemented expr: " ^ name)
 
 
-and c_expr_of_expr prog env = function
+and c_expr_of_expr prog env : expr -> c_expr = function
   (* (( void * )0) => null *)
-  | TypedExpr (
-      CStyleCastExpr (_,
-        { tl = PointerTypeLoc
-          { tl = BuiltinTypeLoc BT_Void }
-        },
-        TypedExpr (IntegerLiteral (_, 0), _)
-      ),
-    _) ->
+  | { e = CStyleCastExpr (
+      { tl = PointerTypeLoc
+            { tl = BuiltinTypeLoc BT_Void }
+      },
+      { e = IntegerLiteral 0 }
+    ) } ->
       {
         cek = Ceconst Ccnull;
         cet = Ctptr None;
       }
 
-  | TypedExpr (MemberExpr _, ty)
-  | TypedExpr (DeclRefExpr _, ty) as expr ->
+  | { e = MemberExpr _; e_type = ty; }
+  | { e = DeclRefExpr _; e_type = ty; } as expr ->
       (*print_endline (Show.show<ClangShow.expr> expr);*)
       (*print_endline (Show.show<ClangShow.ctyp> ty);*)
       {
         cek = Celval (c_lval_of_expr prog env expr);
-        cet = c_type_of_type ty;
+        cet = c_type_of_type ty.t;
       }
 
-  | TypedExpr (expr, ty) ->
+  | { e = expr; e_type = ty; } ->
       (*print_endline (Show.show<ClangShow.expr> expr);*)
       {
         cek = c_exprk_of_expr prog env expr;
-        cet = c_type_of_type ty;
+        cet = c_type_of_type ty.t;
       }
-
-  | _ -> failwith "typed expression required in rvalue"
 
 
 let rec c_stat_of_expr prog env = function
-  | BinaryOperator ({ loc_s_line }, BO_Assign, lhs, rhs) ->
+  | { e = BinaryOperator (BO_Assign, lhs, rhs);
+      e_sloc = { loc_s_line = csl };
+    } ->
       (*print_endline (Show.show<ClangShow.expr> rhs);*)
       {
-        csl = loc_s_line;
+        csl;
         csk = Csassign (
           c_lval_of_expr prog env lhs,
           c_expr_of_expr prog env rhs
         );
       }
 
-  | CallExpr ({ loc_s_line = csl }, callee, args) ->
+  | { e = CallExpr (callee, args);
+      e_sloc = { loc_s_line = csl };
+    } ->
       let csk =
-        match ClangQuery.identifier_of_expr callee,
-              List.map ClangUntype.strip_expr args with
-        | "_memcad", [StringLiteral (_, str)] ->
+        match ClangQuery.identifier_of_expr callee.e, args with
+        | "_memcad", [{ e = StringLiteral str }] ->
             Cs_memcad (Mc_comstring str)
         | "assert", [_] ->
-            Csassert (List.hd args |> c_expr_of_expr prog env)
+            Csassert (c_expr_of_expr prog env (List.hd args))
         | "free", [_] ->
-            Csfree (List.hd args |> c_lval_of_expr prog env)
+            Csfree (c_lval_of_expr prog env (List.hd args))
         | _ ->
             Cspcall {
               cc_fun = c_expr_of_expr prog env callee;
@@ -376,39 +363,36 @@ let rec c_stat_of_expr prog env = function
       in
       { csl; csk; }
 
-  | TypedExpr (expr, ty) ->
-      c_stat_of_expr prog env expr
+  | { e = IntegerLiteral _ } -> failwith "stats IntegerLiteral"
+  | { e = CharacterLiteral _ } -> failwith "stats CharacterLiteral"
+  | { e = FloatingLiteral _ } -> failwith "stats FloatingLiteral"
+  | { e = StringLiteral _ } -> failwith "stats StringLiteral"
+  | { e = BinaryOperator _ } -> failwith "stats BinaryOperator"
+  | { e = UnaryOperator _ } -> failwith "stats UnaryOperator"
 
-  | IntegerLiteral _ -> failwith "stats IntegerLiteral"
-  | CharacterLiteral _ -> failwith "stats CharacterLiteral"
-  | FloatingLiteral _ -> failwith "stats FloatingLiteral"
-  | StringLiteral _ -> failwith "stats StringLiteral"
-  | BinaryOperator _ -> failwith "stats BinaryOperator"
-  | UnaryOperator _ -> failwith "stats UnaryOperator"
+  | { e = DeclRefExpr _ } -> failwith "stats DeclRefExpr"
+  | { e = PredefinedExpr _ } -> failwith "stats PredefinedExpr"
+  | { e = ImplicitCastExpr _ } -> failwith "stats ImplicitCastExpr"
+  | { e = CStyleCastExpr _ } -> failwith "stats CStyleCastExpr"
+  | { e = CompoundLiteralExpr _ } -> failwith "stats CompoundLiteralExpr"
+  | { e = ParenExpr _ } -> failwith "stats ParenExpr"
+  | { e = VAArgExpr _ } -> failwith "stats VAArgExpr"
+  | { e = MemberExpr _ } -> failwith "stats MemberExpr"
+  | { e = ConditionalOperator _ } -> failwith "stats ConditionalOperator"
+  | { e = DesignatedInitExpr _ } -> failwith "stats DesignatedInitExpr"
+  | { e = InitListExpr _ } -> failwith "stats InitListExpr"
+  | { e = ImplicitValueInitExpr } -> failwith "stats ImplicitValueInitExpr"
+  | { e = ArraySubscriptExpr _ } -> failwith "stats ArraySubscriptExpr"
+  | { e = StmtExpr _ } -> failwith "stats StmtExpr"
 
-  | DeclRefExpr _ -> failwith "stats DeclRefExpr"
-  | PredefinedExpr _ -> failwith "stats PredefinedExpr"
-  | ImplicitCastExpr _ -> failwith "stats ImplicitCastExpr"
-  | CStyleCastExpr _ -> failwith "stats CStyleCastExpr"
-  | CompoundLiteralExpr _ -> failwith "stats CompoundLiteralExpr"
-  | ParenExpr _ -> failwith "stats ParenExpr"
-  | VAArgExpr _ -> failwith "stats VAArgExpr"
-  | MemberExpr _ -> failwith "stats MemberExpr"
-  | ConditionalOperator _ -> failwith "stats ConditionalOperator"
-  | DesignatedInitExpr _ -> failwith "stats DesignatedInitExpr"
-  | InitListExpr _ -> failwith "stats InitListExpr"
-  | ImplicitValueInitExpr _ -> failwith "stats ImplicitValueInitExpr"
-  | ArraySubscriptExpr _ -> failwith "stats ArraySubscriptExpr"
-  | StmtExpr _ -> failwith "stats StmtExpr"
+  | { e = SizeOfExpr _ } -> failwith "stats SizeOfExpr"
+  | { e = SizeOfType _ } -> failwith "stats SizeOfType"
+  | { e = AlignOfExpr _ } -> failwith "stats AlignOfExpr"
+  | { e = AlignOfType _ } -> failwith "stats AlignOfType"
+  | { e = VecStepExpr _ } -> failwith "stats VecStepExpr"
+  | { e = VecStepType _ } -> failwith "stats VecStepType"
 
-  | SizeOfExpr _ -> failwith "stats SizeOfExpr"
-  | SizeOfType _ -> failwith "stats SizeOfType"
-  | AlignOfExpr _ -> failwith "stats AlignOfExpr"
-  | AlignOfType _ -> failwith "stats AlignOfType"
-  | VecStepExpr _ -> failwith "stats VecStepExpr"
-  | VecStepType _ -> failwith "stats VecStepType"
-
-  | UnimpExpr (_, name) -> failwith ("Unimplemented expr: " ^ name)
+  | { e = UnimpExpr (name) } -> failwith ("Unimplemented expr: " ^ name)
 
 
 (* This function maps N clang statements to M memcad statements.
@@ -417,11 +401,11 @@ let rec c_stats_of_stmts prog env stmts =
   let rec loop env stats = function
     | [] -> stats
 
-    | ExprStmt e :: tl ->
+    | { s = ExprStmt e } :: tl ->
         let e = ClangImplicitCast.strip_expr e in
         loop env (c_stat_of_expr prog env e :: stats) tl
 
-    | DeclStmt (_, [decl]) :: tl ->
+    | { s = DeclStmt [decl] } :: tl ->
         let (loc, c_decl) = c_decl_of_decl decl in
         let env = StringMap.add c_decl.cv_name c_decl env in
         let stats =
@@ -430,7 +414,9 @@ let rec c_stats_of_stmts prog env stmts =
         in
         loop env stats tl
 
-    | WhileStmt ({ loc_s_line = csl }, cond, body) :: tl ->
+    | { s = WhileStmt (cond, body);
+        s_sloc = { loc_s_line = csl };
+      } :: tl ->
         let cond = ClangImplicitCast.strip_expr cond in
         let stats =
           let stmts = ClangQuery.body_of_stmt body in
@@ -446,7 +432,9 @@ let rec c_stats_of_stmts prog env stmts =
         in
         loop env stats tl
 
-    | IfStmt ({ loc_s_line = csl }, cond, then_body, else_body) :: tl ->
+    | { s = IfStmt (cond, then_body, else_body);
+        s_sloc = { loc_s_line = csl };
+      } :: tl ->
         let cond = ClangImplicitCast.strip_expr cond in
         let stats =
           let then_stmts = ClangQuery.body_of_stmt then_body in
@@ -467,21 +455,21 @@ let rec c_stats_of_stmts prog env stmts =
         in
         loop env stats tl
 
-    | NullStmt _ :: tl -> failwith "NullStmt"
-    | BreakStmt _ :: tl -> failwith "BreakStmt"
-    | ContinueStmt _ :: tl -> failwith "ContinueStmt"
-    | LabelStmt _ :: tl -> failwith "LabelStmt"
-    | CaseStmt _ :: tl -> failwith "CaseStmt"
-    | DefaultStmt _ :: tl -> failwith "DefaultStmt"
-    | GotoStmt _ :: tl -> failwith "GotoStmt"
-    | CompoundStmt _ :: tl -> failwith "CompoundStmt"
-    | ReturnStmt _ :: tl -> failwith "ReturnStmt"
-    | ForStmt _ :: tl -> failwith "ForStmt"
-    | DoStmt _ :: tl -> failwith "DoStmt"
-    | SwitchStmt _ :: tl -> failwith "SwitchStmt"
-    | DeclStmt _ :: tl -> failwith "DeclStmt"
+    | { s = NullStmt } :: tl -> failwith "NullStmt"
+    | { s = BreakStmt } :: tl -> failwith "BreakStmt"
+    | { s = ContinueStmt } :: tl -> failwith "ContinueStmt"
+    | { s = LabelStmt _ } :: tl -> failwith "LabelStmt"
+    | { s = CaseStmt _ } :: tl -> failwith "CaseStmt"
+    | { s = DefaultStmt _ } :: tl -> failwith "DefaultStmt"
+    | { s = GotoStmt _ } :: tl -> failwith "GotoStmt"
+    | { s = CompoundStmt _ } :: tl -> failwith "CompoundStmt"
+    | { s = ReturnStmt _ } :: tl -> failwith "ReturnStmt"
+    | { s = ForStmt _ } :: tl -> failwith "ForStmt"
+    | { s = DoStmt _ } :: tl -> failwith "DoStmt"
+    | { s = SwitchStmt _ } :: tl -> failwith "SwitchStmt"
+    | { s = DeclStmt _ } :: tl -> failwith "DeclStmt"
 
-    | UnimpStmt (_, name) :: tl -> failwith ("Unimplemented statement: " ^ name)
+    | { s = UnimpStmt name } :: tl -> failwith ("Unimplemented statement: " ^ name)
   in
   (* We build the list in reverse. *)
   List.rev (loop env [] stmts)
@@ -523,9 +511,13 @@ let rec collect_decls prog env = function
     explicitly and transform it to the appropriate memcad AST.
    *)
   |   { d = RecordDecl (name1, members) }
-    :: { d = TypedefDecl ({ tl = ElaboratedTypeLoc {
-        tl = RecordTypeLoc (kind, name2)
-      } }, name) }
+    :: { d = TypedefDecl (
+        { tl = ElaboratedTypeLoc {
+             tl = RecordTypeLoc (kind, name2)
+           }
+        },
+        name)
+      }
     :: tl
     when name1 = name2 ->
       let c_type =

@@ -71,7 +71,19 @@ namespace dynamic_stack_detail
   {
     ptr<Stmt> p = boost::dynamic_pointer_cast<Stmt> (adt);
     if (!p)
-      return mkExprStmt (adt_cast<Expr> (adt));
+      {
+        ptr<Expr> expr = adt_cast<Expr> (adt);
+        if (!expr)
+          {
+            printf ("Expected either Stmt or Expr, but got type %s\n",
+                    name (*adt).c_str ());
+            throw std::bad_cast ();
+          }
+        ptr<Stmt> stmt = mkStmt ();
+        stmt->s = mkExprStmt (expr);
+        stmt->s_sloc = expr->e_sloc;
+        return stmt;
+      }
     return p;
   }
 

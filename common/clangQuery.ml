@@ -14,17 +14,16 @@ let args_of_tloc = function
 
 
 let body_of_stmt = function
-  | CompoundStmt (_, stmts) -> stmts
+  | { s = CompoundStmt stmts } -> stmts
   | stmt -> [stmt]
 
 
 let rec identifier_of_expr = function
-  | DeclRefExpr (_, name) -> name
+  | DeclRefExpr (name) -> name
 
-  | UnimpExpr (_, name) -> failwith ("unimplemented expr: " ^ name)
+  | UnimpExpr (name) -> failwith ("unimplemented expr: " ^ name)
 
-  | ImplicitCastExpr (_, expr)
-  | ParenExpr (_, expr)
-  | TypedExpr (expr, _) -> identifier_of_expr expr
+  | ImplicitCastExpr (expr)
+  | ParenExpr (expr) -> identifier_of_expr expr.e
 
   | _ -> failwith "invalid expression (not an identifier)"

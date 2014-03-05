@@ -17,6 +17,7 @@ let () =
 
   match ClangApi.recv () with
   | List [Filename file; AstNode (Decl decl)] ->
+      print_endline (Show.show<ClangAst.decl> decl);
       memcad_parse file;
       Format.printf "@[<v2>Declaration:@,%a@]@."
         ClangPp.pp_decl decl;
