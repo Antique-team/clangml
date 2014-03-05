@@ -14,11 +14,11 @@ let lookup_var prog env name =
 
 
 let dump_stmt s =
-  Format.fprintf Format.std_formatter "%a\n"
+  Format.fprintf Format.err_formatter "%a\n"
     ClangPp.pp_stmt s
 
 let dump_expr s =
-  Format.fprintf Format.std_formatter "%a\n"
+  Format.fprintf Format.err_formatter "%a\n"
     ClangPp.pp_expr s
 
 
@@ -136,7 +136,7 @@ let rec c_type_of_type_loc tl =
       c_type_of_type_loc inner
 
   | FunctionProtoTypeLoc (_, _) ->
-      Format.fprintf Format.std_formatter "%a%a\n"
+      Format.fprintf Format.err_formatter "%a%a\n"
         ClangPp.pp_sloc tl.tl_sloc
         ClangPp.pp_tloc tl;
       failwith "FunctionProtoTypeLoc"
@@ -162,7 +162,7 @@ let c_agg_field_of_decl = function
         caf_name = name;
       }
   | { d } ->
-      print_endline (Show.show<decl_> d);
+      prerr_endline (Show.show<decl_> d);
       failwith "Only FieldDecls allowed within RecordDecl"
 
 
@@ -213,7 +213,7 @@ let rec c_lvalk_of_expr prog env = function
       Clvar (lookup_var prog env name)
 
   | MemberExpr (({ e_type = ty } as base), member, is_arrow) ->
-      (*print_endline (Show.show<ctyp> ty);*)
+      (*prerr_endline (Show.show<ctyp> ty);*)
       let base =
         if is_arrow then
           {
@@ -344,15 +344,15 @@ and c_expr_of_expr prog env expr =
   | ArraySubscriptExpr _
   | MemberExpr _
   | DeclRefExpr _ ->
-      (*print_endline (Show.show<expr> expr);*)
-      (*print_endline (Show.show<ctyp> ty);*)
+      (*prerr_endline (Show.show<expr> expr);*)
+      (*prerr_endline (Show.show<ctyp> ty);*)
       {
         cek = Celval (c_lval_of_expr prog env expr);
         cet = c_type_of_type expr.e_type.t;
       }
 
   | _ ->
-      (*print_endline (Show.show<expr> expr);*)
+      (*prerr_endline (Show.show<expr> expr);*)
       {
         cek = c_exprk_of_expr prog env expr.e;
         cet = c_type_of_type expr.e_type.t;
@@ -362,7 +362,7 @@ and c_expr_of_expr prog env expr =
 let rec c_stat_of_expr prog env expr =
   match expr.e with
   | BinaryOperator (BO_Assign, lhs, rhs) ->
-      (*print_endline (Show.show<expr> rhs);*)
+      (*prerr_endline (Show.show<expr> rhs);*)
       {
         csl = expr.e_sloc.loc_s_line;
         csk = Csassign (
@@ -448,7 +448,7 @@ let rec c_stats_of_stmts prog env stmts =
                   }
 
               | e ->
-                  print_endline (Show.show<expr> e);
+                  prerr_endline (Show.show<expr> e);
                   c_stat_of_expr prog env e
             in
             loop env (stat :: stats) tl

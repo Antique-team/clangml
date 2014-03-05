@@ -86,14 +86,14 @@ HelloChecker::checkASTDecl (const TranslationUnitDecl *D,
 
       char const *filename = SM.getFileEntryForID (SM.getMainFileID ())->getName ();
 
-      value *cb = caml_named_value ("Hello print decl");
+      value *cb = caml_named_value ("success");
       caml_callback2 (*cb, result, caml_copy_string (filename));
     }
 #if HANDLE_CXX_EXN
   catch (std::exception const &e)
     {
       result = caml_copy_string (e.what ());
-      value *cb = caml_named_value ("Hello failure");
+      value *cb = caml_named_value ("failure");
       caml_callback (*cb, result);
     }
 #endif

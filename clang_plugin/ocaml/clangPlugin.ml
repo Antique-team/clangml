@@ -2,41 +2,50 @@ open ClangBridge
 
 external check_bridge_version : string -> unit = "check_bridge_version"
 
-let null = Format.formatter_of_out_channel (open_out "/dev/null")
-(*let null = Format.formatter_of_out_channel stdout*)
 
-
-let run_processor send pp name value file =
+let run_processor (tu : decl) (file : string) =
   Gc.compact ();
-  let proc = Unix.open_process_out "../ast-processor/main.byte" in
+  let (input, output) = Unix.open_process "../ast-processor/main.byte" in
 
-  Marshal.to_channel proc (ClangApi.List [
-      ClangApi.Filename file;
-      ClangApi.AstNode (send value);
-    ]) [];
+  let rec respond = let open ClangApi in function
+    | R_List msgs ->
+        S_List (List.map respond msgs)
 
-  match Unix.close_process_out proc with
-  | Unix.WEXITED 0 -> (* all went fine *) ()
-  | Unix.WEXITED   status -> failwith ("WEXITED "   ^ string_of_int status)
-  | Unix.WSIGNALED status -> failwith ("WSIGNALED " ^ string_of_int status)
-  | Unix.WSTOPPED  status -> failwith ("WSTOPPED "  ^ string_of_int status)
+    | R_Handshake version ->
+        if version = ClangBridge.version then
+          S_Handshake None
+        else
+          S_Handshake (Some ClangBridge.version)
 
+    | R_TranslationUnit ->
+        S_TranslationUnit tu
 
-let print_expr : expr -> string -> unit =
-  run_processor (fun x -> ClangApi.Expr x) ClangPp.pp_expr "Expression"
+    | R_Filename ->
+        S_Filename file
+  in
 
-let print_stmt : stmt -> string -> unit =
-  run_processor (fun x -> ClangApi.Stmt x) ClangPp.pp_stmt "Statement"
+  let rec io_loop () =
+    ClangApi.send output (
+      let request = ClangApi.recv input in
+      respond request
+    );
 
-let print_decl : decl -> string -> unit =
-  run_processor (fun x -> ClangApi.Decl x) ClangPp.pp_decl "Declaration"
+    io_loop ()
+  in
+
+  try
+    io_loop ()
+  with End_of_file ->
+    match Unix.close_process (input, output) with
+    | Unix.WEXITED 0 -> (* all went fine *) ()
+    | Unix.WEXITED   status -> failwith ("WEXITED "   ^ string_of_int status)
+    | Unix.WSIGNALED status -> failwith ("WSIGNALED " ^ string_of_int status)
+    | Unix.WSTOPPED  status -> failwith ("WSTOPPED "  ^ string_of_int status)
 
 
 let () =
+  (* Check C++ side of bridge. *)
   check_bridge_version ClangBridge.version;
-  (*TODO: standardize convention for naming*)
-  Callback.register "Hello print expr" print_expr;
-  Callback.register "Hello print stmt" print_stmt;
-  Callback.register "Hello print decl" print_decl;
-  Callback.register "Hello failure" failwith;
+  Callback.register "success" run_processor;
+  Callback.register "failure" failwith;
 ;;

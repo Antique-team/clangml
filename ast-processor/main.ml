@@ -1,3 +1,4 @@
+open ClangApi
 open ClangAst
 
 
@@ -6,26 +7,44 @@ let memcad_parse file =
   let lexbuf = Lexing.from_channel fh in
   let ast = C_parser.entry C_lexer.token lexbuf in
   close_in fh;
-  print_endline "--------------------- MemCAD PP ---------------------";
-  C_utils.ppi_c_prog "" stdout ast;
+  prerr_endline "--------------------- MemCAD PP ---------------------";
+  C_utils.ppi_c_prog "" stderr ast;
 ;;
 
 
-let () =
-  let open ClangApi in
-
-  Printexc.record_backtrace true;
-
-  match ClangApi.recv () with
-  | List [Filename file; AstNode (Decl decl)] ->
-      (*print_endline (Show.show<ClangAst.decl> decl);*)
+let process = function
+  | S_List [S_Filename file; S_TranslationUnit decl] ->
+      (*prerr_endline (Show.show<ClangAst.decl> decl);*)
       memcad_parse file;
-      print_endline "--------------------- Clang AST ---------------------";
-      Format.printf "@[<v2>Declaration:@,%a@]@."
+      prerr_endline "--------------------- Clang AST ---------------------";
+      Format.fprintf Format.err_formatter "@[<v2>Declaration:@,%a@]@."
         ClangPp.pp_decl decl;
-      print_endline "----------------- Clang -> MemCAD -------------------";
-      C_utils.ppi_c_prog "" stdout (Transform.c_prog_from_decl decl);
-      print_endline "-----------------------------------------------------"
+      prerr_endline "----------------- Clang -> MemCAD -------------------";
+      C_utils.ppi_c_prog "" stderr (Transform.c_prog_from_decl decl);
+      prerr_endline "-----------------------------------------------------"
 
   | _ ->
       failwith "Unhandled message type"
+
+
+let initialise () =
+  match request (R_Handshake ClangAst.version) with
+  | S_Handshake None ->
+      (* Handshake OK; request filename and translation unit. *)
+      process (request (R_List [R_Filename; R_TranslationUnit]))
+
+  | S_Handshake (Some version) ->
+      failwith (
+        "AST versions do not match: \
+         server says " ^ version ^
+        ", but we have " ^ ClangAst.version
+      )
+
+  | _ ->
+      failwith "Invalid message on handshake"
+
+
+let () =
+  Printexc.record_backtrace true;
+  initialise ();
+;;
