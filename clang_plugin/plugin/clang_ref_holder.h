@@ -6,8 +6,8 @@
 #include "heterogenous_container.h"
 
 template<typename T>
-struct concrete_ref_holder
-  : heterogenous_container<concrete_ref_holder>::concrete<T>
+struct concrete_clang_ref_holder
+  : heterogenous_container<concrete_clang_ref_holder>::concrete<T>
 {
   std::vector<typename clang_type<T>::type> values;
 
@@ -26,7 +26,7 @@ struct concrete_ref_holder
 
 
 struct clang_ref_holder
-  : heterogenous_container<concrete_ref_holder>
+  : heterogenous_container<concrete_clang_ref_holder>
 {
   template<typename T>
   clang_ref<T> create (typename clang_type<T>::type value)
