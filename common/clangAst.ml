@@ -379,7 +379,7 @@ and decl_ = ClangBridge.decl_ =
   | RecordDecl			of (* name *)string * (* members *)decl list
   | FieldDecl			of (* type *)type_loc * (* name *)string * (* bitwidth *)expr option * (* initialiser *)expr option
   | EnumDecl			of (* name *)string * (* enumerators *)decl list
-  | EnumConstantDecl		of (* name *)string * (* init *)expr option
+  | EnumConstantDecl		of (* name *)string * (* value *)expr option
 
   (* All of the above derive Show. *)
   deriving (Show)
