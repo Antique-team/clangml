@@ -114,7 +114,7 @@ struct OCamlVisitor
   // Resolve all source locations.
   bool with_sloc = true;
 
-  // Not static, because creating bridge objects has side effects.
+  // Not static, so ID assignment works correctly.
   ptr<Sloc> const empty_sloc = mkSloc ();
 
 private:
