@@ -138,6 +138,9 @@ let rec c_type_of_type_loc tl =
   | ParenTypeLoc inner ->
       c_type_of_type_loc inner
 
+  | QualifiedTypeLoc (unqual, qual, aspace) ->
+      c_type_of_type_loc unqual
+
   | FunctionProtoTypeLoc (_, _) ->
       Format.fprintf Format.err_formatter "%a%a\n"
         ClangPp.pp_sloc tl.tl_sloc
@@ -146,7 +149,6 @@ let rec c_type_of_type_loc tl =
 
   | TypeOfExprTypeLoc _ -> Log.unimp "TypeOfExprTypeLoc"
   | TypeOfTypeLoc _ -> Log.unimp "TypeOfTypeLoc"
-  | QualifiedTypeLoc _ -> Log.unimp "QualifiedTypeLoc"
   | FunctionNoProtoTypeLoc _ -> Log.unimp "FunctionNoProtoTypeLoc"
   | VariableArrayTypeLoc _ -> Log.unimp "VariableArrayTypeLoc"
   | IncompleteArrayTypeLoc _ -> Log.unimp "IncompleteArrayTypeLoc"
@@ -154,9 +156,41 @@ let rec c_type_of_type_loc tl =
   | UnimpTypeLoc name -> Log.unimp "%s" name
 
 
+let make_aggregate agg = function
+  | TTK_Struct -> Ctstruct agg
+  | TTK_Union  -> Ctunion  agg
+  | _ -> Log.unimp "Unhandled tag type kind"
+
+
 let rec c_agg_fields_of_decls decls =
   let rec loop fields = function
     | [] -> fields
+
+    | { d = RecordDecl (name1, members) }
+      :: { d = FieldDecl ({ tl = ElaboratedTypeLoc {
+          tl = RecordTypeLoc (kind, name2)
+        } }, name, bitwidth, init) } :: tl
+      when name1 = name2 ->
+        if bitwidth <> None then
+          Log.unimp "Bit fields not implemented";
+        if init <> None then
+          Log.unimp "Member initialisers not implemented";
+
+        let agg = {
+          cag_name   = if name1 = "" then None else Some name1;
+          cag_align  = -1;
+          cag_size   = -1;
+          cag_fields = c_agg_fields_of_decls members;
+        } in
+
+        let field = {
+          caf_typ  = make_aggregate agg kind;
+          caf_off  = -1;
+          caf_size = -1;
+          caf_name = name;
+        } in
+
+        loop (field :: fields) tl
 
     | { d = FieldDecl (ty, name, bitwidth, init) } :: tl ->
         if bitwidth <> None then
@@ -186,7 +220,7 @@ let c_var_of_parm_decl = function
         cv_name     = name;
         cv_uid      = -1;
         cv_type     = c_type_of_type_loc ty;
-        cv_volatile = false (* TODO: ClangQuery.is_volatile_tloc ty *);
+        cv_volatile = ClangQuery.is_volatile_tloc ty.tl;
       }
   | _ -> Log.err "only ParmVarDecls allowed in function argument list"
 
@@ -200,7 +234,7 @@ let c_decl_of_decl { d_sloc = { loc_s_line }; d } =
         cv_name     = name;
         cv_uid      = -1;
         cv_type     = c_type_of_type_loc ty;
-        cv_volatile = false (* TODO: ClangQuery.is_volatile_tloc ty *);
+        cv_volatile = ClangQuery.is_volatile_tloc ty.tl;
       }
 
   | EmptyDecl ->
@@ -578,16 +612,12 @@ let rec collect_decls prog env = function
     :: tl
     when name1 = name2 ->
       let c_type =
-        let agg = {
+        make_aggregate {
           cag_name   = if name1 = "" then None else Some name1;
           cag_align  = -1;
           cag_size   = -1;
           cag_fields = c_agg_fields_of_decls members;
-        } in
-        match kind with
-        | TTK_Struct -> Ctstruct agg
-        | TTK_Union  -> Ctunion  agg
-        | _ -> Log.unimp "Unhandled tag type kind"
+        } kind
       in
       collect_decls (add_type name c_type prog) env tl
 

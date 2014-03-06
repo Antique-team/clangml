@@ -27,3 +27,10 @@ let rec identifier_of_expr = function
   | ParenExpr expr -> identifier_of_expr expr.e
 
   | _ -> failwith "invalid expression (not an identifier)"
+
+
+let is_volatile_tloc = function
+  | QualifiedTypeLoc (_, qual, _) ->
+      List.memq TQ_Volatile qual
+
+  | _ -> false
