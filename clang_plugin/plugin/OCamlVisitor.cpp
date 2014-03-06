@@ -1096,7 +1096,7 @@ OCamlVisitor::TraverseType (clang::QualType T)
 
   clang::Qualifiers quals = T.getLocalQualifiers ();
 
-  std::vector<Qualifier> qualifiers;
+  std::vector<TypeQualifier> qualifiers;
   if (quals.hasConst ())	qualifiers.push_back (TQ_Const);
   if (quals.hasVolatile ())	qualifiers.push_back (TQ_Volatile);
   if (quals.hasRestrict ())	qualifiers.push_back (TQ_Restrict);
@@ -1546,7 +1546,7 @@ OCamlVisitor::TraverseQualifiedTypeLoc (clang::QualifiedTypeLoc TL)
   ptr<TypeLoc> unqual = must_traverse (TL.getUnqualifiedLoc ());
   clang::Qualifiers quals = TL.getType ().getLocalQualifiers ();
 
-  std::vector<Qualifier> qualifiers;
+  std::vector<TypeQualifier> qualifiers;
   if (quals.hasConst ())	qualifiers.push_back (TQ_Const);
   if (quals.hasVolatile ())	qualifiers.push_back (TQ_Volatile);
   if (quals.hasRestrict ())	qualifiers.push_back (TQ_Restrict);

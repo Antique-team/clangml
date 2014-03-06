@@ -1,7 +1,7 @@
 let version = "$Id$"
 
 (* clang/AST/Type.h *)
-type qualifier = ClangBridge.qualifier =
+type type_qualifier = ClangBridge.type_qualifier =
   (* CVR *)
   | TQ_Const
   | TQ_Volatile
@@ -254,8 +254,8 @@ and expr_ = ClangBridge.expr_ =
   | CharacterLiteral		of char
   | FloatingLiteral		of float
   | StringLiteral		of string
-  | BinaryOperator		of binary_operator * expr * expr
-  | UnaryOperator		of unary_operator * expr
+  | BinaryOperator		of binary_operator * (* lhs *)expr * (* rhs *)expr
+  | UnaryOperator		of unary_operator * (* operand *)expr
 
   | DeclRefExpr			of (* name *)string
   | PredefinedExpr		of (* kind *)predefined_expr
@@ -266,11 +266,11 @@ and expr_ = ClangBridge.expr_ =
   | VAArgExpr			of (* sub *)expr * (* type *)type_loc
   | CallExpr			of (* callee *)expr * (* args *)expr list
   | MemberExpr			of (* base *)expr * (* member *)string * (* is_arrow *)bool
-  | ConditionalOperator		of expr * expr * expr
-  | DesignatedInitExpr		of designator list * expr
-  | InitListExpr		of expr list
+  | ConditionalOperator		of (* cond *)expr * (* then *)expr * (* else *)expr
+  | DesignatedInitExpr		of designator list * (* init *)expr
+  | InitListExpr		of (* inits *)expr list
   | ImplicitValueInitExpr
-  | ArraySubscriptExpr		of expr * expr
+  | ArraySubscriptExpr		of (* base *)expr * (* index *)expr
   | StmtExpr			of stmt
 
   | SizeOfExpr			of expr
@@ -293,14 +293,14 @@ and stmt_ = ClangBridge.stmt_ =
   | NullStmt
   | BreakStmt
   | ContinueStmt
-  | LabelStmt			of string * stmt
-  | CaseStmt			of expr * expr option * stmt
+  | LabelStmt			of (* label *)string * stmt
+  | CaseStmt			of (* from *)expr * (* to *)expr option * stmt
   | DefaultStmt			of stmt
-  | GotoStmt			of string
+  | GotoStmt			of (* label *)string
   | ExprStmt			of expr
-  | CompoundStmt		of stmt list
+  | CompoundStmt		of (* body *)stmt list
   | ReturnStmt			of expr option
-  | IfStmt			of expr * stmt * stmt option
+  | IfStmt			of (* cond *)expr * (* then *)stmt * (* else *)stmt option
   | ForStmt			of (* init *)stmt option * (* cond *)expr option * (* incr *)expr option * (* body *)stmt
   | WhileStmt			of (* cond *)expr * (* body *)stmt
   | DoStmt			of (* body *)stmt * (* cond *)expr
@@ -321,7 +321,7 @@ and type_loc_ = ClangBridge.type_loc_ =
   | TypeOfExprTypeLoc		of expr
   | TypeOfTypeLoc		of type_loc
   | ParenTypeLoc		of type_loc
-  | QualifiedTypeLoc		of type_loc * qualifier list * int option
+  | QualifiedTypeLoc		of (* unqual *)type_loc * (* qual *)type_qualifier list * (* aspace *)int option
   | TypedefTypeLoc		of (* name *)string
   | PointerTypeLoc		of (* pointee *)type_loc
   | FunctionNoProtoTypeLoc	of (* result *)type_loc
@@ -337,7 +337,7 @@ and type_loc_ = ClangBridge.type_loc_ =
 and ctyp = ClangBridge.ctyp = {
   t        : ctyp_;
   t_cref   : ctyp Clang.t;
-  t_qual   : qualifier list;
+  t_qual   : type_qualifier list;
   t_aspace : int option;
 }
 
@@ -351,7 +351,7 @@ and ctyp_ = ClangBridge.ctyp_ =
   | TypedefType			of (* name *)string
   | PointerType			of (* pointee *)ctyp
   | FunctionNoProtoType		of (* result *)ctyp
-  | FunctionProtoType		of (* result *)ctyp * ctyp list
+  | FunctionProtoType		of (* result *)ctyp * (* args *)ctyp list
   | ConstantArrayType		of (* member-type *)ctyp * (* size *)int
   | VariableArrayType		of (* member-type *)ctyp * (* size *)expr
   | IncompleteArrayType		of (* member-type *)ctyp
