@@ -8,6 +8,4 @@ template<typename T>
 ptr<T> bridge_ast_of (typename clang_type<T>::type D,
                       clang_context &ctx);
 
-void clear_bridge_cache ();
-
 #endif /* OCAML_VISITOR_H */

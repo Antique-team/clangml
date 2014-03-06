@@ -30,75 +30,6 @@ struct delayed_exit
 #undef TRACE
 #define TRACE
 
-namespace clang
-{
-  static bool
-  operator < (Qualifiers a, Qualifiers b)
-  {
-    return a == b ? 0 : b.isStrictSupersetOf (a);
-  }
-
-  static bool
-  operator < (QualType a, QualType b)
-  {
-    return a.getTypePtr () < b.getTypePtr ()
-        || a.getLocalQualifiers () < b.getLocalQualifiers ();
-  }
-
-  static bool
-  operator < (TypeLoc a, TypeLoc b)
-  {
-    // This ignores the source locations.
-    return a.getType () < b.getType ();
-  }
-}
-
-
-struct bridge_cache
-{
-private:
-  static std::vector<std::function<void ()>> clear_funs;
-
-  template<typename T>
-  struct typed_cache
-  {
-    std::map<T, adt_ptr> cache;
-
-    typed_cache ()
-    {
-      clear_funs.push_back ([this] { cache.clear (); });
-    }
-  };
-
-public:
-  template<typename T>
-  static adt_ptr
-  cached_value (T p, adt_ptr value)
-  {
-    static typed_cache<T> cache;
-    if (value)
-      {
-        cache.cache.insert (std::make_pair (p, value));
-        return value;
-      }
-    else
-      {
-        auto found = cache.cache.find (p);
-        if (found == cache.cache.end ())
-          return nullptr;
-        return found->second;
-      }
-  }
-
-  static void clear ()
-  {
-    for (auto clear : clear_funs)
-      clear ();
-  }
-};
-
-std::vector<std::function<void ()>> bridge_cache::clear_funs;
-
 
 struct OCamlVisitor
   : clang::RecursiveASTVisitor<OCamlVisitor>
@@ -128,10 +59,10 @@ private:
    */
 
   adt_ptr cached (clang::QualType p, adt_ptr value = nullptr)
-  { return sharing && share_types ? bridge_cache::cached_value (p, value) : nullptr; }
+  { return sharing && share_types ? ctx.cache.cached_value (p, value) : nullptr; }
 
   adt_ptr cached (clang::TypeLoc p, adt_ptr value = nullptr)
-  { return sharing && share_type_locs ? bridge_cache::cached_value (p, value) : nullptr; }
+  { return sharing && share_type_locs ? ctx.cache.cached_value (p, value) : nullptr; }
 
   adt_ptr cached (clang::DesignatedInitExpr::Designator p, adt_ptr value = nullptr)
   { return nullptr; }
@@ -2053,9 +1984,3 @@ template ptr<Expr>	bridge_ast_of<Expr>	(clang::Expr *  , clang_context &ctx);
 template ptr<Stmt>	bridge_ast_of<Stmt>	(clang::Stmt *  , clang_context &ctx);
 template ptr<Ctyp>	bridge_ast_of<Ctyp>	(clang::QualType, clang_context &ctx);
 template ptr<TypeLoc>	bridge_ast_of<TypeLoc>	(clang::TypeLoc , clang_context &ctx);
-
-void
-clear_bridge_cache ()
-{
-  bridge_cache::clear ();
-}

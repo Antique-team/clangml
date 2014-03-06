@@ -38,10 +38,12 @@ OBJECTS =					\
 	clang_context.o				\
 	clang_operations.o			\
 	clang_ref_holder.o			\
+	heterogenous_container.o		\
 	HelloChecker.o				\
 	OCamlVisitor.o				\
 	PluginRegistration.o			\
 	bridge_ast.o				\
+	bridge_cache.o				\
 	trace.o
 
 $(PLUGIN): $(OBJECTS)
