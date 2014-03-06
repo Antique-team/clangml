@@ -1,10 +1,15 @@
 open ClangAst
 
-(* Opaque C++ side context. This type is not serialisable. *)
+(* C++ side context. It is required on the server side
+   to resolve 'a Clang.t to actual clang AST node objects.
+   This context object is never sent to the client. *)
 type context
 
 
-(* Request messages use a GADT to enable type-safe communication. *)
+(* Request messages use a GADT to enable type-safe communication.
+   Messages are designed to be compact, so most clang query
+   messages will operate on 'a Clang.t references. A wrapper
+   function may extract these from the respective 'a. *)
 type _ request =
   (* Handshake:
      - client sends its AST version
@@ -13,12 +18,20 @@ type _ request =
      We keep the handshake constructor in the first place,
      so its binary interface remains stable. *)
   | Handshake : (* version *)string -> string option request
-  (* Compose several messages. *)
+
+  (* Compose two messages. This composition can nest arbitrarily,
+     enabling a user to create any command tree. The server
+     processes this tree depth-first left-to-right. *)
   | Compose : 'a request * 'b request -> ('a * 'b) request
-  (* Get the TranslationUnit decl node. *)
+
+  (* Get the TranslationUnit decl node. This node is immutable
+     and always available on the server. This function is used
+     to get the initial TU node. *)
   | TranslationUnit : decl request
+
   (* Get the main unit filename. *)
   | Filename : string request
+
   (* Get the canonical type for a ctyp node. *)
   | CanonicalType : ctyp Clang.t -> ctyp request
 

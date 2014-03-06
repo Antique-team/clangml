@@ -9,7 +9,9 @@ let run_processor (tu : decl) (file : string) (ctx : ClangApi.context) =
 
   let rec handle_request : type a. a ClangApi.request -> a = let open ClangApi in function
     | Compose (msg1, msg2) ->
-        handle_request msg1, handle_request msg2
+        let res1 = handle_request msg1 in
+        let res2 = handle_request msg2 in
+        res1, res2
 
     | Handshake version ->
         if version = ClangAst.version then
