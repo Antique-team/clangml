@@ -154,19 +154,30 @@ let rec c_type_of_type_loc tl =
   | UnimpTypeLoc name -> Log.unimp "%s" name
 
 
-let c_agg_field_of_decl = function
-  | { d = FieldDecl (ty, name, bitwidth, init) } ->
-      if bitwidth <> None then Log.unimp "Bit fields not implemented";
-      if init <> None then Log.unimp "Member initialisers not implemented";
-      {
-        caf_typ  = c_type_of_type_loc ty;
-        caf_off  = -1;
-        caf_size = -1;
-        caf_name = name;
-      }
-  | { d } ->
-      (*prerr_endline (Show.show<decl_> d);*)
-      Log.err "Only FieldDecls allowed within RecordDecl"
+let rec c_agg_fields_of_decls decls =
+  let rec loop fields = function
+    | [] -> fields
+
+    | { d = FieldDecl (ty, name, bitwidth, init) } :: tl ->
+        if bitwidth <> None then
+          Log.unimp "Bit fields not implemented";
+        if init <> None then
+          Log.unimp "Member initialisers not implemented";
+        let field = {
+          caf_typ  = c_type_of_type_loc ty;
+          caf_off  = -1;
+          caf_size = -1;
+          caf_name = name;
+        } in
+
+        loop (field :: fields) tl
+
+    | { d } :: tl ->
+        prerr_endline (Show.show<decl_> d);
+        Log.err "Only FieldDecls allowed within RecordDecl"
+  in
+
+  loop [] decls
 
 
 let c_var_of_parm_decl = function
@@ -571,7 +582,7 @@ let rec collect_decls prog env = function
           cag_name   = if name1 = "" then None else Some name1;
           cag_align  = -1;
           cag_size   = -1;
-          cag_fields = List.map c_agg_field_of_decl members;
+          cag_fields = c_agg_fields_of_decls members;
         } in
         match kind with
         | TTK_Struct -> Ctstruct agg
