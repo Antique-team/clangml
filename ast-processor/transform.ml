@@ -5,14 +5,24 @@ open Data_structures
 module Log = Logger.Make(struct let tag = "transform" end)
 
 
-let empty_env = StringMap.empty
-
-
 let lookup_var prog env name =
   try
     StringMap.find name env
   with Not_found ->
-    StringMap.find name prog.cp_vars
+    try
+      StringMap.find name prog.cp_vars
+    with Not_found ->
+      try
+        let func = StringMap.find name prog.cp_funs in
+        (* TODO: funcs are not vars, so how are they handled in DeclRefExprs? *)
+        {
+          cv_name     = func.cf_name;
+          cv_uid      = func.cf_uid;
+          cv_type     = func.cf_type;
+          cv_volatile = false;
+        }
+      with Not_found ->
+        Log.err "lookup failed for var: %s" name
 
 
 let dump_stmt s =
@@ -103,10 +113,13 @@ let rec c_type_of_type = function
   | ParenType inner ->
       c_type_of_type inner.t
 
+  | FunctionNoProtoType _
+  | FunctionProtoType _ ->
+      (* TODO *)
+      Ctnamed { cnt_name = "FunctionProtoType"; cnt_type = Ctvoid; }
+
   | TypeOfExprType _ -> Log.unimp "TypeOfExprType"
   | TypeOfType _ -> Log.unimp "TypeOfType"
-  | FunctionProtoType _ -> Log.unimp "FunctionProtoType"
-  | FunctionNoProtoType _ -> Log.unimp "FunctionNoProtoType"
   | VariableArrayType _ -> Log.unimp "VariableArrayType"
   | IncompleteArrayType _ -> Log.unimp "IncompleteArrayType"
   | DecayedType _ -> Log.unimp "IncompleteArrayType"
@@ -410,6 +423,13 @@ and c_expr_of_expr prog env expr =
       }
 
 
+let make_call prog env callee args =
+  {
+    cc_fun = c_expr_of_expr prog env callee;
+    cc_args = List.map (c_expr_of_expr prog env) args;
+  }
+
+
 let rec c_stat_of_expr prog env expr =
   match expr.e with
   | BinaryOperator (BO_Assign, lhs, rhs) ->
@@ -437,10 +457,7 @@ let rec c_stat_of_expr prog env expr =
           | "free", [_] ->
               Csfree (c_lval_of_expr prog env (List.hd args))
           | _ ->
-              Cspcall {
-                cc_fun = c_expr_of_expr prog env callee;
-                cc_args = List.map (c_expr_of_expr prog env) args;
-              }
+              Cspcall (make_call prog env callee args)
       }
 
   | IntegerLiteral _ -> Log.unimp "stats IntegerLiteral"
@@ -483,6 +500,19 @@ let rec c_stats_of_stmts prog env stmts =
 
     | stmt :: tl ->
         match stmt.s with
+        | ReturnStmt expr ->
+            let stat = {
+              csl = stmt.s_sloc.loc_s_line;
+              csk = Csreturn (
+                match expr with
+                | None ->
+                    None
+                | Some expr ->
+                    Some (c_expr_of_expr prog env (ClangImplicitCast.strip_expr expr))
+              );
+            } in
+            loop env (stat :: stats) tl
+
         | ExprStmt e ->
             let stat =
               match ClangImplicitCast.strip_expr e with
@@ -495,6 +525,18 @@ let rec c_stats_of_stmts prog env stmts =
                     csk = Csalloc (
                       c_lval_of_expr prog env lhs,
                       c_expr_of_expr prog env arg
+                    );
+                  }
+
+              (* Special handling of assigned call expressions. *)
+              | { e = BinaryOperator (BO_Assign, lhs,
+                                      { e = CallExpr (callee, args) })
+                } ->
+                  {
+                    csl = stmt.s_sloc.loc_s_line;
+                    csk = Csfcall (
+                      c_lval_of_expr prog env lhs,
+                      make_call prog env callee args
                     );
                   }
 
@@ -554,7 +596,6 @@ let rec c_stats_of_stmts prog env stmts =
         | DefaultStmt _ -> Log.unimp "DefaultStmt"
         | GotoStmt _ -> Log.unimp "GotoStmt"
         | CompoundStmt _ -> Log.unimp "CompoundStmt"
-        | ReturnStmt _ -> Log.unimp "ReturnStmt"
         | ForStmt _ -> Log.unimp "ForStmt"
         | DoStmt _ -> Log.unimp "DoStmt"
         | SwitchStmt _ -> Log.unimp "SwitchStmt"
@@ -566,30 +607,43 @@ let rec c_stats_of_stmts prog env stmts =
   List.rev (loop env [] stmts)
 
 
-let c_fun_of_decl prog env ty name body =
+let make_env = function
+  | FunctionProtoTypeLoc (_, args) ->
+      List.fold_left (fun env decl ->
+        let parm = c_var_of_parm_decl decl in
+        StringMap.add parm.cv_name parm env
+      ) StringMap.empty args
+
+  | FunctionNoProtoTypeLoc (_) ->
+      StringMap.empty
+
+  | tl -> failwith (Show.show<type_loc_> tl)
+
+
+let c_fun_of_decl prog ty name body =
   let stmts = ClangQuery.body_of_stmt body in
   {
     cf_type = c_type_of_type_loc (ClangQuery.return_type_of_tloc ty.tl);
     cf_uid  = -1;
     cf_name = name;
     cf_args = List.map c_var_of_parm_decl (ClangQuery.args_of_tloc ty.tl);
-    cf_body = c_stats_of_stmts prog env stmts;
+    cf_body = c_stats_of_stmts prog (make_env ty.tl) stmts;
   }
 
 
-let rec collect_decls prog env = function
+let rec collect_decls prog = function
   | [] -> prog
 
   | { d = EmptyDecl } :: tl ->
-      collect_decls prog env tl
+      collect_decls prog tl
 
   | { d = FunctionDecl (_, _, None) } :: tl ->
       (* Function declarations (without definition) do nothing. *)
-      collect_decls prog env tl
+      collect_decls prog tl
 
   | { d = FunctionDecl (fd_type, fd_name, Some body) } :: tl ->
-      let c_fun = c_fun_of_decl prog env fd_type fd_name body in
-      collect_decls (add_fun fd_name c_fun prog) env tl
+      let c_fun = c_fun_of_decl prog fd_type fd_name body in
+      collect_decls (add_fun fd_name c_fun prog) tl
 
   (*
     Clang turns this code:
@@ -619,19 +673,19 @@ let rec collect_decls prog env = function
           cag_fields = c_agg_fields_of_decls members;
         } kind
       in
-      collect_decls (add_type name c_type prog) env tl
+      collect_decls (add_type name c_type prog) tl
 
   | { d = TypedefDecl (ty, name) } :: tl ->
       let c_type = c_type_of_type_loc ty in
-      collect_decls (add_type name c_type prog) env tl
+      collect_decls (add_type name c_type prog) tl
 
   | { d = VarDecl (ty, name, init) } :: tl ->
       (* TODO *)
-      collect_decls prog env tl
+      collect_decls prog tl
 
   | { d = EnumDecl (name, enumerators) } :: tl ->
       (* TODO *)
-      collect_decls prog env tl
+      collect_decls prog tl
 
   | { d = RecordDecl (name, members) } :: tl ->
       Log.unimp "RecordDecl without TypedefDecl not supported by memcad AST"
@@ -646,5 +700,5 @@ let rec collect_decls prog env = function
 
 let c_prog_from_decl = function
   | { d = TranslationUnitDecl decls } ->
-      collect_decls C_utils.empty_unit empty_env decls
+      collect_decls C_utils.empty_unit decls
   | _ -> Log.err "c_prog_from_decl requires a translation unit"
