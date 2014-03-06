@@ -73,6 +73,10 @@ HelloChecker::checkASTDecl (TranslationUnitDecl const *D,
     {
       //TIME;
 
+      // Clear bridge AST cache whenever we start processing a new AST,
+      // since the pointers we had mapped are no longer valid.
+      clear_bridge_cache ();
+
       OCamlADTBase::reset_statistics ();
 
       clang_context ctx = {
