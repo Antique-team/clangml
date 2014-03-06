@@ -36,8 +36,8 @@ check: all myclang test.c
 define testsuite
 TESTSUITE.$1 = $2
 check-$1: all myclang
-	#./myclang -include "memcad.h" -w $$(TESTSUITE.$1)
-	./myclang -DTEST_ALL -w $$(TESTSUITE.$1)
+	./myclang -include "memcad.h" -w $$(TESTSUITE.$1)
+	#./myclang -DTEST_ALL -w $$(TESTSUITE.$1)
 
 check-$1-separate: $$(TESTSUITE.$1:=.test)
 endef

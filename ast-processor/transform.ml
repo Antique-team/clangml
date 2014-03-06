@@ -63,8 +63,9 @@ let c_binop_of_binary_operator = function
 
 
 let c_uniop_of_unary_operator = function
-  | UO_LNot -> Cuneg
-  | _ -> Log.unimp "unsupported uniop"
+  | UO_Minus -> Cuneg
+  | op -> Log.unimp "unsupported uniop: %a"
+            Show.format<unary_operator> op
 
 
 let c_type_of_builtin_type = function
@@ -292,6 +293,9 @@ let rec c_lvalk_of_expr prog env = function
         c_expr_of_expr prog env index
       )
 
+  | UnaryOperator (UO_Deref, expr) ->
+      Clderef (c_expr_of_expr prog env expr)
+
   | IntegerLiteral _ -> Log.unimp "lvalk IntegerLiteral"
   | CharacterLiteral _ -> Log.unimp "lvalk CharacterLiteral"
   | FloatingLiteral _ -> Log.unimp "lvalk FloatingLiteral"
@@ -405,6 +409,7 @@ and c_expr_of_expr prog env expr =
         cet = Ctptr None;
       }
 
+  | UnaryOperator (UO_Deref, _)
   | ArraySubscriptExpr _
   | MemberExpr _
   | DeclRefExpr _ ->
@@ -588,14 +593,27 @@ let rec c_stats_of_stmts prog env stmts =
             in
             loop env (stat :: stats) tl
 
+        | BreakStmt ->
+            let stat = {
+              csl = stmt.s_sloc.loc_s_line;
+              csk = Csbreak;
+            } in
+            loop env (stat :: stats) tl
+
+        | CompoundStmt stmts ->
+            let stat = {
+              csl = stmt.s_sloc.loc_s_line;
+              csk = Csblock
+                (c_stats_of_stmts prog env stmts)
+            } in
+            loop env (stat :: stats) tl
+
         | NullStmt -> Log.unimp "NullStmt"
-        | BreakStmt -> Log.unimp "BreakStmt"
         | ContinueStmt -> Log.unimp "ContinueStmt"
         | LabelStmt _ -> Log.unimp "LabelStmt"
         | CaseStmt _ -> Log.unimp "CaseStmt"
         | DefaultStmt _ -> Log.unimp "DefaultStmt"
         | GotoStmt _ -> Log.unimp "GotoStmt"
-        | CompoundStmt _ -> Log.unimp "CompoundStmt"
         | ForStmt _ -> Log.unimp "ForStmt"
         | DoStmt _ -> Log.unimp "DoStmt"
         | SwitchStmt _ -> Log.unimp "SwitchStmt"
@@ -620,15 +638,9 @@ let make_env = function
   | tl -> failwith (Show.show<type_loc_> tl)
 
 
-let c_fun_of_decl prog ty name body =
+let c_fun_body_of_stmts prog ty body =
   let stmts = ClangQuery.body_of_stmt body in
-  {
-    cf_type = c_type_of_type_loc (ClangQuery.return_type_of_tloc ty.tl);
-    cf_uid  = -1;
-    cf_name = name;
-    cf_args = List.map c_var_of_parm_decl (ClangQuery.args_of_tloc ty.tl);
-    cf_body = c_stats_of_stmts prog (make_env ty.tl) stmts;
-  }
+  c_stats_of_stmts prog (make_env ty.tl) stmts
 
 
 let rec collect_decls prog = function
@@ -641,9 +653,22 @@ let rec collect_decls prog = function
       (* Function declarations (without definition) do nothing. *)
       collect_decls prog tl
 
-  | { d = FunctionDecl (fd_type, fd_name, Some body) } :: tl ->
-      let c_fun = c_fun_of_decl prog fd_type fd_name body in
-      collect_decls (add_fun fd_name c_fun prog) tl
+  | { d = FunctionDecl (ty, name, Some body) } :: tl ->
+      let c_fun =
+        (* Create the head of the function (without body), first,
+           so that name lookups within the body work for the
+           currently processed function name. *)
+        let stub = {
+          cf_type = c_type_of_type_loc (ClangQuery.return_type_of_tloc ty.tl);
+          cf_uid  = -1;
+          cf_name = name;
+          cf_args = List.map c_var_of_parm_decl (ClangQuery.args_of_tloc ty.tl);
+          cf_body = []; (* Filled in later. *)
+        } in
+        let prog = add_fun name stub prog in
+        { stub with cf_body = c_fun_body_of_stmts prog ty body }
+      in
+      collect_decls (add_fun name c_fun prog) tl
 
   (*
     Clang turns this code:
@@ -675,20 +700,47 @@ let rec collect_decls prog = function
       in
       collect_decls (add_type name c_type prog) tl
 
+  (* Handle "typedef struct foo *Foo;" (where struct foo was not
+     yet defined) specially, as well. *)
+  |   { d = RecordDecl (name1, members) }
+    :: { d = TypedefDecl (
+        { tl = PointerTypeLoc
+          { tl = ElaboratedTypeLoc {
+               tl = RecordTypeLoc (_, name2)
+             }
+          }
+        } as ty,
+        name)
+      }
+    :: tl
+    when name1 = name2 ->
+      let c_type = c_type_of_type_loc ty in
+      collect_decls (add_type name c_type prog) tl
+
+  (* There may be other typedefs involving a preceding record definition,
+     so this case is printed with a better diagnostic than the catch-all
+     case below. *)
+  |   { d = RecordDecl (name, members) }
+    :: { d = TypedefDecl _ as tdef }
+    :: tl ->
+      Log.unimp "unsupported record/typedef combination: %a"
+        Show.format<decl_> tdef
+
+  (* Any lone RecordDecls are not supported. *)
+  | { d = RecordDecl (name, members) } :: tl ->
+      Log.unimp "RecordDecl without TypedefDecl not supported by memcad AST"
+
   | { d = TypedefDecl (ty, name) } :: tl ->
       let c_type = c_type_of_type_loc ty in
       collect_decls (add_type name c_type prog) tl
 
-  | { d = VarDecl (ty, name, init) } :: tl ->
-      (* TODO *)
-      collect_decls prog tl
+  | { d = VarDecl (ty, name, init) } as decl :: tl ->
+      let c_var = snd (c_decl_of_decl decl) in
+      collect_decls (add_var name c_var prog) tl
 
   | { d = EnumDecl (name, enumerators) } :: tl ->
       (* TODO *)
       collect_decls prog tl
-
-  | { d = RecordDecl (name, members) } :: tl ->
-      Log.unimp "RecordDecl without TypedefDecl not supported by memcad AST"
 
   | { d = EnumConstantDecl    _ } :: _ -> Log.err "EnumConstantDecl found at file scope"
   | { d = FieldDecl           _ } :: _ -> Log.err "FieldDecl found at file scope"

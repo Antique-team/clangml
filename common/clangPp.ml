@@ -486,6 +486,9 @@ and pp_decl_ ff = function
   | VarDecl (ty, name, None)
   | ParmVarDecl (ty, name) ->
       pp_named_arg ff (name, ty)
+  | RecordDecl (name, []) ->
+      Format.fprintf ff "struct %s@;"
+        (if name = "" then "<anonymous>" else name)
   | RecordDecl (name, members) ->
       Format.fprintf ff "struct %s@\n@[<v2>{@,%a@]@\n};"
         (if name = "" then "<anonymous>" else name)
