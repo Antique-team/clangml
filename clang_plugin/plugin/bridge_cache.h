@@ -48,6 +48,11 @@ struct concrete_bridge_cache
   {
     cache.insert (std::make_pair (p, value));
   }
+
+  void clear ()
+  {
+    cache.clear ();
+  }
 };
 
 
@@ -63,5 +68,11 @@ struct bridge_cache
         return value;
       }
     return get_concrete<T> ().get (p);
+  }
+
+  template<typename T>
+  void clear ()
+  {
+    return get_concrete<T> ().clear ();
   }
 };

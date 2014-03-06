@@ -281,7 +281,7 @@ and pp_stmt_ ff = function
       Format.fprintf ff "%a;"
         pp_expr e
   | CompoundStmt ss ->
-      Format.fprintf ff "{ %a }"
+      Format.fprintf ff "@\n@[<v2>{@\n%a@]@\n}"
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_stmt) ss
   | ReturnStmt None ->
       Format.fprintf ff "return;"
@@ -323,7 +323,7 @@ and pp_stmt_ ff = function
         pp_expr cond
         pp_stmt thn
   | IfStmt (cond, thn, Some els) ->
-      Format.fprintf ff "if (%a) %a else %a"
+      Format.fprintf ff "if (%a) %a@\nelse %a"
         pp_expr cond
         pp_stmt thn
         pp_stmt els
@@ -476,7 +476,7 @@ and pp_decl_ ff = function
         name
         pp_tloc ty
   | FunctionDecl (fd_type, fd_name, fd_body) ->
-      Format.fprintf ff "@[<v2>%a@]@, = %a"
+      Format.fprintf ff "@[<v2>%a@]%a"
         pp_named_arg (fd_name, fd_type)
         (pp_option pp_stmt) fd_body
   | VarDecl (ty, name, Some init) ->
@@ -487,8 +487,8 @@ and pp_decl_ ff = function
   | ParmVarDecl (ty, name) ->
       pp_named_arg ff (name, ty)
   | RecordDecl (name, members) ->
-      Format.fprintf ff "struct %s { %a };"
-        name
+      Format.fprintf ff "struct %s@\n@[<v2>{@,%a@]@\n};"
+        (if name = "" then "<anonymous>" else name)
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) members
   | FieldDecl (ty, name, bitwidth, init) ->
       Format.fprintf ff "%a;"

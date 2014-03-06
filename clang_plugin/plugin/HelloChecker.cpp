@@ -23,9 +23,6 @@ extern "C" {
 #include "bridge_ast.h"
 #include "clang_context.h"
 
-using namespace clang;
-using namespace ento;
-
 void
 initialize_caml ()
 {
@@ -55,11 +52,20 @@ to_value (adt_ptr ob)
   return result;
 }
 
+static value
+to_value (clang::TranslationUnitDecl const *D, clang_context &ctx)
+{
+  ptr<bridge_ast::Decl> decl
+    = bridge_ast_of<bridge_ast::Decl>
+        (const_cast<clang::TranslationUnitDecl *> (D), ctx);
+  return to_value (decl);
+}
+
 
 void
-HelloChecker::checkASTDecl (TranslationUnitDecl const *D,
-                            AnalysisManager &Mgr,
-                            BugReporter &BR) const
+HelloChecker::checkASTDecl (clang::TranslationUnitDecl const *D,
+                            clang::ento::AnalysisManager &Mgr,
+                            clang::ento::BugReporter &BR) const
 {
   CAMLparam0 ();
   CAMLlocal1 (result);
@@ -71,7 +77,7 @@ HelloChecker::checkASTDecl (TranslationUnitDecl const *D,
   try
 #endif
     {
-      //TIME;
+      TIME;
 
       OCamlADTBase::reset_statistics ();
 
@@ -79,11 +85,7 @@ HelloChecker::checkASTDecl (TranslationUnitDecl const *D,
         BR.getSourceManager (),
       };
 
-      ptr<bridge_ast::Decl> decl
-        = bridge_ast_of<bridge_ast::Decl>
-            (const_cast<TranslationUnitDecl *> (D), ctx);
-
-      result = to_value (decl);
+      result = to_value (D, ctx);
 
       OCamlADTBase::print_statistics ();
 

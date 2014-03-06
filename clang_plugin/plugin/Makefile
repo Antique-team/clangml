@@ -46,6 +46,8 @@ OBJECTS =					\
 	bridge_cache.o				\
 	trace.o
 
+HEADERS := bridge_ast.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
+
 $(PLUGIN): $(OBJECTS)
 	$(EXT)/bin/clang++ $^ -o $@ $(LDFLAGS)
 
@@ -56,13 +58,16 @@ $(PLUGIN): $(OBJECTS)
 clean:
 	rm -f $(PLUGIN) *.o bridge_ast.cpp bridge_ast.h
 
-%.o: %.cpp bridge_ast.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
+%.o: %.cpp $(HEADERS)
 	$(EXT)/bin/clang++ -c $< $(CXXFLAGS) -o $@
 
-OCamlVisitor.o: OCamlVisitor.cpp bridge_ast.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
+OCamlVisitor.o: OCamlVisitor.cpp $(HEADERS)
 	$(EXT)/bin/clang++ -c $< $(CXXFLAGS) -frtti
 
-bridge_ast.o: bridge_ast.cpp bridge_ast.h $(wildcard *.h ../../camlp4_autogen/cutil/*.h)
+clang_operations.o: clang_operations.cpp $(HEADERS)
+	$(EXT)/bin/clang++ -c $< $(CXXFLAGS) -frtti
+
+bridge_ast.o: bridge_ast.cpp $(HEADERS)
 	$(EXT)/bin/clang++ -c $< $(CXXFLAGS) -frtti
 
 bridge_ast.h: ../../common/clangBridge.ml ../../camlp4_autogen/main.byte

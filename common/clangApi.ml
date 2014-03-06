@@ -1,43 +1,37 @@
+open ClangAst
+
 (* Opaque C++ side context. This type is not serialisable. *)
 type context
 
 
-(* Messages prefixed with R_ are requests, the ones prefixed
-   with S_ are responses. *)
-type request =
+(* Request messages use a GADT to enable type-safe communication. *)
+type _ request =
   (* Handshake:
      - client sends its AST version
      - server checks version and sends None in case they are
        equal, Some version with its own version otherwise.
      We keep the handshake constructor in the first place,
      so its binary interface remains stable. *)
-  | R_Handshake of (* version *)string
+  | Handshake : (* version *)string -> string option request
   (* Compose several messages. *)
-  | R_List of request list
+  | Compose : 'a request * 'b request -> ('a * 'b) request
   (* Get the TranslationUnit decl node. *)
-  | R_TranslationUnit
+  | TranslationUnit : decl request
   (* Get the main unit filename. *)
-  | R_Filename
+  | Filename : string request
+  (* Get the canonical type for a ctyp node. *)
+  | CanonicalType : ctyp Clang.t -> ctyp request
 
 
-type response =
-  | S_Handshake of (* version *)string option
-  | S_List of response list
-  | S_TranslationUnit of ClangAst.decl
-  | S_Filename of string
-
-
-(* Server functions. *)
-let recv input : request =
-  Marshal.from_channel input
-
-let send output (msg : response) : unit =
-  Marshal.to_channel output msg [];
+(* Server function. *)
+let respond input output (handle : 'a request -> 'a) : unit =
+  let request = Marshal.from_channel input in
+  Marshal.to_channel output (handle request) [];
   flush output
 
 
-(* Client functions. *)
-let request (msg : request) : response =
+(* Client function. *)
+let request (msg : 'a request) : 'a =
   Marshal.to_channel stdout msg [];
   flush stdout;
   Marshal.from_channel stdin

@@ -1,1 +1,3 @@
 <*.ml{,i}>: package(deriving-ocsigen.syntax), syntax(camlp4o)
+
+true: annot

@@ -1,32 +1,34 @@
 open ClangAst
 
+external clang_canonical_type : ClangApi.context -> ctyp Clang.t -> ctyp = "clang_canonical_type"
+
 
 let run_processor (tu : decl) (file : string) (ctx : ClangApi.context) =
   Gc.compact ();
   let (input, output) = Unix.open_process "../ast-processor/main.byte" in
 
-  let rec respond = let open ClangApi in function
-    | R_List msgs ->
-        S_List (List.map respond msgs)
+  let rec handle_request : type a. a ClangApi.request -> a = let open ClangApi in function
+    | Compose (msg1, msg2) ->
+        handle_request msg1, handle_request msg2
 
-    | R_Handshake version ->
+    | Handshake version ->
         if version = ClangAst.version then
-          S_Handshake None
+          None
         else
-          S_Handshake (Some ClangAst.version)
+          Some ClangAst.version
 
-    | R_TranslationUnit ->
-        S_TranslationUnit tu
+    | TranslationUnit ->
+        tu
 
-    | R_Filename ->
-        S_Filename file
+    | Filename ->
+        file
+
+    | CanonicalType id ->
+        clang_canonical_type ctx id
   in
 
   let rec io_loop () =
-    ClangApi.send output (
-      let request = ClangApi.recv input in
-      respond request
-    );
+    ClangApi.respond input output handle_request;
 
     io_loop ()
   in

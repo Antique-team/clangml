@@ -1973,7 +1973,7 @@ bridge_ast_of (typename clang_type<T>::type N,
 {
   //D->dump ();
 
-  TIME;
+  //TIME;
 
   OCamlVisitor visitor (ctx);
   return visitor.translate (N);
