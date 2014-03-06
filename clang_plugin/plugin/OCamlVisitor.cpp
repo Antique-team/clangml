@@ -30,35 +30,27 @@ struct delayed_exit
 #undef TRACE
 #define TRACE
 
-template<typename T>
-struct clang_compare
+namespace clang
 {
-  typedef T type;
-  bool operator () (T a, T b) { return a < b; }
-};
+  static bool
+  operator < (Qualifiers a, Qualifiers b)
+  {
+    return a == b ? 0 : b.isStrictSupersetOf (a);
+  }
 
+  static bool
+  operator < (QualType a, QualType b)
+  {
+    return a.getTypePtr () < b.getTypePtr ()
+        || a.getLocalQualifiers () < b.getLocalQualifiers ();
+  }
 
-static bool
-operator < (clang::Qualifiers a, clang::Qualifiers b)
-{
-  return a == b ? 0 : b.isStrictSupersetOf (a);
-}
-
-template<>
-bool
-clang_compare<clang::QualType>::operator () (type a, type b)
-{
-  return a.getTypePtr () < b.getTypePtr ()
-      || a.getLocalQualifiers () < b.getLocalQualifiers ();
-}
-
-
-template<>
-bool
-clang_compare<clang::TypeLoc>::operator () (type a, type b)
-{
-  // This ignores the source locations.
-  return clang_compare<clang::QualType> () (a.getType (), b.getType ());
+  static bool
+  operator < (TypeLoc a, TypeLoc b)
+  {
+    // This ignores the source locations.
+    return a.getType () < b.getType ();
+  }
 }
 
 
@@ -70,7 +62,7 @@ private:
   template<typename T>
   struct typed_cache
   {
-    std::map<T, adt_ptr, clang_compare<T>> cache;
+    std::map<T, adt_ptr> cache;
 
     typed_cache ()
     {
