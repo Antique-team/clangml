@@ -239,6 +239,7 @@ and designator_ = ClangBridge.designator_ =
   | ArrayDesignator		of expr
   | ArrayRangeDesignator	of expr * expr
 
+
 and expr = ClangBridge.expr = {
   e      : expr_;
   e_cref : expr Clang.t;
@@ -279,6 +280,7 @@ and expr_ = ClangBridge.expr_ =
   | VecStepExpr			of expr
   | VecStepType			of type_loc
 
+
 and stmt = ClangBridge.stmt = {
   s      : stmt_;
   s_cref : stmt Clang.t;
@@ -305,6 +307,7 @@ and stmt_ = ClangBridge.stmt_ =
   | SwitchStmt			of expr * stmt
   | DeclStmt			of decl list
 
+
 and type_loc = ClangBridge.type_loc = {
   tl      : type_loc_;
   tl_cref : type_loc Clang.t;
@@ -329,6 +332,7 @@ and type_loc_ = ClangBridge.type_loc_ =
   | ElaboratedTypeLoc		of (* named-type *)type_loc
   | EnumTypeLoc			of (* name *)string
   | RecordTypeLoc		of (* kind *)tag_type_kind * (* name *)string
+
 
 and ctyp = ClangBridge.ctyp = {
   t        : ctyp_;
@@ -355,6 +359,7 @@ and ctyp_ = ClangBridge.ctyp_ =
   | EnumType			of (* name *)string
   | RecordType			of (* kind *)tag_type_kind * (* name *)string
   | DecayedType			of (* decayed *)ctyp * (* original *)ctyp
+
 
 and decl = ClangBridge.decl = {
   d      : decl_;
