@@ -77,7 +77,7 @@ HelloChecker::checkASTDecl (clang::TranslationUnitDecl const *D,
   try
 #endif
     {
-      TIME;
+      //TIME;
 
       OCamlADTBase::reset_statistics ();
 
@@ -95,6 +95,7 @@ HelloChecker::checkASTDecl (clang::TranslationUnitDecl const *D,
       char const *filename = ctx.SM.getFileEntryForID (ctx.SM.getMainFileID ())->getName ();
 
       value *cb = caml_named_value ("success");
+      // val success : decl -> string -> context -> unit
       caml_callback3 (*cb,
                       result,
                       caml_copy_string (filename),

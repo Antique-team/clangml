@@ -26,18 +26,24 @@ ocaml/_build/clangLib.cmxa: $(wildcard ocaml/*.ml* ocaml/*/*.ml* ocaml/*/*/*.ml*
 ## Testing
 ####################################################################
 
+ALDOR_PATH = ../../github/_build/src/lang/aldor/compiler
+
+CLANGFLAGS =			\
+	-w			\
+	-I$(ALDOR_PATH)		\
+	-DTEST_ALL		\
+	-include "memcad.h"
+
 check: all myclang test.c
-	./myclang -include "memcad.h" -w test.c
+	./myclang $(CLANGFLAGS) test.c
 
 %.test: % all myclang
-	./myclang -include "memcad.h" -w $<
-	#./myclang -DTEST_ALL -w $<
+	./myclang $(CLANGFLAGS) $<
 
 define testsuite
 TESTSUITE.$1 = $2
 check-$1: all myclang
-	./myclang -include "memcad.h" -w $$(TESTSUITE.$1)
-	#./myclang -DTEST_ALL -w $$(TESTSUITE.$1)
+	./myclang $(CLANGFLAGS) $$(TESTSUITE.$1)
 
 check-$1-separate: $$(TESTSUITE.$1:=.test)
 endef
@@ -46,6 +52,9 @@ $(eval $(call testsuite,testsuite,$(wildcard testsuite/*.[ci])))
 $(eval $(call testsuite,memcad,$(wildcard ../ast-processor/memcad/bench/*.c)))
 
 ALDOR_SRC =		\
+	java/genjava.c	\
+	java/javacode.c	\
+	java/javaobj.c	\
 	abcheck.c	\
 	ablogic.c	\
 	abnorm.c	\
@@ -126,6 +135,7 @@ ALDOR_SRC =		\
 	gf_syme.c	\
 	include.c	\
 	inlutil.c	\
+	int.c		\
 	intset.c	\
 	lib.c		\
 	linear.c	\
