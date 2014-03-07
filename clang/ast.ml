@@ -294,18 +294,18 @@ and stmt_ = Bridge.stmt_ =
   | BreakStmt
   | ContinueStmt
   | LabelStmt			of (* label *)string * stmt
-  | CaseStmt			of (* from *)expr * (* to *)expr option * stmt
-  | DefaultStmt			of stmt
+  | CaseStmt			of (* range_begin *)expr * (* range_end *)expr option * (* stmt *)stmt
+  | DefaultStmt			of (* stmt *)stmt
   | GotoStmt			of (* label *)string
-  | ExprStmt			of expr
+  | ExprStmt			of (* expr *)expr
   | CompoundStmt		of (* body *)stmt list
-  | ReturnStmt			of expr option
+  | ReturnStmt			of (* expr *)expr option
   | IfStmt			of (* cond *)expr * (* then *)stmt * (* else *)stmt option
   | ForStmt			of (* init *)stmt option * (* cond *)expr option * (* incr *)expr option * (* body *)stmt
   | WhileStmt			of (* cond *)expr * (* body *)stmt
   | DoStmt			of (* body *)stmt * (* cond *)expr
-  | SwitchStmt			of expr * stmt
-  | DeclStmt			of decl list
+  | SwitchStmt			of (* value *)expr * (* body *)stmt
+  | DeclStmt			of (* decls *)decl list
 
 
 and type_loc = Bridge.type_loc = {
