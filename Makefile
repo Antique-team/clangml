@@ -1,6 +1,13 @@
-all:
+OCAMLBUILD_FLAGS =				\
+	-cflags -I,+camlp4/Camlp4Parsers	\
+	-use-ocamlfind
 
-%:
-	$(MAKE) -C ast-processor $@
-	$(MAKE) -C camlp4_autogen $@
-	$(MAKE) -C clang_plugin $@
+TARGETS =		\
+	clangaml.dylib	\
+	processor.native
+
+build:
+	ocamlbuild $(OCAMLBUILD_FLAGS) $(TARGETS)
+
+clean:
+	ocamlbuild -clean

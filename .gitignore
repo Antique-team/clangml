@@ -1,13 +1,1 @@
-_build
-*.annot
-*.cmo
-*.cma
-*.cmi
-*.a
-*.o
-*.cmx
-*.cmxs
-*.cmxa
-*.DS_Store
-*.byte
-*.native
+/_build

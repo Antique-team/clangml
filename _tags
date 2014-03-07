@@ -1,0 +1,8 @@
+# Subdirectories
+"bridgen": include
+"common": include
+"consumer": include
+"plugin": include
+"util": include
+
+true: annot

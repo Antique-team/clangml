@@ -1,0 +1,9 @@
+# camlp4
+<memcad/*/*.ml{,i}>: package(apron)
+<*.ml{,i}>: package(deriving-ocsigen.syntax), syntax(camlp4o)
+<*.{byte,native}>: package(deriving-ocsigen), package(unix)
+
+"memcad/c": include
+"memcad/lib": include
+"memcad/nd": include
+"memcad/sd": include

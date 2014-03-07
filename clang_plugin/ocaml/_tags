@@ -1,6 +1,0 @@
-<*.cmxa>: package(unix), package(deriving-ocsigen)
-
-"common": include
-"common/util": include
-
-true: annot
