@@ -13,7 +13,7 @@ struct concrete_clang_ref_holder
 
   clang_ref<T> create (typename clang_type<T>::type value)
   {
-    clang_ref<T> ref = { values.size () };
+    clang_ref<T> ref = { values.size () + 1 };
     values.push_back (value);
     return ref;
   }
