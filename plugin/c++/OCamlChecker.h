@@ -1,13 +1,10 @@
 //
-//  HelloChecker.h
-//  HelloClangPlugin
-//
 //  Created by Devin Coughlin on 10/16/13.
 //  Copyright (c) 2013 Devin Coughlin. All rights reserved.
 //
 
-#ifndef __HelloClangPlugin__HelloChecker__
-#define __HelloClangPlugin__HelloChecker__
+#ifndef OCAML_CHECKER_H
+#define OCAML_CHECKER_H
 
 #include <clang/StaticAnalyzer/Core/Checker.h>
 #include <clang/StaticAnalyzer/Core/PathSensitive/CheckerContext.h>
@@ -20,7 +17,7 @@
 
 #include "bridge_ast.h"
 
-struct HelloChecker
+struct OCamlChecker
   : clang::ento::Checker<clang::ento::check::ASTDecl<clang::TranslationUnitDecl> >
 {
   void checkASTDecl (const clang::TranslationUnitDecl *D,
@@ -29,4 +26,4 @@ struct HelloChecker
 };
 
 
-#endif /* defined(__HelloClangPlugin__HelloChecker__) */
+#endif /* OCAML_CHECKER_H */

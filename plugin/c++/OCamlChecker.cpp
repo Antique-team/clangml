@@ -1,7 +1,4 @@
 //
-//  HelloChecker.cpp
-//  HelloClangPlugin
-//
 //  Created by Devin Coughlin on 10/16/13.
 //  Copyright (c) 2013 Devin Coughlin. All rights reserved.
 //
@@ -16,7 +13,7 @@ extern "C" {
 #include <cstdio>
 #include <llvm/Support/raw_ostream.h>
 
-#include "HelloChecker.h"
+#include "OCamlChecker.h"
 #include "OCamlVisitor.h"
 #include "trace.h"
 
@@ -63,7 +60,7 @@ to_value (clang::TranslationUnitDecl const *D, clang_context &ctx)
 
 
 void
-HelloChecker::checkASTDecl (clang::TranslationUnitDecl const *D,
+OCamlChecker::checkASTDecl (clang::TranslationUnitDecl const *D,
                             clang::ento::AnalysisManager &Mgr,
                             clang::ento::BugReporter &BR) const
 {

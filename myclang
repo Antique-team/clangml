@@ -33,7 +33,7 @@ ADDITIONAL_ARGS = [
         "-Xclang", "-load",
         "-Xclang", PLUGIN_PATH,
         "-Xclang", "-analyze",
-        "-Xclang", "-analyzer-checker=coughlin.HelloChecker"
+        "-Xclang", "-analyzer-checker=OCamlChecker"
 ]
 
 CLANG = ["#{EXT_CLANG_PATH}"] + ARGV + ADDITIONAL_ARGS

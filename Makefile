@@ -1,6 +1,8 @@
+NCPU := $(shell expr $(shell cat /proc/cpuinfo | grep processor | grep -o '[0-9]\+' | tail -n1) + 1)
+
 OCAMLBUILD_FLAGS =				\
 	-cflags -I,+camlp4/Camlp4Parsers	\
-	-use-ocamlfind
+	-use-ocamlfind -j $(NCPU)
 
 TARGETS =		\
 	clangaml.dylib	\

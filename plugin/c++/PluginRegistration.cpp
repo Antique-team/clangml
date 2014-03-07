@@ -1,7 +1,4 @@
 //
-//  PluginRegistration.cpp
-//  HelloClangPlugin
-//
 //  Created by Devin Coughlin on 10/16/13.
 //  Copyright (c) 2013 Devin Coughlin. All rights reserved.
 //
@@ -13,7 +10,7 @@ extern "C" {
 
 #include <clang/StaticAnalyzer/Core/CheckerRegistry.h>
 
-#include "HelloChecker.h"
+#include "OCamlChecker.h"
 
 using clang::ento::CheckerRegistry;
 
@@ -25,7 +22,7 @@ extern "C"
 void
 clang_registerCheckers (CheckerRegistry &registry)
 {
-  registry.addChecker<HelloChecker> ("coughlin.HelloChecker", "RunHelloChecker");
+  registry.addChecker<OCamlChecker> ("OCamlChecker", "RunOCamlChecker");
 }
 
 extern "C"

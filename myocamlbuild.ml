@@ -48,15 +48,15 @@ let headers = [
   "plugin/c++/clang_type_traits.h";
   "plugin/c++/dynamic_stack.h";
   "plugin/c++/enums.h";
-  "plugin/c++/HelloChecker.h";
   "plugin/c++/heterogenous_container.h";
+  "plugin/c++/OCamlChecker.h";
   "plugin/c++/OCamlVisitor.h";
   "plugin/c++/trace.h";
 ]
 
 let objects = [
   "bridgen/c++/ocaml++.o";
-  "plugin/c++/HelloChecker.o";
+  "plugin/c++/OCamlChecker.o";
   "plugin/c++/OCamlVisitor.o";
   "plugin/c++/PluginRegistration.o";
   "plugin/c++/bridge_ast.o";
@@ -72,6 +72,9 @@ let objects = [
 
 let () =
   dispatch begin function
+    | Before_options ->
+        Options.ocaml_cflags := ["-warn-error"; "A"]
+
     | After_rules ->
         rule "Produce clean bridge AST without camlp4 extensions"
           ~prod:"clang/bridge.ml"
@@ -101,25 +104,18 @@ let () =
             Cmd (S[A"bridgen/bridgen.native"; A"plugin/c++"; A"bridge_ast"; A"clang/bridge.ml"])
           end;
 
+        flag ["compile"; "c++"; "no-rtti"] (A"-fno-rtti");
+
         rule "C++ compilation"
           ~prod:"%.o"
           ~deps:("%.cpp" :: headers)
           begin fun env build ->
-            Cmd (S([
-              A("../" ^ ext ^ "/bin/clang++");
-              A"-c"; A"-o"; A(env "%.o");
-            ] @ cxxflags @ [A(env "%.cpp")]))
-          end;
+            let tags = tags_of_pathname (env "%.cpp") ++ "compile" ++ "c++" in
 
-        (* TODO: Add _tags flag for this. *)
-        rule "No-RTTI C++ compilation"
-          ~prod:"%.o"
-          ~deps:("%.no-rtti.cpp" :: headers)
-          begin fun env build ->
             Cmd (S([
               A("../" ^ ext ^ "/bin/clang++");
               A"-c"; A"-o"; A(env "%.o");
-            ] @ cxxflags @ [A"-fno-rtti"; A(env "%.no-rtti.cpp")]))
+            ] @ cxxflags @ [T tags; A(env "%.cpp")]))
           end;
 
         rule "OCaml library to object file"

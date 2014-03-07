@@ -1,0 +1,2 @@
+# Disable RTTI on this file
+"PluginRegistration.cpp": no-rtti
