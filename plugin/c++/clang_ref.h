@@ -7,6 +7,13 @@ template<typename Node>
 struct clang_ref
 {
   size_t id;
+
+  clang_ref (size_t id = -1)
+    : id (id)
+  {
+    if (id == 0)
+      failwith ("null reference passed to clang API");
+  }
 };
 
 

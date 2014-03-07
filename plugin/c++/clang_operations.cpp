@@ -11,7 +11,7 @@ CAMLprim value
 clang_canonical_type (value context, value id)
 {
   clang_context &ctx = *reinterpret_cast<clang_context *> (Bp_val (context));
-  clang_ref<Ctyp> ref { Unsigned_long_val (id) };
+  clang_ref<Ctyp> ref (Unsigned_long_val (id));
 
   clang::QualType type = ctx.refs.retrieve (ref).getCanonicalType ();
 
