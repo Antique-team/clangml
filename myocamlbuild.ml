@@ -90,7 +90,13 @@ let () =
 
         rule "Bridge AST generation"
           ~prods:["plugin/c++/bridge_ast.cpp"; "plugin/c++/bridge_ast.h"]
-          ~deps:["clang/bridge.ml"; "bridgen/bridgen.native"]
+          ~deps:[
+            "clang/bridge.ml";
+            "bridgen/bridgen.native";
+            (* This one is not a real dependency, but it makes sure
+               that the target path exists. *)
+            "plugin/c++/clang_ref.h";
+          ]
           begin fun env build ->
             Cmd (S[A"bridgen/bridgen.native"; A"plugin/c++"; A"bridge_ast"; A"clang/bridge.ml"])
           end;
@@ -105,6 +111,7 @@ let () =
             ] @ cxxflags @ [A(env "%.cpp")]))
           end;
 
+        (* TODO: Add _tags flag for this. *)
         rule "No-RTTI C++ compilation"
           ~prod:"%.o"
           ~deps:("%.no-rtti.cpp" :: headers)
@@ -112,7 +119,7 @@ let () =
             Cmd (S([
               A("../" ^ ext ^ "/bin/clang++");
               A"-c"; A"-o"; A(env "%.o");
-            ] @ cxxflags @ [A"-fno-rtti"; A(env "%.cpp")]))
+            ] @ cxxflags @ [A"-fno-rtti"; A(env "%.no-rtti.cpp")]))
           end;
 
         rule "OCaml library to object file"
