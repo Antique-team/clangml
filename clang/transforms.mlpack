@@ -1,4 +1,6 @@
 # simplify
 All
+LiftConditionals
+MapStmt
 SimplifyDeclStmt
 SplitInitialisers

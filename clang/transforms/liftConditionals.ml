@@ -20,18 +20,6 @@ let transform_decl =
     | CompoundStmt stmts ->
         MapStmt.mapCompoundStmt map_stmt state stmt stmts
 
-    | DeclStmt decls ->
-        let replacement =
-          List.rev_map (fun decl ->
-            { stmt with
-              s = DeclStmt [decl];
-              s_sloc = decl.d_sloc;
-            }
-          ) decls
-        in
-
-        (replacement, stmt)
-
     | _ ->
         MapVisitor.visit_stmt v state stmt
 

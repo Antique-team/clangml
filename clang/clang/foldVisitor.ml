@@ -10,15 +10,15 @@ type 'a visitor = {
 }
 
 
-let fold_opt v state = function
+let fold_option v state = function
   | Some value ->
       v state value
   | None ->
       state
 
 
-let fold_list v state xs =
-  List.fold_left v state xs
+let fold_list =
+  List.fold_left
 
 
 let visit_desg v state desg =
@@ -46,14 +46,14 @@ let visit_decl v state decl =
       state
   | FunctionDecl (ty, name, body) ->
       let state = v.fold_tloc state ty in
-      let state = fold_opt v.fold_stmt state body in
+      let state = fold_option v.fold_stmt state body in
       state
   | TypedefDecl (ty, name) ->
       let state = v.fold_tloc state ty in
       state
   | VarDecl (ty, name, init) ->
       let state = v.fold_tloc state ty in
-      let state = fold_opt v.fold_expr state init in
+      let state = fold_option v.fold_expr state init in
       state
   | ParmVarDecl (ty, name) ->
       let state = v.fold_tloc state ty in
@@ -63,14 +63,14 @@ let visit_decl v state decl =
       state
   | FieldDecl (ty, name, bitwidth, init) ->
       let state = v.fold_tloc state ty in
-      let state = fold_opt v.fold_expr state bitwidth in
-      let state = fold_opt v.fold_expr state init in
+      let state = fold_option v.fold_expr state bitwidth in
+      let state = fold_option v.fold_expr state init in
       state
   | EnumDecl (name, enums) ->
       let state = fold_list v.fold_decl state enums in
       state
   | EnumConstantDecl (name, value) ->
-      let state = fold_opt v.fold_expr state value in
+      let state = fold_option v.fold_expr state value in
       state
 
 
@@ -182,7 +182,7 @@ let visit_stmt v state stmt =
       state
   | CaseStmt (range_start, range_end, stmt) ->
       let state = v.fold_expr state range_start in
-      let state = fold_opt v.fold_expr state range_end in
+      let state = fold_option v.fold_expr state range_end in
       let state = v.fold_stmt state stmt in
       state
   | DefaultStmt stmt ->
@@ -197,17 +197,17 @@ let visit_stmt v state stmt =
       let state = fold_list v.fold_stmt state body in
       state
   | ReturnStmt expr ->
-      let state = fold_opt v.fold_expr state expr in
+      let state = fold_option v.fold_expr state expr in
       state
   | IfStmt (cond, then_stmt, else_stmt) ->
       let state = v.fold_expr state cond in
       let state = v.fold_stmt state then_stmt in
-      let state = fold_opt v.fold_stmt state else_stmt in
+      let state = fold_option v.fold_stmt state else_stmt in
       state
   | ForStmt (init, cond, incr, body) ->
-      let state = fold_opt v.fold_stmt state init in
-      let state = fold_opt v.fold_expr state cond in
-      let state = fold_opt v.fold_expr state incr in
+      let state = fold_option v.fold_stmt state init in
+      let state = fold_option v.fold_expr state cond in
+      let state = fold_option v.fold_expr state incr in
       let state = v.fold_stmt state body in
       state
   | WhileStmt (cond, body) ->

@@ -5,10 +5,12 @@ external clang_type_ptr : Clang.Api.context -> tloc Clang.Ref.t -> ctyp = "clang
 
 
 let run_processor (tu : decl) (file : string) (ctx : Clang.Api.context) =
+  let open Clang.Api in
+
   Gc.compact ();
   let (input, output) = Unix.open_process "_build/consumer/processor.native" in
 
-  let rec handle_request : type a. a Clang.Api.request -> a = let open Clang.Api in function
+  let rec handle_request : type a. a request -> a = function
     | Compose (msg1, msg2) ->
         let res1 = handle_request msg1 in
         let res2 = handle_request msg2 in
@@ -30,7 +32,10 @@ let run_processor (tu : decl) (file : string) (ctx : Clang.Api.context) =
         clang_canonical_type ctx id
 
     | TypePtr tloc ->
-        clang_type_ptr ctx tloc
+        if Clang.Ref.is_null tloc then
+          failure E_NullRef
+        else
+          clang_type_ptr ctx tloc
   in
 
   let rec io_loop () =

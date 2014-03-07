@@ -10,7 +10,7 @@ type 'a visitor = {
 }
 
 
-let map_opt v state = function
+let map_option v state = function
   | Some value ->
       let (state, value) = v state value in
       (state, Some value)
@@ -57,14 +57,14 @@ let visit_decl v state decl =
         (state, TranslationUnitDecl decls)
     | FunctionDecl (ty, name, body) ->
         let (state, ty) = v.map_tloc state ty in
-        let (state, body) = map_opt v.map_stmt state body in
+        let (state, body) = map_option v.map_stmt state body in
         (state, FunctionDecl (ty, name, body))
     | TypedefDecl (ty, name) ->
         let (state, ty) = v.map_tloc state ty in
         (state, TypedefDecl (ty, name))
     | VarDecl (ty, name, init) ->
         let (state, ty) = v.map_tloc state ty in
-        let (state, init) = map_opt v.map_expr state init in
+        let (state, init) = map_option v.map_expr state init in
         (state, VarDecl (ty, name, init))
     | ParmVarDecl (ty, name) ->
         let (state, ty) = v.map_tloc state ty in
@@ -74,14 +74,14 @@ let visit_decl v state decl =
         (state, RecordDecl (name, members))
     | FieldDecl (ty, name, bitwidth, init) ->
         let (state, ty) = v.map_tloc state ty in
-        let (state, bitwidth) = map_opt v.map_expr state bitwidth in
-        let (state, init) = map_opt v.map_expr state init in
+        let (state, bitwidth) = map_option v.map_expr state bitwidth in
+        let (state, init) = map_option v.map_expr state init in
         (state, FieldDecl (ty, name, bitwidth, init))
     | EnumDecl (name, enums) ->
         let (state, enums) = map_list v.map_decl state enums in
         (state, EnumDecl (name, enums))
     | EnumConstantDecl (name, value) ->
-        let (state, value) = map_opt v.map_expr state value in
+        let (state, value) = map_option v.map_expr state value in
         (state, EnumConstantDecl (name, value))
   in
   (state, { decl with d })
@@ -199,7 +199,7 @@ let visit_stmt v state stmt =
         (state, LabelStmt (label, stmt))
     | CaseStmt (range_start, range_end, stmt) ->
         let (state, range_start) = v.map_expr state range_start in
-        let (state, range_end) = map_opt v.map_expr state range_end in
+        let (state, range_end) = map_option v.map_expr state range_end in
         let (state, stmt) = v.map_stmt state stmt in
         (state, CaseStmt (range_start, range_end, stmt))
     | DefaultStmt stmt ->
@@ -214,17 +214,17 @@ let visit_stmt v state stmt =
         let (state, body) = map_list v.map_stmt state body in
         (state, CompoundStmt body)
     | ReturnStmt expr ->
-        let (state, expr) = map_opt v.map_expr state expr in
+        let (state, expr) = map_option v.map_expr state expr in
         (state, ReturnStmt expr)
     | IfStmt (cond, then_stmt, else_stmt) ->
         let (state, cond) = v.map_expr state cond in
         let (state, then_stmt) = v.map_stmt state then_stmt in
-        let (state, else_stmt) = map_opt v.map_stmt state else_stmt in
+        let (state, else_stmt) = map_option v.map_stmt state else_stmt in
         (state, IfStmt (cond, then_stmt, else_stmt))
     | ForStmt (init, cond, incr, body) ->
-        let (state, init) = map_opt v.map_stmt state init in
-        let (state, cond) = map_opt v.map_expr state cond in
-        let (state, incr) = map_opt v.map_expr state incr in
+        let (state, init) = map_option v.map_stmt state init in
+        let (state, cond) = map_option v.map_expr state cond in
+        let (state, incr) = map_option v.map_expr state incr in
         let (state, body) = v.map_stmt state body in
         (state, ForStmt (init, cond, incr, body))
     | WhileStmt (cond, body) ->

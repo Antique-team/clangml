@@ -18,16 +18,7 @@ let transform_decl =
   and map_stmt state stmt =
     match stmt.s with
     | CompoundStmt stmts ->
-        let stmts =
-          List.fold_left (fun stmts stmt ->
-            let (state, stmt) = map_stmt state stmt in
-            match state with
-            | [] -> stmt :: stmts
-            | xs -> xs @ stmts
-          ) [] stmts
-        in
-
-        (state, { stmt with s = CompoundStmt (List.rev stmts) })
+        MapStmt.mapCompoundStmt map_stmt state stmt stmts
 
     | DeclStmt [{ d = VarDecl (ty, name, Some init) } as decl] ->
         let init_stmt = {

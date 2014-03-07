@@ -39,10 +39,30 @@ type _ request =
   | TypePtr : tloc Ref.t -> ctyp request
 
 
+type error =
+  | E_NullRef
+
+type 'a response =
+  | Error of error
+  | Success of 'a
+
+exception E of error
+
+
+let failure e =
+  raise (E e)
+
+
 (* Server function. *)
 let respond input output (handle : 'a request -> 'a) : unit =
   let request = Marshal.from_channel input in
-  Marshal.to_channel output (handle request) [];
+  let response =
+    try
+      Success (handle request)
+    with E error ->
+      Error error
+  in
+  Marshal.to_channel output response [];
   flush output
 
 
@@ -50,4 +70,8 @@ let respond input output (handle : 'a request -> 'a) : unit =
 let request (msg : 'a request) : 'a =
   Marshal.to_channel stdout msg [];
   flush stdout;
-  Marshal.from_channel stdin
+  match Marshal.from_channel stdin with
+  | Error error ->
+      raise (E error)
+  | Success value ->
+      value
