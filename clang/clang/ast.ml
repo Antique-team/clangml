@@ -229,7 +229,10 @@ type sloc = Bridge.sloc = {
 } deriving (Show)
 
 
-type designator = Bridge.designator = {
+(* short-cut *)
+type desg = designator
+
+and designator = Bridge.designator = {
   dr : designator_;
   dr_sloc : sloc;
 }
@@ -307,6 +310,8 @@ and stmt_ = Bridge.stmt_ =
   | SwitchStmt			of (* value *)expr * (* body *)stmt
   | DeclStmt			of (* decls *)decl list
 
+
+and tloc = type_loc
 
 and type_loc = Bridge.type_loc = {
   tl      : type_loc_;

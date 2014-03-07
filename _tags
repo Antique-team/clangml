@@ -1,8 +1,9 @@
 # Subdirectories
-"bridgen": include
-"common": include
-"consumer": include
-"plugin": include
-"util": include
+"bridgen":	include
+"clang":	include
+"consumer":	include
+"plugin":	include
+"util":		include
 
 true: annot
+true: debug

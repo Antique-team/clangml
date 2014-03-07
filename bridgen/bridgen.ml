@@ -66,6 +66,7 @@ let sum_type_is_enum (sum_type_name, branches) =
 
 let type_is_enum = let open Parse in function
   | SumType ty -> sum_type_is_enum ty
+  | AliasType _
   | RecordType _ -> false
   | RecursiveType _ -> failwith "type_is_enum cannot handle recursive types"
   | Version _ -> failwith "Version in type list"
@@ -377,6 +378,7 @@ let gen_code_for_record_type ctx (record_type : Parse.record_type) =
 
 let name_of_type = let open Parse in function
   | SumType (name, _)
+  | AliasType (name, _)
   | RecordType (name, _) -> name
   | Version _ -> failwith "version has no name"
   | RecursiveType _ -> failwith "recursive types have no name"
@@ -385,6 +387,7 @@ let name_of_type = let open Parse in function
 let gen_code_for_ocaml_type ctx = let open Parse in function
   | SumType ty -> gen_code_for_sum_type ctx ty
   | RecordType ty -> gen_code_for_record_type ctx ty
+  | AliasType _ -> []
   | Version _ -> Log.err "version in recursive type"
   | RecursiveType _ -> Log.err "recursive type in recursive type"
 
@@ -421,6 +424,8 @@ let partition_type_names =
           (enums, fst ty :: classes)
     | Parse.RecordType (name, _) ->
         (enums, name :: classes)
+    | Parse.AliasType _ ->
+        (enums, classes)
     | Parse.Version _ -> Log.err "version does not have a type name"
     | Parse.RecursiveType _ -> Log.err "recursive types do not have a type name"
   ) ([], [])

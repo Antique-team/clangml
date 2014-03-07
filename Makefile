@@ -8,8 +8,9 @@ TARGETS =		\
 	clangaml.dylib	\
 	processor.native
 
-build:
+myclang: $(shell find */ -type f -not -wholename "_build/*")
 	ocamlbuild $(OCAMLBUILD_FLAGS) $(TARGETS)
+	touch $@
 
 clean:
 	ocamlbuild -clean
@@ -27,15 +28,15 @@ CLANGFLAGS =			\
 	-DTEST_ALL		\
 	-include "memcad.h"
 
-check: build myclang test.c
+check: myclang test.c
 	./myclang $(CLANGFLAGS) test.c
 
-%.test: % build myclang
+%.test: % myclang
 	./myclang $(CLANGFLAGS) $<
 
 define testsuite
 TESTSUITE.$1 = $2
-check-$1: build myclang
+check-$1: myclang
 	./myclang $(CLANGFLAGS) $$(TESTSUITE.$1)
 
 check-$1-separate: $$(TESTSUITE.$1:=.test)
@@ -218,4 +219,4 @@ ALDOR_SRC =		\
 	version.c	\
 	xfloat.c	\
 	xfloat_t.c
-$(eval $(call testsuite,aldor,$(addprefix ../../github/_build/src/lang/aldor/compiler/,$(ALDOR_SRC))))
+$(eval $(call testsuite,aldor,$(addprefix ../github/_build/src/lang/aldor/compiler/,$(ALDOR_SRC))))

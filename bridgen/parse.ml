@@ -42,6 +42,7 @@ type record_type = (* name *)string * (* members *)record_member list
   deriving (Show)
 
 type ocaml_type =
+  | AliasType of string * basic_type
   | SumType of sum_type
   | RecordType of record_type
   | RecursiveType of ocaml_type list
@@ -187,6 +188,8 @@ let map_rec_type = function
       SumType (name, map_sum_type ast_branches)
   | Ast.TyDcl (_, name, [], <:ctyp<{ $members$ }>>, []) ->
       RecordType (name, map_record_members members)
+  | Ast.TyDcl (_, name, [], other, []) ->
+      AliasType (name, ast_type_to_type other)
   | ty ->
       (* Perhaps ignore this instead. *)
       Log.unimp "only sum types are supported"

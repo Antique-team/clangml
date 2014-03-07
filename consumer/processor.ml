@@ -34,7 +34,10 @@ let process () =
 
   let decl =
     try
-      let decl = Clang.Simplify.simplify_unit decl in
+      let decl =
+        decl
+        |> Transforms.SimplifyDeclStmt.simplify_unit
+      in
       prerr_string "--------------------- Simple AST --------------------";
       Format.fprintf Format.err_formatter "@[<v2>@,%a@]@."
         Clang.Pp.pp_decl decl;

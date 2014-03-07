@@ -72,36 +72,36 @@ let objects = [
 
 let () =
   dispatch begin function
-    | Before_options ->
-        Options.ocaml_cflags := ["-warn-error"; "A"]
+    (*| Before_options ->*)
+        (*Options.ocaml_cflags := ["-warn-error"; "A"]*)
 
     | After_rules ->
         rule "Produce clean bridge AST without camlp4 extensions"
-          ~prod:"clang/bridge.ml"
-          ~dep:"clang/ast.ml"
+          ~prod:"clang/clang/bridge.ml"
+          ~dep:"clang/clang/ast.ml"
           begin fun env build ->
             Cmd (S[
               A"grep"; A"-v"; A"^\\s*deriving (Show)\\s*$";
-              A"clang/ast.ml";
+              A"clang/clang/ast.ml";
               Sh"|";
               A"sed"; A"-e";
               A"s/\\s\\+deriving (Show)//;s/= Bridge.\\w\\+ //";
               Sh">";
-              A"clang/bridge.ml";
+              A"clang/clang/bridge.ml";
             ])
           end;
 
         rule "Bridge AST generation"
           ~prods:["plugin/c++/bridge_ast.cpp"; "plugin/c++/bridge_ast.h"]
           ~deps:[
-            "clang/bridge.ml";
+            "clang/clang/bridge.ml";
             "bridgen/bridgen.native";
             (* This one is not a real dependency, but it makes sure
                that the target path exists. *)
             "plugin/c++/clang_ref.h";
           ]
           begin fun env build ->
-            Cmd (S[A"bridgen/bridgen.native"; A"plugin/c++"; A"bridge_ast"; A"clang/bridge.ml"])
+            Cmd (S[A"bridgen/bridgen.native"; A"plugin/c++"; A"bridge_ast"; A"clang/clang/bridge.ml"])
           end;
 
         flag ["compile"; "c++"; "no-rtti"] (A"-fno-rtti");
@@ -127,7 +127,7 @@ let () =
               "ocamlopt";
               "util/formatx.cmx";
               "util/logger.cmx";
-              "clang.cmx";
+              "clang/clang.cmx";
               env "%.cmxa";
               "-output-obj";
               "-o";
