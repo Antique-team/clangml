@@ -12,7 +12,7 @@ struct clang_ref
     : id (id)
   {
     if (id == 0)
-      failwith ("null reference passed to clang API");
+      throw std::runtime_error ("null reference passed to clang API");
   }
 };
 

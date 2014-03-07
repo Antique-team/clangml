@@ -35,6 +35,9 @@ type _ request =
   (* Get the canonical type for a ctyp node. *)
   | CanonicalType : ctyp Ref.t -> ctyp request
 
+  (* Get the type for a type_loc. *)
+  | TypePtr : tloc Ref.t -> ctyp request
+
 
 (* Server function. *)
 let respond input output (handle : 'a request -> 'a) : unit =

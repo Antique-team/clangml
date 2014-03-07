@@ -1,6 +1,7 @@
-(* A reference to a clang AST node object. This can be freely
-   passed over the client/server communication channel. *)
-type 'a t = private int
+type 'a t = int
+
+let null = 0
+let is_null ref = ref = 0
 
 module Show_t(S : Deriving_Show.Show) =
   Deriving_Show.Defaults(struct
@@ -8,6 +9,6 @@ module Show_t(S : Deriving_Show.Show) =
     type a = S.a t
 
     let format fmt (a : a) =
-      Format.fprintf fmt "<%d>" (a :> int)
+      Format.fprintf fmt "<%d>" a
 
   end)

@@ -30,17 +30,34 @@ let transform_decl =
 
         (state, { stmt with s = CompoundStmt (List.rev stmts) })
 
-    | DeclStmt decls ->
-        let replacement =
-          List.rev_map (fun decl ->
-            { stmt with
-              s = DeclStmt [decl];
-              s_sloc = decl.d_sloc;
-            }
-          ) decls
-        in
+    | DeclStmt [{ d = VarDecl (ty, name, Some init) } as decl] ->
+        let init_stmt = {
+          s = ExprStmt {
+              e = BinaryOperator (
+                  BO_Assign,
+                  { e = DeclRefExpr name;
+                    e_sloc = decl.d_sloc;
+                    e_type = Api.(request @@ TypePtr ty.tl_cref);
+                    e_cref = Ref.null;
+                  },
+                  init
+                );
+              e_type = init.e_type;
+              e_sloc = decl.d_sloc;
+              e_cref = Ref.null;
+            };
+          s_sloc = init.e_sloc;
+          s_cref = Ref.null;
+        } in
 
-        (replacement, stmt)
+        let state = [
+          init_stmt;
+          { stmt with
+            s = DeclStmt [{ decl with d = VarDecl (ty, name, None) }];
+          };
+        ] in
+
+        (state, stmt)
 
     | _ ->
         Visitor.visit_stmt v state stmt

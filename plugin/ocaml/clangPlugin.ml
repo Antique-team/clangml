@@ -1,6 +1,7 @@
 open Clang.Ast
 
 external clang_canonical_type : Clang.Api.context -> ctyp Clang.Ref.t -> ctyp = "clang_canonical_type"
+external clang_type_ptr : Clang.Api.context -> tloc Clang.Ref.t -> ctyp = "clang_type_ptr"
 
 
 let run_processor (tu : decl) (file : string) (ctx : Clang.Api.context) =
@@ -27,6 +28,9 @@ let run_processor (tu : decl) (file : string) (ctx : Clang.Api.context) =
 
     | CanonicalType id ->
         clang_canonical_type ctx id
+
+    | TypePtr tloc ->
+        clang_type_ptr ctx tloc
   in
 
   let rec io_loop () =

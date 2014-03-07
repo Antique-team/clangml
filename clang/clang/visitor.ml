@@ -57,8 +57,6 @@ let visit_decl v state decl =
         (state, TranslationUnitDecl decls)
     | FunctionDecl (ty, name, body) ->
         let (state, ty) = v.map_tloc state ty in
-        prerr_endline "HERE";
-        prerr_endline @@ Show.show<stmt option> body;
         let (state, body) = map_opt v.map_stmt state body in
         (state, FunctionDecl (ty, name, body))
     | TypedefDecl (ty, name) ->
@@ -365,4 +363,4 @@ let () =
     map_ctyp = (fun state desg -> visit_ctyp v state desg);
     map_tloc = (fun state desg -> visit_tloc v state desg);
     map_stmt = (fun state desg -> visit_stmt v state desg);
-  } in ()
+  } in ignore v

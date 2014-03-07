@@ -32,20 +32,10 @@ let process () =
   Format.fprintf Format.err_formatter "@[<v2>@,%a@]@."
     Clang.Pp.pp_decl decl;
 
-  let decl =
-    try
-      let decl =
-        decl
-        |> Transforms.SimplifyDeclStmt.simplify_unit
-      in
-      prerr_string "--------------------- Simple AST --------------------";
-      Format.fprintf Format.err_formatter "@[<v2>@,%a@]@."
-        Clang.Pp.pp_decl decl;
-      decl
-    with Failure msg ->
-      Format.fprintf Format.err_formatter "Failure: %s" msg;
-      decl
-  in
+  let decl = Transforms.All.transform_decl decl in
+  prerr_string "--------------------- Simple AST --------------------";
+  Format.fprintf Format.err_formatter "@[<v2>@,%a@]@."
+    Clang.Pp.pp_decl decl;
 
   prerr_endline "----------------- Clang -> MemCAD -------------------";
   C_utils.ppi_c_prog "" stderr (Transform.c_prog_from_decl decl);
