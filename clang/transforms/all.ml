@@ -1,5 +1,7 @@
-let (%) f g = fun x -> f (g x)
+open Clang.Prelude
 
-let transform_decl =
-  SplitInitialisers.transform_decl
-  % SimplifyDeclStmt.transform_decl
+let transform_decl decl =
+  decl
+  |> SimplifyDeclStmt.transform_decl
+  |> SplitInitialisers.transform_decl
+  (*|> LiftConditionals.transform_decl*)

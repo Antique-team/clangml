@@ -1,12 +1,11 @@
 open Clang
-
-let (%) f g = fun x -> f (g x)
+open Prelude
 
 
 let transform_decl =
   let open Ast in
 
-  let rec v = Visitor.({
+  let rec v = MapVisitor.({
     map_desg = (fun state desg -> visit_desg v state desg);
     map_decl = (fun state desg -> visit_decl v state desg);
     map_expr = (fun state desg -> visit_expr v state desg);
@@ -59,9 +58,12 @@ let transform_decl =
 
         (state, stmt)
 
+    | DeclStmt (_::_::_) ->
+        failwith "SplitInitialisers cannot handle multiple declarations"
+
     | _ ->
-        Visitor.visit_stmt v state stmt
+        MapVisitor.visit_stmt v state stmt
 
   in
 
-  snd % Visitor.visit_decl v []
+  snd % MapVisitor.visit_decl v []

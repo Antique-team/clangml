@@ -2,9 +2,11 @@
 Api
 Ast
 Bridge
+FoldVisitor
 ImplicitCast
+MapVisitor
 Pp
+Prelude
 Query
 Ref
 Sloc
-Visitor
