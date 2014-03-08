@@ -1,4 +1,5 @@
 TODO:
+- add a way to create new clang AST nodes from ocaml AST nodes
 - use clang AST visitor to construct a bridge-AST
 - figure out where to put the type/location information
   - in the AST itself?
