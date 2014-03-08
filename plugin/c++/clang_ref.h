@@ -3,24 +3,19 @@
 
 #include "ocaml++.h"
 
-template<typename Node>
-struct clang_ref
+struct clang_ref_base
 {
   size_t id;
 
-  clang_ref ()
-    : id (-1)
-  {
-  }
+  clang_ref_base ();
+  clang_ref_base (size_t id);
+};
 
-  clang_ref (size_t id)
-    : id (id)
-  {
-    if (id == 0)
-      throw std::runtime_error ("null reference passed to clang API");
-    if (id == -1)
-      throw std::runtime_error ("invalid reference passed to clang API");
-  }
+template<typename Node>
+struct clang_ref
+  : clang_ref_base
+{
+  using clang_ref_base::clang_ref_base;
 };
 
 

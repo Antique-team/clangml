@@ -8,25 +8,9 @@
 
 namespace clang
 {
-  static bool
-  operator < (Qualifiers a, Qualifiers b)
-  {
-    return a == b ? 0 : b.isStrictSupersetOf (a);
-  }
-
-  static bool
-  operator < (QualType a, QualType b)
-  {
-    return a.getTypePtr () < b.getTypePtr ()
-        || a.getLocalQualifiers () < b.getLocalQualifiers ();
-  }
-
-  static bool
-  operator < (TypeLoc a, TypeLoc b)
-  {
-    // This ignores the source locations.
-    return a.getType () < b.getType ();
-  }
+  bool operator < (Qualifiers a, Qualifiers b);
+  bool operator < (QualType a, QualType b);
+  bool operator < (TypeLoc a, TypeLoc b);
 }
 
 

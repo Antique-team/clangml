@@ -1,3 +1,8 @@
+#ifndef CLANG_RANGES_H
+#define CLANG_RANGES_H
+
+#include <boost/range/iterator_range.hpp>
+
 /********************************************************
  * <HACKS FOR CLANG INELEGANCES>
  * TODO: Remove when clang interfaces improve.
@@ -59,3 +64,5 @@ arg_type_range = [] (clang::FunctionProtoType *T)
 /********************************************************
  * </HACKS FOR CLANG INELEGANCES>
  ********************************************************/
+
+#endif /* CLANG_RANGES_H */

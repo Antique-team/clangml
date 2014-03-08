@@ -7,6 +7,7 @@ let atomise = List.map (fun a -> A a)
 
 let cxxflags = atomise [
   "-Ibridgen/c++";
+  "-Iplugin/c++";
   "-I../" ^ clangdir ^ "/include";
   "-Icamlp4_autogen/cutil";
   "-D__STDC_CONSTANT_MACROS";
@@ -40,31 +41,44 @@ let ldflags = [
 
 let headers = [
   "bridgen/c++/ocaml++.h";
+  "plugin/c++/OCamlVisitor/OCamlVisitor.h";
+  "plugin/c++/OCamlVisitor/operators.h";
+  "plugin/c++/OCamlChecker.h";
   "plugin/c++/bridge_ast.h";
+  "plugin/c++/bridge_ast_of.h";
   "plugin/c++/bridge_cache.h";
   "plugin/c++/clang_context.h";
-  "plugin/c++/clang_hacks.h";
+  "plugin/c++/clang_enums.h";
+  "plugin/c++/clang_ranges.h";
   "plugin/c++/clang_ref.h";
   "plugin/c++/clang_ref_holder.h";
   "plugin/c++/clang_type_traits.h";
+  "plugin/c++/delayed_exit.h";
   "plugin/c++/dynamic_stack.h";
-  "plugin/c++/enums.h";
   "plugin/c++/heterogenous_container.h";
-  "plugin/c++/OCamlChecker.h";
-  "plugin/c++/OCamlVisitor.h";
   "plugin/c++/trace.h";
 ]
 
 let objects = [
   "bridgen/c++/ocaml++.o";
+  "plugin/c++/OCamlVisitor/OCamlVisitor.o";
+  "plugin/c++/OCamlVisitor/Decl.o";
+  "plugin/c++/OCamlVisitor/Expr.o";
+  "plugin/c++/OCamlVisitor/Stmt.o";
+  "plugin/c++/OCamlVisitor/Type.o";
+  "plugin/c++/OCamlVisitor/TypeLoc.o";
   "plugin/c++/OCamlChecker.o";
-  "plugin/c++/OCamlVisitor.o";
   "plugin/c++/PluginRegistration.o";
   "plugin/c++/bridge_ast.o";
+  "plugin/c++/bridge_ast_of.o";
   "plugin/c++/bridge_cache.o";
   "plugin/c++/clang_context.o";
+  "plugin/c++/clang_enums.o";
   "plugin/c++/clang_operations.o";
+  "plugin/c++/clang_ref.o";
   "plugin/c++/clang_ref_holder.o";
+  "plugin/c++/delayed_exit.o";
+  "plugin/c++/dynamic_stack.o";
   "plugin/c++/heterogenous_container.o";
   "plugin/c++/trace.o";
   "plugin/ocaml/clangLib.o";

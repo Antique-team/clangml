@@ -5,13 +5,13 @@ extern "C" {
 #include <caml/mlvalues.h>
 }
 
-#include <clang/StaticAnalyzer/Core/BugReporter/BugReporter.h>
+#include <clang/StaticAnalyzer/Core/PathSensitive/AnalysisManager.h>
 
 #include <cstdio>
 
 #include "OCamlChecker.h"
-#include "OCamlVisitor.h"
 #include "bridge_ast.h"
+#include "bridge_ast_of.h"
 #include "clang_context.h"
 #include "trace.h"
 
@@ -74,7 +74,7 @@ OCamlChecker::checkASTDecl (clang::TranslationUnitDecl const *D,
       OCamlADTBase::reset_statistics ();
 
       clang_context ctx = {
-        BR.getSourceManager (),
+        Mgr.getSourceManager (),
       };
 
       result = to_value (D, ctx);

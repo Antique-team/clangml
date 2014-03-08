@@ -1,4 +1,9 @@
-static PredefinedExpr
+#include "clang_enums.h"
+
+using namespace bridge_ast;
+
+
+PredefinedExpr
 translate_predefined_expr (clang::PredefinedExpr::IdentType kind)
 {
   switch (kind)
@@ -14,7 +19,7 @@ translate_predefined_expr (clang::PredefinedExpr::IdentType kind)
 }
 
 
-static TagTypeKind
+TagTypeKind
 translate_tag_type_kind (clang::TagTypeKind kind)
 {
   switch (kind)
@@ -29,7 +34,7 @@ translate_tag_type_kind (clang::TagTypeKind kind)
 }
 
 
-static ElaboratedTypeKeyword
+ElaboratedTypeKeyword
 translate_elaborated_type_keyword (clang::ElaboratedTypeKeyword kw)
 {
   switch (kw)
@@ -46,7 +51,7 @@ translate_elaborated_type_keyword (clang::ElaboratedTypeKeyword kw)
 }
 
 
-static BuiltinType
+BuiltinType
 translate_builtin_type (clang::BuiltinType::Kind kind)
 {
   switch (kind)
@@ -60,7 +65,7 @@ translate_builtin_type (clang::BuiltinType::Kind kind)
 }
 
 
-static CastKind
+CastKind
 translate_cast_kind (clang::CastKind kind)
 {
   switch (kind)
