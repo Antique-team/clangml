@@ -7,7 +7,7 @@ let mapCompoundStmt map_stmt state stmt stmts =
       let (state, stmt) = map_stmt state stmt in
       match state with
       | [] -> stmt :: stmts
-      | xs -> xs @ stmts
+      | replacement -> replacement @ stmts
     ) [] stmts
   in
 
