@@ -46,6 +46,18 @@ let assign var expr =
   }
 
 
+let append_stmts stmt stmts =
+  let open Ast in
+
+  match stmts with
+  | [] -> stmt
+  | stmts ->
+      { s = CompoundStmt (stmt :: stmts);
+        s_sloc = stmt.s_sloc;
+        s_cref = Ref.null;
+      }
+
+
 let transform_decl =
   let open Ast in
 
@@ -151,16 +163,6 @@ let transform_decl =
     | [], [] -> stmt
     | stmts, decls ->
         { s = CompoundStmt (List.rev @@ stmt :: stmts @ decls);
-          s_sloc = stmt.s_sloc;
-          s_cref = Ref.null;
-        }
-
-
-  and append_stmts stmt stmts =
-    match stmts with
-    | [] -> stmt
-    | stmts ->
-        { s = CompoundStmt (stmt :: stmts);
           s_sloc = stmt.s_sloc;
           s_cref = Ref.null;
         }
