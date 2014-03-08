@@ -501,4 +501,4 @@ let () =
   | [|_; dir; basename; source|] ->
       parse_and_generate dir basename source
   | _ ->
-      print_endline "Usage: c++adt <output-path> <basename> <source>"
+      print_endline "Usage: bridgen <output-path> <basename> <source>"

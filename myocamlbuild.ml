@@ -6,7 +6,7 @@ let ocamldir = Sys.getenv "HOME" ^ "/.opam/4.01.0+PIC"
 let atomise = List.map (fun a -> A a)
 
 let cxxflags = atomise [
-  "-Ibridgen/c++";
+  "-Itools/bridgen/c++";
   "-Iplugin/c++";
   "-I../" ^ clangdir ^ "/include";
   "-Icamlp4_autogen/cutil";
@@ -40,7 +40,7 @@ let ldflags = [
 ]
 
 let headers = [
-  "bridgen/c++/ocaml++.h";
+  "tools/bridgen/c++/ocaml++.h";
   "plugin/c++/OCamlVisitor/OCamlVisitor.h";
   "plugin/c++/OCamlVisitor/operators.h";
   "plugin/c++/OCamlChecker.h";
@@ -60,7 +60,7 @@ let headers = [
 ]
 
 let objects = [
-  "bridgen/c++/ocaml++.o";
+  "tools/bridgen/c++/ocaml++.o";
   "plugin/c++/OCamlVisitor/OCamlVisitor.o";
   "plugin/c++/OCamlVisitor/Decl.o";
   "plugin/c++/OCamlVisitor/Expr.o";
@@ -110,13 +110,13 @@ let () =
           ~prods:["plugin/c++/bridge_ast.cpp"; "plugin/c++/bridge_ast.h"]
           ~deps:[
             "clang/clang/bridge.ml";
-            "bridgen/bridgen.native";
+            "tools/bridgen/bridgen.native";
             (* This one is not a real dependency, but it makes sure
                that the target path exists. *)
             "plugin/c++/clang_ref.h";
           ]
           begin fun env build ->
-            Cmd (S[A"bridgen/bridgen.native"; A"plugin/c++"; A"bridge_ast"; A"clang/clang/bridge.ml"])
+            Cmd (S[A"tools/bridgen/bridgen.native"; A"plugin/c++"; A"bridge_ast"; A"clang/clang/bridge.ml"])
           end;
 
         flag ["compile"; "c++"; "no-rtti"] (A"-fno-rtti");
