@@ -37,16 +37,6 @@ let assign var expr =
   }
 
 
-let make_type_loc sloc ty =
-  let open Ast in
-
-  {
-    tl = BuiltinTypeLoc BT_Int;
-    tl_sloc = sloc;
-    tl_cref = Ref.null;
-  }
-
-
 let transform_decl =
   let open Ast in
 
@@ -84,7 +74,7 @@ let transform_decl =
         let var_decl = {
           s = DeclStmt [{
               d = VarDecl (
-                  make_type_loc expr.e_sloc expr.e_type,
+                  Types.tloc_of_ctyp expr.e_sloc expr.e_type,
                   var,
                   None
                 );
