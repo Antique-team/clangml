@@ -20,7 +20,7 @@ struct concrete_clang_ref_holder
 
   typename clang_type<T>::type retrieve (clang_ref<T> ref)
   {
-    return values.at (ref.id);
+    return values.at (ref.id - 1);
   }
 };
 
