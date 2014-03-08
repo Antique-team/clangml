@@ -1,8 +1,3 @@
-//
-//  Created by Devin Coughlin on 10/16/13.
-//  Copyright (c) 2013 Devin Coughlin. All rights reserved.
-//
-
 extern "C" {
 #include <caml/alloc.h>
 #include <caml/callback.h>
@@ -10,15 +5,15 @@ extern "C" {
 #include <caml/mlvalues.h>
 }
 
+#include <clang/StaticAnalyzer/Core/BugReporter/BugReporter.h>
+
 #include <cstdio>
-#include <llvm/Support/raw_ostream.h>
 
 #include "OCamlChecker.h"
 #include "OCamlVisitor.h"
-#include "trace.h"
-
 #include "bridge_ast.h"
 #include "clang_context.h"
+#include "trace.h"
 
 void
 initialize_caml ()

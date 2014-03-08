@@ -1,5 +1,5 @@
-#include "clang_context.h"
 #include "OCamlVisitor.h"
+#include "clang_context.h"
 
 using namespace bridge_ast;
 

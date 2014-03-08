@@ -1,6 +1,6 @@
 #include "OCamlVisitor.h"
-#include "dynamic_stack.h"
 #include "clang_context.h"
+#include "dynamic_stack.h"
 #include "trace.h"
 
 #include <clang/AST/RecursiveASTVisitor.h>

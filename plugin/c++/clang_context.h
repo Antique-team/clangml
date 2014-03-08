@@ -1,8 +1,8 @@
 #ifndef CLANG_CONTEXT_H
 #define CLANG_CONTEXT_H
 
-#include "clang_ref_holder.h"
 #include "bridge_cache.h"
+#include "clang_ref_holder.h"
 
 namespace clang
 {
