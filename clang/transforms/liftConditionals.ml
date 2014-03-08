@@ -3,13 +3,22 @@ open Prelude
 
 
 type state = {
+  inserted_decls : Ast.stmt list;
   inserted_stmts : Ast.stmt list;
   generated_vars : int;
 }
 
 let empty_state = {
+  inserted_decls = [];
   inserted_stmts = [];
   generated_vars = 0;
+}
+
+
+let clear_state state = {
+  state with
+  inserted_decls = [];
+  inserted_stmts = [];
 }
 
 
@@ -87,14 +96,12 @@ let transform_decl =
 
         let (state, if_stmt) = map_stmt state if_stmt in
 
-        let inserted_stmts = [
-          if_stmt;
-          var_decl;
-        ] @ state.inserted_stmts in
+        let inserted_stmts = if_stmt :: state.inserted_stmts in
+        let inserted_decls = var_decl :: state.inserted_decls in
 
         let e = DeclRefExpr var in
 
-        ({ state with inserted_stmts }, { expr with e })
+        ({ state with inserted_stmts; inserted_decls }, { expr with e })
 
     | _ ->
         MapVisitor.visit_expr v state expr
@@ -107,8 +114,8 @@ let transform_decl =
           List.fold_left (fun (state, stmts) stmt ->
             let (state, stmt) = map_stmt state stmt in
             (
-              { state with inserted_stmts = [] },
-              stmt :: state.inserted_stmts @ stmts
+              clear_state state,
+              stmt :: state.inserted_stmts @ state.inserted_decls @ stmts
             )
           ) (state, []) stmts
         in
@@ -122,18 +129,38 @@ let transform_decl =
 
         (state, { stmt with s = IfStmt (cond, then_stmt, else_stmt) })
 
+    | WhileStmt (cond, body) ->
+        let (state, cond) = map_expr state cond in
+        let body = map_sub_stmt state body in
+
+        (* Execute the replacement code for the condition again
+           after each iteration. *)
+        let body = append_stmts body state.inserted_stmts in
+
+        (state, { stmt with s = WhileStmt (cond, body) })
+
     | _ ->
         MapVisitor.visit_stmt v state stmt
 
 
   and map_sub_stmt state stmt =
     let (state, stmt) =
-      map_stmt { state with inserted_stmts = [] } stmt
+      map_stmt (clear_state state) stmt
     in
-    match state.inserted_stmts with
+    match state.inserted_stmts, state.inserted_decls with
+    | [], [] -> stmt
+    | stmts, decls ->
+        { s = CompoundStmt (List.rev @@ stmt :: stmts @ decls);
+          s_sloc = stmt.s_sloc;
+          s_cref = Ref.null;
+        }
+
+
+  and append_stmts stmt stmts =
+    match stmts with
     | [] -> stmt
     | stmts ->
-        { s = CompoundStmt (List.rev @@ stmt :: stmts);
+        { s = CompoundStmt (stmt :: stmts);
           s_sloc = stmt.s_sloc;
           s_cref = Ref.null;
         }
