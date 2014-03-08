@@ -8,7 +8,7 @@ TARGETS =		\
 	clangaml.dylib	\
 	processor.native
 
-myclang: $(shell find */ -type f -not -wholename "_build/*")
+myclang: $(shell find */ -type f -not -wholename "_build/*") myocamlbuild.ml _tags
 	ocamlbuild $(OCAMLBUILD_FLAGS) $(TARGETS)
 	touch $@
 

@@ -1,26 +1,27 @@
 open Ocamlbuild_plugin
 
-let ext = "plugin/ext/clang/build/Debug+Asserts"
+let clangdir = "plugin/ext/clang/build/Debug+Asserts"
 let ocamldir = Sys.getenv "HOME" ^ "/.opam/4.01.0+PIC"
 
 let atomise = List.map (fun a -> A a)
 
 let cxxflags = atomise [
   "-Ibridgen/c++";
-  "-I../" ^ ext ^ "/include";
+  "-I../" ^ clangdir ^ "/include";
   "-Icamlp4_autogen/cutil";
   "-D__STDC_CONSTANT_MACROS";
   "-D__STDC_LIMIT_MACROS";
   "-fPIC";
+  "-fvisibility=hidden";
   "-std=c++11";
   "-ggdb3";
   "-O3";
 ]
 
-let ldflags = atomise [
+let ldflags = [
   "-Wl,-z,defs";
   "-shared";
-  "-L../" ^ ext ^ "/lib";
+  "-L../" ^ clangdir ^ "/lib";
   "-lclangStaticAnalyzerCore";
   "-lclangAnalysis";
   "-lclangAST";
@@ -113,7 +114,7 @@ let () =
             let tags = tags_of_pathname (env "%.cpp") ++ "compile" ++ "c++" in
 
             Cmd (S([
-              A("../" ^ ext ^ "/bin/clang++");
+              A("../" ^ clangdir ^ "/bin/clang++");
               A"-c"; A"-o"; A(env "%.o");
             ] @ cxxflags @ [T tags; A(env "%.cpp")]))
           end;
@@ -143,11 +144,11 @@ let () =
           ~prod:"clangaml.dylib"
           ~deps:objects
           begin fun env build ->
-            Cmd (S([
-              A("../" ^ ext ^ "/bin/clang++");
-              A"-o";
-              A"clangaml.dylib" ;
-            ] @ atomise objects @ ldflags))
+            Cmd (S(atomise @@ [
+              "../" ^ clangdir ^ "/bin/clang++";
+              "-o";
+              "clangaml.dylib" ;
+            ] @ objects @ ldflags))
           end;
 
     | _ ->
