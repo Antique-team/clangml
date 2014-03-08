@@ -1,4 +1,5 @@
 open Ast
+open Prelude
 
 (* C++ side context. It is required on the server side
    to resolve 'a Ref.t to actual clang AST node objects.
@@ -63,6 +64,9 @@ let spawn prog (handle : 'a request -> 'a) : Unix.process_status =
       (* Start client program. *)
       Unix.execv prog [|
         prog;
+        (* The fd numbers are passed on the command line. In the
+           client process, these fds are still open, but the program
+           needs to be told what they are. *)
         String.escaped (Marshal.to_string (client_read, client_write) []);
       |]
 
@@ -140,7 +144,12 @@ let connect continue =
             )
       in
 
-      continue (token, input, output)
+      finally 
+        continue (token, input, output)
+        (fun () ->
+           close_in input;
+           close_out output;
+        )
 
-  | _ ->
-      failwith "NOK"
+  | argv ->
+      failwith @@ "Usage: " ^ argv.(0) ^ " (input, output)"
