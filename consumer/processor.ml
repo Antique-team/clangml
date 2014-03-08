@@ -23,8 +23,8 @@ let memcad_parse file =
 ;;
 
 
-let process () =
-  let file, decl = request @@ Compose (Filename, TranslationUnit) in
+let process clang =
+  let file, decl = request clang @@ Compose (Filename, TranslationUnit) in
 
   prerr_endline @@ "%% processing file " ^ file;
   prerr_endline "--------------------- MemCAD PP ---------------------";
@@ -35,7 +35,7 @@ let process () =
   Format.fprintf Format.err_formatter "@[<v2>@,%a@]@."
     Clang.Pp.pp_decl decl;
 
-  let decl = Transforms.All.transform_decl decl in
+  let decl = Transforms.All.transform_decl clang decl in
   prerr_string "--------------------- Simple AST --------------------";
   Format.fprintf Format.err_formatter "@[<v2>@,%a@]@."
     Clang.Pp.pp_decl decl;
@@ -46,21 +46,7 @@ let process () =
 ;;
 
 
-let initialise () =
-  match request @@ Handshake Clang.Ast.version with
-  | None ->
-      (* Handshake OK; request filename and translation unit. *)
-      process ()
-
-  | Some version ->
-      failwith (
-        "AST versions do not match: \
-         server says " ^ version ^
-        ", but we have " ^ Clang.Ast.version
-      )
-
-
 let () =
   Printexc.record_backtrace true;
-  initialise ();
+  Clang.Api.connect process;
 ;;

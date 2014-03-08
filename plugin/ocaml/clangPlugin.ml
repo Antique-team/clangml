@@ -7,9 +7,6 @@ external clang_type_ptr : Clang.Api.context -> tloc Clang.Ref.t -> ctyp = "clang
 let run_processor (tu : decl) (file : string) (ctx : Clang.Api.context) =
   let open Clang.Api in
 
-  Gc.compact ();
-  let (input, output) = Unix.open_process "_build/consumer/processor.native" in
-
   let rec handle_request : type a. a request -> a = function
     | Compose (msg1, msg2) ->
         let res1 = handle_request msg1 in
@@ -38,20 +35,12 @@ let run_processor (tu : decl) (file : string) (ctx : Clang.Api.context) =
           clang_type_ptr ctx tloc
   in
 
-  let rec io_loop () =
-    Clang.Api.respond input output handle_request;
-
-    io_loop ()
-  in
-
-  try
-    io_loop ()
-  with End_of_file ->
-    match Unix.close_process (input, output) with
-    | Unix.WEXITED 0 -> (* all went fine *) ()
-    | Unix.WEXITED   status -> failwith ("WEXITED "   ^ string_of_int status)
-    | Unix.WSIGNALED status -> failwith ("WSIGNALED " ^ string_of_int status)
-    | Unix.WSTOPPED  status -> failwith ("WSTOPPED "  ^ string_of_int status)
+  Gc.compact ();
+  match Clang.Api.spawn "_build/consumer/processor.native" handle_request with
+  | Unix.WEXITED 0 -> (* all went fine *) ()
+  | Unix.WEXITED   status -> failwith ("WEXITED "   ^ string_of_int status)
+  | Unix.WSIGNALED status -> failwith ("WSIGNALED " ^ string_of_int status)
+  | Unix.WSTOPPED  status -> failwith ("WSTOPPED "  ^ string_of_int status)
 
 
 external check_bridge_version : string -> unit = "check_bridge_version"

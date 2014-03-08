@@ -2,7 +2,7 @@ open Clang
 open Prelude
 
 
-let transform_decl =
+let transform_decl clang =
   let open Ast in
 
   let rec v = MapVisitor.({

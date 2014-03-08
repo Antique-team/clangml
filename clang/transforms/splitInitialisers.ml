@@ -2,7 +2,7 @@ open Clang
 open Prelude
 
 
-let transform_decl =
+let transform_decl clang =
   let open Ast in
 
   let rec v = MapVisitor.({
@@ -27,7 +27,7 @@ let transform_decl =
                   BO_Assign,
                   { e = DeclRefExpr name;
                     e_sloc = decl.d_sloc;
-                    e_type = Api.(request @@ TypePtr ty.tl_cref);
+                    e_type = Api.(request clang @@ TypePtr ty.tl_cref);
                     e_cref = Ref.null;
                   },
                   init

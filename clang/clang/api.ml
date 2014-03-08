@@ -49,29 +49,98 @@ type 'a response =
 exception E of error
 
 
+(* Server functions. *)
+let spawn prog (handle : 'a request -> 'a) : Unix.process_status =
+  (* Communication pipe. *)
+  let (server_read, client_write) = Unix.pipe () in
+  let (client_read, server_write) = Unix.pipe () in
+
+  match Unix.fork () with
+  | 0 ->
+      (* Close unneeded fds. *)
+      List.iter Unix.close [server_read; server_write];
+
+      (* Start client program. *)
+      Unix.execv prog [|
+        prog;
+        String.escaped (Marshal.to_string (client_read, client_write) []);
+      |]
+
+  | pid ->
+      let input  = Unix. in_channel_of_descr server_read  in
+      let output = Unix.out_channel_of_descr server_write in
+
+      (* Close unneeded fds. *)
+      List.iter Unix.close [client_read; client_write];
+
+      let rec io_loop () =
+        (* Read request. *)
+        let request = Marshal.from_channel input in
+
+        (* Handle request. *)
+        let response =
+          try
+            Success (handle request)
+          with E error ->
+            Error error
+        in
+
+        (* Write response. *)
+        Marshal.to_channel output response [];
+        flush output;
+
+        (* Next iteration. *)
+        io_loop ()
+      in
+
+      try
+        io_loop ()
+      with End_of_file ->
+        close_in input;
+        close_out output;
+        (* Wait for child process to end and retrieve process status. *)
+        snd (Unix.waitpid [] pid)
+
+
 let failure e =
   raise (E e)
 
 
-(* Server function. *)
-let respond input output (handle : 'a request -> 'a) : unit =
-  let request = Marshal.from_channel input in
-  let response =
-    try
-      Success (handle request)
-    with E error ->
-      Error error
-  in
-  Marshal.to_channel output response [];
-  flush output
-
-
-(* Client function. *)
-let request (msg : 'a request) : 'a =
-  Marshal.to_channel stdout msg [];
-  flush stdout;
-  match Marshal.from_channel stdin with
+(* Client functions. *)
+let request (token, input, output) (msg : 'a request) : 'a =
+  Marshal.to_channel output msg [];
+  flush output;
+  match Marshal.from_channel input with
   | Error error ->
       raise (E error)
   | Success value ->
       value
+
+
+let connect continue =
+  match Sys.argv with
+  | [|_; data|] ->
+      let (client_read, client_write) =
+        Marshal.from_string (Scanf.unescaped data) 0
+      in
+      let input  = Unix. in_channel_of_descr client_read  in
+      let output = Unix.out_channel_of_descr client_write in
+
+      let token =
+        match request (None, input, output) @@ Handshake Ast.version with
+        | None ->
+            (* Handshake OK. *)
+            Some Ast.version
+
+        | Some version ->
+            failwith (
+              "AST versions do not match: \
+               server says " ^ version ^
+              ", but we have " ^ Ast.version
+            )
+      in
+
+      continue (token, input, output)
+
+  | _ ->
+      failwith "NOK"

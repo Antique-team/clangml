@@ -121,7 +121,16 @@ let () =
 
         rule "OCaml library to object file"
           ~prod:"%.o"
-          ~deps:["%.cmxa"; "%.a"]
+          ~deps:[
+            "%.cmxa";
+            "%.a";
+            "util/formatx.cmx";
+            "util/logger.cmx";
+            "clang/clang.cmx";
+            "util/formatx.o";
+            "util/logger.o";
+            "clang/clang.o";
+          ]
           begin fun env build ->
             Cmd (S (atomise [
               "ocamlfind";

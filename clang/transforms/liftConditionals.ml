@@ -68,7 +68,7 @@ let append_stmts stmt stmts =
       }
 
 
-let transform_decl =
+let transform_decl clang =
   let open Ast in
 
   let rec v = MapVisitor.({
