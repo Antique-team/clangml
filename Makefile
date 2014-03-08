@@ -15,6 +15,15 @@ myclang: $(shell find */ -type f -not -wholename "_build/*") myocamlbuild.ml _ta
 clean:
 	ocamlbuild -clean
 
+wc:
+	@find */					\
+	  -not -wholename "_build/*"		-and	\
+	  -not -wholename "plugin/ext/*"	-and	\
+	  -not -wholename "plugin/testsuite/*"	-and	\
+	  -not -wholename "consumer/memcad/*"	-and	\
+	  -type f					\
+	  | sort | xargs wc -l
+
 
 ####################################################################
 ## Testing
