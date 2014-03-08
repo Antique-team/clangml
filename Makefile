@@ -10,10 +10,11 @@ TARGETS =		\
 
 myclang: $(shell find */ -type f -not -wholename "_build/*") myocamlbuild.ml _tags
 	ocamlbuild $(OCAMLBUILD_FLAGS) $(TARGETS)
-	touch $@
+	@touch $@
 
 clean:
 	ocamlbuild -clean
+	@touch _tags
 
 wc:
 	@find */					\
@@ -51,7 +52,7 @@ check-$1: myclang
 check-$1-separate: $$(TESTSUITE.$1:=.test)
 endef
 
-$(eval $(call testsuite,testsuite,$(wildcard testsuite/*.[ci])))
+$(eval $(call testsuite,testsuite,$(wildcard plugin/testsuite/*.[ci])))
 $(eval $(call testsuite,memcad,$(wildcard consumer/memcad/bench/*.c)))
 
 ALDOR_SRC =		\

@@ -14,6 +14,9 @@ let memcad_parse file =
       prerr_endline "!!!! MemCAD failed to parse file";
   | Failure "lexing: empty token" ->
       prerr_endline "!!!! MemCAD failed to tokenise file";
+  | Assert_failure (file, line, column) ->
+      prerr_endline @@ Printf.sprintf "!!!! MemCAD Assert_failure(\"%s\", %d, %d)"
+        file line column;
   end;
 
   close_in fh;

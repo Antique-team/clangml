@@ -37,7 +37,7 @@ let visit_desg v state desg =
 let visit_decl v state decl =
   match decl.d with
   | UnimpDecl name ->
-      failwith name
+      state
 
   | EmptyDecl ->
       state
@@ -77,7 +77,7 @@ let visit_decl v state decl =
 let visit_expr v state expr =
   match expr.e with
   | UnimpExpr name ->
-      failwith name
+      state
 
   | IntegerLiteral i ->
       state
@@ -169,7 +169,7 @@ let visit_expr v state expr =
 let visit_stmt v state stmt =
   match stmt.s with
   | UnimpStmt name ->
-      failwith name
+      state
 
   | NullStmt ->
       state
@@ -230,7 +230,7 @@ let visit_stmt v state stmt =
 let visit_ctyp v state ctyp =
   match ctyp.t with
   | UnimpType name ->
-      failwith name
+      state
 
   | BuiltinType bt ->
       state
@@ -281,7 +281,7 @@ let visit_ctyp v state ctyp =
 let visit_tloc v state tloc =
   match tloc.tl with
   | UnimpTypeLoc name ->
-      failwith name
+      state
 
   | BuiltinTypeLoc bt ->
       state

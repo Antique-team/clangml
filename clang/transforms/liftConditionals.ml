@@ -73,7 +73,7 @@ let transform_decl =
 
   let rec v = MapVisitor.({
     map_desg = (fun state desg -> visit_desg v state desg);
-    map_decl = (fun state decl -> visit_decl v state decl);
+    map_decl;
     map_expr;
     map_ctyp = (fun state ctyp -> visit_ctyp v state ctyp);
     map_tloc = (fun state tloc -> visit_tloc v state tloc);
@@ -133,6 +133,12 @@ let transform_decl =
   and map_stmt state stmt =
     match stmt.s with
     | CompoundStmt stmts ->
+        (* There should be no unclaimed inserted decls/stmts. *)
+        assert (state.inserted_decls == []);
+        assert (state.inserted_stmts == []);
+
+        (* We drop the state after the compound statement,
+           so we can reuse temporary variable names. *)
         let _, stmts =
           List.fold_left (fun (state, stmts) stmt ->
             let (state, stmt) = map_stmt state stmt in
@@ -179,6 +185,18 @@ let transform_decl =
           s_sloc = stmt.s_sloc;
           s_cref = Ref.null;
         }
+
+
+  and map_decl state decl =
+    match decl.d with
+    | EnumConstantDecl (name, value) ->
+        (* These might contain constant conditionals. We should
+           compute them here or in another constant computation
+           pass. *)
+        (state, decl)
+
+    | _ ->
+        MapVisitor.visit_decl v state decl
 
 
   in
