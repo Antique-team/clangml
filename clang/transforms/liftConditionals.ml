@@ -23,7 +23,7 @@ let clear_state state = {
 
 
 let make_temporary state =
-  let var = "tmp" ^ string_of_int state.generated_vars in
+  let var = "%tmp" ^ string_of_int state.generated_vars in
   ({ state with generated_vars = state.generated_vars + 1 }, var)
 
 
