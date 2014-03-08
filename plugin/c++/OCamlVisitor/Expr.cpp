@@ -176,7 +176,7 @@ OCamlVisitor::TraverseCStyleCastExpr (clang::CStyleCastExpr *S)
   TRACE;
 
   CastKind kind = translate_cast_kind (S->getCastKind ());
-  ptr<TypeLoc> type = must_traverse (S->getTypeInfoAsWritten ()->getTypeLoc ());
+  ptr<Tloc> type = must_traverse (S->getTypeInfoAsWritten ()->getTypeLoc ());
   ptr<Expr> sub = must_traverse (S->getSubExpr ());
 
   stack.push (mkCStyleCastExpr (kind, type, sub));
@@ -217,7 +217,7 @@ OCamlVisitor::TraverseCompoundLiteralExpr (clang::CompoundLiteralExpr *S)
 {
   TRACE;
 
-  ptr<TypeLoc> type = getTypeLoc (S);
+  ptr<Tloc> type = getTypeLoc (S);
   ptr<Expr> init = must_traverse (S->getInitializer ());
 
   stack.push (mkCompoundLiteralExpr (type, init));
@@ -228,11 +228,11 @@ OCamlVisitor::TraverseCompoundLiteralExpr (clang::CompoundLiteralExpr *S)
 
 bool
 OCamlVisitor::TraverseDesignator (clang::DesignatedInitExpr::Designator D,
-                         clang::DesignatedInitExpr *S)
+                                  clang::DesignatedInitExpr *S)
 {
   TRACE;
 
-  ptr<Designator_> dr;
+  ptr<Desg_> dr;
 
   if (D.isFieldDesignator ())
     {
@@ -258,7 +258,7 @@ OCamlVisitor::TraverseDesignator (clang::DesignatedInitExpr::Designator D,
   else
     assert (!"Invalid or unknown designator");
 
-  ptr<Designator> designator = mkDesignator ();
+  ptr<Desg> designator = mkDesg ();
   designator->dr = dr;
   designator->dr_sloc = sloc (S);
   stack.push (designator);
@@ -271,7 +271,7 @@ OCamlVisitor::TraverseDesignatedInitExpr (clang::DesignatedInitExpr *S)
 {
   TRACE;
 
-  list<Designator> designators = traverse_list (designator_range (S), S);
+  list<Desg> designators = traverse_list (designator_range (S), S);
   ptr<Expr> init = must_traverse (S->getInit ());
 
   stack.push (mkDesignatedInitExpr (designators, init));
@@ -299,7 +299,7 @@ OCamlVisitor::TraverseVAArgExpr (clang::VAArgExpr *S)
   TRACE;
 
   ptr<Expr> sub = must_traverse (S->getSubExpr ());
-  ptr<TypeLoc> type = must_traverse (S->getWrittenTypeInfo ()->getTypeLoc ());
+  ptr<Tloc> type = must_traverse (S->getWrittenTypeInfo ()->getTypeLoc ());
 
   stack.push (mkVAArgExpr (sub, type));
 

@@ -230,14 +230,12 @@ type sloc = Bridge.sloc = {
 
 
 (* short-cut *)
-type desg = designator
-
-and designator = Bridge.designator = {
-  dr : designator_;
+type desg = Bridge.desg = {
+  dr : desg_;
   dr_sloc : sloc;
 }
 
-and designator_ = Bridge.designator_ =
+and desg_ = Bridge.desg_ =
   | FieldDesignator		of string
   | ArrayDesignator		of expr
   | ArrayRangeDesignator	of expr * expr
@@ -263,25 +261,25 @@ and expr_ = Bridge.expr_ =
   | DeclRefExpr			of (* name *)string
   | PredefinedExpr		of (* kind *)predefined_expr
   | ImplicitCastExpr		of cast_kind * expr
-  | CStyleCastExpr		of cast_kind * type_loc * expr
-  | CompoundLiteralExpr		of type_loc * (* init *)expr
+  | CStyleCastExpr		of cast_kind * tloc * expr
+  | CompoundLiteralExpr		of tloc * (* init *)expr
   | ParenExpr			of expr
-  | VAArgExpr			of (* sub *)expr * (* type *)type_loc
+  | VAArgExpr			of (* sub *)expr * (* type *)tloc
   | CallExpr			of (* callee *)expr * (* args *)expr list
   | MemberExpr			of (* base *)expr * (* member *)string * (* is_arrow *)bool
   | ConditionalOperator		of (* cond *)expr * (* then *)expr * (* else *)expr
-  | DesignatedInitExpr		of designator list * (* init *)expr
+  | DesignatedInitExpr		of desg list * (* init *)expr
   | InitListExpr		of (* inits *)expr list
   | ImplicitValueInitExpr
   | ArraySubscriptExpr		of (* base *)expr * (* index *)expr
   | StmtExpr			of stmt
 
   | SizeOfExpr			of expr
-  | SizeOfType			of type_loc
+  | SizeOfType			of tloc
   | AlignOfExpr			of expr
-  | AlignOfType			of type_loc
+  | AlignOfType			of tloc
   | VecStepExpr			of expr
-  | VecStepType			of type_loc
+  | VecStepType			of tloc
 
 
 and stmt = Bridge.stmt = {
@@ -311,30 +309,28 @@ and stmt_ = Bridge.stmt_ =
   | DeclStmt			of (* decls *)decl list
 
 
-and tloc = type_loc
-
-and type_loc = Bridge.type_loc = {
-  tl      : type_loc_;
-  tl_cref : type_loc Ref.t;
+and tloc = Bridge.tloc = {
+  tl      : tloc_;
+  tl_cref : tloc Ref.t;
   tl_sloc : sloc;
 }
 
-and type_loc_ = Bridge.type_loc_ =
+and tloc_ = Bridge.tloc_ =
   | UnimpTypeLoc		of string
 
   | BuiltinTypeLoc		of builtin_type
   | TypeOfExprTypeLoc		of expr
-  | TypeOfTypeLoc		of type_loc
-  | ParenTypeLoc		of type_loc
-  | QualifiedTypeLoc		of (* unqual *)type_loc * (* qual *)type_qualifier list * (* aspace *)int option
+  | TypeOfTypeLoc		of tloc
+  | ParenTypeLoc		of tloc
+  | QualifiedTypeLoc		of (* unqual *)tloc * (* qual *)type_qualifier list * (* aspace *)int option
   | TypedefTypeLoc		of (* name *)string
-  | PointerTypeLoc		of (* pointee *)type_loc
-  | FunctionNoProtoTypeLoc	of (* result *)type_loc
-  | FunctionProtoTypeLoc	of (* result *)type_loc * (* args *)decl list
-  | ConstantArrayTypeLoc	of (* member-type *)type_loc * (* size *)int
-  | VariableArrayTypeLoc	of (* member-type *)type_loc * (* size *)expr
-  | IncompleteArrayTypeLoc	of (* member-type *)type_loc
-  | ElaboratedTypeLoc		of (* named-type *)type_loc
+  | PointerTypeLoc		of (* pointee *)tloc
+  | FunctionNoProtoTypeLoc	of (* result *)tloc
+  | FunctionProtoTypeLoc	of (* result *)tloc * (* args *)decl list
+  | ConstantArrayTypeLoc	of (* member-type *)tloc * (* size *)int
+  | VariableArrayTypeLoc	of (* member-type *)tloc * (* size *)expr
+  | IncompleteArrayTypeLoc	of (* member-type *)tloc
+  | ElaboratedTypeLoc		of (* named-type *)tloc
   | EnumTypeLoc			of (* name *)string
   | RecordTypeLoc		of (* kind *)tag_type_kind * (* name *)string
 
@@ -377,12 +373,12 @@ and decl_ = Bridge.decl_ =
 
   | EmptyDecl
   | TranslationUnitDecl		of decl list
-  | FunctionDecl		of (* type *)type_loc * (* name *)string * (* body *)stmt option
-  | TypedefDecl			of (* type *)type_loc * (* name *)string
-  | VarDecl			of (* type *)type_loc * (* name *)string * (* init *)expr option
-  | ParmVarDecl			of (* type *)type_loc * (* name *)string
+  | FunctionDecl		of (* type *)tloc * (* name *)string * (* body *)stmt option
+  | TypedefDecl			of (* type *)tloc * (* name *)string
+  | VarDecl			of (* type *)tloc * (* name *)string * (* init *)expr option
+  | ParmVarDecl			of (* type *)tloc * (* name *)string
   | RecordDecl			of (* name *)string * (* members *)decl list
-  | FieldDecl			of (* type *)type_loc * (* name *)string * (* bitwidth *)expr option * (* initialiser *)expr option
+  | FieldDecl			of (* type *)tloc * (* name *)string * (* bitwidth *)expr option * (* initialiser *)expr option
   | EnumDecl			of (* name *)string * (* enumerators *)decl list
   | EnumConstantDecl		of (* name *)string * (* value *)expr option
 

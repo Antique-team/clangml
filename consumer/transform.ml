@@ -635,7 +635,7 @@ let make_env = function
   | FunctionNoProtoTypeLoc (_) ->
       StringMap.empty
 
-  | tl -> failwith (Show.show<type_loc_> tl)
+  | tl -> failwith (Show.show<tloc_> tl)
 
 
 let c_fun_body_of_stmts prog ty body =

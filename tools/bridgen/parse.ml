@@ -17,36 +17,47 @@ module P4Printer = Camlp4.Printers.OCaml.Make(Syntax)
 module Log = Logger.Make(struct let tag = "parse" end)
 
 
+type loc = Ast.loc
+
+module Show_loc = Deriving_Show.Defaults(struct
+    type a = loc
+
+    let format fmt loc =
+      Format.fprintf fmt "<loc>"
+
+  end)
+
+
 type basic_type =
   (* Simple type *)
-  | NamedType of string
+  | NamedType of loc * string
   (* Clang pointer *)
-  | ClangType of string
+  | ClangType of loc * string
   (* List of basic_type *)
-  | ListOfType of basic_type
+  | ListOfType of loc * basic_type
   (* Optional basic_type *)
-  | OptionType of basic_type
+  | OptionType of loc * basic_type
   (* Will want others, eventually *)
   deriving (Show)
 
-type sum_type_branch = (* branch_name *)string * (* types *)basic_type list
+type sum_type_branch = loc * (* branch_name *)string * (* types *)basic_type list
   deriving (Show)
 
-type sum_type = (* sum_type_name *)string * (* branches *)sum_type_branch list
+type sum_type = loc * (* sum_type_name *)string * (* branches *)sum_type_branch list
   deriving (Show)
 
-type record_member = (* name *)string * (* type *)basic_type
+type record_member = loc * (* name *)string * (* type *)basic_type
   deriving (Show)
 
-type record_type = (* name *)string * (* members *)record_member list
+type record_type = loc * (* name *)string * (* members *)record_member list
   deriving (Show)
 
 type ocaml_type =
-  | AliasType of string * basic_type
+  | AliasType of loc * string * basic_type
   | SumType of sum_type
   | RecordType of record_type
-  | RecursiveType of ocaml_type list
-  | Version of string
+  | RecursiveType of loc * ocaml_type list
+  | Version of loc * string
   deriving (Show)
 
 
@@ -75,19 +86,19 @@ let print_expanded_str_item str_item =
 
 let rec ast_type_to_type (ctyp: Ast.ctyp) =
   match ctyp with
-  | <:ctyp<$lid:identifier$>> ->
-      NamedType (identifier)
+  | <:ctyp@loc<$lid:identifier$>> ->
+      NamedType (loc, identifier)
 
-  | <:ctyp<list $ty$>> ->
+  | <:ctyp@loc<list $ty$>> ->
       let list_of_type = ast_type_to_type ty in
-      ListOfType (list_of_type)
+      ListOfType (loc, list_of_type)
 
-  | <:ctyp<option $ty$>> ->
+  | <:ctyp@loc<option $ty$>> ->
       let list_of_type = ast_type_to_type ty in
-      OptionType (list_of_type)
+      OptionType (loc, list_of_type)
 
-  | <:ctyp<Ref.t $lid:node_type$>> ->
-      ClangType (node_type)
+  | <:ctyp@loc<Ref.t $lid:node_type$>> ->
+      ClangType (loc, node_type)
 
   | _ ->
       Log.unimp "ast_type_to_type"
@@ -132,11 +143,11 @@ let flatten_ast_tuple_type_components (t : Ast.ctyp) : Ast.ctyp list =
 
 
 let ast_sum_type_branch_to_branch (ctyp: Ast.ctyp) : sum_type_branch =
-  let (identifier, ast_branch_components) =
+  let (loc, identifier, ast_branch_components) =
     match ctyp with
-    | Ast.TyId (_, Ast.IdUid (_, identifier)) ->
-        (identifier, [])
-    | Ast.TyOf (_, Ast.TyId (_, Ast.IdUid (_, identifier)), of_components) ->
+    | Ast.TyId (loc, Ast.IdUid (_, identifier)) ->
+        (loc, identifier, [])
+    | Ast.TyOf (loc, Ast.TyId (_, Ast.IdUid (_, identifier)), of_components) ->
         let n_ary_components =
           match of_components with
           | Ast.TyAnd _ ->
@@ -146,10 +157,10 @@ let ast_sum_type_branch_to_branch (ctyp: Ast.ctyp) : sum_type_branch =
               (* Single component *)
               [of_components]
         in
-        (identifier, n_ary_components)
+        (loc, identifier, n_ary_components)
     | _ -> Log.err "Unhandled sum type branch"
   in
-  (identifier, List.map ast_type_to_type ast_branch_components)
+  (loc, identifier, List.map ast_type_to_type ast_branch_components)
 
 
 let rec flatten_ast_rec_types list = function
@@ -172,8 +183,8 @@ let map_sum_type =
 
 
 let map_record_member = function
-  | <:ctyp<$lid:name$ : $ty$>> ->
-      (name, ast_type_to_type ty)
+  | <:ctyp@loc<$lid:name$ : $ty$>> ->
+      (loc, name, ast_type_to_type ty)
   | ty ->
       Log.err "unhandled record member format"
 
@@ -184,12 +195,12 @@ let map_record_members =
 
 
 let map_rec_type = function
-  | Ast.TyDcl (_, name, [], <:ctyp<[ $ast_branches$ ]>>, []) ->
-      SumType (name, map_sum_type ast_branches)
-  | Ast.TyDcl (_, name, [], <:ctyp<{ $members$ }>>, []) ->
-      RecordType (name, map_record_members members)
-  | Ast.TyDcl (_, name, [], other, []) ->
-      AliasType (name, ast_type_to_type other)
+  | Ast.TyDcl (loc, name, [], <:ctyp<[ $ast_branches$ ]>>, []) ->
+      SumType (loc, name, map_sum_type ast_branches)
+  | Ast.TyDcl (loc, name, [], <:ctyp<{ $members$ }>>, []) ->
+      RecordType (loc, name, map_record_members members)
+  | Ast.TyDcl (loc, name, [], other, []) ->
+      AliasType (loc, name, ast_type_to_type other)
   | ty ->
       (* Perhaps ignore this instead. *)
       Log.unimp "only sum types are supported"
@@ -197,19 +208,19 @@ let map_rec_type = function
 
 let ast_str_item_to_sum_type types (str_item : Ast.str_item) : ocaml_type list =
   match str_item with
-  | <:str_item<type $lid:name$ = [ $ast_branches$ ]>> ->
-      SumType (name, map_sum_type ast_branches) :: types
+  | <:str_item@loc<type $lid:name$ = [ $ast_branches$ ]>> ->
+      SumType (loc, name, map_sum_type ast_branches) :: types
 
-  | <:str_item<type $lid:name$ = { $members$ }>> ->
-      RecordType (name, map_record_members members) :: types
+  | <:str_item@loc<type $lid:name$ = { $members$ }>> ->
+      RecordType (loc, name, map_record_members members) :: types
 
-  | <:str_item<type $ty1$ and $ty2$>> ->
+  | <:str_item@loc<type $ty1$ and $ty2$>> ->
       let flattened = flatten_ast_rec_types [ty2] ty1 in
       let rec_types = List.map map_rec_type flattened in
-      RecursiveType (rec_types) :: types
+      RecursiveType (loc, rec_types) :: types
 
-  | <:str_item<value version = $str:version$>> ->
-      Version version :: types
+  | <:str_item@loc<value version = $str:version$>> ->
+      Version (loc, version) :: types
 
   | _ ->
       types

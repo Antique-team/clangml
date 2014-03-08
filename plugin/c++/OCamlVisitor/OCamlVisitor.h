@@ -199,7 +199,7 @@ private:
 
   // TypedefDecl and DeclaratorDecl
   template<typename DeclT>
-  ptr<TypeLoc> getTypeLoc (DeclT const *D)
+  ptr<Tloc> getTypeLoc (DeclT const *D)
   {
     clang::TypeSourceInfo *TSI = D->getTypeSourceInfo ();
     assert (TSI);
@@ -249,7 +249,7 @@ private:
   clang_ref<Stmt> ref (clang::Stmt *S);
   clang_ref<Expr> ref (clang::Expr *E);
   clang_ref<Ctyp> ref (clang::QualType T);
-  clang_ref<TypeLoc> ref (clang::TypeLoc TL);
+  clang_ref<Tloc> ref (clang::TypeLoc TL);
 
 
   // }}}

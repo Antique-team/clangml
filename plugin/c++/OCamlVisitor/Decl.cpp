@@ -29,7 +29,7 @@ OCamlVisitor::TraverseFunctionDecl (clang::FunctionDecl *D)
   TraverseDeclarationNameInfo (D->getNameInfo ());
 
   // Function type, including parameters.
-  ptr<TypeLoc> type;
+  ptr<Tloc> type;
   if (D->getTypeSourceInfo ())
     type = getTypeLoc (D);
   else
@@ -38,7 +38,7 @@ OCamlVisitor::TraverseFunctionDecl (clang::FunctionDecl *D)
 
       // Built-in implicit function declarations such as
       // printf don't have a valid TSI.
-      //ptr<TypeLoc> result = mkBuiltinTypeLoc (sloc (D), BT_Void);
+      //ptr<Tloc> result = mkBuiltinTypeLoc (sloc (D), BT_Void);
       //list<Decl> args;// = traverse_list (param_range (D));
 
       // TODO: exceptions
@@ -79,7 +79,7 @@ OCamlVisitor::TraverseTypedefDecl (clang::TypedefDecl *D)
 {
   TRACE;
 
-  ptr<TypeLoc> type = getTypeLoc (D);
+  ptr<Tloc> type = getTypeLoc (D);
   clang::StringRef name = D->getName ();
 
   stack.push (mkTypedefDecl (type, name));
@@ -108,7 +108,7 @@ OCamlVisitor::TraverseFieldDecl (clang::FieldDecl *D)
 {
   TRACE;
 
-  ptr<TypeLoc> type = getTypeLoc (D);
+  ptr<Tloc> type = getTypeLoc (D);
 
   option<Expr> bitwidth;
   if (D->isBitField ())
@@ -161,7 +161,7 @@ OCamlVisitor::TraverseParmVarDecl (clang::ParmVarDecl *D)
 
   TraverseNestedNameSpecifierLoc (D->getQualifierLoc ());
 
-  ptr<TypeLoc> type = getTypeLoc (D);
+  ptr<Tloc> type = getTypeLoc (D);
   clang::StringRef name = D->getName ();
 
   stack.push (mkParmVarDecl (type, name));
@@ -177,7 +177,7 @@ OCamlVisitor::TraverseVarDecl (clang::VarDecl *D)
 
   TraverseNestedNameSpecifierLoc (D->getQualifierLoc ());
 
-  ptr<TypeLoc> type = getTypeLoc (D);
+  ptr<Tloc> type = getTypeLoc (D);
   clang::StringRef name = D->getName ();
   option<Expr> init = maybe_traverse (D->getInit ());
 

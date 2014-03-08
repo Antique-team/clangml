@@ -87,8 +87,9 @@ let objects = [
 
 let () =
   dispatch begin function
-    (*| Before_options ->*)
+    | Before_options ->
         (*Options.ocaml_cflags := ["-warn-error"; "A"]*)
+        Options.ocaml_cflags := ["-I"; "+camlp4/Camlp4Parsers"]
 
     | After_rules ->
         rule "Produce clean bridge AST without camlp4 extensions"

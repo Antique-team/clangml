@@ -1,14 +1,11 @@
+open ProcessOCamlTypes
+
 module Log = Logger.Make(struct let tag = "main" end)
 
 let (%) f g x = f (g x)
 
-
-type context = {
-  (* These are actually lookup sets, but since the number of
-     types is typically very small, we use simple lists. *)
-  enum_types  : string list;
-  class_types : string list;
-}
+let name_of_sum_type (_, name, _) = name
+let name_of_record_type (_, name, _) = name
 
 
 (**
@@ -44,10 +41,10 @@ let cpp_name name =
  * Enum (all tycons are nullary)
  *****************************************************)
 
-let enum_intf_for_constant_sum_type (sum_type_name, branches) =
+let enum_intf_for_constant_sum_type (_, sum_type_name, branches) =
   (* Explicitly make the first enum have value 0, the second have value 2, etc.*)
   let enum_elements =
-    List.mapi (fun i (branch_name, _) ->
+    List.mapi (fun i (_, branch_name, _) ->
       (branch_name, Some i)
     ) branches
   in
@@ -56,20 +53,6 @@ let enum_intf_for_constant_sum_type (sum_type_name, branches) =
     enum_name = cpp_name sum_type_name;
     enum_elements = enum_elements;
   })
-
-
-let sum_type_is_enum (sum_type_name, branches) =
-  List.for_all (fun (branch_name, types) ->
-    types = []
-  ) branches
-
-
-let type_is_enum = let open Parse in function
-  | SumType ty -> sum_type_is_enum ty
-  | AliasType _
-  | RecordType _ -> false
-  | RecursiveType _ -> failwith "type_is_enum cannot handle recursive types"
-  | Version _ -> failwith "Version in type list"
 
 
 (*****************************************************
@@ -89,7 +72,7 @@ let is_basic_type = function
 
 
 let is_nonnull_ptr ctx = function
-  | Parse.NamedType name ->
+  | Parse.NamedType (_, name) ->
       (* Basic types and enum types are no pointers. *)
       if is_basic_type name || List.mem name ctx.enum_types then
         false
@@ -101,17 +84,17 @@ let is_nonnull_ptr ctx = function
 
 
 let rec translate_type ctx = let open Parse in let open Codegen in function
-  | NamedType "bool" ->
+  | NamedType (_, "bool") ->
       TyBool
-  | NamedType "char" ->
+  | NamedType (_, "char") ->
       TyChar
-  | NamedType "int" ->
+  | NamedType (_, "int") ->
       TyInt
-  | NamedType "float" ->
+  | NamedType (_, "float") ->
       TyFloat
-  | NamedType "string" ->
+  | NamedType (_, "string") ->
       TyString
-  | NamedType name ->
+  | NamedType (_, name) ->
       let ty = TyName (cpp_name name) in
       (* Make sure enum/constant ADTs are passed and stored
          by value, not by pointer. *)
@@ -126,12 +109,12 @@ let rec translate_type ctx = let open Parse in let open Codegen in function
         (* Plain pointers to anything unknown. *)
         TyPointer (ty)
       )
-  | ClangType name ->
+  | ClangType (_, name) ->
       (* Plain pointers to Clang AST nodes. *)
       TyTemplate ("clang_ref", TyName (cpp_name name))
-  | ListOfType ty ->
+  | ListOfType (_, ty) ->
       TyTemplate ("std::vector", translate_type ctx ty)
-  | OptionType (NamedType name as ty) ->
+  | OptionType (_, (NamedType (_, name) as ty)) ->
       let ty =
         if is_basic_type name then
           translate_type ctx ty
@@ -139,7 +122,7 @@ let rec translate_type ctx = let open Parse in let open Codegen in function
           TyName (cpp_name name)
       in
       TyTemplate ("option", ty)
-  | OptionType ty ->
+  | OptionType (_, ty) ->
       TyTemplate ("option", translate_type ctx ty)
 
 
@@ -200,7 +183,7 @@ let toValue fields =
   }
 
 
-let class_intf_for_sum_type ctx (sum_type_name, branches) =
+let class_intf_for_sum_type ctx (_, sum_type_name, branches) =
   let open Codegen in
 
   (* Base class *)
@@ -214,15 +197,15 @@ let class_intf_for_sum_type ctx (sum_type_name, branches) =
   let derived =
     let explicit = [Explicit] in
 
-    let make_derived tag (branch_name, types) =
+    let make_derived tag (_, branch_name, types) =
       let toValue =
-        toValue (List.mapi (fun i ty -> IdExpr ("field" ^ string_of_int i)) types)
+        toValue (List.mapi (fun i _ -> IdExpr ("field" ^ string_of_int i)) types)
       in
 
       let constructor =
         (* Constructor initialiser list. *)
         let init =
-          List.mapi (fun i ty ->
+          List.mapi (fun i _ ->
             ("field" ^ string_of_int i, "arg" ^ string_of_int i)
           ) types
         in
@@ -278,7 +261,7 @@ let class_intf_for_sum_type ctx (sum_type_name, branches) =
 
     let (nullary, parameterised) =
       List.partition
-        (fun branch -> snd branch = [])
+        (fun (_, _, types) -> types = [])
         branches
     in
     (* First, nullary constructors. *)
@@ -294,22 +277,22 @@ let class_intf_for_sum_type ctx (sum_type_name, branches) =
  *****************************************************)
 
 let gen_code_for_sum_type ctx (sum_type : Parse.sum_type) =
-  if List.mem (fst sum_type) ctx.enum_types then
+  if List.mem (name_of_sum_type sum_type) ctx.enum_types then
     [Codegen.Enum (enum_intf_for_constant_sum_type sum_type)]
   else
-    let (sum_type_name, branches) = sum_type in
+    let (_, sum_type_name, branches) = sum_type in
 
     List.map (fun i -> Codegen.Class i)
       (class_intf_for_sum_type ctx sum_type)
 
-    @ List.map (fun (branch_name, types) ->
+    @ List.map (fun (_, branch_name, types) ->
         let open Codegen in
         let ty =
           TyName (cpp_name branch_name ^
                   cpp_name sum_type_name)
         in
         let args =
-          List.mapi (fun i ty ->
+          List.mapi (fun i _ ->
             IdExpr ("arg" ^ string_of_int i)
           ) types
         in
@@ -328,11 +311,11 @@ let gen_code_for_sum_type ctx (sum_type : Parse.sum_type) =
       ) branches
 
 
-let class_intf_for_record_type ctx (record_name, fields) =
+let class_intf_for_record_type ctx (_, record_name, fields) =
   let open Codegen in
 
   let class_fields =
-    List.map (fun (name, ty) ->
+    List.map (fun (_, name, ty) ->
       MemberField {
         empty_decl with
         decl_type = translate_type ctx ty;
@@ -342,7 +325,7 @@ let class_intf_for_record_type ctx (record_name, fields) =
   in
 
   let toValue =
-    toValue (List.map (fun (name, ty) -> IdExpr (name)) fields)
+    toValue (List.map (fun (_, name, _) -> IdExpr (name)) fields)
   in
 
   {
@@ -357,7 +340,7 @@ let gen_code_for_record_type ctx (record_type : Parse.record_type) =
   let open Codegen in
 
   let factory =
-    let class_name = cpp_name (fst record_type) in
+    let class_name = cpp_name (name_of_record_type record_type) in
     let ty = TyName class_name in
     Function {
       flags  = [Static; Inline];
@@ -377,9 +360,9 @@ let gen_code_for_record_type ctx (record_type : Parse.record_type) =
 
 
 let name_of_type = let open Parse in function
-  | SumType (name, _)
-  | AliasType (name, _)
-  | RecordType (name, _) -> name
+  | SumType (_, name, _)
+  | AliasType (_, name, _)
+  | RecordType (_, name, _) -> name
   | Version _ -> failwith "version has no name"
   | RecursiveType _ -> failwith "recursive types have no name"
 
@@ -393,7 +376,7 @@ let gen_code_for_ocaml_type ctx = let open Parse in function
 
 
 let gen_code_for_rec_type ctx = function
-  | Parse.RecursiveType rec_types ->
+  | Parse.RecursiveType (_, rec_types) ->
       (* Generate forward declarations for recursive types.
          Only consider types that will be turned into classes,
          as recursive type definitions may contain some enum
@@ -406,7 +389,7 @@ let gen_code_for_rec_type ctx = function
         List.map (gen_code_for_ocaml_type ctx) rec_types
         |> List.flatten
       )
-  | Parse.Version version ->
+  | Parse.Version (_, version) ->
       let open Codegen in
       let ty = TyConst (TyPointer (TyConst TyChar)) in
       [Variable (ty, "version", StrLit version)]
@@ -414,46 +397,14 @@ let gen_code_for_rec_type ctx = function
       gen_code_for_ocaml_type ctx ty
 
 
-(* Partition by enum/class types. *)
-let partition_type_names =
-  List.fold_left (fun (enums, classes) -> function
-    | Parse.SumType ty ->
-        if sum_type_is_enum ty then
-          (fst ty :: enums, classes)
-        else
-          (enums, fst ty :: classes)
-    | Parse.RecordType (name, _) ->
-        (enums, name :: classes)
-    | Parse.AliasType _ ->
-        (enums, classes)
-    | Parse.Version _ -> Log.err "version does not have a type name"
-    | Parse.RecursiveType _ -> Log.err "recursive types do not have a type name"
-  ) ([], [])
-
-let flatten_recursive_types =
-  List.flatten % List.map (function
-    | Parse.RecursiveType tys -> tys
-    | Parse.Version _ -> []
-    | ty -> [ty]
-  )
-
-
 let code_gen dir basename (ocaml_types : Parse.ocaml_type list) =
-  let (enum_types, class_types) =
-    (* Get all types, including the ones in a recursive definition,
-       as a flat list. *)
-    flatten_recursive_types ocaml_types
-    |> partition_type_names
-  in
-
-  (* Extract type names. *)
-  let ctx = { enum_types; class_types; } in
+  let ctx = make_context ocaml_types in
 
   (* Get AST version. *)
   begin
     match
       List.map (function
-        | Parse.Version version -> [version]
+        | Parse.Version (_, version) -> [version]
         | _ -> []
       ) ocaml_types
       |> List.flatten

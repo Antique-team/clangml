@@ -67,8 +67,8 @@ clang_ref<Expr> OCamlVisitor::ref (clang::Expr *E)
 clang_ref<Ctyp> OCamlVisitor::ref (clang::QualType T)
 { return ctx.refs.create<Ctyp> (T); }
 
-clang_ref<TypeLoc> OCamlVisitor::ref (clang::TypeLoc TL)
-{ return ctx.refs.create<TypeLoc> (TL); }
+clang_ref<Tloc> OCamlVisitor::ref (clang::TypeLoc TL)
+{ return ctx.refs.create<Tloc> (TL); }
 
 
 // }}}

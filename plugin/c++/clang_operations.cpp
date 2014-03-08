@@ -39,7 +39,7 @@ CAMLprim value
 clang_type_ptr (value context, value id)
 {
   clang_context &ctx = *reinterpret_cast<clang_context *> (Bp_val (context));
-  clang_ref<TypeLoc> ref (Unsigned_long_val (id));
+  clang_ref<Tloc> ref (Unsigned_long_val (id));
 
   clang::QualType type = ctx.refs.retrieve (ref).getType ();
 

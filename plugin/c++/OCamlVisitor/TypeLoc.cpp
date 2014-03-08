@@ -20,7 +20,7 @@ OCamlVisitor::TraverseTypeLoc (clang::TypeLoc TL)
     }
   else if (marker > 1)
     {
-      ptr<TypeLoc> mostRecent = stack.pop ();
+      ptr<Tloc> mostRecent = stack.pop ();
       printf ("WARNING: %s drops all but most recent (out of %lu) TypeLoc\n",
               __func__, marker);
       // Keep the last one
@@ -29,7 +29,7 @@ OCamlVisitor::TraverseTypeLoc (clang::TypeLoc TL)
     }
 
   // Amend with source locations.
-  ptr<TypeLoc> type_loc = mkTypeLoc ();
+  ptr<Tloc> type_loc = mkTloc ();
   type_loc->tl      = stack.pop ();
   type_loc->tl_cref = ref (TL);
   type_loc->tl_sloc = sloc (TL);
@@ -70,7 +70,7 @@ OCamlVisitor::TraverseTypeOfTypeLoc (clang::TypeOfTypeLoc TL)
 {
   TRACE;
 
-  ptr<TypeLoc> type = must_traverse (TL.getUnderlyingTInfo ()->getTypeLoc ());
+  ptr<Tloc> type = must_traverse (TL.getUnderlyingTInfo ()->getTypeLoc ());
 
   stack.push (mkTypeOfTypeLoc (type));
 
@@ -83,7 +83,7 @@ OCamlVisitor::TraverseConstantArrayTypeLoc (clang::ConstantArrayTypeLoc TL)
 {
   TRACE;
 
-  ptr<TypeLoc> element = must_traverse (TL.getElementLoc ());
+  ptr<Tloc> element = must_traverse (TL.getElementLoc ());
   uint64_t size = TL.getTypePtr ()->getSize ().getZExtValue ();
 
   stack.push (mkConstantArrayTypeLoc (element, size));
@@ -97,7 +97,7 @@ OCamlVisitor::TraverseVariableArrayTypeLoc (clang::VariableArrayTypeLoc TL)
 {
   TRACE;
 
-  ptr<TypeLoc> element = must_traverse (TL.getElementLoc ());
+  ptr<Tloc> element = must_traverse (TL.getElementLoc ());
   ptr<Expr> size = must_traverse (TL.getSizeExpr ());
 
   stack.push (mkVariableArrayTypeLoc (element, size));
@@ -111,7 +111,7 @@ OCamlVisitor::TraverseIncompleteArrayTypeLoc (clang::IncompleteArrayTypeLoc TL)
 {
   TRACE;
 
-  ptr<TypeLoc> element = must_traverse (TL.getElementLoc ());
+  ptr<Tloc> element = must_traverse (TL.getElementLoc ());
 
   stack.push (mkIncompleteArrayTypeLoc (element));
 
@@ -124,7 +124,7 @@ OCamlVisitor::TraversePointerTypeLoc (clang::PointerTypeLoc TL)
 {
   TRACE;
 
-  ptr<TypeLoc> pointee = must_traverse (TL.getPointeeLoc ());
+  ptr<Tloc> pointee = must_traverse (TL.getPointeeLoc ());
 
   stack.push (mkPointerTypeLoc (pointee));
 
@@ -138,7 +138,7 @@ OCamlVisitor::TraverseElaboratedTypeLoc (clang::ElaboratedTypeLoc TL)
   TRACE;
 
   TraverseNestedNameSpecifierLoc (TL.getQualifierLoc ());
-  ptr<TypeLoc> type = must_traverse (TL.getNamedTypeLoc ());
+  ptr<Tloc> type = must_traverse (TL.getNamedTypeLoc ());
 
   stack.push (mkElaboratedTypeLoc (type));
 
@@ -151,7 +151,7 @@ OCamlVisitor::TraverseQualifiedTypeLoc (clang::QualifiedTypeLoc TL)
 {
   TRACE;
 
-  ptr<TypeLoc> unqual = must_traverse (TL.getUnqualifiedLoc ());
+  ptr<Tloc> unqual = must_traverse (TL.getUnqualifiedLoc ());
   clang::Qualifiers quals = TL.getType ().getLocalQualifiers ();
 
   std::vector<TypeQualifier> qualifiers;
@@ -233,7 +233,7 @@ OCamlVisitor::TraverseFunctionNoProtoTypeLoc (clang::FunctionNoProtoTypeLoc TL)
 {
   TRACE;
 
-  ptr<TypeLoc> result = must_traverse (TL.getResultLoc ());
+  ptr<Tloc> result = must_traverse (TL.getResultLoc ());
 
   stack.push (mkFunctionNoProtoTypeLoc (result));
 
@@ -246,7 +246,7 @@ OCamlVisitor::TraverseFunctionProtoTypeLoc (clang::FunctionProtoTypeLoc TL)
 {
   TRACE;
 
-  ptr<TypeLoc> result = must_traverse (TL.getResultLoc ());
+  ptr<Tloc> result = must_traverse (TL.getResultLoc ());
   list<Decl> args = traverse_list (TL.getParams ());
 
   // TODO: exceptions
@@ -275,7 +275,7 @@ OCamlVisitor::TraverseParenTypeLoc (clang::ParenTypeLoc TL)
 {
   TRACE;
 
-  ptr<TypeLoc> inner = must_traverse (TL.getInnerLoc ());
+  ptr<Tloc> inner = must_traverse (TL.getInnerLoc ());
 
   stack.push (mkParenTypeLoc (inner));
 
