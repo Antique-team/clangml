@@ -13,7 +13,7 @@ type state = {
      When entering a compound statement, the state is
      duplicated, so two consequtive compound statements
      can have the same temporary variable names, but no
-     shadowing occurs. *)
+     shadowing can occur. *)
   generated_vars : int;
 }
 
