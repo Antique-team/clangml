@@ -32,8 +32,8 @@ let transform_decl =
                   },
                   init
                 );
-              e_type = init.e_type;
               e_sloc = decl.d_sloc;
+              e_type = init.e_type;
               e_cref = Ref.null;
             };
           s_sloc = init.e_sloc;
