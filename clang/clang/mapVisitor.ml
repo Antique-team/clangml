@@ -358,9 +358,9 @@ let () =
      of the data structure. *)
   let rec v = {
     map_desg = (fun state desg -> visit_desg v state desg);
-    map_decl = (fun state desg -> visit_decl v state desg);
-    map_expr = (fun state desg -> visit_expr v state desg);
-    map_ctyp = (fun state desg -> visit_ctyp v state desg);
-    map_tloc = (fun state desg -> visit_tloc v state desg);
-    map_stmt = (fun state desg -> visit_stmt v state desg);
+    map_decl = (fun state decl -> visit_decl v state decl);
+    map_expr = (fun state expr -> visit_expr v state expr);
+    map_ctyp = (fun state ctyp -> visit_ctyp v state ctyp);
+    map_tloc = (fun state tloc -> visit_tloc v state tloc);
+    map_stmt = (fun state stmt -> visit_stmt v state stmt);
   } in ignore v

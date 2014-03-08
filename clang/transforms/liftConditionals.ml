@@ -3,8 +3,17 @@ open Prelude
 
 
 type state = {
+  (* We keep the decls and stmts separate, so we can
+     append only the stmts at the end of a loop, where
+     we need to insert them twice (once before the loop
+     and once after each iteration). *)
   inserted_decls : Ast.stmt list;
   inserted_stmts : Ast.stmt list;
+  (* We keep track of the number of temporaries created.
+     When entering a compound statement, the state is
+     duplicated, so two consequtive compound statements
+     can have the same temporary variable names, but no
+     shadowing occurs. *)
   generated_vars : int;
 }
 
@@ -15,6 +24,7 @@ let empty_state = {
 }
 
 
+(* Clear inserted decls and stmts. *)
 let clear_state state = {
   state with
   inserted_decls = [];
@@ -63,10 +73,10 @@ let transform_decl =
 
   let rec v = MapVisitor.({
     map_desg = (fun state desg -> visit_desg v state desg);
-    map_decl = (fun state desg -> visit_decl v state desg);
+    map_decl = (fun state decl -> visit_decl v state decl);
     map_expr;
-    map_ctyp = (fun state desg -> visit_ctyp v state desg);
-    map_tloc = (fun state desg -> visit_tloc v state desg);
+    map_ctyp = (fun state ctyp -> visit_ctyp v state ctyp);
+    map_tloc = (fun state tloc -> visit_tloc v state tloc);
     map_stmt;
   })
 
@@ -113,7 +123,8 @@ let transform_decl =
 
         let e = DeclRefExpr var in
 
-        ({ state with inserted_stmts; inserted_decls }, { expr with e })
+        ({ state with inserted_stmts; inserted_decls },
+         { expr with e })
 
     | _ ->
         MapVisitor.visit_expr v state expr
@@ -125,10 +136,8 @@ let transform_decl =
         let _, stmts =
           List.fold_left (fun (state, stmts) stmt ->
             let (state, stmt) = map_stmt state stmt in
-            (
-              clear_state state,
-              stmt :: state.inserted_stmts @ state.inserted_decls @ stmts
-            )
+            (clear_state state,
+             stmt :: state.inserted_stmts @ state.inserted_decls @ stmts)
           ) (state, []) stmts
         in
 
@@ -155,10 +164,14 @@ let transform_decl =
         MapVisitor.visit_stmt v state stmt
 
 
+  (* This function is used for statements with sub-statements.
+     If we want to insert more statements into the sub-statement,
+     we wrap the original sub-statement together with the added
+     statements and declarations in a new compound statement.
+     If no statements were added, we leave it alone. *)
   and map_sub_stmt state stmt =
-    let (state, stmt) =
-      map_stmt (clear_state state) stmt
-    in
+    let (state, stmt) = map_stmt (clear_state state) stmt in
+
     match state.inserted_stmts, state.inserted_decls with
     | [], [] -> stmt
     | stmts, decls ->
