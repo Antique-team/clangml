@@ -1,10 +1,24 @@
 #include "clang_context.h"
 #include "OCamlVisitor.h"
 
+using namespace bridge_ast;
+
 O_BEGIN_DECLS
 
 
-using namespace bridge_ast;
+CAMLprim value
+check_bridge_version (value version)
+{
+  if (strcmp (String_val (version), bridge_ast::version) != 0)
+    {
+      char buf[128];
+      snprintf (buf, sizeof buf,
+                "Bridge version mismatch: OCaml side is \"%s\", C++ side is \"%s\"",
+                String_val (version), bridge_ast::version);
+      failwith (buf);
+    }
+  return Val_unit;
+}
 
 
 CAMLprim value

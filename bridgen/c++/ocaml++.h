@@ -9,6 +9,7 @@
 
 #define O_BEGIN_DECLS	extern "C" {
 #define O_END_DECLS	}
+#define O_EXPORT	extern "C" __attribute__ ((__visibility__ ("default")))
 
 O_BEGIN_DECLS
 #include <caml/alloc.h>

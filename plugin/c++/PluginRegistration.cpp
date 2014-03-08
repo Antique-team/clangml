@@ -15,29 +15,11 @@ extern "C" {
 using clang::ento::CheckerRegistry;
 
 // Register plugin!
-extern "C"
-void clang_registerCheckers (CheckerRegistry &registry);
+O_EXPORT void clang_registerCheckers (CheckerRegistry &registry);
+O_EXPORT char const clang_analyzerAPIVersionString[] = CLANG_ANALYZER_API_VERSION_STRING;
 
-extern "C"
 void
 clang_registerCheckers (CheckerRegistry &registry)
 {
   registry.addChecker<OCamlChecker> ("OCamlChecker", "RunOCamlChecker");
-}
-
-extern "C"
-char const clang_analyzerAPIVersionString[] = CLANG_ANALYZER_API_VERSION_STRING;
-
-extern "C"
-CAMLprim value
-check_bridge_version (value version)
-{
-  if (strcmp (String_val (version), bridge_ast::version) != 0)
-    {
-      char buf[128];
-      snprintf (buf, sizeof buf, "Bridge version mismatch: OCaml side is \"%s\", C++ side is \"%s\"",
-                String_val (version), bridge_ast::version);
-      failwith (buf);
-    }
-  return Val_unit;
 }
