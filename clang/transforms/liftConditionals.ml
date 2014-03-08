@@ -71,17 +71,7 @@ let append_stmts stmt stmts =
 let transform_decl clang =
   let open Ast in
 
-  let rec v = MapVisitor.({
-    map_desg = (fun state desg -> visit_desg v state desg);
-    map_decl;
-    map_expr;
-    map_ctyp = (fun state ctyp -> visit_ctyp v state ctyp);
-    map_tloc = (fun state tloc -> visit_tloc v state tloc);
-    map_stmt;
-  })
-
-
-  and map_expr state expr =
+  let rec map_expr v state expr =
     match expr.e with
     | ConditionalOperator (cond, then_expr, else_expr) ->
         let (state, var) = make_temporary state in
@@ -116,7 +106,7 @@ let transform_decl clang =
           s_cref = Ref.null;
         } in
 
-        let (state, if_stmt) = map_stmt state if_stmt in
+        let (state, if_stmt) = map_stmt v state if_stmt in
 
         let inserted_stmts = if_stmt :: state.inserted_stmts in
         let inserted_decls = var_decl :: state.inserted_decls in
@@ -130,7 +120,7 @@ let transform_decl clang =
         MapVisitor.visit_expr v state expr
 
 
-  and map_stmt state stmt =
+  and map_stmt v state stmt =
     match stmt.s with
     | CompoundStmt stmts ->
         (* There should be no unclaimed inserted decls/stmts. *)
@@ -141,7 +131,7 @@ let transform_decl clang =
            so we can reuse temporary variable names. *)
         let _, stmts =
           List.fold_left (fun (state, stmts) stmt ->
-            let (state, stmt) = map_stmt state stmt in
+            let (state, stmt) = map_stmt v state stmt in
             (clear_state state,
              stmt :: state.inserted_stmts @ state.inserted_decls @ stmts)
           ) (state, []) stmts
@@ -150,15 +140,15 @@ let transform_decl clang =
         (state, { stmt with s = CompoundStmt (List.rev stmts) })
 
     | IfStmt (cond, then_stmt, else_stmt) ->
-        let (state, cond) = map_expr state cond in
-        let then_stmt = map_sub_stmt state then_stmt in
-        let else_stmt = Option.map (map_sub_stmt state) else_stmt in
+        let (state, cond) = map_expr v state cond in
+        let then_stmt = map_sub_stmt v state then_stmt in
+        let else_stmt = Option.map (map_sub_stmt v state) else_stmt in
 
         (state, { stmt with s = IfStmt (cond, then_stmt, else_stmt) })
 
     | WhileStmt (cond, body) ->
-        let (state, cond) = map_expr state cond in
-        let body = map_sub_stmt state body in
+        let (state, cond) = map_expr v state cond in
+        let body = map_sub_stmt v state body in
 
         (* Execute the replacement code for the condition again
            after each iteration. *)
@@ -175,8 +165,8 @@ let transform_decl clang =
      we wrap the original sub-statement together with the added
      statements and declarations in a new compound statement.
      If no statements were added, we leave it alone. *)
-  and map_sub_stmt state stmt =
-    let (state, stmt) = map_stmt (clear_state state) stmt in
+  and map_sub_stmt v state stmt =
+    let (state, stmt) = map_stmt v (clear_state state) stmt in
 
     match state.inserted_stmts, state.inserted_decls with
     | [], [] -> stmt
@@ -187,7 +177,7 @@ let transform_decl clang =
         }
 
 
-  and map_decl state decl =
+  and map_decl v state decl =
     match decl.d with
     | EnumConstantDecl (name, value) ->
         (* These might contain constant conditionals. We should
@@ -200,5 +190,12 @@ let transform_decl clang =
 
 
   in
+
+  let v = MapVisitor.({
+    default with
+    map_decl;
+    map_expr;
+    map_stmt;
+  }) in
 
   snd % MapVisitor.visit_decl v empty_state
