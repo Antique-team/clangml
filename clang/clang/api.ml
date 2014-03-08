@@ -14,11 +14,11 @@ type context
 type _ request =
   (* Handshake:
      - client sends its AST version
-     - server checks version and sends None in case they are
-       equal, Some version with its own version otherwise.
+     - server checks version and sends a communication token
+       in case they are equal, and raises E_Version otherwise.
      We keep the handshake constructor in the first place,
      so its binary interface remains stable. *)
-  | Handshake : (* version *)string -> string option request
+  | Handshake : (* version *)string -> string request
 
   (* Compose two messages. This composition can nest arbitrarily,
      enabling a user to create any command tree. The server
@@ -42,6 +42,7 @@ type _ request =
 
 type error =
   | E_NullRef
+  | E_Version of string
 
 type 'a response =
   | Error of error
@@ -131,17 +132,14 @@ let connect continue =
       let output = Unix.out_channel_of_descr client_write in
 
       let token =
-        match request (None, input, output) @@ Handshake Ast.version with
-        | None ->
-            (* Handshake OK. *)
-            Some Ast.version
-
-        | Some version ->
-            failwith (
-              "AST versions do not match: \
-               server says " ^ version ^
-              ", but we have " ^ Ast.version
-            )
+        try
+          request (None, input, output) @@ Handshake Ast.version
+        with E (E_Version version) ->
+          failwith (
+            "AST versions do not match: server says\n"
+            ^ version ^ ", but we have\n"
+            ^ Ast.version
+          )
       in
 
       finally 

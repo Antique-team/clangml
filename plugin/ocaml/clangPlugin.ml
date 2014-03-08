@@ -15,9 +15,9 @@ let run_processor (tu : decl) (file : string) (ctx : Clang.Api.context) =
 
     | Handshake version ->
         if version = Clang.Ast.version then
-          None
+          Clang.Ast.version
         else
-          Some Clang.Ast.version
+          failure @@ E_Version Clang.Ast.version
 
     | TranslationUnit ->
         tu
