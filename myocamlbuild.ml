@@ -9,7 +9,6 @@ let cxxflags = atomise [
   "-Itools/bridgen/c++";
   "-Iplugin/c++";
   "-I../" ^ clangdir ^ "/include";
-  "-Icamlp4_autogen/cutil";
   "-D__STDC_CONSTANT_MACROS";
   "-D__STDC_LIMIT_MACROS";
   "-fPIC";
