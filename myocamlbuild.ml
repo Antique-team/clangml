@@ -196,6 +196,34 @@ let () =
             ] @ objects @ ldflags))
           end;
 
+        rule "Noweb to OCaml interface file"
+          ~prod:"%.mli"
+          ~dep:"%.ml.nw"
+          begin fun env build ->
+            Cmd (S[
+              A"notangle";
+              A"-L# %L \"%F\"%N";
+              A"-R.mli";
+              A(env "%.ml.nw");
+              Sh">";
+              A(env "%.mli");
+            ])
+          end;
+
+        rule "Noweb to OCaml implementation file"
+          ~prod:"%.ml"
+          ~dep:"%.ml.nw"
+          begin fun env build ->
+            Cmd (S[
+              A"notangle";
+              A"-L# %L \"%F\"%N";
+              A"-R.ml";
+              A(env "%.ml.nw");
+              Sh">";
+              A(env "%.ml");
+            ])
+          end;
+
     | _ ->
         ()
   end
