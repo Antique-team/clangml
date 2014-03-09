@@ -48,7 +48,7 @@ public:
   private:
     static size_t const id;
 
-    friend class heterogenous_container<Concrete>;
+    friend struct heterogenous_container<Concrete>;
   };
 
 private:

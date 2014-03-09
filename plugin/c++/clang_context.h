@@ -6,7 +6,7 @@
 
 namespace clang
 {
-  struct SourceManager;
+  class SourceManager;
 }
 
 struct clang_context

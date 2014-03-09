@@ -6,16 +6,20 @@ let ocamldir = Sys.getenv "HOME" ^ "/.opam/4.01.0+PIC"
 let atomise = List.map (fun a -> A a)
 
 let cxxflags = atomise [
-  "-Itools/bridgen/c++";
-  "-Iplugin/c++";
-  "-I../" ^ clangdir ^ "/include";
-  "-D__STDC_CONSTANT_MACROS";
-  "-D__STDC_LIMIT_MACROS";
+  "-Wall";
+  "-Werror";
+
   "-fPIC";
   "-fvisibility=hidden";
   "-std=c++11";
   "-ggdb3";
   "-O3";
+
+  "-Itools/bridgen/c++";
+  "-Iplugin/c++";
+  "-I../" ^ clangdir ^ "/include";
+  "-D__STDC_CONSTANT_MACROS";
+  "-D__STDC_LIMIT_MACROS";
 ]
 
 let ldflags = [

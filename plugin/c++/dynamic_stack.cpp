@@ -25,6 +25,32 @@ namespace dynamic_stack_detail
 #endif
     return ti.name ();
   }
+
+
+  // Special case for Expr -> Stmt
+  template<>
+  ptr<bridge_ast::Stmt>
+  adt_cast (adt_ptr adt)
+  {
+    using namespace bridge_ast;
+
+    ptr<Stmt> p = boost::dynamic_pointer_cast<Stmt> (adt);
+    if (!p)
+      {
+        ptr<Expr> expr = adt_cast<Expr> (adt);
+        if (!expr)
+          {
+            printf ("Expected either Stmt or Expr, but got type %s\n",
+                    name (*adt).c_str ());
+            throw std::bad_cast ();
+          }
+        ptr<Stmt> stmt = mkStmt ();
+        stmt->s = mkExprStmt (expr);
+        stmt->s_sloc = expr->e_sloc;
+        return stmt;
+      }
+    return p;
+  }
 }
 
 

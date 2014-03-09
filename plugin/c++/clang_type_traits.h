@@ -3,11 +3,11 @@
 
 namespace clang
 {
-  struct Decl;
-  struct Expr;
-  struct Stmt;
-  struct QualType;
-  struct TypeLoc;
+  class Decl;
+  class Expr;
+  class Stmt;
+  class QualType;
+  class TypeLoc;
 }
 
 namespace bridge_ast
