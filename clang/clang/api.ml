@@ -117,8 +117,14 @@ let failure e =
   raise (E e)
 
 
+type clang = {
+  input  : in_channel;
+  output : out_channel;
+  token  : string;
+}
+
 (* Client functions. *)
-let request (token, input, output) (msg : 'a request) : 'a =
+let request { input; output } (msg : 'a request) : 'a =
   Marshal.to_channel output msg [];
   flush output;
   match Marshal.from_channel input with
@@ -139,7 +145,7 @@ let connect continue =
 
       let token =
         try
-          request (None, input, output) @@ Handshake Ast.version
+          request { input; output; token = "" } @@ Handshake Ast.version
         with E (E_Version version) ->
           failwith (
             "AST versions do not match: server says\n"
@@ -149,7 +155,7 @@ let connect continue =
       in
 
       finally 
-        continue (token, input, output)
+        continue { input; output; token }
         (fun () ->
            close_in input;
            close_out output;

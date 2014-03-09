@@ -1,14 +1,11 @@
 NCPU := $(shell expr $(shell cat /proc/cpuinfo | grep processor | grep -o '[0-9]\+' | tail -n1) + 1)
 
-OCAMLBUILD_FLAGS =				\
-	-use-ocamlfind -j $(NCPU)
-
 TARGETS =			\
 	clangaml.dylib		\
 	consumer/processor.native
 
 myclang: $(shell find */ -type f -not -wholename "_build/*") $(filter-out myclang, $(wildcard *))
-	ocamlbuild $(OCAMLBUILD_FLAGS) $(TARGETS)
+	ocamlbuild -j $(NCPU) $(TARGETS)
 	@touch $@
 
 clean:

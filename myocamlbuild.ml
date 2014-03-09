@@ -89,7 +89,8 @@ let () =
   dispatch begin function
     | Before_options ->
         (*Options.ocaml_cflags := ["-warn-error"; "A"]*)
-        Options.ocaml_cflags := ["-I"; "+camlp4/Camlp4Parsers"]
+        Options.ocaml_cflags := ["-I"; "+camlp4/Camlp4Parsers"];
+        Options.use_ocamlfind := true;
 
     | After_rules ->
         rule "Generate map and fold visitors from bridge AST"
