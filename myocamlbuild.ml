@@ -92,6 +92,23 @@ let () =
         Options.ocaml_cflags := ["-I"; "+camlp4/Camlp4Parsers"]
 
     | After_rules ->
+        rule "Generate map and fold visitors from bridge AST"
+          ~prods:[
+            "clang/clang/visitor/mapVisitor.ml";
+            "clang/clang/visitor/foldVisitor.ml"
+          ]
+          ~deps:[
+            "clang/clang/bridge.ml";
+            "tools/visitgen/visitgen.native";
+          ]
+          begin fun env build ->
+            Cmd (S[
+              A"tools/visitgen/visitgen.native";
+              A"clang/clang/visitor";
+              A"clang/clang/bridge.ml";
+            ])
+          end;
+
         rule "Produce clean bridge AST without camlp4 extensions"
           ~prod:"clang/clang/bridge.ml"
           ~dep:"clang/clang/ast.ml"

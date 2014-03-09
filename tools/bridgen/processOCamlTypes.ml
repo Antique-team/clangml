@@ -1,5 +1,9 @@
 (* Common functionality. *)
-open Parse
+open DefineOCamlTypes
+
+module Log = Logger.Make(struct let tag = "ProcessOCamlTypes" end)
+
+let (%) f g x = f (g x)
 
 
 type context = {

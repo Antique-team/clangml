@@ -1,3 +1,4 @@
+open DefineOCamlTypes
 open ProcessOCamlTypes
 
 module Log = Logger.Make(struct let tag = "main" end)
@@ -72,7 +73,7 @@ let is_basic_type = function
 
 
 let is_nonnull_ptr ctx = function
-  | Parse.NamedType (_, name) ->
+  | NamedType (_, name) ->
       (* Basic types and enum types are no pointers. *)
       if is_basic_type name || List.mem name ctx.enum_types then
         false
@@ -83,7 +84,7 @@ let is_nonnull_ptr ctx = function
       false
 
 
-let rec translate_type ctx = let open Parse in let open Codegen in function
+let rec translate_type ctx = let open Codegen in function
   | NamedType (_, "bool") ->
       TyBool
   | NamedType (_, "char") ->
@@ -276,7 +277,7 @@ let class_intf_for_sum_type ctx (_, sum_type_name, branches) =
  * Main
  *****************************************************)
 
-let gen_code_for_sum_type ctx (sum_type : Parse.sum_type) =
+let gen_code_for_sum_type ctx (sum_type : sum_type) =
   if List.mem (name_of_sum_type sum_type) ctx.enum_types then
     [Codegen.Enum (enum_intf_for_constant_sum_type sum_type)]
   else
@@ -336,7 +337,7 @@ let class_intf_for_record_type ctx (_, record_name, fields) =
   }
 
 
-let gen_code_for_record_type ctx (record_type : Parse.record_type) =
+let gen_code_for_record_type ctx (record_type : record_type) =
   let open Codegen in
 
   let factory =
@@ -359,7 +360,7 @@ let gen_code_for_record_type ctx (record_type : Parse.record_type) =
   [Codegen.Class (class_intf_for_record_type ctx record_type); factory]
 
 
-let name_of_type = let open Parse in function
+let name_of_type = function
   | SumType (_, name, _)
   | AliasType (_, name, _)
   | RecordType (_, name, _) -> name
@@ -367,7 +368,7 @@ let name_of_type = let open Parse in function
   | RecursiveType _ -> failwith "recursive types have no name"
 
 
-let gen_code_for_ocaml_type ctx = let open Parse in function
+let gen_code_for_ocaml_type ctx = function
   | SumType ty -> gen_code_for_sum_type ctx ty
   | RecordType ty -> gen_code_for_record_type ctx ty
   | AliasType _ -> []
@@ -376,7 +377,7 @@ let gen_code_for_ocaml_type ctx = let open Parse in function
 
 
 let gen_code_for_rec_type ctx = function
-  | Parse.RecursiveType (_, rec_types) ->
+  | RecursiveType (_, rec_types) ->
       (* Generate forward declarations for recursive types.
          Only consider types that will be turned into classes,
          as recursive type definitions may contain some enum
@@ -389,7 +390,7 @@ let gen_code_for_rec_type ctx = function
         List.map (gen_code_for_ocaml_type ctx) rec_types
         |> List.flatten
       )
-  | Parse.Version (_, version) ->
+  | Version (_, version) ->
       let open Codegen in
       let ty = TyConst (TyPointer (TyConst TyChar)) in
       [Variable (ty, "version", StrLit version)]
@@ -397,14 +398,14 @@ let gen_code_for_rec_type ctx = function
       gen_code_for_ocaml_type ctx ty
 
 
-let code_gen dir basename (ocaml_types : Parse.ocaml_type list) =
+let code_gen dir basename (ocaml_types : ocaml_type list) =
   let ctx = make_context ocaml_types in
 
   (* Get AST version. *)
   begin
     match
       List.map (function
-        | Parse.Version (_, version) -> [version]
+        | Version (_, version) -> [version]
         | _ -> []
       ) ocaml_types
       |> List.flatten
@@ -440,7 +441,7 @@ let code_gen dir basename (ocaml_types : Parse.ocaml_type list) =
 
 let parse_and_generate dir basename source =
   let ocaml_types = Parse.parse_file source in
-  (*print_endline (Show.show_list<Parse.ocaml_type> ocaml_types);*)
+  (*print_endline (Show.show_list<ocaml_type> ocaml_types);*)
   code_gen dir basename ocaml_types
 
   (* TODO: Think about detecting versioning mismatch between generated and ocaml ast.*)

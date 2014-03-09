@@ -1,4 +1,6 @@
 open Camlp4.PreCast
+open DefineOCamlTypes
+open PrintOCamlTypes
 
 let (%) f g x = f (g x)
 
@@ -7,81 +9,7 @@ let (%) f g x = f (g x)
 (* *)
 (* *)
 
-module M = Camlp4OCamlRevisedParser.Make(Syntax)
-module P4Parser = Camlp4OCamlParser.Make(Syntax)
-(* DCC: Note: above are needed for their side effects (grrr) *)
-
-module Quotation = Camlp4QuotationCommon.Make(P4Parser)(Syntax.AntiquotSyntax)
-module P4Printer = Camlp4.Printers.OCaml.Make(Syntax)
-
 module Log = Logger.Make(struct let tag = "parse" end)
-
-
-type loc = Ast.loc
-
-module Show_loc = Deriving_Show.Defaults(struct
-    type a = loc
-
-    let format fmt loc =
-      Format.fprintf fmt "<loc>"
-
-  end)
-
-
-type basic_type =
-  (* Simple type *)
-  | NamedType of loc * string
-  (* Clang pointer *)
-  | ClangType of loc * string
-  (* List of basic_type *)
-  | ListOfType of loc * basic_type
-  (* Optional basic_type *)
-  | OptionType of loc * basic_type
-  (* Will want others, eventually *)
-  deriving (Show)
-
-type sum_type_branch = loc * (* branch_name *)string * (* types *)basic_type list
-  deriving (Show)
-
-type sum_type = loc * (* sum_type_name *)string * (* branches *)sum_type_branch list
-  deriving (Show)
-
-type record_member = loc * (* name *)string * (* type *)basic_type
-  deriving (Show)
-
-type record_type = loc * (* name *)string * (* members *)record_member list
-  deriving (Show)
-
-type ocaml_type =
-  | AliasType of loc * string * basic_type
-  | SumType of sum_type
-  | RecordType of record_type
-  | RecursiveType of loc * ocaml_type list
-  | Version of loc * string
-  deriving (Show)
-
-
-(* Debugging *)
-
-let print_meta_expr (e : Ast.expr) =
-  P4Printer.print None (fun o -> o#expr) e;
-  print_endline ""
-
-let print_str_item_as_meta (str_item : Ast.str_item) : unit =
-  let meta_e = Quotation.MetaAst.Expr.meta_str_item Ast.Loc.ghost str_item in
-  print_meta_expr meta_e
-
-let print_ctyp (t : Ast.ctyp) =
-  P4Printer.print None (fun o f t -> Format.fprintf f "@[<v2>ctyp: <%a>@]@\n" o#ctyp t) t
-
-let print_ctyp_as_meta (t : Ast.ctyp) : unit =
-  let meta_t = Quotation.MetaAst.Expr.meta_ctyp Ast.Loc.ghost t in
-  print_meta_expr meta_t
-
-let print_expanded_str_item str_item =
-  let e = Quotation.MetaAst.Expr.meta_str_item Ast.Loc.ghost str_item in
-  print_meta_expr e
-
 
 
 let rec ast_type_to_type (ctyp: Ast.ctyp) =

@@ -3,3 +3,5 @@
 
 # pack
 <*.cmx>: for-pack(Clang)
+
+"visitor": include
