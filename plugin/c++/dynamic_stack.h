@@ -5,8 +5,6 @@
 #include <type_traits>
 #include <typeinfo>
 
-#include <cxxabi.h>
-
 #include "bridge_ast.h"
 
 namespace dynamic_stack_detail
