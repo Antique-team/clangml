@@ -4,13 +4,24 @@ open PrintOCamlTypes
 open ProcessOCamlTypes
 
 
+type kind =
+  | Map
+  | Fold
+
+let name_of_kind = function
+  | Map -> "map"
+  | Fold -> "fold"
+
+
 let reduce f = function
   | [] -> assert false
   | fn :: fns -> List.fold_left f fn fns
 
 
-let codegen ocaml_types =
+let codegen kind ocaml_types =
   let ctx = make_context @@ snd @@ List.split ocaml_types in
+
+  let prefix = name_of_kind kind ^ "_" in
 
   let visit_types =
     List.filter (fun (name, _) ->
@@ -67,6 +78,21 @@ let codegen ocaml_types =
                  Ast.PaApp (_loc, tycon, param))
           in
 
+          let result =
+            match kind with
+            | Map ->
+                let reconstruct =
+                  construct <:expr<$uid:tycon$>>
+                    (fun i _loc name -> 
+                       <:expr<$lid:name ^ string_of_int i$>>)
+                    (fun _loc tycon param ->
+                       Ast.ExApp (_loc, tycon, param))
+                in
+                <:expr<(state, $reconstruct$)>>
+            | Fold ->
+                <:expr<state>>
+          in
+
           let update =
             List.mapi (fun i ty -> (i, ty)) tycon_args
             |> List.rev
@@ -78,35 +104,41 @@ let codegen ocaml_types =
                 let mkmap name = function
                   | None ->
                       let var = mangle name in
-                      <:expr<v.$lid:"fold_" ^ name$ v state $lid:var$>>
+                      <:expr<v.$lid:prefix ^ name$ v state $lid:var$>>
                   | Some fn ->
                       let var = mangle name in
-                      <:expr<$lid:"fold_" ^ fn$ v.$lid:"fold_" ^ name$ v state $lid:var$>>
+                      <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v state $lid:var$>>
                 in
 
                 let update =
                   match ty with
                   | ListOfType (_, NamedType (_loc, name))
                     when List.mem name visit_type_names ->
-                      Some (mkmap name (Some "list"))
+                      Some (name, mkmap name (Some "list"))
                   | OptionType (_, NamedType (_loc, name))
                     when List.mem name visit_type_names ->
-                      Some (mkmap name (Some "option"))
+                      Some (name, mkmap name (Some "option"))
                   | NamedType (_loc, name)
                     when List.mem name visit_type_names ->
-                      Some (mkmap name None)
+                      Some (name, mkmap name None)
                   | _ ->
                       None
                 in
 
                 match update with
                 | None -> expr
-                | Some update ->
+                | Some (name, update) ->
+                    let name = mangle name in
+                    let patt =
+                      match kind with
+                      | Map -> <:patt<(state, $lid:name$)>>
+                      | Fold -> <:patt<state>>
+                    in
                     <:expr<
-                      let state = $update$ in
+                      let $patt$ = $update$ in
                       $expr$
                     >>
-              ) <:expr<state>>
+              ) result
           in
 
           <:match_case<$pattern$ -> $update$>>
@@ -125,10 +157,29 @@ let codegen ocaml_types =
         ) rec_mems
       in
 
-      <:str_item@rec_loc<
-        let $lid:"visit_" ^ name$ v state $lid:name$ =
+      let do_match =
+        <:expr@rec_loc<
           match $lid:name$.$lid:main_member$ with
           $match_cases$
+        >>
+      in
+
+      let body =
+        match kind with
+        | Map ->
+            <:expr@rec_loc<
+              let (state, $lid:main_member$) =
+                $do_match$
+              in
+              (state, { $lid:name$ with $lid:main_member$ })
+            >>
+        | Fold ->
+            do_match
+      in
+
+      <:str_item@rec_loc<
+        let $lid:"visit_" ^ name$ v state $lid:name$ =
+          $body$
       >>
     ) visit_types
     |> reduce (fun functions fn ->
@@ -140,12 +191,18 @@ let codegen ocaml_types =
 
   let members =
     let mkty (name, (_loc, _, _), _) =
+      let result_ty =
+        match kind with
+        | Map -> <:ctyp<'a * $lid:name$>>
+        | Fold -> <:ctyp<'a>>
+      in
+
       <:ctyp<
-        $id:(<:ident< $lid:"fold_" ^ name$ >>)$
+        $id:(<:ident< $lid:prefix ^ name$ >>)$
           : 'a visitor
           -> 'a
           -> $lid:name$
-          -> 'a
+          -> $result_ty$
       >>
     in
 
@@ -159,7 +216,7 @@ let codegen ocaml_types =
 
   let default =
     let mkbinding (name, (_loc, _, _), _) =
-      <:rec_binding<$lid:"fold_" ^ name$ = $lid:"visit_" ^ name$>>
+      <:rec_binding<$lid:prefix ^ name$ = $lid:"visit_" ^ name$>>
     in
 
     List.map mkbinding visit_types

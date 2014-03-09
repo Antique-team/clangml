@@ -16,17 +16,13 @@ let parse_and_generate dir source =
       )
   in
 
-  Unix.mkdir dir 0o777;
-
-  [
-    "map", GenerateMapVisitor. codegen ocaml_types;
-    "fold", GenerateFoldVisitor.codegen ocaml_types;
-  ]
-  |> List.iter (fun (name, impl) ->
-      let output_file = dir ^ "/" ^ name ^ "Visitor.ml" in
-      (*OCamlPrinter.print_implem ~output_file impl;*)
-      OCamlDumper.print_implem ~output_file impl;
-    )
+  List.iter (fun kind ->
+    let name = GenerateVisitor.name_of_kind kind in
+    let output_file = dir ^ "/" ^ name ^ "Visitor.ml" in
+    let impl = GenerateVisitor.codegen kind ocaml_types in
+    (*OCamlPrinter.print_implem impl;*)
+    OCamlDumper.print_implem ~output_file impl;
+  ) GenerateVisitor.([Map; Fold])
 
 
 let () =

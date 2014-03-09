@@ -100,6 +100,9 @@ let () =
           ~deps:[
             "clang/clang/bridge.ml";
             "tools/visitgen/visitgen.native";
+            (* This one is not a real dependency, but it makes sure
+               that the target path exists. *)
+            "clang/clang/visitor/visitor.ml";
           ]
           begin fun env build ->
             Cmd (S[
