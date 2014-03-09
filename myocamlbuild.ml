@@ -94,20 +94,17 @@ let () =
     | After_rules ->
         rule "Generate map and fold visitors from bridge AST"
           ~prods:[
-            "clang/clang/visitor/mapVisitor.ml";
-            "clang/clang/visitor/foldVisitor.ml"
+            "clang/clang/mapVisitor.ml";
+            "clang/clang/foldVisitor.ml"
           ]
           ~deps:[
-            "clang/clang/bridge.ml";
             "tools/visitgen/visitgen.native";
-            (* This one is not a real dependency, but it makes sure
-               that the target path exists. *)
-            "clang/clang/visitor/visitor.ml";
+            "clang/clang/bridge.ml";
           ]
           begin fun env build ->
             Cmd (S[
               A"tools/visitgen/visitgen.native";
-              A"clang/clang/visitor";
+              A"clang/clang";
               A"clang/clang/bridge.ml";
             ])
           end;

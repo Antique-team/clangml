@@ -5,6 +5,7 @@ Bridge
 FoldVisitor
 ImplicitCast
 MapVisitor
+Option
 Pp
 Prelude
 Query

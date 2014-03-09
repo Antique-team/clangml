@@ -1,7 +1,6 @@
 open Camlp4.PreCast
-open DefineOCamlTypes
-open PrintOCamlTypes
-open ProcessOCamlTypes
+open OcamlTypes.Define
+open OcamlTypes.Process
 
 
 type kind =

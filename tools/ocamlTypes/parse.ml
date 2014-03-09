@@ -1,6 +1,6 @@
 open Camlp4.PreCast
-open DefineOCamlTypes
-open PrintOCamlTypes
+open Define
+open Print
 
 let (%) f g x = f (g x)
 

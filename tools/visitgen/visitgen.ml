@@ -1,12 +1,12 @@
 open Camlp4.PreCast
-open DefineOCamlTypes
-open PrintOCamlTypes
-open ProcessOCamlTypes
+open OcamlTypes.Define
+open OcamlTypes.Print
+open OcamlTypes.Process
 
 
 let parse_and_generate dir source =
   let ocaml_types =
-    Parse.parse_file source
+    OcamlTypes.Parse.parse_file source
     |> flatten_recursive_types
     |> List.map (function
         | RecordType (_, name, _)

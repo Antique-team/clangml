@@ -1,0 +1,5 @@
+# pack
+<*.cmx>: for-pack(OcamlTypes)
+
+# camlp4
+<*.ml>: package(deriving-ocsigen.syntax), package(camlp4.quotations), syntax(camlp4o)

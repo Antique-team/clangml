@@ -1,4 +1,2 @@
-"ocaml": include
-
 # Don't look at external (clang) code.
 "ext": -traverse

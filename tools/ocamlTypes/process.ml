@@ -1,5 +1,5 @@
 (* Common functionality. *)
-open DefineOCamlTypes
+open Define
 
 module Log = Logger.Make(struct let tag = "ProcessOCamlTypes" end)
 

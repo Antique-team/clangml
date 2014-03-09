@@ -5,8 +5,7 @@ OCAMLBUILD_FLAGS =				\
 
 TARGETS =			\
 	clangaml.dylib		\
-	processor.native	\
-	visitgen.native
+	consumer/processor.native
 
 myclang: $(shell find */ -type f -not -wholename "_build/*") $(filter-out myclang, $(wildcard *))
 	ocamlbuild $(OCAMLBUILD_FLAGS) $(TARGETS)

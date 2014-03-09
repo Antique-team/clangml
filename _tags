@@ -1,7 +1,5 @@
 # Subdirectories
 "clang":	include
-"consumer":	include
-"plugin":	include
 "tools":	include
 "util":		include
 

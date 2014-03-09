@@ -1,5 +1,5 @@
-open DefineOCamlTypes
-open ProcessOCamlTypes
+open OcamlTypes.Define
+open OcamlTypes.Process
 
 module Log = Logger.Make(struct let tag = "main" end)
 
@@ -440,7 +440,7 @@ let code_gen dir basename (ocaml_types : ocaml_type list) =
 
 
 let parse_and_generate dir basename source =
-  let ocaml_types = Parse.parse_file source in
+  let ocaml_types = OcamlTypes.Parse.parse_file source in
   (*print_endline (Show.show_list<ocaml_type> ocaml_types);*)
   code_gen dir basename ocaml_types
 
