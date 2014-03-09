@@ -63,13 +63,19 @@ let spawn prog (handle : 'a request -> 'a) : Unix.process_status =
       List.iter Unix.close [server_read; server_write];
 
       (* Start client program. *)
-      Unix.execv prog [|
-        prog;
-        (* The fd numbers are passed on the command line. In the
-           client process, these fds are still open, but the program
-           needs to be told what they are. *)
-        String.escaped (Marshal.to_string (client_read, client_write) []);
-      |]
+      begin try
+        Unix.execv prog [|
+          prog;
+          (* The fd numbers are passed on the command line. In the
+             client process, these fds are still open, but the program
+             needs to be told what they are. *)
+          String.escaped (Marshal.to_string (client_read, client_write) []);
+        |]
+      with Unix.Unix_error (error, operation, argument) ->
+        Format.printf "%s: %s %s\n"
+          (Unix.error_message error) operation argument;
+        exit 1;
+      end
 
   | pid ->
       let input  = Unix. in_channel_of_descr server_read  in
