@@ -336,10 +336,6 @@ and c_lval_of_expr prog env { e = expr; e_type; } =
 
 
 and c_exprk_of_expr prog env = function
-  | ImplicitCastExpr (_, expr) ->
-      (* Ignore implicit casts within sub-expressions. *)
-      c_exprk_of_expr prog env expr.e
-
   | IntegerLiteral i ->
       Ceconst (Ccint i)
 
@@ -365,6 +361,7 @@ and c_exprk_of_expr prog env = function
       c_exprk_of_expr prog env expr.e
 
   | CStyleCastExpr _ -> Log.unimp "exprk CStyleCastExpr"
+  | ImplicitCastExpr _ -> Log.unimp "exprk ImplicitCastExpr"
 
   | CharacterLiteral _ -> Log.unimp "exprk CharacterLiteral"
   | FloatingLiteral _ -> Log.unimp "exprk FloatingLiteral"
@@ -405,8 +402,7 @@ and c_expr_of_expr prog env expr =
     ) ->
       {
         cek = Ceconst Ccnull;
-        (* TODO: We could get the type of the outer ImplicitCastExpr. *)
-        cet = Ctptr None;
+        cet = c_type_of_type expr.e_type.t;
       }
 
   | UnaryOperator (UO_Deref, _)
@@ -513,14 +509,14 @@ let rec c_stats_of_stmts prog env stmts =
                 | None ->
                     None
                 | Some expr ->
-                    Some (c_expr_of_expr prog env (Clang.ImplicitCast.strip_expr expr))
+                    Some (c_expr_of_expr prog env expr)
               );
             } in
             loop env (stat :: stats) tl
 
         | ExprStmt e ->
             let stat =
-              match Clang.ImplicitCast.strip_expr e with
+              match e with
               (* Special handling of malloc. *)
               | { e = BinaryOperator (BO_Assign, lhs,
                                       { e = CallExpr (callee, [arg]) })
@@ -559,7 +555,6 @@ let rec c_stats_of_stmts prog env stmts =
             loop env (stat :: stats) tl
 
         | WhileStmt (cond, body) ->
-            let cond = Clang.ImplicitCast.strip_expr cond in
             let stat =
               let stmts = Clang.Query.body_of_stmt body in
               {
@@ -574,7 +569,6 @@ let rec c_stats_of_stmts prog env stmts =
             loop env (stat :: stats) tl
 
         | IfStmt (cond, then_body, else_body) ->
-            let cond = Clang.ImplicitCast.strip_expr cond in
             let stat =
               let then_stmts = Clang.Query.body_of_stmt then_body in
               let else_stmts =

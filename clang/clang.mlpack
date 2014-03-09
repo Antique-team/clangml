@@ -3,7 +3,6 @@ Api
 Ast
 Bridge
 FoldVisitor
-ImplicitCast
 MapVisitor
 Option
 Pp

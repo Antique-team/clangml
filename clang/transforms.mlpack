@@ -2,5 +2,6 @@
 All
 LiftConditionals
 MapStmt
+RemoveImplicitCast
 SimplifyDeclStmt
 SplitInitialisers
