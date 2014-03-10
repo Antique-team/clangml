@@ -37,37 +37,6 @@ let make_temporary state =
   ({ state with generated_vars = state.generated_vars + 1 }, var)
 
 
-let assign var expr =
-  let open Ast in
-
-  ExprStmt {
-    e = BinaryOperator (
-        BO_Assign,
-        { e = DeclRefExpr var;
-          e_sloc = expr.e_sloc;
-          e_type = expr.e_type;
-          e_cref = Ref.null;
-        },
-        expr
-      );
-    e_sloc = expr.e_sloc;
-    e_type = expr.e_type;
-    e_cref = Ref.null;
-  }
-
-
-let append_stmts stmt stmts =
-  let open Ast in
-
-  match stmts with
-  | [] -> stmt
-  | stmts ->
-      { s = CompoundStmt (stmt :: stmts);
-        s_sloc = stmt.s_sloc;
-        s_cref = Ref.null;
-      }
-
-
 let transform_decl clang =
   let open Ast in
 
@@ -79,32 +48,17 @@ let transform_decl clang =
         let if_stmt = {
           s = IfStmt (
               cond,
-              { s = assign var then_expr;
-                s_sloc = then_expr.e_sloc;
-                s_cref = Ref.null;
-              },
-              Some { s = assign var else_expr;
-                     s_sloc = else_expr.e_sloc;
-                     s_cref = Ref.null;
-                   }
+              Codegen.assign var then_expr,
+              Some (Codegen.assign var else_expr)
             );
           s_sloc = cond.e_sloc;
           s_cref = Ref.null;
         } in
 
-        let var_decl = {
-          s = DeclStmt [{
-              d = VarDecl (
-                  Types.tloc_of_ctyp expr.e_sloc expr.e_type,
-                  var,
-                  None
-                );
-              d_sloc = cond.e_sloc;
-              d_cref = Ref.null;
-            }];
-          s_sloc = cond.e_sloc;
-          s_cref = Ref.null;
-        } in
+        let var_decl =
+          Codegen.declare cond.e_sloc var
+            (Types.tloc_of_ctyp expr.e_sloc expr.e_type)
+        in
 
         let (state, if_stmt) = map_stmt v state if_stmt in
 
@@ -152,7 +106,7 @@ let transform_decl clang =
 
         (* Execute the replacement code for the condition again
            after each iteration. *)
-        let body = append_stmts body state.inserted_stmts in
+        let body = Codegen.append_stmts body state.inserted_stmts in
 
         (state, { stmt with s = WhileStmt (cond, body) })
 

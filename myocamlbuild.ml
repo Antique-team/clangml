@@ -1,6 +1,6 @@
 open Ocamlbuild_plugin
 
-let clangdir = "plugin/ext/clang/build/Debug+Asserts"
+let clangdir = "plugin/ext/clang"
 let ocamldir = Sys.getenv "HOME" ^ "/.opam/4.01.0+PIC"
 
 let atomise = List.map (fun a -> A a)
