@@ -1,7 +1,6 @@
 # Subdirectories
 "clang":	include
 "tools":	include
-"util":		include
 
 true: annot
 true: debug

@@ -1,0 +1,21 @@
+# META file for clang library
+description = "Clang parser interface"
+version = "0.1"
+requires = "clang.parser,clang.transforms"
+
+package "parser" (
+requires = "clang.util,deriving-ocsigen,unix"
+archive(native) = "clang.cmx"
+archive(byte) = "clang.cmo"
+)
+
+package "transforms" (
+requires = "clang.util,clang.parser"
+archive(native) = "transforms.cmx"
+archive(byte) = "transforms.cmo"
+)
+
+package "util" (
+archive(native) = "util.cmx"
+archive(byte) = "util.cmo"
+)

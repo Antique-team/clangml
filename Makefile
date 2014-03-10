@@ -6,20 +6,35 @@ TARGETS =			\
 
 processor.native: $(shell find */ -type f -not -wholename "_build/*")
 	ocamlbuild -j $(NCPU) $(TARGETS)
-	@touch $@
 
 clean:
 	ocamlbuild -clean
-	@touch _tags
 
 wc:
 	@find */					\
 	  -not -wholename "_build/*"		-and	\
-	  -not -wholename "plugin/ext/*"	-and	\
 	  -not -wholename "plugin/testsuite/*"	-and	\
 	  -not -wholename "consumer/memcad/*"	-and	\
 	  -type f					\
 	  | sort | xargs wc -l
+
+
+install: processor.native
+	ocamlfind install clang META		\
+		_build/clangaml.dylib		\
+		_build/clang/*.cm[iox]		\
+		_build/clang/*.o		\
+		_build/clang/clang/*.mli	\
+		_build/clang/clang/ast.ml	\
+		_build/util.cm[iox]		\
+		_build/util.o
+
+uninstall:
+	ocamlfind remove clang
+
+reinstall:
+	@$(MAKE) uninstall
+	@$(MAKE) install
 
 
 ####################################################################
@@ -29,22 +44,21 @@ wc:
 ALDOR_PATH = ../github/_build/src/lang/aldor
 
 CLANGFLAGS =				\
-	-w				\
 	-I$(ALDOR_PATH)/compiler	\
 	-I$(ALDOR_PATH)/compiler/java	\
 	-DTEST_ALL			\
 	-DSTO_USE_MALLOC
 
 check: processor.native test.c
-	./processor.native $(CLANGFLAGS) -include "memcad.h" test.c
+	./processor.native -w $(CLANGFLAGS) -include "memcad.h" test.c
 
 %.test: % processor.native
-	./processor.native $(CLANGFLAGS) -include "memcad.h" $<
+	./processor.native -w $(CLANGFLAGS) -include "memcad.h" $<
 
 define testsuite
 TESTSUITE.$1 = $2
 check-$1: processor.native
-	./processor.native $(CLANGFLAGS) -include "memcad.h" $$(TESTSUITE.$1)
+	./processor.native -w $(CLANGFLAGS) -include "memcad.h" $$(TESTSUITE.$1)
 
 check-$1-separate: $$(TESTSUITE.$1:=.test)
 endef
@@ -238,8 +252,17 @@ ALDOR_SRC := $(addprefix $(ALDOR_PATH)/compiler/,$(ALDOR_SRC))
 ALDOR_SRC += $(ALDOR_PATH)/tools/frontend/main.c
 $(eval $(call testsuite,aldor,$(ALDOR_SRC)))
 
+
+ANALYSIS_FLAGS =		\
+	-fsyntax-only		\
+	-Xclang -analyze	\
+	-Xclang -analyzer-checker-help
+
 analyze-whopr: aldor.c processor.native
-	./processor.native $(CLANGFLAGS) aldor.c
+	./processor.native -w $(CLANGFLAGS) aldor.c
+
+analyze-whopr-clang: aldor.c
+	clang $(CLANGFLAGS) $(ANALYSIS_FLAGS) aldor.c
 
 aldor.c: $(ALDOR_SRC)
 	:> $@

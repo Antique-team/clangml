@@ -2,7 +2,7 @@ open C_sig
 open Clang.Ast
 open Data_structures
 
-module Log = Logger.Make(struct let tag = "transform" end)
+module Log = Util.Logger.Make(struct let tag = "transform" end)
 
 
 let lookup_var prog env name =

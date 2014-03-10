@@ -90,6 +90,24 @@ let request { input; output } (msg : 'a request) : 'a =
 
 
 let parse args continue =
+  (* Try to find our clang plugin. *)
+  let plugin =
+    try
+      List.find (fun candidate ->
+        try
+          Unix.(access candidate [R_OK]);
+          true
+        with Unix.Unix_error _ ->
+          false
+      ) [
+        "clangaml.dylib";
+        "_build/clangaml.dylib";
+        Config.destdir ^ "/clang/clangaml.dylib";
+      ]
+    with Not_found ->
+      failwith "could not find the clang ocaml plugin"
+  in
+
   (* Communication pipe. *)
   let (client_read, server_write) = Unix.pipe () in
   let (server_read, client_write) = Unix.pipe () in
@@ -111,7 +129,7 @@ let parse args continue =
           "clang";
           "-fsyntax-only";
           "-Xclang"; "-load";
-          "-Xclang"; "_build/clangaml.dylib";
+          "-Xclang"; plugin;
           "-Xclang"; "-analyze";
           "-Xclang"; "-analyzer-checker=external.OCaml";
         ] @ args

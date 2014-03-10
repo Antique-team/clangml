@@ -2,6 +2,8 @@
 (* Clients can construct a C++ AST and this module serializes*)
 (* it to source code. *)
 
+open Util
+
 module Log = Logger.Make(struct let tag = "codegen" end)
 
 

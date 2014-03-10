@@ -47,6 +47,8 @@ to_value (adt_ptr ob)
 static value
 to_value (clang::TranslationUnitDecl const *D, clang_context &ctx)
 {
+  //TIME;
+
   ptr<bridge_ast::Decl> decl
     = bridge_ast_of<bridge_ast::Decl>
         (const_cast<clang::TranslationUnitDecl *> (D), ctx);

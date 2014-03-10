@@ -7,6 +7,7 @@ let atomise = List.map (fun a -> A a)
 let cxxflags = Sh"`llvm-config-3.4 --cxxflags`" :: atomise [
   "-Wall";
   "-Werror";
+  "-fcolor-diagnostics";
 
   "-fPIC";
   "-fexceptions";
@@ -111,6 +112,18 @@ let () =
             ])
           end;
 
+        rule "Generate file containing the search path for clangaml.dylib"
+          ~prod:"clang/clang/config.ml"
+          begin fun env build ->
+            Cmd (S[
+              A"ocamlfind"; A"printconf"; A"destdir";
+              Sh"|";
+              A"sed"; A"-e"; A"s/.*/let destdir = \"&\"/";
+              Sh">";
+              A"clang/clang/config.ml";
+            ])
+          end;
+
         rule "Produce clean bridge AST without camlp4 extensions"
           ~prod:"clang/clang/bridge.ml"
           ~dep:"clang/clang/ast.ml"
@@ -127,7 +140,10 @@ let () =
           end;
 
         rule "Bridge AST generation"
-          ~prods:["plugin/c++/bridge_ast.cpp"; "plugin/c++/bridge_ast.h"]
+          ~prods:[
+            "plugin/c++/bridge_ast.cpp";
+            "plugin/c++/bridge_ast.h";
+          ]
           ~deps:[
             "clang/clang/bridge.ml";
             "tools/bridgen/bridgen.native";
@@ -136,7 +152,12 @@ let () =
             "plugin/c++/clang_ref.h";
           ]
           begin fun env build ->
-            Cmd (S[A"tools/bridgen/bridgen.native"; A"plugin/c++"; A"bridge_ast"; A"clang/clang/bridge.ml"])
+            Cmd (S[
+              A"tools/bridgen/bridgen.native";
+              A"plugin/c++";
+              A"bridge_ast";
+              A"clang/clang/bridge.ml"
+            ])
           end;
 
         flag ["compile"; "c++"; "no-rtti"] (A"-fno-rtti");
@@ -158,19 +179,16 @@ let () =
           ~deps:[
             "%.cmxa";
             "%.a";
-            "util/formatx.cmx";
-            "util/logger.cmx";
+            "util.cmx";
+            "util.o";
             "clang/clang.cmx";
-            "util/formatx.o";
-            "util/logger.o";
             "clang/clang.o";
           ]
           begin fun env build ->
             Cmd (S (atomise [
               "ocamlfind";
               "ocamlopt";
-              "util/formatx.cmx";
-              "util/logger.cmx";
+              "util.cmx";
               "clang/clang.cmx";
               env "%.cmxa";
               "-output-obj";

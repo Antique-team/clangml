@@ -2,6 +2,7 @@
 Api
 Ast
 Bridge
+Config
 FoldVisitor
 MapVisitor
 Option

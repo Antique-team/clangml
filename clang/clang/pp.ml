@@ -1,6 +1,7 @@
 (* Clang AST pretty printer *)
 
 open Ast
+open Util
 
 let string_of_qualifier = function
   | TQ_Const -> "const"

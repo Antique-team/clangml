@@ -1,4 +1,5 @@
 open Camlp4.PreCast
+open Util
 open Define
 open Print
 
