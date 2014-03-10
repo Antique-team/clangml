@@ -11,7 +11,6 @@ translate_predefined_expr (clang::PredefinedExpr::IdentType kind)
     case clang::PredefinedExpr::Func:			return PE_Func;
     case clang::PredefinedExpr::Function:		return PE_Function;
     case clang::PredefinedExpr::LFunction:		return PE_LFunction;
-    case clang::PredefinedExpr::FuncDName:		return PE_FuncDName;
     case clang::PredefinedExpr::PrettyFunction:		return PE_PrettyFunction;
     case clang::PredefinedExpr::PrettyFunctionNoVirtual:return PE_PrettyFunctionNoVirtual;
     }

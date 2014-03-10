@@ -248,6 +248,5 @@ UNIMP_DECL (UnresolvedUsingValueDecl)
 UNIMP_DECL (UsingDecl)
 UNIMP_DECL (UsingDirectiveDecl)
 UNIMP_DECL (UsingShadowDecl)
-UNIMP_DECL (VarTemplateDecl)
 
 // }}}

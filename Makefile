@@ -4,7 +4,7 @@ TARGETS =			\
 	clangaml.dylib		\
 	consumer/processor.native
 
-myclang: $(shell find */ -type f -not -wholename "_build/*") $(filter-out myclang, $(wildcard *))
+processor.native: $(shell find */ -type f -not -wholename "_build/*")
 	ocamlbuild -j $(NCPU) $(TARGETS)
 	@touch $@
 
@@ -35,16 +35,16 @@ CLANGFLAGS =				\
 	-DTEST_ALL			\
 	-DSTO_USE_MALLOC
 
-check: myclang test.c
-	./myclang $(CLANGFLAGS) -include "memcad.h" test.c
+check: processor.native test.c
+	./processor.native $(CLANGFLAGS) -include "memcad.h" test.c
 
-%.test: % myclang
-	./myclang $(CLANGFLAGS) -include "memcad.h" $<
+%.test: % processor.native
+	./processor.native $(CLANGFLAGS) -include "memcad.h" $<
 
 define testsuite
 TESTSUITE.$1 = $2
-check-$1: myclang
-	./myclang $(CLANGFLAGS) -include "memcad.h" $$(TESTSUITE.$1)
+check-$1: processor.native
+	./processor.native $(CLANGFLAGS) -include "memcad.h" $$(TESTSUITE.$1)
 
 check-$1-separate: $$(TESTSUITE.$1:=.test)
 endef
@@ -238,8 +238,8 @@ ALDOR_SRC := $(addprefix $(ALDOR_PATH)/compiler/,$(ALDOR_SRC))
 ALDOR_SRC += $(ALDOR_PATH)/tools/frontend/main.c
 $(eval $(call testsuite,aldor,$(ALDOR_SRC)))
 
-analyze-whopr: aldor.c myclang
-	./myclang $(CLANGFLAGS) aldor.c
+analyze-whopr: aldor.c processor.native
+	./processor.native $(CLANGFLAGS) aldor.c
 
 aldor.c: $(ALDOR_SRC)
 	:> $@

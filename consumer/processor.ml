@@ -48,5 +48,5 @@ let process clang =
 
 let () =
   Printexc.record_backtrace true;
-  Clang.Api.connect process;
+  Clang.Api.parse (List.tl @@ Array.to_list Sys.argv) process;
 ;;

@@ -35,19 +35,8 @@ let run_processor (tu : decl) (file : string) (ctx : Clang.Api.context) =
           clang_type_ptr ctx tloc
   in
 
-  let consumer =
-    try
-      Sys.getenv "CONSUMER"
-    with Not_found ->
-      failwith "Environment variable CONSUMER must be set to an executable filename"
-  in
-
   Gc.compact ();
-  match Clang.Api.spawn consumer handle_request with
-  | Unix.WEXITED 0 -> (* all went fine *) ()
-  | Unix.WEXITED   status -> failwith ("WEXITED "   ^ string_of_int status)
-  | Unix.WSIGNALED status -> failwith ("WSIGNALED " ^ string_of_int status)
-  | Unix.WSTOPPED  status -> failwith ("WSTOPPED "  ^ string_of_int status)
+  Clang.Api.connect handle_request
 
 
 external check_bridge_version : string -> unit = "check_bridge_version"

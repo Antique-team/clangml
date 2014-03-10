@@ -154,20 +154,6 @@ OCamlVisitor::TraverseConstantArrayType (clang::ConstantArrayType *T)
 }
 
 
-bool
-OCamlVisitor::TraverseDecayedType (clang::DecayedType *T)
-{
-  TRACE;
-
-  ptr<Ctyp> decayed = must_traverse (T->getDecayedType ());
-  ptr<Ctyp> original = must_traverse (T->getOriginalType ());
-
-  stack.push (mkDecayedType (decayed, original));
-
-  return true;
-}
-
-
 UNIMP_TYPE(Decltype)
 UNIMP_TYPE(DependentName)
 UNIMP_TYPE(DependentSizedArray)

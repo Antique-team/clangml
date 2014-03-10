@@ -41,6 +41,7 @@ type _ request =
 
 
 type error =
+  | E_Unhandled of string
   | E_NullRef
   | E_Version of string
 
@@ -52,78 +53,56 @@ exception E of error
 
 
 (* Server functions. *)
-let spawn prog (handle : 'a request -> 'a) : Unix.process_status =
-  (* Communication pipe. *)
-  let (server_read, client_write) = Unix.pipe () in
-  let (client_read, server_write) = Unix.pipe () in
+let connect (handle : 'a request -> 'a) =
+  let (server_read, server_write) =
+    Marshal.from_string (Scanf.unescaped @@ Sys.getenv "PIPE_FDS") 0
+  in
 
-  match Unix.fork () with
-  | 0 ->
-      (* Close unneeded fds. *)
-      List.iter Unix.close [server_read; server_write];
+  let input  = Unix. in_channel_of_descr server_read  in
+  let output = Unix.out_channel_of_descr server_write in
 
-      (* Start client program. *)
-      begin try
-        Unix.execv prog [|
-          prog;
-          (* The fd numbers are passed on the command line. In the
-             client process, these fds are still open, but the program
-             needs to be told what they are. *)
-          String.escaped (Marshal.to_string (client_read, client_write) []);
-        |]
-      with Unix.Unix_error (error, operation, argument) ->
-        Format.printf "%s: %s %s\n"
-          (Unix.error_message error) operation argument;
-        exit 1;
-      end
+  let rec io_loop () =
+    (* Read request. *)
+    let request = Marshal.from_channel input in
 
-  | pid ->
-      let input  = Unix. in_channel_of_descr server_read  in
-      let output = Unix.out_channel_of_descr server_write in
-
-      (* Close unneeded fds. *)
-      List.iter Unix.close [client_read; client_write];
-
-      let rec io_loop () =
-        (* Read request. *)
-        let request = Marshal.from_channel input in
-
-        (* Handle request. *)
-        let response =
-          try
-            Success (handle request)
-          with E error ->
-            Error error
-        in
-
-        (* Write response. *)
-        Marshal.to_channel output response [];
-        flush output;
-
-        (* Next iteration. *)
-        io_loop ()
-      in
-
+    (* Handle request. *)
+    let response =
       try
-        io_loop ()
-      with End_of_file ->
-        close_in input;
-        close_out output;
-        (* Wait for child process to end and retrieve process status. *)
-        snd (Unix.waitpid [] pid)
+        Success (handle request)
+      with
+      | E error ->
+          Error error
+      | exn ->
+          Error (E_Unhandled (Printexc.to_string exn))
+    in
+
+    (* Write response. *)
+    Marshal.to_channel output response [];
+    flush output;
+
+    (* Next iteration. *)
+    io_loop ()
+  in
+
+  try
+    io_loop ()
+  with End_of_file ->
+    close_in input;
+    close_out output;
+;;
 
 
 let failure e =
   raise (E e)
 
 
+(* Client functions. *)
 type clang = {
   input  : in_channel;
   output : out_channel;
   token  : string;
 }
 
-(* Client functions. *)
 let request { input; output } (msg : 'a request) : 'a =
   Marshal.to_channel output msg [];
   flush output;
@@ -134,32 +113,84 @@ let request { input; output } (msg : 'a request) : 'a =
       value
 
 
-let connect continue =
-  match Sys.argv with
-  | [|_; data|] ->
-      let (client_read, client_write) =
-        Marshal.from_string (Scanf.unescaped data) 0
+let parse args continue =
+  (* Communication pipe. *)
+  let (client_read, server_write) = Unix.pipe () in
+  let (server_read, client_write) = Unix.pipe () in
+
+  match Unix.fork () with
+  | 0 ->
+      (* Close unneeded fds. *)
+      List.iter Unix.close [client_read; client_write];
+
+      (* Serialise the file descriptors. *)
+      let pipe_fds =
+        String.escaped (Marshal.to_string (server_read, server_write) [])
       in
+
+      let argv =
+        Array.of_list @@
+        [
+          "env";
+          "clang";
+          "-fsyntax-only";
+          "-Xclang"; "-load";
+          "-Xclang"; "_build/clangaml.dylib";
+          "-Xclang"; "-analyze";
+          "-Xclang"; "-analyzer-checker=external.OCaml";
+        ] @ args
+      in
+
+      let env =
+        (* The fd numbers are passed in the environment. In the
+           client process, these fds are still open, but the program
+           needs to be told what they are. *)
+        [|"PIPE_FDS=" ^ pipe_fds|]
+      in
+
+      (* Start client program. *)
+      begin try
+        Unix.execve "/usr/bin/env" argv env
+      with Unix.Unix_error (error, operation, argument) ->
+        failwith @@ Format.sprintf "%s: %s %s\n"
+          (Unix.error_message error) operation argument
+      end
+
+  | pid ->
       let input  = Unix. in_channel_of_descr client_read  in
       let output = Unix.out_channel_of_descr client_write in
 
-      let token =
-        try
-          request { input; output; token = "" } @@ Handshake Ast.version
-        with E (E_Version version) ->
-          failwith (
-            "AST versions do not match: server says\n"
-            ^ version ^ ", but we have\n"
-            ^ Ast.version
-          )
-      in
+      (* Close unneeded fds. *)
+      List.iter Unix.close [server_read; server_write];
 
       finally 
-        continue { input; output; token }
+        (fun () ->
+           let token =
+             try
+               request { input; output; token = "" } @@ Handshake Ast.version
+             with E (E_Version version) ->
+               failwith (
+                 "AST versions do not match: server says\n"
+                 ^ version ^ ", but we have\n"
+                 ^ Ast.version
+               )
+           in
+
+           continue { input; output; token }
+        )
         (fun () ->
            close_in input;
            close_out output;
-        )
 
-  | argv ->
-      failwith @@ "Usage: " ^ argv.(0) ^ " (input, output)"
+           let fail msg status =
+             failwith @@ "sub-process " ^ msg ^ " " ^ string_of_int status
+           in
+
+           (* Wait for child process to end and retrieve process status. *)
+           match snd (Unix.waitpid [] pid) with
+           | Unix.WEXITED 0 ->
+               (* all went fine *) ()
+           | Unix.WEXITED   status -> fail "exited with status" status
+           | Unix.WSIGNALED status -> fail "was killed by signal" status
+           | Unix.WSTOPPED  status -> fail "was stopped by signal" status
+        )

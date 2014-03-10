@@ -11,6 +11,7 @@ type _ request =
   | TypePtr : Ast.tloc Ref.t -> Ast.ctyp request
 
 type error =
+  | E_Unhandled of string
   | E_NullRef
   | E_Version of string
 
@@ -22,10 +23,10 @@ type 'a response =
 exception E of error
 
 val failure : error -> 'a
-val spawn : string -> ('a request -> 'a) -> Unix.process_status
+val connect : ('a request -> 'a) -> unit
 
 (* Client *)
 type clang
 
 val request : clang -> 'a request -> 'a
-val connect : (clang -> 'a) -> unit
+val parse : string list -> (clang -> 'a) -> 'a
