@@ -29,11 +29,11 @@ if (!File.exists?(PLUGIN_PATH))
 end
 
 ADDITIONAL_ARGS = [
-        "-c",
+        "-fsyntax-only",
         "-Xclang", "-load",
         "-Xclang", PLUGIN_PATH,
         "-Xclang", "-analyze",
-        "-Xclang", "-analyzer-checker=OCamlChecker",
+        "-Xclang", "-analyzer-checker=external.OCaml",
 ]
 
 CLANG = ["#{EXT_CLANG_PATH}"] + ARGV + ADDITIONAL_ARGS

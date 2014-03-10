@@ -1,5 +1,6 @@
 # simplify
 All
+ForToWhile
 LiftConditionals
 MapStmt
 RemoveImplicitCast

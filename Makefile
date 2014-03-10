@@ -26,30 +26,41 @@ wc:
 ## Testing
 ####################################################################
 
-ALDOR_PATH = ../github/_build/src/lang/aldor/compiler
+ALDOR_PATH = ../github/_build/src/lang/aldor
 
-CLANGFLAGS =			\
-	-w			\
-	-I$(ALDOR_PATH)		\
-	-DTEST_ALL		\
-	-include "memcad.h"
+CLANGFLAGS =				\
+	-w				\
+	-I$(ALDOR_PATH)/compiler	\
+	-I$(ALDOR_PATH)/compiler/java	\
+	-DTEST_ALL			\
+	-DSTO_USE_MALLOC
 
 check: myclang test.c
-	./myclang $(CLANGFLAGS) test.c
+	./myclang $(CLANGFLAGS) -include "memcad.h" test.c
 
 %.test: % myclang
-	./myclang $(CLANGFLAGS) $<
+	./myclang $(CLANGFLAGS) -include "memcad.h" $<
 
 define testsuite
 TESTSUITE.$1 = $2
 check-$1: myclang
-	./myclang $(CLANGFLAGS) $$(TESTSUITE.$1)
+	./myclang $(CLANGFLAGS) -include "memcad.h" $$(TESTSUITE.$1)
 
 check-$1-separate: $$(TESTSUITE.$1:=.test)
 endef
 
+BROKEN =					\
+	consumer/memcad/bench/atomic-02.c	\
+	consumer/memcad/bench/c-micro-10.c	\
+	consumer/memcad/bench/typ-03.c
+
 $(eval $(call testsuite,testsuite,$(wildcard plugin/testsuite/*.[ci])))
-$(eval $(call testsuite,memcad,$(wildcard consumer/memcad/bench/*.c)))
+$(eval $(call testsuite,memcad,$(filter-out $(BROKEN),$(wildcard consumer/memcad/bench/*.c))))
+
+
+####################################################################
+## Analyse the Aldor compiler sources
+####################################################################
 
 ALDOR_SRC =		\
 	java/genjava.c	\
@@ -144,7 +155,6 @@ ALDOR_SRC =		\
 	list_t.c	\
 	loops.c		\
 	macex.c		\
-	memclim.c	\
 	msg.c		\
 	msg_t.c		\
 	of_argsub.c	\
@@ -161,7 +171,6 @@ ALDOR_SRC =		\
 	of_killp.c	\
 	of_loops.c	\
 	of_peep.c	\
-	of_retyp.c	\
 	of_retyp2.c	\
 	of_rrfmt.c	\
 	of_util.c	\
@@ -225,4 +234,16 @@ ALDOR_SRC =		\
 	version.c	\
 	xfloat.c	\
 	xfloat_t.c
-$(eval $(call testsuite,aldor,$(addprefix ../github/_build/src/lang/aldor/compiler/,$(ALDOR_SRC))))
+ALDOR_SRC := $(addprefix $(ALDOR_PATH)/compiler/,$(ALDOR_SRC))
+ALDOR_SRC += $(ALDOR_PATH)/tools/frontend/main.c
+$(eval $(call testsuite,aldor,$(ALDOR_SRC)))
+
+analyze-whopr: aldor.c myclang
+	./myclang $(CLANGFLAGS) aldor.c
+
+aldor.c: $(ALDOR_SRC)
+	:> $@
+	for f in $^; do				\
+		echo "#line 1 \"$$f\"" >> $@;	\
+		cat $$f >> $@;			\
+	done

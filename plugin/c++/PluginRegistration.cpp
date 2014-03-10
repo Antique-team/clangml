@@ -8,5 +8,5 @@ O_EXPORT char const clang_analyzerAPIVersionString[] = CLANG_ANALYZER_API_VERSIO
 void
 clang_registerCheckers (clang::ento::CheckerRegistry &registry)
 {
-  registry.addChecker<OCamlChecker> ("OCamlChecker", "RunOCamlChecker");
+  registry.addChecker<OCamlChecker> ("external.OCaml", "Runs static analysis passes written in OCaml");
 }
