@@ -1,44 +1,17 @@
 open Ast
 open Prelude
 
-(* C++ side context. It is required on the server side
-   to resolve 'a Ref.t to actual clang AST node objects.
-   This context object is never sent to the client. *)
+(* Server context *)
 type context
 
-
-(* Request messages use a GADT to enable type-safe communication.
-   Messages are designed to be compact, so most clang query
-   messages will operate on 'a Ref.t references. A wrapper
-   function may extract these from the respective 'a. *)
+(* Common communication types *)
 type _ request =
-  (* Handshake:
-     - client sends its AST version
-     - server checks version and sends a communication token
-       in case they are equal, and raises E_Version otherwise.
-     We keep the handshake constructor in the first place,
-     so its binary interface remains stable. *)
-  | Handshake : (* version *)string -> string request
-
-  (* Compose two messages. This composition can nest arbitrarily,
-     enabling a user to create any command tree. The server
-     processes this tree depth-first left-to-right. *)
+  | Handshake : string -> string request
   | Compose : 'a request * 'b request -> ('a * 'b) request
-
-  (* Get the TranslationUnit decl node. This node is immutable
-     and always available on the server. This function is used
-     to get the initial TU node. *)
-  | TranslationUnit : decl request
-
-  (* Get the main unit filename. *)
+  | TranslationUnit : Ast.decl request
   | Filename : string request
-
-  (* Get the canonical type for a ctyp node. *)
-  | CanonicalType : ctyp Ref.t -> ctyp request
-
-  (* Get the type for a type_loc. *)
-  | TypePtr : tloc Ref.t -> ctyp request
-
+  | CanonicalType : Ast.ctyp Ref.t -> Ast.ctyp request
+  | TypePtr : Ast.tloc Ref.t -> Ast.ctyp request
 
 type error =
   | E_Unhandled of string
@@ -55,7 +28,10 @@ exception E of error
 (* Server functions. *)
 let connect (handle : 'a request -> 'a) =
   let (server_read, server_write) =
-    Marshal.from_string (Scanf.unescaped @@ Sys.getenv "PIPE_FDS") 0
+    try
+      Marshal.from_string (Scanf.unescaped @@ Sys.getenv "PIPE_FDS") 0
+    with Not_found ->
+      failwith "PIPE_FDS environment variable must be set"
   in
 
   let input  = Unix. in_channel_of_descr server_read  in
@@ -183,7 +159,7 @@ let parse args continue =
            close_out output;
 
            let fail msg status =
-             failwith @@ "sub-process " ^ msg ^ " " ^ string_of_int status
+             failwith @@ "clang sub-process " ^ msg ^ " " ^ string_of_int status
            in
 
            (* Wait for child process to end and retrieve process status. *)
