@@ -40,7 +40,7 @@ struct value_of_context::data
   value cache;
 
   data (size_t max_id)
-    : cache (caml_alloc (max_id + 1, 0))
+    : cache (caml_alloc (max_id + max_id / 512, 0))
   {
     caml_register_generational_global_root (&cache);
   }
@@ -70,11 +70,20 @@ struct value_of_context::data
     CAMLparam0 ();
     CAMLlocal1 (new_cache);
 
-    new_cache = caml_alloc (max_id + 1, 0);
+    new_cache = caml_alloc (max_id + max_id / 512, 0);
 
     size_t length = caml_array_length (cache);
     for (size_t i = 0; i < length; i++)
-      Store_field (new_cache, i, Field (cache, i));
+      {
+        assert (Is_block (Field (cache, i)));
+        Store_field (new_cache, i, Field (cache, i));
+      }
+
+#if 0
+    printf ("resized ocaml value cache from %ld to %ld\n",
+            caml_array_length (cache),
+            caml_array_length (new_cache));
+#endif
 
     caml_modify_generational_global_root (&cache, new_cache);
 
@@ -103,7 +112,12 @@ value_of_context::resize (size_t max_id)
 }
 
 
-inline value_of_context::data *value_of_context::operator -> () { assert (self); return  self; }
+inline value_of_context::data *
+value_of_context::operator -> ()
+{
+  assert (self != nullptr);
+  return self;
+}
 
 
 value
@@ -112,20 +126,19 @@ OCamlADTBase::to_value (value_of_context &ctx)
   CAMLparam0 ();
   CAMLlocal1 (result);
 
-#define VALUE_SHARING 1
-#if VALUE_SHARING
   result = ctx->get (id);
 
-  if (!result)
+  if (!Int_val (result))
     {
-#endif
       result = ToValue (ctx);
       values_created++;
 
-#if VALUE_SHARING
       ctx->set (id, result);
     }
-#endif
+  else
+    {
+      assert (Is_block (result));
+    }
 
   CAMLreturn (result);
 }
