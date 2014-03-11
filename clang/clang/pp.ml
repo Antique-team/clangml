@@ -238,6 +238,10 @@ and pp_expr_ ff = function
   | StmtExpr stmt ->
       Format.fprintf ff "(%a)"
         pp_stmt stmt
+  | AddrLabelExpr label ->
+      Format.fprintf ff "&&%s"
+        label
+
   | SizeOfExpr expr ->
       Format.fprintf ff "sizeof %a"
         pp_expr expr

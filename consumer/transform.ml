@@ -315,6 +315,7 @@ let rec c_lvalk_of_expr prog env = function
   | InitListExpr _ -> Log.unimp "lvalk InitListExpr"
   | ImplicitValueInitExpr -> Log.unimp "lvalk ImplicitValueInitExpr"
   | StmtExpr _ -> Log.unimp "lvalk StmtExpr"
+  | AddrLabelExpr _ -> Log.unimp "lvalk AddrLabelExpr"
 
   | SizeOfExpr _ -> Log.unimp "lvalk SizeOfExpr"
   | SizeOfType _ -> Log.unimp "lvalk SizeOfType"
@@ -376,6 +377,7 @@ and c_exprk_of_expr prog env = function
   | InitListExpr _ -> Log.unimp "exprk InitListExpr"
   | ImplicitValueInitExpr -> Log.unimp "exprk ImplicitValueInitExpr"
   | StmtExpr _ -> Log.unimp "exprk StmtExpr"
+  | AddrLabelExpr _ -> Log.unimp "exprk AddrLabelExpr"
 
   | SizeOfExpr _ -> Log.unimp "exprk SizeOfExpr"
   | SizeOfType _ -> Log.unimp "exprk SizeOfType"
@@ -482,6 +484,7 @@ let rec c_stat_of_expr prog env expr =
   | ImplicitValueInitExpr -> Log.unimp "stats ImplicitValueInitExpr"
   | ArraySubscriptExpr _ -> Log.unimp "stats ArraySubscriptExpr"
   | StmtExpr _ -> Log.unimp "stats StmtExpr"
+  | AddrLabelExpr _ -> Log.unimp "stats AddrLabelExpr"
 
   | SizeOfExpr _ -> Log.unimp "stats SizeOfExpr"
   | SizeOfType _ -> Log.unimp "stats SizeOfType"

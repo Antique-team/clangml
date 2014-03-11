@@ -373,7 +373,19 @@ OCamlVisitor::TraverseUnaryExprOrTypeTraitExpr (clang::UnaryExprOrTypeTraitExpr 
 }
 
 
-UNIMP_STMT (Expr, AddrLabelExpr)
+bool
+OCamlVisitor::TraverseAddrLabelExpr (clang::AddrLabelExpr *S)
+{
+  TRACE;
+
+  clang::StringRef label = S->getLabel ()->getName ();
+
+  stack.push (mkAddrLabelExpr (label));
+
+  return true;
+}
+
+
 UNIMP_STMT (Expr, ArrayTypeTraitExpr)
 UNIMP_STMT (Expr, AsTypeExpr)
 UNIMP_STMT (Expr, AtomicExpr)

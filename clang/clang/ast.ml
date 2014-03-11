@@ -1,4 +1,4 @@
-let version = "$Id: 43c7c634529af0bc29c027d8eabfc4189ad737bb $"
+let version = "$Id$"
 
 (* clang/AST/Type.h *)
 type type_qualifier = Bridge.type_qualifier =
@@ -280,6 +280,8 @@ and expr_ = Bridge.expr_ =
   | AlignOfType			of tloc
   | VecStepExpr			of expr
   | VecStepType			of tloc
+
+  | AddrLabelExpr		of string
 
 
 and stmt = Bridge.stmt = {
