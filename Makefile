@@ -45,10 +45,25 @@ reinstall:
 ALDOR_PATH = ../github/_build/src/lang/aldor
 
 CLANGFLAGS =				\
+	-D_GNU_SOURCE			\
+	-std=c89			\
+	-pedantic			\
+	-Wall				\
+	-Wextra				\
+	-Wfatal-errors			\
+	-Wno-unused-function		\
+	-Wno-unused-parameter		\
+	-Wno-typedef-redefinition	\
+	-Wno-sign-compare		\
+	-Wno-missing-field-initializers	\
 	-I$(ALDOR_PATH)/compiler	\
 	-I$(ALDOR_PATH)/compiler/java	\
 	-DTEST_ALL			\
 	-DSTO_USE_MALLOC
+
+#CLANGFLAGS +=				\
+	-Wconversion			\
+	-Wno-sign-conversion
 
 check: processor.native test.c
 	./processor.native -w $(CLANGFLAGS) -include "memcad.h" test.c
@@ -77,8 +92,10 @@ $(eval $(call testsuite,memcad,$(filter-out $(BROKEN),$(wildcard consumer/memcad
 ## Analyse the Aldor compiler sources
 ####################################################################
 
+BROKEN_SRC =		\
+	java/genjava.c
+
 ALDOR_SRC =		\
-	java/genjava.c	\
 	java/javacode.c	\
 	java/javaobj.c	\
 	abcheck.c	\
@@ -255,15 +272,19 @@ $(eval $(call testsuite,aldor,$(ALDOR_SRC)))
 
 
 ANALYSIS_FLAGS =		\
-	-fsyntax-only		\
+	-w -fsyntax-only	\
+	-fcolor-diagnostics	\
 	-Xclang -analyze	\
-	-Xclang -analyzer-checker-help
+	-Xclang -analyzer-checker=core.NullDereference
 
 analyze-whopr: aldor.c processor.native
 	./processor.native -w $(CLANGFLAGS) aldor.c
 
 analyze-whopr-clang: aldor.c
-	clang $(CLANGFLAGS) $(ANALYSIS_FLAGS) aldor.c
+	clang $(CLANGFLAGS) $(ANALYSIS_FLAGS) $< 2>&1 | tee analysis.log
+
+compile-whopr-clang: aldor.c
+	clang $(CLANGFLAGS) -fsyntax-only $<
 
 aldor.c: $(ALDOR_SRC)
 	:> $@
