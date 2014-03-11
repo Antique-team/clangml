@@ -40,7 +40,7 @@ struct value_of_context::data
   value cache;
 
   data (size_t max_id)
-    : cache (caml_alloc (max_id + max_id / 512, 0))
+    : cache (caml_alloc (max_id + max_id / 512 + 1, 0))
   {
     caml_register_generational_global_root (&cache);
   }
@@ -70,7 +70,7 @@ struct value_of_context::data
     CAMLparam0 ();
     CAMLlocal1 (new_cache);
 
-    new_cache = caml_alloc (max_id + max_id / 512, 0);
+    new_cache = caml_alloc (max_id + max_id / 512 + 1, 0);
 
     size_t length = caml_array_length (cache);
     for (size_t i = 0; i < length; i++)
