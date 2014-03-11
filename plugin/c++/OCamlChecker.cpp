@@ -36,15 +36,6 @@ initialize_caml ()
 
 
 static value
-to_value (adt_ptr ob)
-{
-  value_of_context ctx (ob->id);
-  value result = ob->to_value (ctx);
-
-  return result;
-}
-
-static value
 to_value (clang::TranslationUnitDecl const *D, clang_context &ctx)
 {
   //TIME;
@@ -52,7 +43,8 @@ to_value (clang::TranslationUnitDecl const *D, clang_context &ctx)
   ptr<bridge_ast::Decl> decl
     = bridge_ast_of<bridge_ast::Decl>
         (const_cast<clang::TranslationUnitDecl *> (D), ctx);
-  return to_value (decl);
+  ctx.values.resize (decl->id);
+  return decl->to_value (ctx.values);;
 }
 
 

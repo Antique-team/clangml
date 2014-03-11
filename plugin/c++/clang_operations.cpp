@@ -30,8 +30,8 @@ clang_canonical_type (value context, value id)
   clang::QualType type = ctx.refs.retrieve (ref).getCanonicalType ();
 
   ptr<Ctyp> ctyp = bridge_ast_of<Ctyp> (type, ctx);
-  value_of_context vctx (ctyp->id);
-  return ctyp->to_value (vctx);
+  ctx.values.resize (ctyp->id);
+  return ctyp->to_value (ctx.values);
 }
 
 
@@ -44,8 +44,8 @@ clang_type_ptr (value context, value id)
   clang::QualType type = ctx.refs.retrieve (ref).getType ();
 
   ptr<Ctyp> ctyp = bridge_ast_of<Ctyp> (type, ctx);
-  value_of_context vctx (ctyp->id);
-  return ctyp->to_value (vctx);
+  ctx.values.resize (ctyp->id);
+  return ctyp->to_value (ctx.values);
 }
 
 

@@ -25,6 +25,15 @@ type 'a response =
 exception E of error
 
 
+let name_of_request : type a. a request -> string = function
+  | Handshake       _ -> "Handshake"
+  | Compose         _ -> "Compose"
+  | TranslationUnit   -> "TranslationUnit"
+  | Filename          -> "Filename"
+  | CanonicalType   _ -> "CanonicalType"
+  | TypePtr         _ -> "TypePtr"
+
+
 (* Server functions. *)
 let connect (handle : 'a request -> 'a) =
   let (server_read, server_write) =

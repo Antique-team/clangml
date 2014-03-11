@@ -6,6 +6,7 @@ TARGETS =			\
 
 processor.native: $(shell find */ -type f -not -wholename "_build/*")
 	ocamlbuild -j $(NCPU) $(TARGETS)
+	@touch $@
 
 clean:
 	ocamlbuild -clean

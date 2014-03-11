@@ -61,11 +61,30 @@ struct value_of_context::data
     assert (index < caml_array_length (cache));
     return Field (cache, index);
   }
+
+  void resize (size_t max_id)
+  {
+    if (max_id < caml_array_length (cache))
+      return;
+
+    CAMLparam0 ();
+    CAMLlocal1 (new_cache);
+
+    new_cache = caml_alloc (max_id + 1, 0);
+
+    size_t length = caml_array_length (cache);
+    for (size_t i = 0; i < length; i++)
+      Store_field (new_cache, i, Field (cache, i));
+
+    caml_modify_generational_global_root (&cache, new_cache);
+
+    CAMLreturn0;
+  }
 };
 
 
-value_of_context::value_of_context (size_t max_id)
-  : self (new data (max_id))
+value_of_context::value_of_context ()
+  : self (nullptr)
 {
 }
 
@@ -73,6 +92,18 @@ value_of_context::~value_of_context ()
 {
   delete self;
 }
+
+void
+value_of_context::resize (size_t max_id)
+{
+  if (!self)
+    self = new data (max_id);
+  else
+    self->resize (max_id);
+}
+
+
+inline value_of_context::data *value_of_context::operator -> () { assert (self); return  self; }
 
 
 value

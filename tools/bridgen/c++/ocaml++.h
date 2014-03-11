@@ -25,19 +25,21 @@ O_END_DECLS
  * Value construction context.
  */
 
-struct value_of_context
+class value_of_context
 {
+  value_of_context (value_of_context const &other) = delete;
+  value_of_context &operator = (value_of_context const &other) = delete;
+
   struct data;
   data *self;
 
-  value_of_context (size_t max_id);
+public:
+  value_of_context ();
   ~value_of_context ();
 
-  data *operator -> () { return  self; }
-  data &operator *  () { return *self; }
+  void resize (size_t max_id);
 
-  value_of_context (value_of_context const &other) = delete;
-  value_of_context &operator = (value_of_context const &other) = delete;
+  data *operator -> ();
 };
 
 
