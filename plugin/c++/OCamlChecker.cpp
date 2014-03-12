@@ -67,7 +67,7 @@ OCamlChecker::checkASTDecl (clang::TranslationUnitDecl const *D,
 
       OCamlADTBase::reset_statistics ();
 
-      clang_context ctx = {
+      clang_context ctx {
         Mgr.getSourceManager (),
       };
 

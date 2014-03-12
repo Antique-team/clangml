@@ -4,7 +4,7 @@ TARGETS =			\
 	clangaml.dylib		\
 	consumer/processor.native
 
-processor.native: $(shell find */ -type f -not -wholename "_build/*")
+processor.native: $(shell find */ -type f -not -wholename "_build/*") myocamlbuild.ml
 	ocamlbuild -j $(NCPU) $(TARGETS)
 	@touch $@
 
@@ -44,8 +44,11 @@ reinstall:
 
 ALDOR_PATH = ../github/_build/src/lang/aldor
 
-CLANGFLAGS =				\
+CCFLAGS =				\
 	-D_GNU_SOURCE			\
+	-D_ANALYSING			\
+	-DTEST_ALL			\
+	-DSTO_USE_MALLOC		\
 	-std=c89			\
 	-pedantic			\
 	-Wall				\
@@ -53,13 +56,27 @@ CLANGFLAGS =				\
 	-Wfatal-errors			\
 	-Wno-unused-function		\
 	-Wno-unused-parameter		\
-	-Wno-typedef-redefinition	\
 	-Wno-sign-compare		\
 	-Wno-missing-field-initializers	\
 	-I$(ALDOR_PATH)/compiler	\
 	-I$(ALDOR_PATH)/compiler/java	\
-	-DTEST_ALL			\
-	-DSTO_USE_MALLOC
+	#
+
+CLANGFLAGS =				\
+	$(CCFLAGS)			\
+	-fcolor-diagnostics		\
+	-Wno-typedef-redefinition	\
+	#
+
+GCCFLAGS =				\
+	$(CCFLAGS)			\
+	-Wsuggest-attribute=pure	\
+	-Wsuggest-attribute=const	\
+	-Wsuggest-attribute=noreturn	\
+	-Wsuggest-attribute=format	\
+	-Wno-empty-body			\
+	-Wno-unused-but-set-variable	\
+	#
 
 #CLANGFLAGS +=				\
 	-Wconversion			\
@@ -273,7 +290,6 @@ $(eval $(call testsuite,aldor,$(ALDOR_SRC)))
 
 ANALYSIS_FLAGS =		\
 	-w -fsyntax-only	\
-	-fcolor-diagnostics	\
 	-Xclang -analyze	\
 	-Xclang -analyzer-checker=core.NullDereference
 
@@ -285,6 +301,12 @@ analyze-whopr-clang: aldor.c
 
 compile-whopr-clang: aldor.c
 	clang $(CLANGFLAGS) -fsyntax-only $<
+
+compile-whopr-gcc: aldor.c
+	gcc $(GCCFLAGS) -fsyntax-only $<
+
+compile-whopr-fcc: aldor.c
+	../github/_install/bin/fcc1 -cflags "$(GCCFLAGS)" $<
 
 aldor.c: $(ALDOR_SRC)
 	:> $@

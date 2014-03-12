@@ -6,13 +6,16 @@ let atomise = List.map (fun a -> A a)
 
 let cxxflags = Sh"`llvm-config-3.4 --cxxflags`" :: atomise [
   "-Wall";
+  "-Wextra";
   "-Werror";
+  "-Wno-unused-parameter";
+  "-std=c++11";
+  "-pedantic";
   "-fcolor-diagnostics";
 
   "-fPIC";
   "-fexceptions";
   "-fvisibility=hidden";
-  "-std=c++11";
   "-ggdb3";
   "-O3";
 
