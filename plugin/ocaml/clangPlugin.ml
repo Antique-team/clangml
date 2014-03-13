@@ -5,6 +5,7 @@ external clang_canonical_type		: Api.context -> ctyp Ref.t -> ctyp = "clang_cano
 external clang_type_ptr			: Api.context -> tloc Ref.t -> ctyp = "clang_type_ptr"
 external clang_presumed_loc		: Api.context -> Sloc.t -> Sloc.presumed_loc = "clang_presumed_loc"
 external clang_is_from_main_file	: Api.context -> Sloc.t -> bool = "clang_is_from_main_file"
+external clang_characteristic_kind	: Api.context -> Sloc.t -> Sloc.characteristic_kind = "clang_characteristic_kind"
 
 
 let run_processor (tu : decl) (file : string) (ctx : Api.context) =
@@ -45,19 +46,22 @@ let run_processor (tu : decl) (file : string) (ctx : Api.context) =
 
     | IsFromMainFile sloc ->
         clang_is_from_main_file ctx sloc
+
+    | FileCharacteristic sloc ->
+        clang_characteristic_kind ctx sloc
   in
 
   Gc.compact ();
   Api.connect handle_request
 
 
-external check_bridge_version : string -> unit = "check_bridge_version"
+external check_ast_bridge_version : string -> unit = "check_ast_bridge_version"
 
 let () =
-  (* Check that Ast and Bridge are the same version. *)
-  assert (Ast.version = Bridge.version);
+  (* Check that Ast and AstBridge are the same version. *)
+  assert (Ast.version = AstBridge.version);
   (* Check C++ side of bridge. *)
-  check_bridge_version Bridge.version;
+  check_ast_bridge_version AstBridge.version;
   Callback.register "success" run_processor;
   Callback.register "failure" failwith;
 ;;

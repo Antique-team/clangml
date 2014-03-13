@@ -1,5 +1,20 @@
-type t = int
-  deriving (Show)
+let version = "$Id$"
+
+type t = private int
+
+module Show_t = Deriving_Show.Defaults(struct
+
+    type a = t
+
+    let format fmt (a : a) =
+      Deriving_Show.Show_int.format fmt (a :> int)
+
+  end)
+
+type characteristic_kind =
+  | C_User
+  | C_System
+  | C_ExternCSystem
 
 type presumed_loc = {
   loc_filename : string;
@@ -15,8 +30,8 @@ let invalid_presumed = {
 }
 
 
-let is_valid sloc =
-  sloc <> 0
+let is_valid (sloc : t) =
+  (sloc :> int) <> 0
 
 let is_valid_presumed ploc =
   ploc <> invalid_presumed

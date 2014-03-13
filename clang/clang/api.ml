@@ -14,6 +14,7 @@ type _ request =
   | TypePtr : Ast.tloc Ref.t -> Ast.ctyp request
   | PresumedLoc : Sloc.t -> Sloc.presumed_loc request
   | IsFromMainFile : Sloc.t -> bool request
+  | FileCharacteristic : Sloc.t -> Sloc.characteristic_kind request
 
 type error =
   | E_Unhandled of string
@@ -34,14 +35,15 @@ let string_of_error = function
 
 
 let name_of_request : type a. a request -> string = function
-  | Handshake       _ -> "Handshake"
-  | Compose         _ -> "Compose"
-  | TranslationUnit   -> "TranslationUnit"
-  | Filename          -> "Filename"
-  | CanonicalType   _ -> "CanonicalType"
-  | TypePtr         _ -> "TypePtr"
-  | PresumedLoc     _ -> "PresumedLoc"
-  | IsFromMainFile  _ -> "IsFromMainFile"
+  | Handshake		_ -> "Handshake"
+  | Compose		_ -> "Compose"
+  | TranslationUnit	  -> "TranslationUnit"
+  | Filename		  -> "Filename"
+  | CanonicalType	_ -> "CanonicalType"
+  | TypePtr		_ -> "TypePtr"
+  | PresumedLoc		_ -> "PresumedLoc"
+  | IsFromMainFile	_ -> "IsFromMainFile"
+  | FileCharacteristic	_ -> "FileCharacteristic"
 
 
 (* Server functions. *)

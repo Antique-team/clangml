@@ -1,7 +1,7 @@
 let version = "$Id$"
 
 (* clang/AST/Type.h *)
-type type_qualifier = Bridge.type_qualifier =
+type type_qualifier = AstBridge.type_qualifier =
   (* CVR *)
   | TQ_Const
   | TQ_Volatile
@@ -18,7 +18,7 @@ type type_qualifier = Bridge.type_qualifier =
 
 
 (* clang/AST/Expr.h *)
-type predefined_expr = Bridge.predefined_expr =
+type predefined_expr = AstBridge.predefined_expr =
   | PE_Func
   | PE_Function
   | PE_LFunction
@@ -29,7 +29,7 @@ type predefined_expr = Bridge.predefined_expr =
 
 
 (* clang/AST/Type.h *)
-type tag_type_kind = Bridge.tag_type_kind =
+type tag_type_kind = AstBridge.tag_type_kind =
   | TTK_Struct
   | TTK_Interface
   | TTK_Union
@@ -39,7 +39,7 @@ type tag_type_kind = Bridge.tag_type_kind =
 
 
 (* clang/AST/Type.h *)
-type elaborated_type_keyword = Bridge.elaborated_type_keyword =
+type elaborated_type_keyword = AstBridge.elaborated_type_keyword =
   | ETK_Struct
   | ETK_Interface
   | ETK_Union
@@ -51,7 +51,7 @@ type elaborated_type_keyword = Bridge.elaborated_type_keyword =
 
 
 (* clang/AST/OperationKinds.h *)
-type cast_kind = Bridge.cast_kind =
+type cast_kind = AstBridge.cast_kind =
   | CK_Dependent
   | CK_BitCast
   | CK_LValueBitCast
@@ -110,7 +110,7 @@ type cast_kind = Bridge.cast_kind =
 
 
 (* clang/AST/OperationKinds.h *)
-type unary_operator = Bridge.unary_operator =
+type unary_operator = AstBridge.unary_operator =
   | UO_PostInc	(* [C99 6.5.2.4] Postfix increment and decrement *)
   | UO_PostDec
   | UO_PreInc	(* [C99 6.5.3.1] Prefix increment and decrement *)
@@ -128,7 +128,7 @@ type unary_operator = Bridge.unary_operator =
 
 
 (* clang/AST/OperationKinds.h *)
-type binary_operator = Bridge.binary_operator =
+type binary_operator = AstBridge.binary_operator =
   | BO_PtrMemD	(* [C++ 5.5] Pointer-to-member operators. *)
   | BO_PtrMemI
   | BO_Mul	(* [C99 6.5.5] Multiplicative operators. *)
@@ -165,7 +165,7 @@ type binary_operator = Bridge.binary_operator =
 
 
 (* clang/AST/BuiltinTypes.def *)
-type builtin_type = Bridge.builtin_type =
+type builtin_type = AstBridge.builtin_type =
   | BT_Void
   | BT_Bool
 
@@ -219,33 +219,31 @@ type builtin_type = Bridge.builtin_type =
   deriving (Show)
 
 
-type sloc = Bridge.sloc = {
+type sloc = AstBridge.sloc = {
   loc_s : Sloc.t;
   loc_e : Sloc.t;
 } deriving (Show)
 
 
-type desg = Bridge.desg = {
+type desg = AstBridge.desg = {
   dr : desg_;
   dr_sloc : sloc;
 }
 
-and desg_ = Bridge.desg_ =
+and desg_ = AstBridge.desg_ =
   | FieldDesignator		of string
   | ArrayDesignator		of expr
   | ArrayRangeDesignator	of expr * expr
 
 
-and expr = Bridge.expr = {
+and expr = AstBridge.expr = {
   e      : expr_;
   e_cref : expr Ref.t;
   e_sloc : sloc;
   e_type : ctyp;
 }
 
-and expr_ = Bridge.expr_ =
-  | UnimpExpr			of string
-
+and expr_ = AstBridge.expr_ =
   | IntegerLiteral		of int
   | CharacterLiteral		of char
   | FloatingLiteral		of float
@@ -278,16 +276,90 @@ and expr_ = Bridge.expr_ =
 
   | AddrLabelExpr		of string
 
+  | ArrayTypeTraitExpr
+  | AsTypeExpr
+  | AtomicExpr
+  | BinaryConditionalOperator
+  | BinaryTypeTraitExpr
+  | BlockExpr
+  | ChooseExpr
+  | CompoundAssignOperator
+  | CUDAKernelCallExpr
+  | CXXBindTemporaryExpr
+  | CXXBoolLiteralExpr
+  | CXXConstCastExpr
+  | CXXConstructExpr
+  | CXXDefaultArgExpr
+  | CXXDefaultInitExpr
+  | CXXDeleteExpr
+  | CXXDependentScopeMemberExpr
+  | CXXDynamicCastExpr
+  | CXXFunctionalCastExpr
+  | CXXMemberCallExpr
+  | CXXNewExpr
+  | CXXNoexceptExpr
+  | CXXNullPtrLiteralExpr
+  | CXXOperatorCallExpr
+  | CXXPseudoDestructorExpr
+  | CXXReinterpretCastExpr
+  | CXXScalarValueInitExpr
+  | CXXStaticCastExpr
+  | CXXStdInitializerListExpr
+  | CXXTemporaryObjectExpr
+  | CXXThisExpr
+  | CXXThrowExpr
+  | CXXTypeidExpr
+  | CXXUnresolvedConstructExpr
+  | CXXUuidofExpr
+  | DependentScopeDeclRefExpr
+  | ExpressionTraitExpr
+  | ExprWithCleanups
+  | ExtVectorElementExpr
+  | FunctionParmPackExpr
+  | GenericSelectionExpr
+  | GNUNullExpr
+  | ImaginaryLiteral
+  | LambdaExpr
+  | MaterializeTemporaryExpr
+  | MSPropertyRefExpr
+  | ObjCArrayLiteral
+  | ObjCBoolLiteralExpr
+  | ObjCBoxedExpr
+  | ObjCBridgedCastExpr
+  | ObjCDictionaryLiteral
+  | ObjCEncodeExpr
+  | ObjCIndirectCopyRestoreExpr
+  | ObjCIsaExpr
+  | ObjCIvarRefExpr
+  | ObjCMessageExpr
+  | ObjCPropertyRefExpr
+  | ObjCProtocolExpr
+  | ObjCSelectorExpr
+  | ObjCStringLiteral
+  | ObjCSubscriptRefExpr
+  | OffsetOfExpr
+  | OpaqueValueExpr
+  | PackExpansionExpr
+  | ParenListExpr
+  | PseudoObjectExpr
+  | ShuffleVectorExpr
+  | SizeOfPackExpr
+  | SubstNonTypeTemplateParmExpr
+  | SubstNonTypeTemplateParmPackExpr
+  | TypeTraitExpr
+  | UnaryTypeTraitExpr
+  | UnresolvedLookupExpr
+  | UnresolvedMemberExpr
+  | UserDefinedLiteral
 
-and stmt = Bridge.stmt = {
+
+and stmt = AstBridge.stmt = {
   s      : stmt_;
   s_cref : stmt Ref.t;
   s_sloc : sloc;
 }
 
-and stmt_ = Bridge.stmt_ =
-  | UnimpStmt			of string
-
+and stmt_ = AstBridge.stmt_ =
   | NullStmt
   | BreakStmt
   | ContinueStmt
@@ -305,16 +377,34 @@ and stmt_ = Bridge.stmt_ =
   | SwitchStmt			of (* value *)expr * (* body *)stmt
   | DeclStmt			of (* decls *)decl list
 
+  | AttributedStmt
+  | CapturedStmt
+  | CXXCatchStmt
+  | CXXForRangeStmt
+  | CXXTryStmt
+  | GCCAsmStmt
+  | IndirectGotoStmt
+  | MSAsmStmt
+  | MSDependentExistsStmt
+  | ObjCAtCatchStmt
+  | ObjCAtFinallyStmt
+  | ObjCAtSynchronizedStmt
+  | ObjCAtThrowStmt
+  | ObjCAtTryStmt
+  | ObjCAutoreleasePoolStmt
+  | ObjCForCollectionStmt
+  | SEHExceptStmt
+  | SEHFinallyStmt
+  | SEHTryStmt
 
-and tloc = Bridge.tloc = {
+
+and tloc = AstBridge.tloc = {
   tl      : tloc_;
   tl_cref : tloc Ref.t;
   tl_sloc : sloc;
 }
 
-and tloc_ = Bridge.tloc_ =
-  | UnimpTypeLoc		of string
-
+and tloc_ = AstBridge.tloc_ =
   | BuiltinTypeLoc		of builtin_type
   | TypeOfExprTypeLoc		of expr
   | TypeOfTypeLoc		of tloc
@@ -331,17 +421,42 @@ and tloc_ = Bridge.tloc_ =
   | EnumTypeLoc			of (* name *)string
   | RecordTypeLoc		of (* kind *)tag_type_kind * (* name *)string
 
+  | AtomicTypeLoc
+  | AttributedTypeLoc
+  | AutoTypeLoc
+  | BlockPointerTypeLoc
+  | ComplexTypeLoc
+  | DecltypeTypeLoc
+  | DependentNameTypeLoc
+  | DependentSizedArrayTypeLoc
+  | DependentSizedExtVectorTypeLoc
+  | DependentTemplateSpecializationTypeLoc
+  | ExtVectorTypeLoc
+  | InjectedClassNameTypeLoc
+  | LValueReferenceTypeLoc
+  | MemberPointerTypeLoc
+  | ObjCInterfaceTypeLoc
+  | ObjCObjectTypeLoc
+  | ObjCObjectPointerTypeLoc
+  | PackExpansionTypeLoc
+  | RValueReferenceTypeLoc
+  | SubstTemplateTypeParmTypeLoc
+  | SubstTemplateTypeParmPackTypeLoc
+  | TemplateSpecializationTypeLoc
+  | TemplateTypeParmTypeLoc
+  | UnaryTransformTypeLoc
+  | UnresolvedUsingTypeLoc
+  | VectorTypeLoc
 
-and ctyp = Bridge.ctyp = {
+
+and ctyp = AstBridge.ctyp = {
   t        : ctyp_;
   t_cref   : ctyp Ref.t;
   t_qual   : type_qualifier list;
   t_aspace : int option;
 }
 
-and ctyp_ = Bridge.ctyp_ =
-  | UnimpType			of string
-
+and ctyp_ = AstBridge.ctyp_ =
   | BuiltinType			of builtin_type
   | TypeOfExprType		of expr
   | TypeOfType			of ctyp
@@ -358,16 +473,41 @@ and ctyp_ = Bridge.ctyp_ =
   | RecordType			of (* kind *)tag_type_kind * (* name *)string
   | DecayedType			of (* decayed *)ctyp * (* original *)ctyp
 
+  | AtomicType
+  | AttributedType
+  | AutoType
+  | BlockPointerType
+  | ComplexType
+  | DecltypeType
+  | DependentNameType
+  | DependentSizedArrayType
+  | DependentSizedExtVectorType
+  | DependentTemplateSpecializationType
+  | ExtVectorType
+  | InjectedClassNameType
+  | LValueReferenceType
+  | MemberPointerType
+  | ObjCInterfaceType
+  | ObjCObjectPointerType
+  | ObjCObjectType
+  | PackExpansionType
+  | RValueReferenceType
+  | SubstTemplateTypeParmPackType
+  | SubstTemplateTypeParmType
+  | TemplateSpecializationType
+  | TemplateTypeParmType
+  | UnaryTransformType
+  | UnresolvedUsingType
+  | VectorType
 
-and decl = Bridge.decl = {
+
+and decl = AstBridge.decl = {
   d      : decl_;
   d_cref : decl Ref.t;
   d_sloc : sloc;
 }
 
-and decl_ = Bridge.decl_ =
-  | UnimpDecl			of string
-
+and decl_ = AstBridge.decl_ =
   | EmptyDecl
   | TranslationUnitDecl		of decl list
   | FunctionDecl		of (* type *)tloc * (* name *)string * (* body *)stmt option
@@ -378,6 +518,44 @@ and decl_ = Bridge.decl_ =
   | FieldDecl			of (* type *)tloc * (* name *)string * (* bitwidth *)expr option * (* initialiser *)expr option
   | EnumDecl			of (* name *)string * (* enumerators *)decl list
   | EnumConstantDecl		of (* name *)string * (* value *)expr option
+
+  | AccessSpecDecl
+  | BlockDecl
+  | CapturedDecl
+  | ClassScopeFunctionSpecializationDecl
+  | ClassTemplateDecl
+  | FileScopeAsmDecl
+  | FriendDecl
+  | FriendTemplateDecl
+  | FunctionTemplateDecl
+  | ImportDecl
+  | IndirectFieldDecl
+  | LabelDecl
+  | LinkageSpecDecl
+  | MSPropertyDecl
+  | NamespaceAliasDecl
+  | NamespaceDecl
+  | NonTypeTemplateParmDecl
+  | ObjCCategoryDecl
+  | ObjCCategoryImplDecl
+  | ObjCCompatibleAliasDecl
+  | ObjCImplementationDecl
+  | ObjCInterfaceDecl
+  | ObjCMethodDecl
+  | ObjCPropertyDecl
+  | ObjCPropertyImplDecl
+  | ObjCProtocolDecl
+  | OMPThreadPrivateDecl
+  | StaticAssertDecl
+  | TemplateTemplateParmDecl
+  | TemplateTypeParmDecl
+  | TypeAliasDecl
+  | TypeAliasTemplateDecl
+  | UnresolvedUsingTypenameDecl
+  | UnresolvedUsingValueDecl
+  | UsingDecl
+  | UsingDirectiveDecl
+  | UsingShadowDecl
 
   (* All of the above derive Show. *)
   deriving (Show)

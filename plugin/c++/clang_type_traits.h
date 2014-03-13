@@ -10,7 +10,7 @@ namespace clang
   class TypeLoc;
 }
 
-namespace bridge_ast
+namespace ast_bridge
 {
   struct Decl;
   struct Expr;
@@ -20,17 +20,17 @@ namespace bridge_ast
 }
 
 template<typename T> struct clang_type;
-template<> struct clang_type<bridge_ast::Decl> { typedef clang::Decl    *type; };
-template<> struct clang_type<bridge_ast::Expr> { typedef clang::Expr    *type; };
-template<> struct clang_type<bridge_ast::Stmt> { typedef clang::Stmt    *type; };
-template<> struct clang_type<bridge_ast::Ctyp> { typedef clang::QualType type; };
-template<> struct clang_type<bridge_ast::Tloc> { typedef clang::TypeLoc  type; };
+template<> struct clang_type<ast_bridge::Decl> { typedef clang::Decl    *type; };
+template<> struct clang_type<ast_bridge::Expr> { typedef clang::Expr    *type; };
+template<> struct clang_type<ast_bridge::Stmt> { typedef clang::Stmt    *type; };
+template<> struct clang_type<ast_bridge::Ctyp> { typedef clang::QualType type; };
+template<> struct clang_type<ast_bridge::Tloc> { typedef clang::TypeLoc  type; };
 
 template<typename T> struct bridge_type;
-template<> struct bridge_type<clang::Decl    *> { typedef bridge_ast::Decl type; };
-template<> struct bridge_type<clang::Expr    *> { typedef bridge_ast::Expr type; };
-template<> struct bridge_type<clang::Stmt    *> { typedef bridge_ast::Stmt type; };
-template<> struct bridge_type<clang::QualType > { typedef bridge_ast::Ctyp type; };
-template<> struct bridge_type<clang::TypeLoc  > { typedef bridge_ast::Tloc type; };
+template<> struct bridge_type<clang::Decl    *> { typedef ast_bridge::Decl type; };
+template<> struct bridge_type<clang::Expr    *> { typedef ast_bridge::Expr type; };
+template<> struct bridge_type<clang::Stmt    *> { typedef ast_bridge::Stmt type; };
+template<> struct bridge_type<clang::QualType > { typedef ast_bridge::Ctyp type; };
+template<> struct bridge_type<clang::TypeLoc  > { typedef ast_bridge::Tloc type; };
 
 #endif /* CLANG_TYPE_TRAITS_H */

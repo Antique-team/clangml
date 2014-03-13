@@ -1,4 +1,4 @@
-#include "bridge_ast.h"
+#include "ast_bridge.h"
 #include "heterogenous_container.h"
 
 #include <clang/AST/Type.h>

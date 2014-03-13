@@ -9,7 +9,17 @@
 bool
 OCamlVisitor::TraverseStmt (clang::Stmt *S)
 {
-  Base::TraverseStmt (S);
+  // Top switch stmt: dispatch to TraverseFooStmt for each concrete FooStmt.
+  switch (S->getStmtClass ())
+    {
+    case clang::Stmt::NoStmtClass: break;
+#define ABSTRACT_STMT(STMT)
+#define STMT(CLASS, PARENT)				\
+    case clang::Stmt::CLASS##Class:			\
+      Traverse##CLASS (static_cast<clang::CLASS *> (S));\
+      break;
+#include <clang/AST/StmtNodes.inc>
+    }
 
   if (clang::Expr *E = clang::dyn_cast<clang::Expr> (S))
     {
@@ -229,7 +239,7 @@ OCamlVisitor::TraverseGCCAsmStmt (clang::GCCAsmStmt *S)
   TRACE;
 
   // TODO: implement
-  stack.push (bridge_ast::mkUnimpStmt ("GCCAsmStmt"));
+  stack.push (ast_bridge::mkGCCAsmStmt ());
 
   return true;
 }

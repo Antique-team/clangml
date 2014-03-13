@@ -4,9 +4,6 @@ open Ast
 let rec tloc_of_ctyp sloc ty =
   let tl =
     match ty.t with
-    | UnimpType (name) ->
-        UnimpTypeLoc (name)
-
     | BuiltinType (bt) ->
         BuiltinTypeLoc (bt)
     | TypeOfExprType (expr) ->
@@ -46,6 +43,33 @@ let rec tloc_of_ctyp sloc ty =
         RecordTypeLoc (kind, name)
     | DecayedType (decayed, original) ->
         (tloc_of_ctyp sloc original).tl
+
+    | AtomicType -> AtomicTypeLoc
+    | AttributedType -> AttributedTypeLoc
+    | AutoType -> AutoTypeLoc
+    | BlockPointerType -> BlockPointerTypeLoc
+    | ComplexType -> ComplexTypeLoc
+    | DecltypeType -> DecltypeTypeLoc
+    | DependentNameType -> DependentNameTypeLoc
+    | DependentSizedArrayType -> DependentSizedArrayTypeLoc
+    | DependentSizedExtVectorType -> DependentSizedExtVectorTypeLoc
+    | DependentTemplateSpecializationType -> DependentTemplateSpecializationTypeLoc
+    | ExtVectorType -> ExtVectorTypeLoc
+    | InjectedClassNameType -> InjectedClassNameTypeLoc
+    | LValueReferenceType -> LValueReferenceTypeLoc
+    | MemberPointerType -> MemberPointerTypeLoc
+    | ObjCInterfaceType -> ObjCInterfaceTypeLoc
+    | ObjCObjectPointerType -> ObjCObjectPointerTypeLoc
+    | ObjCObjectType -> ObjCObjectTypeLoc
+    | PackExpansionType -> PackExpansionTypeLoc
+    | RValueReferenceType -> RValueReferenceTypeLoc
+    | SubstTemplateTypeParmPackType -> SubstTemplateTypeParmPackTypeLoc
+    | SubstTemplateTypeParmType -> SubstTemplateTypeParmTypeLoc
+    | TemplateSpecializationType -> TemplateSpecializationTypeLoc
+    | TemplateTypeParmType -> TemplateTypeParmTypeLoc
+    | UnaryTransformType -> UnaryTransformTypeLoc
+    | UnresolvedUsingType -> UnresolvedUsingTypeLoc
+    | VectorType -> VectorTypeLoc
   in
 
   let tl =

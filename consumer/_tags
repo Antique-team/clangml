@@ -4,7 +4,7 @@
 #<*.ml{,i}>: package(deriving-ocsigen.syntax), syntax(camlp4o), package(clang)
 #<*.{byte,native}>: package(clang)
 <*.ml{,i}>: package(deriving-ocsigen.syntax), package(unix), syntax(camlp4o)
-<*.{byte,native}>: package(deriving-ocsigen), package(unix)
+<*.{byte,native}>: package(deriving-ocsigen), package(unix), package(ANSITerminal)
 
 "memcad/c": include
 "memcad/lib": include

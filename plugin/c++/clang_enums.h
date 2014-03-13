@@ -3,12 +3,14 @@
 
 #include <clang/AST/Expr.h>
 
-#include "bridge_ast.h"
+#include "ast_bridge.h"
 
-bridge_ast::PredefinedExpr translate_predefined_expr (clang::PredefinedExpr::IdentType kind);
-bridge_ast::TagTypeKind translate_tag_type_kind (clang::TagTypeKind kind);
-bridge_ast::ElaboratedTypeKeyword translate_elaborated_type_keyword (clang::ElaboratedTypeKeyword kw);
-bridge_ast::BuiltinType translate_builtin_type (clang::BuiltinType::Kind kind);
-bridge_ast::CastKind translate_cast_kind (clang::CastKind kind);
+ast_bridge::UnaryOperator translate_unary_operator_kind (clang::UnaryOperatorKind kind);
+ast_bridge::BinaryOperator translate_binary_operator_kind (clang::BinaryOperatorKind kind);
+ast_bridge::PredefinedExpr translate_predefined_expr (clang::PredefinedExpr::IdentType kind);
+ast_bridge::TagTypeKind translate_tag_type_kind (clang::TagTypeKind kind);
+ast_bridge::ElaboratedTypeKeyword translate_elaborated_type_keyword (clang::ElaboratedTypeKeyword kw);
+ast_bridge::BuiltinType translate_builtin_type (clang::BuiltinType::Kind kind);
+ast_bridge::CastKind translate_cast_kind (clang::CastKind kind);
 
 #endif /* CLANG_ENUMS_H */

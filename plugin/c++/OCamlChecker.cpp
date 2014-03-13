@@ -10,8 +10,8 @@ extern "C" {
 #include <cstdio>
 
 #include "OCamlChecker.h"
-#include "bridge_ast.h"
-#include "bridge_ast_of.h"
+#include "ast_bridge.h"
+#include "ast_bridge_of.h"
 #include "clang_context.h"
 #include "trace.h"
 
@@ -40,8 +40,8 @@ to_value (clang::TranslationUnitDecl const *D, clang_context &ctx)
 {
   //TIME;
 
-  ptr<bridge_ast::Decl> decl
-    = bridge_ast_of<bridge_ast::Decl>
+  ptr<ast_bridge::Decl> decl
+    = ast_bridge_of<ast_bridge::Decl>
         (const_cast<clang::TranslationUnitDecl *> (D), ctx);
   ctx.values.resize (decl->id);
   return decl->to_value (ctx.values);;

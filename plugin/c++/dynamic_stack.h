@@ -5,7 +5,7 @@
 #include <type_traits>
 #include <typeinfo>
 
-#include "bridge_ast.h"
+#include "ast_bridge.h"
 
 namespace dynamic_stack_detail
 {
@@ -42,7 +42,7 @@ namespace dynamic_stack_detail
 
   // Special case for Expr -> Stmt
   template<>
-  ptr<bridge_ast::Stmt> adt_cast (adt_ptr adt);
+  ptr<ast_bridge::Stmt> adt_cast (adt_ptr adt);
 }
 
 

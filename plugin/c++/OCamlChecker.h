@@ -3,7 +3,7 @@
 
 #include <clang/StaticAnalyzer/Core/Checker.h>
 
-#include "bridge_ast.h"
+#include "ast_bridge.h"
 
 struct OCamlChecker
   : clang::ento::Checker<clang::ento::check::ASTDecl<clang::TranslationUnitDecl> >

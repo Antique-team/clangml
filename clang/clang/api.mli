@@ -30,18 +30,42 @@ type _ request =
   (* Get the main unit filename. *)
   | Filename : string request
 
-  (* Get the canonical type for a ctyp node. *)
+  (* Get the canonical type for a ctyp node. A canonical type
+     is the type with any typedef names stripped out of it or
+     the types it references. *)
   | CanonicalType : Ast.ctyp Ref.t -> Ast.ctyp request
 
   (* Get the type for a type_loc. *)
   | TypePtr : Ast.tloc Ref.t -> Ast.ctyp request
 
-  (* Get the presumed location for a source location. *)
+  (* Returns the "presumed" location of a SourceLocation specifies.
+
+     A "presumed location" can be modified by [#line] or GNU line marker
+     directives.  This provides a view on the data that a user should see
+     in diagnostics, for example.
+ 
+     Note that a presumed location is always given as the expansion point of
+     an expansion location, not at the spelling location.
+ 
+     Returns the presumed location of the specified SourceLocation. If the
+     presumed location cannot be calculate (e.g., because [loc] is invalid
+     or the file containing [loc] has changed on disk), returns an invalid
+     presumed location. *)
   | PresumedLoc : Sloc.t -> Sloc.presumed_loc request
 
   (* Returns true if the file of provided SourceLocation is
      the main file. *)
   | IsFromMainFile : Sloc.t -> bool request
+
+  (* Return the file characteristic of the specified source
+     location, indicating whether this is a normal file, a system
+     header, or an "implicit extern C" system header.
+
+     This state can be modified with flags on GNU linemarker directives like:
+     [# 4 "foo.h" 3]
+     which changes all source locations in the current file after that to be
+     considered to be from a system header. *)
+  | FileCharacteristic : Sloc.t -> Sloc.characteristic_kind request
 
 
 type error =

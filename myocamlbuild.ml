@@ -17,7 +17,7 @@ let cxxflags = Sh"`llvm-config-3.4 --cxxflags`" :: atomise [
   "-fexceptions";
   "-fvisibility=hidden";
   "-ggdb3";
-  "-O3";
+  "-O0";
 
   "-Itools/bridgen/c++";
   "-Iplugin/c++";
@@ -47,10 +47,9 @@ let ldflags = Sh"`llvm-config-3.4 --ldflags`" :: atomise [
 let headers = [
   "tools/bridgen/c++/ocaml++.h";
   "plugin/c++/OCamlVisitor/OCamlVisitor.h";
-  "plugin/c++/OCamlVisitor/operators.h";
   "plugin/c++/OCamlChecker.h";
-  "plugin/c++/bridge_ast.h";
-  "plugin/c++/bridge_ast_of.h";
+  "plugin/c++/ast_bridge.h";
+  "plugin/c++/ast_bridge_of.h";
   "plugin/c++/bridge_cache.h";
   "plugin/c++/clang_context.h";
   "plugin/c++/clang_enums.h";
@@ -61,6 +60,7 @@ let headers = [
   "plugin/c++/delayed_exit.h";
   "plugin/c++/dynamic_stack.h";
   "plugin/c++/heterogenous_container.h";
+  "plugin/c++/sloc_bridge.h";
   "plugin/c++/trace.h";
 ]
 
@@ -74,8 +74,8 @@ let objects = [
   "plugin/c++/OCamlVisitor/TypeLoc.o";
   "plugin/c++/OCamlChecker.o";
   "plugin/c++/PluginRegistration.o";
-  "plugin/c++/bridge_ast.o";
-  "plugin/c++/bridge_ast_of.o";
+  "plugin/c++/ast_bridge.o";
+  "plugin/c++/ast_bridge_of.o";
   "plugin/c++/bridge_cache.o";
   "plugin/c++/clang_context.o";
   "plugin/c++/clang_enums.o";
@@ -85,6 +85,7 @@ let objects = [
   "plugin/c++/delayed_exit.o";
   "plugin/c++/dynamic_stack.o";
   "plugin/c++/heterogenous_container.o";
+  "plugin/c++/sloc_bridge.o";
   "plugin/c++/trace.o";
   "plugin/ocaml/clangLib.o";
 ]
@@ -105,13 +106,13 @@ let () =
           ]
           ~deps:[
             "tools/visitgen/visitgen.native";
-            "clang/clang/bridge.ml";
+            "clang/clang/astBridge.ml";
           ]
           begin fun env build ->
             Cmd (S[
               A"tools/visitgen/visitgen.native";
               A"clang/clang";
-              A"clang/clang/bridge.ml";
+              A"clang/clang/astBridge.ml";
             ])
           end;
 
@@ -128,27 +129,29 @@ let () =
           end;
 
         rule "Produce clean bridge AST without camlp4 extensions"
-          ~prod:"clang/clang/bridge.ml"
-          ~dep:"clang/clang/ast.ml"
+          ~prod:"clang/clang/%Bridge.ml"
+          ~dep:"clang/clang/%.ml"
           begin fun env build ->
             Cmd (S[
               A"grep"; A"-v"; A"^\\s*deriving (Show)\\s*$";
-              A"clang/clang/ast.ml";
+              A(env "clang/clang/%.ml");
               Sh"|";
               A"sed"; A"-e";
-              A"s/\\s\\+deriving (Show)//;s/= Bridge.\\w\\+ //";
+              A("s/\\s\\+deriving (Show)//;s/= "
+                ^ String.capitalize (env "%")
+                ^ "Bridge.\\w\\+ //");
               Sh">";
-              A"clang/clang/bridge.ml";
+              A(env "clang/clang/%Bridge.ml");
             ])
           end;
 
         rule "Bridge AST generation"
           ~prods:[
-            "plugin/c++/bridge_ast.cpp";
-            "plugin/c++/bridge_ast.h";
+            "plugin/c++/%_bridge.cpp";
+            "plugin/c++/%_bridge.h";
           ]
           ~deps:[
-            "clang/clang/bridge.ml";
+            "clang/clang/%Bridge.ml";
             "tools/bridgen/bridgen.native";
             (* This one is not a real dependency, but it makes sure
                that the target path exists. *)
@@ -158,8 +161,8 @@ let () =
             Cmd (S[
               A"tools/bridgen/bridgen.native";
               A"plugin/c++";
-              A"bridge_ast";
-              A"clang/clang/bridge.ml"
+              A(env "%_bridge");
+              A(env "clang/clang/%Bridge.ml")
             ])
           end;
 

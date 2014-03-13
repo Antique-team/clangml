@@ -21,8 +21,6 @@ let body_of_stmt = function
 let rec identifier_of_expr = function
   | DeclRefExpr name -> name
 
-  | UnimpExpr name -> failwith ("unimplemented expr: " ^ name)
-
   | ImplicitCastExpr (_, expr)
   | ParenExpr expr -> identifier_of_expr expr.e
 

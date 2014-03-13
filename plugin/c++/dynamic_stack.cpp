@@ -29,10 +29,10 @@ namespace dynamic_stack_detail
 
   // Special case for Expr -> Stmt
   template<>
-  ptr<bridge_ast::Stmt>
+  ptr<ast_bridge::Stmt>
   adt_cast (adt_ptr adt)
   {
-    using namespace bridge_ast;
+    using namespace ast_bridge;
 
     ptr<Stmt> p = boost::dynamic_pointer_cast<Stmt> (adt);
     if (!p)

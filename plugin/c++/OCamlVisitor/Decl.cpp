@@ -206,7 +206,7 @@ OCamlVisitor::TraverseTranslationUnitDecl (clang::TranslationUnitDecl *D)
     TODO;							\
     TRACE;							\
     IGNORE_ADT (CLASS, D);					\
-    stack.push (mkUnimpDecl (#CLASS));				\
+    stack.push (mk##CLASS ());					\
     return true;						\
   }
 

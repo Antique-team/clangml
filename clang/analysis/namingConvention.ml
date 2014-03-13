@@ -1,27 +1,31 @@
 open Clang
 open Prelude
+open Diagnostic
 
 
 let is_uppercase ch =
   ch = Char.uppercase ch
 
 
-let print_warning clang (loc, w) =
-  let ploc = Api.(request clang @@ PresumedLoc loc.Ast.loc_s) in
-  Printf.printf "%s:%d: %s\n"
-    ploc.Sloc.loc_filename
-    ploc.Sloc.loc_line
-    w
+let warn sloc kind name =
+  Diagnostic.({
+    diag_loc = sloc.Ast.loc_s;
+    diag_msg = "reserved " ^ kind ^ " name `" ^ name ^ "'";
+    diag_std = Std_C "7.1.3";
+    diag_lvl = Warning;
+    diag_flg = Wreserved_name;
+  })
 
 
 let check_name name kind clang sloc state =
-  if Api.(request clang @@ IsFromMainFile sloc.Ast.loc_s) then
+  if Sloc.is_valid sloc.Ast.loc_s &&
+     Api.(request clang @@ FileCharacteristic sloc.Ast.loc_s) = Sloc.C_User then
     let state =
       if String.length name >= 2 then
         if name.[0] = '_' && name.[1] = '_' then
-          (sloc, "reserved " ^ kind ^ " name `" ^ name ^ "'") :: state
+          warn sloc kind name :: state
         else if name.[0] = '_' && is_uppercase name.[1] then
-          (sloc, "reserved " ^ kind ^ " name `" ^ name ^ "'") :: state
+          warn sloc kind name :: state
         else
           state
       else
@@ -68,6 +72,6 @@ let analyse_decl clang decl =
   match warnings with
   | [] -> () (* OK *)
   | warnings ->
-      List.iter (print_warning clang) warnings;
+      List.iter (Diagnostic.show clang) warnings;
       failwith @@ "naming convention check failed with " ^ string_of_int
                     (List.length warnings) ^ " violations"

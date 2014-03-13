@@ -289,7 +289,7 @@ OCamlVisitor::Traverse##CLASS##TypeLoc (clang::CLASS##TypeLoc TL)	\
 {									\
   TODO;									\
   TRACE;								\
-  stack.push (mkUnimpTypeLoc (#CLASS));					\
+  stack.push (mk##CLASS##TypeLoc ());					\
   return true;								\
 }
 

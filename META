@@ -10,7 +10,7 @@ archive(byte) = "clang.cmo"
 )
 
 package "analysis" (
-requires = "clang.util,clang.parser"
+requires = "clang.util,clang.parser,ANSITerminal"
 archive(native) = "analysis.cmx"
 archive(byte) = "analysis.cmo"
 )

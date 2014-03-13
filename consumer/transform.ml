@@ -130,7 +130,7 @@ let rec c_type_of_type = function
   | IncompleteArrayType _ -> Log.unimp "IncompleteArrayType"
   | DecayedType _ -> Log.unimp "IncompleteArrayType"
 
-  | UnimpType name -> Log.unimp "%s" name
+  | ty -> Log.unimp "%a" Show.format<ctyp_> ty
 
 
 let rec c_type_of_type_loc tl =
@@ -169,7 +169,7 @@ let rec c_type_of_type_loc tl =
   | VariableArrayTypeLoc _ -> Log.unimp "VariableArrayTypeLoc"
   | IncompleteArrayTypeLoc _ -> Log.unimp "IncompleteArrayTypeLoc"
 
-  | UnimpTypeLoc name -> Log.unimp "%s" name
+  | ty -> Log.unimp "%a" Show.format<tloc_> ty
 
 
 let make_aggregate agg = function
@@ -271,7 +271,7 @@ let c_decl_of_decl clang { d_sloc; d } =
   | ParmVarDecl         _ -> Log.err "ParmVarDecl found in function"
   | TranslationUnitDecl _ -> Log.err "TranslationUnitDecl found in function"
 
-  | UnimpDecl name -> Log.unimp "%s" name
+  | decl -> Log.unimp "%a" Show.format<decl_> decl
 
 
 let rec c_lvalk_of_expr prog env = function
@@ -328,7 +328,7 @@ let rec c_lvalk_of_expr prog env = function
   | VecStepExpr _ -> Log.unimp "lvalk VecStepExpr"
   | VecStepType _ -> Log.unimp "lvalk VecStepType"
 
-  | UnimpExpr name -> Log.unimp "%s" name
+  | expr -> Log.unimp "%a" Show.format<expr_> expr
 
 
 and c_lval_of_expr prog env { e = expr; e_type; } =
@@ -390,12 +390,12 @@ and c_exprk_of_expr prog env = function
   | VecStepExpr _ -> Log.unimp "exprk VecStepExpr"
   | VecStepType _ -> Log.unimp "exprk VecStepType"
 
-  | UnimpExpr name -> Log.unimp "%s" name
-
   (* Already handled below. *)
   | ArraySubscriptExpr _ -> Log.err "exprk ArraySubscriptExpr"
   | MemberExpr _ -> Log.err "exprk MemberExpr"
   | DeclRefExpr _ -> Log.err "exprk DeclRefExpr"
+
+  | expr -> Log.unimp "exprk %a" Show.format<expr_> expr
 
 
 and c_expr_of_expr prog env expr =
@@ -497,7 +497,7 @@ let rec c_stat_of_expr clang prog env expr =
   | VecStepExpr _ -> Log.unimp "stats VecStepExpr"
   | VecStepType _ -> Log.unimp "stats VecStepType"
 
-  | UnimpExpr name -> Log.unimp "%s" name
+  | expr -> Log.unimp "stats %a" Show.format<expr_> expr
 
 
 (* This function maps N clang statements to M memcad statements.
@@ -622,7 +622,7 @@ let rec c_stats_of_stmts clang prog env stmts =
         | SwitchStmt _ -> Log.unimp "SwitchStmt"
         | DeclStmt _ -> Log.unimp "DeclStmt"
 
-        | UnimpStmt name -> Log.unimp "%s" name
+        | stmt -> Log.unimp "%a" Show.format<stmt_> stmt
   in
   (* We build the list in reverse. *)
   List.rev (loop env [] stmts)
@@ -750,7 +750,7 @@ let rec collect_decls clang prog = function
   | { d = ParmVarDecl         _ } :: _ -> Log.err "ParmVarDecl found at file scope"
   | { d = TranslationUnitDecl _ } :: _ -> Log.err "nested TranslationUnitDecl found"
 
-  | { d = UnimpDecl name } :: _ -> Log.unimp "%s" name
+  | { d } :: _ -> Log.unimp "%a" Show.format<decl_> d
 
 
 let c_prog_from_decl clang = function

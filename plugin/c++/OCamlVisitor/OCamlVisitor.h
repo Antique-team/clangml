@@ -16,7 +16,7 @@
 
 #include "clang_ranges.h"
 
-using namespace bridge_ast;
+using namespace ast_bridge;
 
 #define TODO std::printf ("TODO: %s\n", __func__); delayed_exit E { 1 }
 
@@ -51,11 +51,11 @@ private:
    * {{{1 Traversal dispatch functions
    */
 
-  adt_ptr cached (clang::QualType p, adt_ptr value = nullptr);
-  adt_ptr cached (clang::TypeLoc p, adt_ptr value = nullptr);
-  adt_ptr cached (clang::DesignatedInitExpr::Designator p, adt_ptr value = nullptr);
-  adt_ptr cached (clang::Decl *p, adt_ptr value = nullptr);
-  adt_ptr cached (clang::Stmt *p, adt_ptr value = nullptr);
+  adt_ptr cached (clang::QualType			p, adt_ptr value = nullptr);
+  adt_ptr cached (clang::TypeLoc			p, adt_ptr value = nullptr);
+  adt_ptr cached (clang::DesignatedInitExpr::Designator	p, adt_ptr value = nullptr);
+  adt_ptr cached (clang::Decl *				p, adt_ptr value = nullptr);
+  adt_ptr cached (clang::Stmt *				p, adt_ptr value = nullptr);
 
 
   template<typename T>
@@ -263,17 +263,6 @@ public:
   // }}}
 
   /****************************************************
-   * {{{1 Unary/binary operators
-   */
-
-#define UNARYOP(OP)	bool TraverseUnary##OP (clang::UnaryOperator *S);
-#define BINOP(OP)	bool TraverseBin##OP (clang::BinaryOperator *S);
-#define CAO(OP)		bool TraverseBin##OP##Assign (clang::CompoundAssignOperator *S);
-#include "operators.h"
-
-  // }}}
-
-  /****************************************************
    * {{{1 Statements
    */
   bool TraverseDesignator (clang::DesignatedInitExpr::Designator D,
@@ -389,7 +378,7 @@ OCamlVisitor::Traverse##CLASS (clang::CLASS *S)		\
   TODO;							\
   TRACE;						\
   IGNORE_ADT (CLASS, S);				\
-  stack.push (mkUnimp##TYPE (#CLASS));			\
+  stack.push (mk##CLASS ());				\
   return true;						\
 }
 

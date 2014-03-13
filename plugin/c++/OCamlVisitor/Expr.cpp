@@ -5,38 +5,39 @@
  * {{{1 Unary/binary operators
  */
 
-#define UNARYOP(OP)							\
-bool									\
-OCamlVisitor::TraverseUnary##OP (clang::UnaryOperator *S)		\
-{									\
-  ptr<Expr> sub = must_traverse (S->getSubExpr ());			\
-  stack.push (mkUnaryOperator (UO_##OP, sub));				\
-  return true;								\
+bool
+OCamlVisitor::TraverseUnaryOperator (clang::UnaryOperator *S)
+{
+  TRACE;
+
+  UnaryOperator op = translate_unary_operator_kind (S->getOpcode ());
+  ptr<Expr> subExpr = must_traverse (S->getSubExpr ());
+
+  stack.push (mkUnaryOperator (op, subExpr));
+
+  return true;
 }
 
 
-#define BINOP(OP)							\
-bool									\
-OCamlVisitor::TraverseBin##OP (clang::BinaryOperator *S)		\
-{									\
-  ptr<Expr> lhs = must_traverse (S->getLHS ());				\
-  ptr<Expr> rhs = must_traverse (S->getRHS ());				\
-  stack.push (mkBinaryOperator (BO_##OP, lhs, rhs));			\
-  return true;								\
+bool
+OCamlVisitor::TraverseBinaryOperator (clang::BinaryOperator *S)
+{
+  TRACE;
+
+  BinaryOperator op = translate_binary_operator_kind (S->getOpcode ());
+  ptr<Expr> lhs = must_traverse (S->getLHS ());
+  ptr<Expr> rhs = must_traverse (S->getRHS ());
+
+  stack.push (mkBinaryOperator (op, lhs, rhs));
+
+  return true;
 }
 
-
-#define CAO(OP)								\
-bool									\
-OCamlVisitor::TraverseBin##OP##Assign (clang::CompoundAssignOperator *S)\
-{									\
-  ptr<Expr> lhs = must_traverse (S->getLHS ());				\
-  ptr<Expr> rhs = must_traverse (S->getRHS ());				\
-  stack.push (mkBinaryOperator (BO_##OP##Assign, lhs, rhs));		\
-  return true;								\
+bool
+OCamlVisitor::TraverseCompoundAssignOperator (clang::CompoundAssignOperator *S)
+{
+  return TraverseBinaryOperator (S);
 }
-
-#include "operators.h"
 
 
 bool
@@ -390,11 +391,9 @@ UNIMP_STMT (Expr, ArrayTypeTraitExpr)
 UNIMP_STMT (Expr, AsTypeExpr)
 UNIMP_STMT (Expr, AtomicExpr)
 UNIMP_STMT (Expr, BinaryConditionalOperator)
-UNIMP_STMT (Expr, BinaryOperator)
 UNIMP_STMT (Expr, BinaryTypeTraitExpr)
 UNIMP_STMT (Expr, BlockExpr)
 UNIMP_STMT (Expr, ChooseExpr)
-UNIMP_STMT (Expr, CompoundAssignOperator)
 UNIMP_STMT (Expr, CUDAKernelCallExpr)
 UNIMP_STMT (Expr, CXXBindTemporaryExpr)
 UNIMP_STMT (Expr, CXXBoolLiteralExpr)
@@ -458,7 +457,6 @@ UNIMP_STMT (Expr, SizeOfPackExpr)
 UNIMP_STMT (Expr, SubstNonTypeTemplateParmExpr)
 UNIMP_STMT (Expr, SubstNonTypeTemplateParmPackExpr)
 UNIMP_STMT (Expr, TypeTraitExpr)
-UNIMP_STMT (Expr, UnaryOperator)
 UNIMP_STMT (Expr, UnaryTypeTraitExpr)
 UNIMP_STMT (Expr, UnresolvedLookupExpr)
 UNIMP_STMT (Expr, UnresolvedMemberExpr)

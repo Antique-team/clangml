@@ -1,6 +1,71 @@
 #include "clang_enums.h"
 
-using namespace bridge_ast;
+using namespace ast_bridge;
+
+
+UnaryOperator
+translate_unary_operator_kind (clang::UnaryOperatorKind kind)
+{
+  switch (kind)
+    {
+    case clang::UO_PostInc:	return UO_PostInc;
+    case clang::UO_PostDec:	return UO_PostDec;
+    case clang::UO_PreInc:	return UO_PreInc;
+    case clang::UO_PreDec:	return UO_PreDec;
+    case clang::UO_AddrOf:	return UO_AddrOf;
+    case clang::UO_Deref:	return UO_Deref;
+    case clang::UO_Plus:	return UO_Plus;
+    case clang::UO_Minus:	return UO_Minus;
+    case clang::UO_Not:		return UO_Not;
+    case clang::UO_LNot:	return UO_LNot;
+    case clang::UO_Real:	return UO_Real;
+    case clang::UO_Imag:	return UO_Imag;
+    case clang::UO_Extension:	return UO_Extension;
+    }
+  throw std::runtime_error ("invalid unary operator kind");
+}
+
+
+BinaryOperator
+translate_binary_operator_kind (clang::BinaryOperatorKind kind)
+{
+  switch (kind)
+    {
+    case clang::BO_PtrMemD:	return BO_PtrMemD;
+    case clang::BO_PtrMemI:	return BO_PtrMemI;
+    case clang::BO_Mul:		return BO_Mul;
+    case clang::BO_Div:		return BO_Div;
+    case clang::BO_Rem:		return BO_Rem;
+    case clang::BO_Add:		return BO_Add;
+    case clang::BO_Sub:		return BO_Sub;
+    case clang::BO_Shl:		return BO_Shl;
+    case clang::BO_Shr:		return BO_Shr;
+    case clang::BO_LT:		return BO_LT;
+    case clang::BO_GT:		return BO_GT;
+    case clang::BO_LE:		return BO_LE;
+    case clang::BO_GE:		return BO_GE;
+    case clang::BO_EQ:		return BO_EQ;
+    case clang::BO_NE:		return BO_NE;
+    case clang::BO_And:		return BO_And;
+    case clang::BO_Xor:		return BO_Xor;
+    case clang::BO_Or:		return BO_Or;
+    case clang::BO_LAnd:	return BO_LAnd;
+    case clang::BO_LOr:		return BO_LOr;
+    case clang::BO_Assign:	return BO_Assign;
+    case clang::BO_MulAssign:	return BO_MulAssign;
+    case clang::BO_DivAssign:	return BO_DivAssign;
+    case clang::BO_RemAssign:	return BO_RemAssign;
+    case clang::BO_AddAssign:	return BO_AddAssign;
+    case clang::BO_SubAssign:	return BO_SubAssign;
+    case clang::BO_ShlAssign:	return BO_ShlAssign;
+    case clang::BO_ShrAssign:	return BO_ShrAssign;
+    case clang::BO_AndAssign:	return BO_AndAssign;
+    case clang::BO_OrAssign:	return BO_OrAssign;
+    case clang::BO_XorAssign:	return BO_XorAssign;
+    case clang::BO_Comma:	return BO_Comma;
+    }
+  throw std::runtime_error ("invalid binary operator kind");
+}
 
 
 PredefinedExpr
