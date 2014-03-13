@@ -13,6 +13,7 @@ type _ request =
   | CanonicalType : Ast.ctyp Ref.t -> Ast.ctyp request
   | TypePtr : Ast.tloc Ref.t -> Ast.ctyp request
   | PresumedLoc : Sloc.t -> Sloc.presumed_loc request
+  | IsFromMainFile : Sloc.t -> bool request
 
 type error =
   | E_Unhandled of string
@@ -26,6 +27,12 @@ type 'a response =
 exception E of error
 
 
+let string_of_error = function
+  | E_Unhandled msg -> "E_Unhandled (" ^ msg ^ ")"
+  | E_NullRef -> "E_NullRef"
+  | E_Version ver -> "E_Version (" ^ ver ^ ")"
+
+
 let name_of_request : type a. a request -> string = function
   | Handshake       _ -> "Handshake"
   | Compose         _ -> "Compose"
@@ -34,6 +41,7 @@ let name_of_request : type a. a request -> string = function
   | CanonicalType   _ -> "CanonicalType"
   | TypePtr         _ -> "TypePtr"
   | PresumedLoc     _ -> "PresumedLoc"
+  | IsFromMainFile  _ -> "IsFromMainFile"
 
 
 (* Server functions. *)

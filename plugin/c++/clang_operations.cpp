@@ -71,4 +71,14 @@ clang_presumed_loc (value context, value sloc)
 }
 
 
+CAMLprim value
+clang_is_from_main_file (value context, value sloc)
+{
+  clang_context &ctx = *reinterpret_cast<clang_context *> (Bp_val (context));
+  clang::SourceLocation loc = clang::SourceLocation::getFromRawEncoding (Unsigned_int_val (sloc));
+
+  return Val_bool (ctx.SM.isFromMainFile (loc));
+}
+
+
 O_END_DECLS

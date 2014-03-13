@@ -31,11 +31,13 @@ let process clang =
   (*print_endline (Show.show<Clang.Ast.decl> decl);*)
   memcad_parse file;
 
+  let _ = Analysis.All.analyse_decl clang decl in
+
   print_string "--------------------- Clang AST ---------------------";
   Format.printf "@[<v2>@,%a@]@."
     Clang.Pp.pp_decl decl;
 
-  let decl = Transforms.All.transform_decl clang decl in
+  let decl = Transformation.All.transform_decl clang decl in
   print_string "--------------------- Simple AST --------------------";
   Format.printf "@[<v2>@,%a@]@."
     Clang.Pp.pp_decl decl;
@@ -48,5 +50,8 @@ let process clang =
 
 let () =
   Printexc.record_backtrace true;
-  Clang.Api.parse (List.tl @@ Array.to_list Sys.argv) process;
+  try
+    Clang.Api.parse (List.tl @@ Array.to_list Sys.argv) process;
+  with Clang.Api.E error ->
+    failwith @@ Clang.Api.string_of_error error
 ;;

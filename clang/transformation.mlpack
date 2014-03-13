@@ -1,0 +1,10 @@
+# simplify
+transformation/All
+transformation/Codegen
+transformation/ForToWhile
+transformation/LiftConditionals
+transformation/MapStmt
+transformation/RemoveImplicitCast
+transformation/SimplifyDeclStmt
+transformation/SplitInitialisers
+transformation/SwitchToIf

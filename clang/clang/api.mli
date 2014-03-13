@@ -39,11 +39,17 @@ type _ request =
   (* Get the presumed location for a source location. *)
   | PresumedLoc : Sloc.t -> Sloc.presumed_loc request
 
+  (* Returns true if the file of provided SourceLocation is
+     the main file. *)
+  | IsFromMainFile : Sloc.t -> bool request
+
 
 type error =
   | E_Unhandled of string
   | E_NullRef
   | E_Version of string
+
+val string_of_error : error -> string
 
 (* Server *)
 type 'a response =

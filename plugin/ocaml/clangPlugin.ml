@@ -1,9 +1,10 @@
 open Clang
 open Ast
 
-external clang_canonical_type	: Api.context -> ctyp Ref.t -> ctyp = "clang_canonical_type"
-external clang_type_ptr		: Api.context -> tloc Ref.t -> ctyp = "clang_type_ptr"
-external clang_presumed_loc	: Api.context -> Sloc.t -> Sloc.presumed_loc = "clang_presumed_loc"
+external clang_canonical_type		: Api.context -> ctyp Ref.t -> ctyp = "clang_canonical_type"
+external clang_type_ptr			: Api.context -> tloc Ref.t -> ctyp = "clang_type_ptr"
+external clang_presumed_loc		: Api.context -> Sloc.t -> Sloc.presumed_loc = "clang_presumed_loc"
+external clang_is_from_main_file	: Api.context -> Sloc.t -> bool = "clang_is_from_main_file"
 
 
 let run_processor (tu : decl) (file : string) (ctx : Api.context) =
@@ -41,6 +42,9 @@ let run_processor (tu : decl) (file : string) (ctx : Api.context) =
           clang_presumed_loc ctx sloc
         else
           Sloc.invalid_presumed
+
+    | IsFromMainFile sloc ->
+        clang_is_from_main_file ctx sloc
   in
 
   Gc.compact ();
