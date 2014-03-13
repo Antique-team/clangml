@@ -14,13 +14,16 @@ let print_warning clang (loc, w) =
     w
 
 
-let check_name clang sloc name state =
+let check_name name kind clang sloc state =
   if Api.(request clang @@ IsFromMainFile sloc.Ast.loc_s) then
     let state =
-      if name.[0] = '_' && name.[1] = '_' then
-        (sloc, "reserved name `" ^ name ^ "'") :: state
-      else if name.[0] = '_' && is_uppercase name.[1] then
-        (sloc, "reserved name `" ^ name ^ "'") :: state
+      if String.length name >= 2 then
+        if name.[0] = '_' && name.[1] = '_' then
+          (sloc, "reserved " ^ kind ^ " name `" ^ name ^ "'") :: state
+        else if name.[0] = '_' && is_uppercase name.[1] then
+          (sloc, "reserved " ^ kind ^ " name `" ^ name ^ "'") :: state
+        else
+          state
       else
         state
     in
@@ -35,17 +38,24 @@ let analyse_decl clang decl =
   let open Ast in
 
   let rec fold_decl v state decl =
-    match decl.d with
-    | VarDecl (_, name, _)
-    | FunctionDecl (_, name, _)
-    | TypedefDecl (_, name) ->
-        let state = FoldVisitor.visit_decl v state decl in
+    let check =
+      match decl.d with
+      | VarDecl (_, name, _) ->
+          check_name name "variable"
+      | FunctionDecl (_, name, _) ->
+          check_name name "function"
+      | TypedefDecl (_, name) ->
+          check_name name "typedef"
+      | RecordDecl (name, _) ->
+          check_name name "record"
 
-        check_name clang decl.d_sloc name state
+      | _ ->
+          fun _ _ state -> state
+    in
 
-    | _ ->
-        FoldVisitor.visit_decl v state decl
+    let state = check clang decl.d_sloc state in
 
+    FoldVisitor.visit_decl v state decl
   in
 
   let v = FoldVisitor.({ default with fold_decl }) in
@@ -59,4 +69,5 @@ let analyse_decl clang decl =
   | [] -> () (* OK *)
   | warnings ->
       List.iter (print_warning clang) warnings;
-      failwith "naming convention check failed"
+      failwith @@ "naming convention check failed with " ^ string_of_int
+                    (List.length warnings) ^ " violations"
