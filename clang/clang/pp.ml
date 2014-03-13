@@ -146,11 +146,11 @@ let pp_option f ff = function
   | None -> Format.pp_print_string ff "<null>"
   | Some x -> f ff x
 
-let pp_sloc ff sloc =
-  if Sloc.is_valid sloc then
+let pp_sloc ff ploc =
+  if Sloc.is_valid_presumed ploc then
     Format.fprintf ff "# %d \"%s\"\n"
-      sloc.loc_s_line
-      sloc.loc_s_filename
+      ploc.Sloc.loc_line
+      ploc.Sloc.loc_filename
   else
     Format.pp_print_string ff "# <invalid sloc>\n"
 

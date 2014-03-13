@@ -12,6 +12,7 @@ type _ request =
   | Filename : string request
   | CanonicalType : Ast.ctyp Ref.t -> Ast.ctyp request
   | TypePtr : Ast.tloc Ref.t -> Ast.ctyp request
+  | PresumedLoc : Sloc.t -> Sloc.presumed_loc request
 
 type error =
   | E_Unhandled of string
@@ -32,6 +33,7 @@ let name_of_request : type a. a request -> string = function
   | Filename          -> "Filename"
   | CanonicalType   _ -> "CanonicalType"
   | TypePtr         _ -> "TypePtr"
+  | PresumedLoc     _ -> "PresumedLoc"
 
 
 (* Server functions. *)

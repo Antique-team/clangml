@@ -220,16 +220,11 @@ type builtin_type = Bridge.builtin_type =
 
 
 type sloc = Bridge.sloc = {
-  loc_s_filename : string;
-  loc_s_line     : int;
-  loc_s_column   : int;
-  loc_e_filename : string;
-  loc_e_line     : int;
-  loc_e_column   : int;
+  loc_s : Sloc.t;
+  loc_e : Sloc.t;
 } deriving (Show)
 
 
-(* short-cut *)
 type desg = Bridge.desg = {
   dr : desg_;
   dr_sloc : sloc;

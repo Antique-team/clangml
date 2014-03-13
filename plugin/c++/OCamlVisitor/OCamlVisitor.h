@@ -218,8 +218,8 @@ private:
     if (!with_sloc)
       return empty_sloc;
 
-    clang::PresumedLoc start = ctx.SM.getPresumedLoc (deref (p).getLocStart ());
-    clang::PresumedLoc end   = ctx.SM.getPresumedLoc (deref (p).getLocEnd   ());
+    clang::SourceLocation start = deref (p).getLocStart ();
+    clang::SourceLocation end   = deref (p).getLocEnd   ();
 
     assert (start.isValid () == end.isValid ());
 
@@ -228,12 +228,8 @@ private:
 
     ptr<Sloc> sloc = mkSloc ();
 
-    sloc->loc_s_filename = start.getFilename ();
-    sloc->loc_s_line     = start.getLine     ();
-    sloc->loc_s_column   = start.getColumn   ();
-    sloc->loc_e_filename = end  .getFilename ();
-    sloc->loc_e_line     = end  .getLine     ();
-    sloc->loc_e_column   = end  .getColumn   ();
+    sloc->loc_s = start;
+    sloc->loc_e = end;
 
     return sloc;
   }

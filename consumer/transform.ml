@@ -1,8 +1,13 @@
 open C_sig
-open Clang.Ast
+open Clang
+open Ast
 open Data_structures
 
 module Log = Util.Logger.Make(struct let tag = "transform" end)
+
+
+let start_line clang loc =
+  Api.(request clang @@ PresumedLoc loc.loc_s).Sloc.loc_line
 
 
 let lookup_var prog env name =
@@ -27,11 +32,11 @@ let lookup_var prog env name =
 
 let dump_stmt s =
   Format.printf "%a\n"
-    Clang.Pp.pp_stmt s
+    Pp.pp_stmt s
 
 let dump_expr s =
   Format.printf "%a\n"
-    Clang.Pp.pp_expr s
+    Pp.pp_expr s
 
 
 let add_type name ty prog =
@@ -156,9 +161,6 @@ let rec c_type_of_type_loc tl =
       c_type_of_type_loc unqual
 
   | FunctionProtoTypeLoc (_, _) ->
-      Format.printf "%a%a\n"
-        Clang.Pp.pp_sloc tl.tl_sloc
-        Clang.Pp.pp_tloc tl;
       Log.unimp "FunctionProtoTypeLoc"
 
   | TypeOfExprTypeLoc _ -> Log.unimp "TypeOfExprTypeLoc"
@@ -234,12 +236,14 @@ let c_var_of_parm_decl = function
         cv_name     = name;
         cv_uid      = -1;
         cv_type     = c_type_of_type_loc ty;
-        cv_volatile = Clang.Query.is_volatile_tloc ty.tl;
+        cv_volatile = Query.is_volatile_tloc ty.tl;
       }
   | _ -> Log.err "only ParmVarDecls allowed in function argument list"
 
 
-let c_decl_of_decl { d_sloc = { loc_s_line }; d } =
+let c_decl_of_decl clang { d_sloc; d } =
+  let loc_s_line = start_line clang d_sloc in
+
   match d with
   | VarDecl (ty, name, init) ->
       if init <> None then
@@ -248,7 +252,7 @@ let c_decl_of_decl { d_sloc = { loc_s_line }; d } =
         cv_name     = name;
         cv_uid      = -1;
         cv_type     = c_type_of_type_loc ty;
-        cv_volatile = Clang.Query.is_volatile_tloc ty.tl;
+        cv_volatile = Query.is_volatile_tloc ty.tl;
       }
 
   | EmptyDecl ->
@@ -328,7 +332,7 @@ let rec c_lvalk_of_expr prog env = function
 
 
 and c_lval_of_expr prog env { e = expr; e_type; } =
-  (*let canon = Clang.Api.(request @@ CanonicalType e_type.t_cref) in*)
+  (*let canon = Api.(request clang @@ CanonicalType e_type.t_cref) in*)
   (*print_endline (Show.show<ctyp> canon);*)
   {
     clk = c_lvalk_of_expr prog env expr;
@@ -433,12 +437,12 @@ let make_call prog env callee args =
   }
 
 
-let rec c_stat_of_expr prog env expr =
+let rec c_stat_of_expr clang prog env expr =
   match expr.e with
   | BinaryOperator (BO_Assign, lhs, rhs) ->
       (*print_endline (Show.show<expr> rhs);*)
       {
-        csl = expr.e_sloc.loc_s_line;
+        csl = start_line clang expr.e_sloc;
         csk = Csassign (
           c_lval_of_expr prog env lhs,
           c_expr_of_expr prog env rhs
@@ -447,12 +451,12 @@ let rec c_stat_of_expr prog env expr =
 
   | CallExpr (callee, args) ->
       {
-        csl = expr.e_sloc.loc_s_line;
+        csl = start_line clang expr.e_sloc;
         csk = 
           (* Special handling for known functions. Note that
              malloc is not handled here, since it is only used
              within an assignment expression statement. *)
-          match Clang.Query.identifier_of_expr callee.e, args with
+          match Query.identifier_of_expr callee.e, args with
           | "_memcad", [{ e = StringLiteral str }] ->
               Cs_memcad (Mc_comstring str)
           | "assert", [_] ->
@@ -498,15 +502,17 @@ let rec c_stat_of_expr prog env expr =
 
 (* This function maps N clang statements to M memcad statements.
    M may be considerably more than N. *)
-let rec c_stats_of_stmts prog env stmts =
+let rec c_stats_of_stmts clang prog env stmts =
   let rec loop env stats = function
     | [] -> stats
 
     | stmt :: tl ->
+        let csl = start_line clang stmt.s_sloc in
+
         match stmt.s with
         | ReturnStmt expr ->
             let stat = {
-              csl = stmt.s_sloc.loc_s_line;
+              csl;
               csk = Csreturn (
                 match expr with
                 | None ->
@@ -523,9 +529,9 @@ let rec c_stats_of_stmts prog env stmts =
               (* Special handling of malloc. *)
               | { e = BinaryOperator (BO_Assign, lhs,
                                       { e = CallExpr (callee, [arg]) })
-                } when Clang.Query.identifier_of_expr callee.e = "malloc" ->
+                } when Query.identifier_of_expr callee.e = "malloc" ->
                   {
-                    csl = stmt.s_sloc.loc_s_line;
+                    csl;
                     csk = Csalloc (
                       c_lval_of_expr prog env lhs,
                       c_expr_of_expr prog env arg
@@ -537,7 +543,7 @@ let rec c_stats_of_stmts prog env stmts =
                                       { e = CallExpr (callee, args) })
                 } ->
                   {
-                    csl = stmt.s_sloc.loc_s_line;
+                    csl;
                     csk = Csfcall (
                       c_lval_of_expr prog env lhs,
                       make_call prog env callee args
@@ -546,25 +552,25 @@ let rec c_stats_of_stmts prog env stmts =
 
               | e ->
                   (*print_endline (Show.show<expr> e);*)
-                  c_stat_of_expr prog env e
+                  c_stat_of_expr clang prog env e
             in
             loop env (stat :: stats) tl
 
         (* We only accept single declarations. *)
         | DeclStmt [decl] ->
-            let (loc, c_decl) = c_decl_of_decl decl in
+            let (loc, c_decl) = c_decl_of_decl clang decl in
             let env = StringMap.add c_decl.cv_name c_decl env in
             let stat = { csl = loc; csk = Csdecl c_decl } in
             loop env (stat :: stats) tl
 
         | WhileStmt (cond, body) ->
             let stat =
-              let stmts = Clang.Query.body_of_stmt body in
+              let stmts = Query.body_of_stmt body in
               {
-                csl = stmt.s_sloc.loc_s_line;
+                csl;
                 csk = Cswhile (
                   c_expr_of_expr prog env cond,
-                  c_stats_of_stmts prog env stmts,
+                  c_stats_of_stmts clang prog env stmts,
                   None
                 );
               }
@@ -573,18 +579,18 @@ let rec c_stats_of_stmts prog env stmts =
 
         | IfStmt (cond, then_body, else_body) ->
             let stat =
-              let then_stmts = Clang.Query.body_of_stmt then_body in
+              let then_stmts = Query.body_of_stmt then_body in
               let else_stmts =
                 match else_body with
                 | None -> []
-                | Some else_body -> Clang.Query.body_of_stmt else_body
+                | Some else_body -> Query.body_of_stmt else_body
               in
               {
-                csl = stmt.s_sloc.loc_s_line;
+                csl;
                 csk = Csif (
                   c_expr_of_expr prog env cond,
-                  c_stats_of_stmts prog env then_stmts,
-                  c_stats_of_stmts prog env else_stmts
+                  c_stats_of_stmts clang prog env then_stmts,
+                  c_stats_of_stmts clang prog env else_stmts
                 );
               }
             in
@@ -592,16 +598,16 @@ let rec c_stats_of_stmts prog env stmts =
 
         | BreakStmt ->
             let stat = {
-              csl = stmt.s_sloc.loc_s_line;
+              csl;
               csk = Csbreak;
             } in
             loop env (stat :: stats) tl
 
         | CompoundStmt stmts ->
             let stat = {
-              csl = stmt.s_sloc.loc_s_line;
+              csl;
               csk = Csblock
-                (c_stats_of_stmts prog env stmts)
+                (c_stats_of_stmts clang prog env stmts)
             } in
             loop env (stat :: stats) tl
 
@@ -635,20 +641,20 @@ let make_env = function
   | tl -> failwith (Show.show<tloc_> tl)
 
 
-let c_fun_body_of_stmts prog ty body =
-  let stmts = Clang.Query.body_of_stmt body in
-  c_stats_of_stmts prog (make_env ty.tl) stmts
+let c_fun_body_of_stmts clang prog ty body =
+  let stmts = Query.body_of_stmt body in
+  c_stats_of_stmts clang prog (make_env ty.tl) stmts
 
 
-let rec collect_decls prog = function
+let rec collect_decls clang prog = function
   | [] -> prog
 
   | { d = EmptyDecl } :: tl ->
-      collect_decls prog tl
+      collect_decls clang prog tl
 
   | { d = FunctionDecl (_, _, None) } :: tl ->
       (* Function declarations (without definition) do nothing. *)
-      collect_decls prog tl
+      collect_decls clang prog tl
 
   | { d = FunctionDecl (ty, name, Some body) } :: tl ->
       let c_fun =
@@ -656,16 +662,16 @@ let rec collect_decls prog = function
            so that name lookups within the body work for the
            currently processed function name. *)
         let stub = {
-          cf_type = c_type_of_type_loc (Clang.Query.return_type_of_tloc ty.tl);
+          cf_type = c_type_of_type_loc (Query.return_type_of_tloc ty.tl);
           cf_uid  = -1;
           cf_name = name;
-          cf_args = List.map c_var_of_parm_decl (Clang.Query.args_of_tloc ty.tl);
+          cf_args = List.map c_var_of_parm_decl (Query.args_of_tloc ty.tl);
           cf_body = []; (* Filled in later. *)
         } in
         let prog = add_fun name stub prog in
-        { stub with cf_body = c_fun_body_of_stmts prog ty body }
+        { stub with cf_body = c_fun_body_of_stmts clang prog ty body }
       in
-      collect_decls (add_fun name c_fun prog) tl
+      collect_decls clang (add_fun name c_fun prog) tl
 
   (*
     Clang turns this code:
@@ -695,7 +701,7 @@ let rec collect_decls prog = function
           cag_fields = c_agg_fields_of_decls members;
         } kind
       in
-      collect_decls (add_type name c_type prog) tl
+      collect_decls clang (add_type name c_type prog) tl
 
   (* Handle "typedef struct foo *Foo;" (where struct foo was not
      yet defined) specially, as well. *)
@@ -712,7 +718,7 @@ let rec collect_decls prog = function
     :: tl
     when name1 = name2 ->
       let c_type = c_type_of_type_loc ty in
-      collect_decls (add_type name c_type prog) tl
+      collect_decls clang (add_type name c_type prog) tl
 
   (* There may be other typedefs involving a preceding record definition,
      so this case is printed with a better diagnostic than the catch-all
@@ -729,15 +735,15 @@ let rec collect_decls prog = function
 
   | { d = TypedefDecl (ty, name) } :: tl ->
       let c_type = c_type_of_type_loc ty in
-      collect_decls (add_type name c_type prog) tl
+      collect_decls clang (add_type name c_type prog) tl
 
   | { d = VarDecl (ty, name, init) } as decl :: tl ->
-      let c_var = snd (c_decl_of_decl decl) in
-      collect_decls (add_var name c_var prog) tl
+      let c_var = snd (c_decl_of_decl clang decl) in
+      collect_decls clang (add_var name c_var prog) tl
 
   | { d = EnumDecl (name, enumerators) } :: tl ->
       (* TODO *)
-      collect_decls prog tl
+      collect_decls clang prog tl
 
   | { d = EnumConstantDecl    _ } :: _ -> Log.err "EnumConstantDecl found at file scope"
   | { d = FieldDecl           _ } :: _ -> Log.err "FieldDecl found at file scope"
@@ -747,7 +753,7 @@ let rec collect_decls prog = function
   | { d = UnimpDecl name } :: _ -> Log.unimp "%s" name
 
 
-let c_prog_from_decl = function
+let c_prog_from_decl clang = function
   | { d = TranslationUnitDecl decls } ->
-      collect_decls C_utils.empty_unit decls
+      collect_decls clang C_utils.empty_unit decls
   | _ -> Log.err "c_prog_from_decl requires a translation unit"

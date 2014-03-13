@@ -15,6 +15,8 @@ module Show_loc = Deriving_Show.Defaults(struct
 type basic_type =
   (* Simple type *)
   | NamedType of loc * string
+  (* Clang source location *)
+  | SourceLocation of loc
   (* Clang pointer *)
   | ClangType of loc * string
   (* List of basic_type *)

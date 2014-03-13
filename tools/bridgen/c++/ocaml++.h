@@ -19,6 +19,7 @@ O_BEGIN_DECLS
 #include <caml/mlvalues.h>
 O_END_DECLS
 
+#include <clang/Basic/SourceLocation.h>
 #include <llvm/ADT/StringRef.h>
 
 /********************************************************
@@ -211,7 +212,7 @@ static inline value value_of (value_of_context &ctx, double v) { return caml_cop
 static inline value value_of (value_of_context &ctx, int64  v) { return caml_copy_int64 (v); }
 
 static inline value
-value_of (value_of_context &ctx, llvm::StringRef v)
+value_of (value_of_context &ctx, llvm::StringRef const &v)
 {
   CAMLparam0 ();
   CAMLlocal1 (string);
@@ -220,6 +221,15 @@ value_of (value_of_context &ctx, llvm::StringRef v)
   memcpy (String_val (string), v.data (), v.size ());
 
   CAMLreturn (string);
+}
+
+
+static inline value
+value_of (value_of_context &ctx, clang::SourceLocation v)
+{
+  unsigned raw = v.getRawEncoding ();
+  assert (raw < INT_MAX / 2);
+  return value_of (ctx, int (raw));
 }
 
 

@@ -41,7 +41,7 @@ let process clang =
     Clang.Pp.pp_decl decl;
 
   print_endline "----------------- Clang -> MemCAD -------------------";
-  C_utils.ppi_c_prog "" stdout (Transform.c_prog_from_decl decl);
+  C_utils.ppi_c_prog "" stdout (Transform.c_prog_from_decl clang decl);
   print_endline "-----------------------------------------------------";
 ;;
 

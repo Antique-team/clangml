@@ -29,6 +29,9 @@ let rec ast_type_to_type (ctyp: Ast.ctyp) =
   | <:ctyp@loc<Ref.t $lid:node_type$>> ->
       ClangType (loc, node_type)
 
+  | <:ctyp@loc<Sloc.t>> ->
+      SourceLocation (loc)
+
   | _ ->
       Log.unimp "ast_type_to_type"
 

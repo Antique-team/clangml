@@ -114,6 +114,8 @@ let rec translate_type ctx = let open Codegen in function
   | ClangType (_, name) ->
       (* Plain pointers to Clang AST nodes. *)
       TyTemplate ("clang_ref", TyName (cpp_name name))
+  | SourceLocation (_) ->
+      TyName "clang::SourceLocation"
   | ListOfType (_, ty) ->
       TyTemplate ("std::vector", translate_type ctx ty)
   | OptionType (_, (NamedType (_, name) as ty)) ->

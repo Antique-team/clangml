@@ -44,11 +44,16 @@ reinstall:
 
 ALDOR_PATH = ../github/_build/src/lang/aldor
 
-CCFLAGS =				\
+CPPFLAGS =				\
 	-D_GNU_SOURCE			\
 	-D_ANALYSING			\
 	-DTEST_ALL			\
 	-DSTO_USE_MALLOC		\
+	-I$(ALDOR_PATH)/compiler	\
+	-I$(ALDOR_PATH)/compiler/java
+
+CCFLAGS =				\
+	$(CPPFLAGS)			\
 	-std=c89			\
 	-pedantic			\
 	-Wall				\
@@ -58,8 +63,6 @@ CCFLAGS =				\
 	-Wno-unused-parameter		\
 	-Wno-sign-compare		\
 	-Wno-missing-field-initializers	\
-	-I$(ALDOR_PATH)/compiler	\
-	-I$(ALDOR_PATH)/compiler/java	\
 	#
 
 CLANGFLAGS =				\
@@ -109,10 +112,8 @@ $(eval $(call testsuite,memcad,$(filter-out $(BROKEN),$(wildcard consumer/memcad
 ## Analyse the Aldor compiler sources
 ####################################################################
 
-BROKEN_SRC =		\
-	java/genjava.c
-
 ALDOR_SRC =		\
+	java/genjava.c	\
 	java/javacode.c	\
 	java/javaobj.c	\
 	abcheck.c	\
@@ -307,6 +308,12 @@ compile-whopr-gcc: aldor.c
 
 compile-whopr-fcc: aldor.c
 	../github/_install/bin/fcc1 -cflags "$(GCCFLAGS)" $<
+
+preprocess-whopr-clang: aldor.c
+	clang $(CPPFLAGS) -E $< -o aldor.i
+
+preprocess-whopr-gcc: aldor.c
+	gcc $(CPPFLAGS) -E $< -o aldor.i
 
 aldor.c: $(ALDOR_SRC)
 	:> $@

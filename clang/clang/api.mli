@@ -36,6 +36,9 @@ type _ request =
   (* Get the type for a type_loc. *)
   | TypePtr : Ast.tloc Ref.t -> Ast.ctyp request
 
+  (* Get the presumed location for a source location. *)
+  | PresumedLoc : Sloc.t -> Sloc.presumed_loc request
+
 
 type error =
   | E_Unhandled of string
