@@ -4,6 +4,7 @@ clang/Ast
 clang/AstBridge
 clang/Config
 clang/FoldVisitor
+clang/IterVisitor
 clang/MapVisitor
 clang/Option
 clang/Pp

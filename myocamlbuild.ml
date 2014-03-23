@@ -102,7 +102,8 @@ let () =
         rule "Generate map and fold visitors from bridge AST"
           ~prods:[
             "clang/clang/mapVisitor.ml";
-            "clang/clang/foldVisitor.ml"
+            "clang/clang/foldVisitor.ml";
+            "clang/clang/iterVisitor.ml";
           ]
           ~deps:[
             "tools/visitgen/visitgen.native";

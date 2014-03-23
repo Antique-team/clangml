@@ -1,3 +1,15 @@
+let iter_option v self = function
+  | Some value ->
+      v self value
+  | None ->
+      ()
+
+
+let iter_list v self =
+  List.iter (v self)
+
+
+
 let fold_option v self state = function
   | Some value ->
       v self state value

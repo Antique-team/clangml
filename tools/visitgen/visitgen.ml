@@ -20,9 +20,9 @@ let parse_and_generate dir source =
     let name = GenerateVisitor.name_of_kind kind in
     let output_file = dir ^ "/" ^ name ^ "Visitor.ml" in
     let impl = GenerateVisitor.codegen kind ocaml_types in
-    (*OCamlPrinter.print_implem impl;*)
+    (*OCamlPrinter.print_implem ~output_file impl;*)
     OCamlDumper.print_implem ~output_file impl;
-  ) GenerateVisitor.([Map; Fold])
+  ) GenerateVisitor.([Map; Fold; Iter])
 
 
 let () =

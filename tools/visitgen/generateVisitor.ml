@@ -6,10 +6,12 @@ open OcamlTypes.Process
 type kind =
   | Map
   | Fold
+  | Iter
 
 let name_of_kind = function
   | Map -> "map"
   | Fold -> "fold"
+  | Iter -> "iter"
 
 
 let reduce f = function
@@ -90,6 +92,8 @@ let codegen kind ocaml_types =
                 <:expr<(state, $reconstruct$)>>
             | Fold ->
                 <:expr<state>>
+            | Iter ->
+                <:expr<()>>
           in
 
           let update =
@@ -103,10 +107,20 @@ let codegen kind ocaml_types =
                 let mkmap name = function
                   | None ->
                       let var = mangle name in
-                      <:expr<v.$lid:prefix ^ name$ v state $lid:var$>>
+                      begin match kind with
+                      | Map | Fold ->
+                          <:expr<v.$lid:prefix ^ name$ v state $lid:var$>>
+                      | Iter ->
+                          <:expr<v.$lid:prefix ^ name$ v $lid:var$>>
+                      end
                   | Some fn ->
                       let var = mangle name in
-                      <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v state $lid:var$>>
+                      begin match kind with
+                      | Map | Fold ->
+                          <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v state $lid:var$>>
+                      | Iter ->
+                          <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v $lid:var$>>
+                      end
                 in
 
                 let update =
@@ -132,6 +146,7 @@ let codegen kind ocaml_types =
                       match kind with
                       | Map -> <:patt<(state, $lid:name$)>>
                       | Fold -> <:patt<state>>
+                      | Iter -> <:patt<()>>
                     in
                     <:expr<
                       let $patt$ = $update$ in
@@ -172,14 +187,21 @@ let codegen kind ocaml_types =
               in
               (state, { $lid:name$ with $lid:main_member$ })
             >>
-        | Fold ->
+        | Fold | Iter ->
             do_match
       in
 
-      <:str_item@rec_loc<
-        let $lid:"visit_" ^ name$ v state $lid:name$ =
-          $body$
-      >>
+      match kind with
+      | Map | Fold ->
+          <:str_item@rec_loc<
+            let $lid:"visit_" ^ name$ v state $lid:name$ =
+              $body$
+          >>
+      | Iter ->
+          <:str_item@rec_loc<
+            let $lid:"visit_" ^ name$ v $lid:name$ =
+              $body$
+          >>
     ) visit_types
     |> reduce (fun functions fn ->
         let _loc = Ast.loc_of_str_item fn in
@@ -194,14 +216,20 @@ let codegen kind ocaml_types =
         match kind with
         | Map -> <:ctyp<'a * $lid:name$>>
         | Fold -> <:ctyp<'a>>
+        | Iter -> <:ctyp<unit>>
+      in
+
+      let visit_ty =
+        match kind with
+        | Map | Fold ->
+            <:ctyp<'a visitor -> 'a -> $lid:name$ -> $result_ty$>>
+        | Iter ->
+            <:ctyp<visitor -> $lid:name$ -> $result_ty$>>
       in
 
       <:ctyp<
         $id:(<:ident< $lid:prefix ^ name$ >>)$
-          : 'a visitor
-          -> 'a
-          -> $lid:name$
-          -> $result_ty$
+          : $visit_ty$
       >>
     in
 
@@ -227,13 +255,20 @@ let codegen kind ocaml_types =
 
 
   let _loc = Loc.ghost in
+
+  let tydcl =
+    match kind with
+    | Map | Fold ->
+        <:str_item<type 'a visitor = { $members$; }>>
+    | Iter ->
+        <:str_item<type    visitor = { $members$; }>>
+  in
+
   <:str_item<
     open Ast
     open Visitor
 
-    type 'a visitor = {
-      $members$;
-    }
+    $tydcl$;;
 
     $functions$;;
     let default = { $default$ };;
