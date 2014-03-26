@@ -408,7 +408,17 @@ UNIMP_STMT (Expr, CXXFunctionalCastExpr)
 UNIMP_STMT (Expr, CXXMemberCallExpr)
 UNIMP_STMT (Expr, CXXNewExpr)
 UNIMP_STMT (Expr, CXXNoexceptExpr)
-UNIMP_STMT (Expr, CXXNullPtrLiteralExpr)
+bool
+OCamlVisitor::TraverseCXXNullPtrLiteralExpr (clang::CXXNullPtrLiteralExpr *S)
+{
+  TRACE;
+
+  stack.push (mkCXXNullPtrLiteralExpr ());
+
+  return true;
+}
+
+
 UNIMP_STMT (Expr, CXXOperatorCallExpr)
 UNIMP_STMT (Expr, CXXPseudoDestructorExpr)
 UNIMP_STMT (Expr, CXXReinterpretCastExpr)

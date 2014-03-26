@@ -12,5 +12,6 @@ ast_bridge::TagTypeKind translate_tag_type_kind (clang::TagTypeKind kind);
 ast_bridge::ElaboratedTypeKeyword translate_elaborated_type_keyword (clang::ElaboratedTypeKeyword kw);
 ast_bridge::BuiltinType translate_builtin_type (clang::BuiltinType::Kind kind);
 ast_bridge::CastKind translate_cast_kind (clang::CastKind kind);
+ast_bridge::AccessSpecifier translate_access_specifier (clang::AccessSpecifier spec);
 
 #endif /* CLANG_ENUMS_H */

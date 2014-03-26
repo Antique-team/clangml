@@ -191,3 +191,16 @@ translate_cast_kind (clang::CastKind kind)
     }
   throw std::runtime_error ("invalid cast kind");
 }
+
+AccessSpecifier
+translate_access_specifier (clang::AccessSpecifier spec)
+{
+  switch (spec)
+    {
+    case clang::AS_public:				return AS_public;
+    case clang::AS_protected:				return AS_protected;
+    case clang::AS_private:				return AS_private;
+    case clang::AS_none:				return AS_none;
+    }
+  throw std::runtime_error ("invalid access specifier");
+}

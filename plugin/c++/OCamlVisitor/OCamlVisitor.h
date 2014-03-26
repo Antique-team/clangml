@@ -20,8 +20,8 @@ using namespace ast_bridge;
 
 #define TODO std::printf ("TODO: %s\n", __func__); delayed_exit E { 1 }
 
-#undef TRACE
-#define TRACE
+//#undef TRACE
+//#define TRACE
 
 
 struct OCamlVisitor
@@ -56,6 +56,7 @@ private:
   adt_ptr cached (clang::DesignatedInitExpr::Designator	p, adt_ptr value = nullptr);
   adt_ptr cached (clang::Decl *				p, adt_ptr value = nullptr);
   adt_ptr cached (clang::Stmt *				p, adt_ptr value = nullptr);
+  adt_ptr cached (clang::CXXBaseSpecifier		p, adt_ptr value = nullptr);
 
 
   template<typename T>
@@ -63,7 +64,8 @@ private:
   { p->dump (); }
 
   static void dump (clang::TypeLoc TL);
-  static void dump (clang::DesignatedInitExpr::Designator p);
+  static void dump (clang::DesignatedInitExpr::Designator const &p);
+  static void dump (clang::CXXBaseSpecifier const &p);
 
 
   template<typename T>
@@ -127,10 +129,12 @@ private:
 
   void traverse (clang::Decl *D);
   void traverse (clang::Stmt *S);
+  void traverse (clang::TypeSourceInfo *TSI);
   void traverse (clang::TypeLoc TL);
   void traverse (clang::QualType T);
   void traverse (clang::DesignatedInitExpr::Designator const &D,
                  clang::DesignatedInitExpr *S);
+  void traverse (clang::CXXBaseSpecifier const &B);
 
 
   // May take a pointer or an object.
@@ -201,9 +205,7 @@ private:
   template<typename DeclT>
   ptr<Tloc> getTypeLoc (DeclT const *D)
   {
-    clang::TypeSourceInfo *TSI = D->getTypeSourceInfo ();
-    assert (TSI);
-    return must_traverse (TSI->getTypeLoc ());
+    return must_traverse (D->getTypeSourceInfo ());
   }
 
   template<typename T>
@@ -323,6 +325,10 @@ public:
 
 #define RECORD(CLASS, BASE)
   bool TraverseRecordDecl (clang::RecordDecl *D);
+
+#define CXXRECORD(CLASS, BASE)
+  bool TraverseCXXRecordDecl (clang::CXXRecordDecl *D);
+  bool TraverseCXXBaseSpecifier (clang::CXXBaseSpecifier const &B);
 
 #define FIELD(CLASS, BASE)
   bool TraverseFieldDecl (clang::FieldDecl *D);

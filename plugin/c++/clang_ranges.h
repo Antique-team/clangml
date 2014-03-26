@@ -61,6 +61,32 @@ arg_type_range = [] (clang::FunctionProtoType *T)
                                      T->arg_type_end ());
 };
 
+
+static const auto
+base_spec_range = [] (clang::CXXRecordDecl *D)
+{
+  return boost::make_iterator_range (D->bases_begin (),
+                                     D->bases_end ());
+};
+
+
+namespace clang
+{
+  static inline auto
+  begin (TemplateParameterList *L)
+    -> decltype (L->begin ())
+  {
+    return L->begin ();
+  }
+
+  static inline auto
+  end (TemplateParameterList *L)
+    -> decltype (L->end ())
+  {
+    return L->end ();
+  }
+}
+
 /********************************************************
  * </HACKS FOR CLANG INELEGANCES>
  ********************************************************/

@@ -43,13 +43,15 @@ let rec tloc_of_ctyp sloc ty =
         RecordTypeLoc (kind, name)
     | DecayedType (decayed, original) ->
         (tloc_of_ctyp sloc original).tl
+    | TemplateTypeParmType name ->
+        TemplateTypeParmTypeLoc name
 
     | AtomicType -> AtomicTypeLoc
     | AttributedType -> AttributedTypeLoc
     | AutoType -> AutoTypeLoc
     | BlockPointerType -> BlockPointerTypeLoc
     | ComplexType -> ComplexTypeLoc
-    | DecltypeType -> DecltypeTypeLoc
+    | DecltypeType expr -> DecltypeTypeLoc expr
     | DependentNameType -> DependentNameTypeLoc
     | DependentSizedArrayType -> DependentSizedArrayTypeLoc
     | DependentSizedExtVectorType -> DependentSizedExtVectorTypeLoc
@@ -66,7 +68,6 @@ let rec tloc_of_ctyp sloc ty =
     | SubstTemplateTypeParmPackType -> SubstTemplateTypeParmPackTypeLoc
     | SubstTemplateTypeParmType -> SubstTemplateTypeParmTypeLoc
     | TemplateSpecializationType -> TemplateSpecializationTypeLoc
-    | TemplateTypeParmType -> TemplateTypeParmTypeLoc
     | UnaryTransformType -> UnaryTransformTypeLoc
     | UnresolvedUsingType -> UnresolvedUsingTypeLoc
     | VectorType -> VectorTypeLoc

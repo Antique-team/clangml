@@ -298,7 +298,19 @@ UNIMP_TYPE_LOC (Attributed)
 UNIMP_TYPE_LOC (Auto)
 UNIMP_TYPE_LOC (BlockPointer)
 UNIMP_TYPE_LOC (Complex)
-UNIMP_TYPE_LOC (Decltype)
+
+
+bool
+OCamlVisitor::TraverseDecltypeTypeLoc (clang::DecltypeTypeLoc TL)
+{
+  TRACE;
+
+  ptr<Expr> expr = must_traverse (TL.getUnderlyingExpr ());
+
+  stack.push (mkDecltypeTypeLoc (expr));
+
+  return true;
+}
 UNIMP_TYPE_LOC (DependentName)
 UNIMP_TYPE_LOC (DependentSizedArray)
 UNIMP_TYPE_LOC (DependentSizedExtVector)
@@ -315,7 +327,19 @@ UNIMP_TYPE_LOC (RValueReference)
 UNIMP_TYPE_LOC (SubstTemplateTypeParm)
 UNIMP_TYPE_LOC (SubstTemplateTypeParmPack)
 UNIMP_TYPE_LOC (TemplateSpecialization)
-UNIMP_TYPE_LOC (TemplateTypeParm)
+bool
+OCamlVisitor::TraverseTemplateTypeParmTypeLoc (clang::TemplateTypeParmTypeLoc TL)
+{
+  TRACE;
+
+  clang::StringRef name = TL.getDecl ()->getName ();
+
+  stack.push (mkTemplateTypeParmTypeLoc (name));
+
+  return true;
+}
+
+
 UNIMP_TYPE_LOC (UnaryTransform)
 UNIMP_TYPE_LOC (UnresolvedUsing)
 UNIMP_TYPE_LOC (Vector)

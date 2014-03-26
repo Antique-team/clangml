@@ -11,9 +11,9 @@ OCamlVisitor::TraverseDecl (clang::Decl *D)
   Base::TraverseDecl (D);
 
   ptr<Decl> decl = mkDecl ();
-  decl->d      = stack.pop ();
-  decl->d_cref = ref (D);
-  decl->d_sloc = sloc (D);
+  decl->d        = stack.pop ();
+  decl->d_cref   = ref (D);
+  decl->d_sloc   = sloc (D);
   stack.push (decl);
 
   return true;
@@ -96,8 +96,43 @@ OCamlVisitor::TraverseRecordDecl (clang::RecordDecl *D)
   // Some members may be implicit (from inline unions).
   list<Decl> members = traverse_explicit_decls (D);
   clang::StringRef name = D->getName ();
+  list<CxxBaseSpecifier> bases;
 
-  stack.push (mkRecordDecl (name, members));
+  stack.push (mkRecordDecl (name, members, bases));
+
+  return true;
+}
+
+
+bool
+OCamlVisitor::TraverseCXXBaseSpecifier (clang::CXXBaseSpecifier const &B)
+{
+  TRACE;
+
+  ptr<CxxBaseSpecifier> base = mkCxxBaseSpecifier ();
+  base->cbs_virtual          = B.isVirtual ();
+  base->cbs_base_of_class    = B.isBaseOfClass ();
+  base->cbs_pack_expansion   = B.isPackExpansion ();
+  base->cbs_inherit_ctors    = B.getInheritConstructors ();
+  base->cbs_access_spec      = translate_access_specifier (B.getAccessSpecifier ());
+  base->cbs_type             = must_traverse (B.getType ());
+
+  stack.push (base);
+
+  return true;
+}
+
+bool
+OCamlVisitor::TraverseCXXRecordDecl (clang::CXXRecordDecl *D)
+{
+  TRACE;
+
+  // Some members may be implicit (from inline unions).
+  list<Decl> members = traverse_explicit_decls (D);
+  clang::StringRef name = D->getName ();
+  list<CxxBaseSpecifier> bases = traverse_list (base_spec_range (D));
+
+  stack.push (mkRecordDecl (name, members, bases));
 
   return true;
 }
@@ -215,7 +250,20 @@ UNIMP_DECL (AccessSpecDecl)
 UNIMP_DECL (BlockDecl)
 UNIMP_DECL (CapturedDecl)
 UNIMP_DECL (ClassScopeFunctionSpecializationDecl)
-UNIMP_DECL (ClassTemplateDecl)
+
+
+bool
+OCamlVisitor::TraverseClassTemplateDecl (clang::ClassTemplateDecl *D)
+{
+  TRACE;
+
+  ptr<Decl> templated = must_traverse (D->getTemplatedDecl ());
+  list<Decl> params = traverse_list (D->getTemplateParameters ());
+
+  stack.push (mkClassTemplateDecl (templated, params));
+
+  return true;
+}
 UNIMP_DECL (FileScopeAsmDecl)
 UNIMP_DECL (FriendDecl)
 UNIMP_DECL (FriendTemplateDecl)
@@ -226,7 +274,22 @@ UNIMP_DECL (LabelDecl)
 UNIMP_DECL (LinkageSpecDecl)
 UNIMP_DECL (MSPropertyDecl)
 UNIMP_DECL (NamespaceAliasDecl)
-UNIMP_DECL (NamespaceDecl)
+
+
+bool
+OCamlVisitor::TraverseNamespaceDecl (clang::NamespaceDecl *D)
+{
+  TRACE;
+
+  // We filter out implicit declarations before iterating.
+  list<Decl> decls = traverse_explicit_decls (D);
+  clang::StringRef name = D->getName ();
+  bool isInline = D->isInline ();
+
+  stack.push (mkNamespaceDecl (name, isInline, decls));
+
+  return true;
+}
 UNIMP_DECL (NonTypeTemplateParmDecl)
 UNIMP_DECL (ObjCCategoryDecl)
 UNIMP_DECL (ObjCCategoryImplDecl)
@@ -240,7 +303,21 @@ UNIMP_DECL (ObjCProtocolDecl)
 UNIMP_DECL (OMPThreadPrivateDecl)
 UNIMP_DECL (StaticAssertDecl)
 UNIMP_DECL (TemplateTemplateParmDecl)
-UNIMP_DECL (TemplateTypeParmDecl)
+
+
+bool
+OCamlVisitor::TraverseTemplateTypeParmDecl (clang::TemplateTypeParmDecl *D)
+{
+  TRACE;
+
+  // We filter out implicit declarations before iterating.
+  ptr<Ctyp> type = must_traverse (clang::QualType (D->getTypeForDecl (), 0));
+  option<Tloc> defaultArg = maybe_traverse (D->getDefaultArgumentInfo ());
+
+  stack.push (mkTemplateTypeParmDecl (type, defaultArg));
+
+  return true;
+}
 UNIMP_DECL (TypeAliasDecl)
 UNIMP_DECL (TypeAliasTemplateDecl)
 UNIMP_DECL (UnresolvedUsingTypenameDecl)

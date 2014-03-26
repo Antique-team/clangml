@@ -154,7 +154,19 @@ OCamlVisitor::TraverseConstantArrayType (clang::ConstantArrayType *T)
 }
 
 
-UNIMP_TYPE(Decltype)
+bool
+OCamlVisitor::TraverseDecltypeType (clang::DecltypeType *T)
+{
+  TRACE;
+
+  ptr<Expr> expr = must_traverse (T->getUnderlyingExpr ());
+
+  stack.push (mkDecltypeType (expr));
+
+  return true;
+}
+
+
 UNIMP_TYPE(DependentName)
 UNIMP_TYPE(DependentSizedArray)
 UNIMP_TYPE(DependentSizedExtVector)
@@ -238,7 +250,19 @@ UNIMP_TYPE(RValueReference)
 UNIMP_TYPE(SubstTemplateTypeParmPack)
 UNIMP_TYPE(SubstTemplateTypeParm)
 UNIMP_TYPE(TemplateSpecialization)
-UNIMP_TYPE(TemplateTypeParm)
+bool
+OCamlVisitor::TraverseTemplateTypeParmType (clang::TemplateTypeParmType *T)
+{
+  TRACE;
+
+  clang::StringRef name = T->getDecl ()->getName ();
+
+  stack.push (mkTemplateTypeParmType (name));
+
+  return true;
+}
+
+
 bool
 OCamlVisitor::TraverseTypedefType (clang::TypedefType *T)
 {

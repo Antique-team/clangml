@@ -144,23 +144,27 @@ let parse args continue =
       in
 
       let argv =
-        Array.of_list @@
-        [
-          "env";
+        let clang = [
           "clang";
           "-fsyntax-only";
           "-Xclang"; "-load";
           "-Xclang"; plugin;
           "-Xclang"; "-analyze";
           "-Xclang"; "-analyzer-checker=external.OCaml";
-        ] @ args
+        ] in
+
+        Array.of_list @@ "env" :: clang @ args
       in
 
       let env =
         (* The fd numbers are passed in the environment. In the
            client process, these fds are still open, but the program
            needs to be told what they are. *)
-        [|"PIPE_FDS=" ^ pipe_fds|]
+        [|
+          "PIPE_FDS=" ^ pipe_fds;
+          "HOME=" ^ Sys.getenv "HOME";
+          "TERM=" ^ Sys.getenv "TERM";
+        |]
       in
 
       (* Start client program. *)

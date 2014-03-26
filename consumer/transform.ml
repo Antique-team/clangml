@@ -182,7 +182,7 @@ let rec c_agg_fields_of_decls decls =
   let rec loop fields = function
     | [] -> fields
 
-    | { d = RecordDecl (name1, members) }
+    | { d = RecordDecl (name1, members, _) }
       :: { d = FieldDecl ({ tl = ElaboratedTypeLoc {
           tl = RecordTypeLoc (kind, name2)
         } }, name, bitwidth, init) } :: tl
@@ -263,7 +263,7 @@ let c_decl_of_decl clang { d_sloc; d } =
       Log.err "local typedefs are not supported by memcad AST"
   | EnumDecl (name, enumerators) ->
       Log.err "local enums are not supported by memcad AST"
-  | RecordDecl (name, members) ->
+  | RecordDecl (name, members, _) ->
       Log.err "local structs are not supported by memcad AST"
 
   | EnumConstantDecl    _ -> Log.err "EnumConstantDecl found in function"
@@ -683,7 +683,7 @@ let rec collect_decls clang prog = function
     and the memcad parser doesn't parse it, so we match this construct
     explicitly and transform it to the appropriate memcad AST.
    *)
-  |   { d = RecordDecl (name1, members) }
+  |   { d = RecordDecl (name1, members, _) }
     :: { d = TypedefDecl (
         { tl = ElaboratedTypeLoc {
              tl = RecordTypeLoc (kind, name2)
@@ -705,7 +705,7 @@ let rec collect_decls clang prog = function
 
   (* Handle "typedef struct foo *Foo;" (where struct foo was not
      yet defined) specially, as well. *)
-  |   { d = RecordDecl (name1, members) }
+  |   { d = RecordDecl (name1, members, _) }
     :: { d = TypedefDecl (
         { tl = PointerTypeLoc
           { tl = ElaboratedTypeLoc {
@@ -723,14 +723,14 @@ let rec collect_decls clang prog = function
   (* There may be other typedefs involving a preceding record definition,
      so this case is printed with a better diagnostic than the catch-all
      case below. *)
-  |   { d = RecordDecl (name, members) }
+  |   { d = RecordDecl (name, members, _) }
     :: { d = TypedefDecl _ as tdef }
     :: tl ->
       Log.unimp "unsupported record/typedef combination: %a"
         Show.format<decl_> tdef
 
   (* Any lone RecordDecls are not supported. *)
-  | { d = RecordDecl (name, members) } :: tl ->
+  | { d = RecordDecl (name, members, _) } :: tl ->
       Log.unimp "RecordDecl without TypedefDecl not supported by memcad AST"
 
   | { d = TypedefDecl (ty, name) } :: tl ->

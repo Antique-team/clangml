@@ -258,6 +258,9 @@ and pp_expr_ ff = function
       Format.fprintf ff "vec_step (%a)"
         pp_tloc ty
 
+  | CXXNullPtrLiteralExpr ->
+      Format.fprintf ff "nullptr"
+
   | ArrayTypeTraitExpr -> Format.pp_print_string ff "<ArrayTypeTraitExpr>"
   | AsTypeExpr -> Format.pp_print_string ff "<AsTypeExpr>"
   | AtomicExpr -> Format.pp_print_string ff "<AtomicExpr>"
@@ -280,7 +283,6 @@ and pp_expr_ ff = function
   | CXXMemberCallExpr -> Format.pp_print_string ff "<CXXMemberCallExpr>"
   | CXXNewExpr -> Format.pp_print_string ff "<CXXNewExpr>"
   | CXXNoexceptExpr -> Format.pp_print_string ff "<CXXNoexceptExpr>"
-  | CXXNullPtrLiteralExpr -> Format.pp_print_string ff "<CXXNullPtrLiteralExpr>"
   | CXXOperatorCallExpr -> Format.pp_print_string ff "<CXXOperatorCallExpr>"
   | CXXPseudoDestructorExpr -> Format.pp_print_string ff "<CXXPseudoDestructorExpr>"
   | CXXReinterpretCastExpr -> Format.pp_print_string ff "<CXXReinterpretCastExpr>"
@@ -448,6 +450,9 @@ and pp_tloc_ ff = function
   | TypeOfExprTypeLoc expr ->
       Format.fprintf ff "typeof (%a)"
         pp_expr expr
+  | DecltypeTypeLoc expr ->
+      Format.fprintf ff "decltype (%a)"
+        pp_expr expr
   | TypeOfTypeLoc ty ->
       Format.fprintf ff "typeof (%a)"
         pp_tloc ty
@@ -491,7 +496,6 @@ and pp_tloc_ ff = function
   | AutoTypeLoc -> Format.pp_print_string ff "<AutoTypeLoc>"
   | BlockPointerTypeLoc -> Format.pp_print_string ff "<BlockPointerTypeLoc>"
   | ComplexTypeLoc -> Format.pp_print_string ff "<ComplexTypeLoc>"
-  | DecltypeTypeLoc -> Format.pp_print_string ff "<DecltypeTypeLoc>"
   | DependentNameTypeLoc -> Format.pp_print_string ff "<DependentNameTypeLoc>"
   | DependentSizedArrayTypeLoc -> Format.pp_print_string ff "<DependentSizedArrayTypeLoc>"
   | DependentSizedExtVectorTypeLoc -> Format.pp_print_string ff "<DependentSizedExtVectorTypeLoc>"
@@ -508,7 +512,7 @@ and pp_tloc_ ff = function
   | SubstTemplateTypeParmTypeLoc -> Format.pp_print_string ff "<SubstTemplateTypeParmTypeLoc>"
   | SubstTemplateTypeParmPackTypeLoc -> Format.pp_print_string ff "<SubstTemplateTypeParmPackTypeLoc>"
   | TemplateSpecializationTypeLoc -> Format.pp_print_string ff "<TemplateSpecializationTypeLoc>"
-  | TemplateTypeParmTypeLoc -> Format.pp_print_string ff "<TemplateTypeParmTypeLoc>"
+  | TemplateTypeParmTypeLoc _ -> Format.pp_print_string ff "<TemplateTypeParmTypeLoc>"
   | UnaryTransformTypeLoc -> Format.pp_print_string ff "<UnaryTransformTypeLoc>"
   | UnresolvedUsingTypeLoc -> Format.pp_print_string ff "<UnresolvedUsingTypeLoc>"
   | VectorTypeLoc -> Format.pp_print_string ff "<VectorTypeLoc>"
@@ -530,6 +534,9 @@ and pp_type_ ff = function
   | TypeOfType ty ->
       Format.fprintf ff "typeof (%a)"
         pp_type ty
+  | DecltypeType expr ->
+      Format.fprintf ff "decltype (%a)"
+        pp_expr expr
   | ParenType ty ->
       Format.fprintf ff "(%a)"
         pp_type ty
@@ -573,7 +580,6 @@ and pp_type_ ff = function
   | AutoType -> Format.pp_print_string ff "<AutoType>"
   | BlockPointerType -> Format.pp_print_string ff "<BlockPointerType>"
   | ComplexType -> Format.pp_print_string ff "<ComplexType>"
-  | DecltypeType -> Format.pp_print_string ff "<DecltypeType>"
   | DependentNameType -> Format.pp_print_string ff "<DependentNameType>"
   | DependentSizedArrayType -> Format.pp_print_string ff "<DependentSizedArrayType>"
   | DependentSizedExtVectorType -> Format.pp_print_string ff "<DependentSizedExtVectorType>"
@@ -590,7 +596,7 @@ and pp_type_ ff = function
   | SubstTemplateTypeParmPackType -> Format.pp_print_string ff "<SubstTemplateTypeParmPackType>"
   | SubstTemplateTypeParmType -> Format.pp_print_string ff "<SubstTemplateTypeParmType>"
   | TemplateSpecializationType -> Format.pp_print_string ff "<TemplateSpecializationType>"
-  | TemplateTypeParmType -> Format.pp_print_string ff "<TemplateTypeParmType>"
+  | TemplateTypeParmType _ -> Format.pp_print_string ff "<TemplateTypeParmType>"
   | UnaryTransformType -> Format.pp_print_string ff "<UnaryTransformType>"
   | UnresolvedUsingType -> Format.pp_print_string ff "<UnresolvedUsingType>"
   | VectorType -> Format.pp_print_string ff "<VectorType>"
@@ -625,10 +631,10 @@ and pp_decl_ ff = function
   | VarDecl (ty, name, None)
   | ParmVarDecl (ty, name) ->
       pp_named_arg ff (name, ty)
-  | RecordDecl (name, []) ->
+  | RecordDecl (name, [], bases) ->
       Format.fprintf ff "struct %s@;"
         (if name = "" then "<anonymous>" else name)
-  | RecordDecl (name, members) ->
+  | RecordDecl (name, members, bases) ->
       Format.fprintf ff "struct %s@\n@[<v2>{@,%a@]@\n};"
         (if name = "" then "<anonymous>" else name)
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) members
@@ -646,12 +652,17 @@ and pp_decl_ ff = function
       Format.fprintf ff "%s = %a;"
         name
         pp_expr init
+  | NamespaceDecl (name, is_inline, decls) ->
+      Format.fprintf ff "%snamespace %s { %a }"
+        (if is_inline then "inline " else "")
+        name
+        (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) decls
 
   | AccessSpecDecl -> Format.pp_print_string ff "<AccessSpecDecl>"
   | BlockDecl -> Format.pp_print_string ff "<BlockDecl>"
   | CapturedDecl -> Format.pp_print_string ff "<CapturedDecl>"
   | ClassScopeFunctionSpecializationDecl -> Format.pp_print_string ff "<ClassScopeFunctionSpecializationDecl>"
-  | ClassTemplateDecl -> Format.pp_print_string ff "<ClassTemplateDecl>"
+  | ClassTemplateDecl _ -> Format.pp_print_string ff "<ClassTemplateDecl>"
   | FileScopeAsmDecl -> Format.pp_print_string ff "<FileScopeAsmDecl>"
   | FriendDecl -> Format.pp_print_string ff "<FriendDecl>"
   | FriendTemplateDecl -> Format.pp_print_string ff "<FriendTemplateDecl>"
@@ -662,7 +673,6 @@ and pp_decl_ ff = function
   | LinkageSpecDecl -> Format.pp_print_string ff "<LinkageSpecDecl>"
   | MSPropertyDecl -> Format.pp_print_string ff "<MSPropertyDecl>"
   | NamespaceAliasDecl -> Format.pp_print_string ff "<NamespaceAliasDecl>"
-  | NamespaceDecl -> Format.pp_print_string ff "<NamespaceDecl>"
   | NonTypeTemplateParmDecl -> Format.pp_print_string ff "<NonTypeTemplateParmDecl>"
   | ObjCCategoryDecl -> Format.pp_print_string ff "<ObjCCategoryDecl>"
   | ObjCCategoryImplDecl -> Format.pp_print_string ff "<ObjCCategoryImplDecl>"
@@ -676,7 +686,7 @@ and pp_decl_ ff = function
   | OMPThreadPrivateDecl -> Format.pp_print_string ff "<OMPThreadPrivateDecl>"
   | StaticAssertDecl -> Format.pp_print_string ff "<StaticAssertDecl>"
   | TemplateTemplateParmDecl -> Format.pp_print_string ff "<TemplateTemplateParmDecl>"
-  | TemplateTypeParmDecl -> Format.pp_print_string ff "<TemplateTypeParmDecl>"
+  | TemplateTypeParmDecl _ -> Format.pp_print_string ff "<TemplateTypeParmDecl>"
   | TypeAliasDecl -> Format.pp_print_string ff "<TypeAliasDecl>"
   | TypeAliasTemplateDecl -> Format.pp_print_string ff "<TypeAliasTemplateDecl>"
   | UnresolvedUsingTypenameDecl -> Format.pp_print_string ff "<UnresolvedUsingTypenameDecl>"

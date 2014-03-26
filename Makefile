@@ -294,6 +294,9 @@ ANALYSIS_FLAGS =		\
 	-Xclang -analyze	\
 	-Xclang -analyzer-checker=core.NullDereference
 
+analyze-self: processor.native
+	./processor.native $(shell llvm-config-3.4 --cxxflags) -fexceptions -std=c++11 -w -I_build/plugin/c++ -Itools/bridgen/c++ plugin/c++/OCamlVisitor/Expr.cpp
+
 analyze-whopr: aldor.c processor.native
 	./processor.native -w $(CLANGFLAGS) aldor.c
 

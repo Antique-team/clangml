@@ -50,7 +50,7 @@ let analyse_decl clang decl =
           check_name name "function"
       | TypedefDecl (_, name) ->
           check_name name "typedef"
-      | RecordDecl (name, _) ->
+      | RecordDecl (name, _, _) ->
           check_name name "record"
 
       | _ ->

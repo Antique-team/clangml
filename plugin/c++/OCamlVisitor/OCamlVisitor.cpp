@@ -20,12 +20,18 @@ adt_ptr OCamlVisitor::cached (clang::Decl *p, adt_ptr value)
 adt_ptr OCamlVisitor::cached (clang::Stmt *p, adt_ptr value)
 { return nullptr; }
 
+adt_ptr OCamlVisitor::cached (clang::CXXBaseSpecifier p, adt_ptr value)
+{ return nullptr; }
+
 
 void OCamlVisitor::dump (clang::TypeLoc TL)
 { dump (TL.getType ()); }
 
-void OCamlVisitor::dump (clang::DesignatedInitExpr::Designator p)
+void OCamlVisitor::dump (clang::DesignatedInitExpr::Designator const &p)
 { puts ("<clang::DesignatedInitExpr::Designator>"); }
+
+void OCamlVisitor::dump (clang::CXXBaseSpecifier const &p)
+{ puts ("<clang::CXXBaseSpecifier>"); }
 
 
 // Overloads to call appropriate traversal functions.
@@ -41,11 +47,17 @@ void OCamlVisitor::traverse (clang::TypeLoc TL)
 void OCamlVisitor::traverse (clang::QualType T)
 { assert (!T.isNull ()); traverse<clang::QualType, &OCamlVisitor::TraverseType> (T); }
 
+void OCamlVisitor::traverse (clang::TypeSourceInfo *TSI)
+{ assert (TSI); traverse (TSI->getTypeLoc ()); }
+
 // This is an object without a notion of nullability, so the
 // assert is missing.
 void OCamlVisitor::traverse (clang::DesignatedInitExpr::Designator const &D,
                              clang::DesignatedInitExpr *S)
 { traverse<clang::DesignatedInitExpr::Designator, clang::DesignatedInitExpr *, &OCamlVisitor::TraverseDesignator> (D, S); }
+
+void OCamlVisitor::traverse (clang::CXXBaseSpecifier const &B)
+{ assert (B); traverse<clang::CXXBaseSpecifier const &, &OCamlVisitor::TraverseCXXBaseSpecifier> (B); }
 
 
 // }}}
