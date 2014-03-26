@@ -50,6 +50,7 @@ let headers = [
   "plugin/c++/OCamlChecker.h";
   "plugin/c++/ast_bridge.h";
   "plugin/c++/ast_bridge_of.h";
+  "plugin/c++/backtrace.h";
   "plugin/c++/bridge_cache.h";
   "plugin/c++/clang_context.h";
   "plugin/c++/clang_enums.h";
@@ -76,6 +77,7 @@ let objects = [
   "plugin/c++/PluginRegistration.o";
   "plugin/c++/ast_bridge.o";
   "plugin/c++/ast_bridge_of.o";
+  "plugin/c++/backtrace.o";
   "plugin/c++/bridge_cache.o";
   "plugin/c++/clang_context.o";
   "plugin/c++/clang_enums.o";
