@@ -39,6 +39,7 @@ clang_canonical_type (value context, value id)
   clang::QualType type = ctx.refs.retrieve (ref).getCanonicalType ();
 
   ptr<Ctyp> ctyp = ast_bridge_of<Ctyp> (type, ctx);
+
   ctx.values.resize (ctyp->id);
   return ctyp->to_value (ctx.values);
 }
@@ -53,6 +54,7 @@ clang_type_ptr (value context, value id)
   clang::QualType type = ctx.refs.retrieve (ref).getType ();
 
   ptr<Ctyp> ctyp = ast_bridge_of<Ctyp> (type, ctx);
+
   ctx.values.resize (ctyp->id);
   return ctyp->to_value (ctx.values);
 }
@@ -71,6 +73,7 @@ clang_presumed_loc (value context, value sloc)
   result->loc_line = presumed.getLine ();
   result->loc_column = presumed.getColumn ();
 
+  ctx.values.resize (result->id);
   return result->to_value (ctx.values);
 }
 

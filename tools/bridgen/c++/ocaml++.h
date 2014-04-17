@@ -2,6 +2,7 @@
 #define OCAMLPP_H
 
 #include <cassert>
+#include <climits>
 #include <vector>
 
 #include <boost/intrusive_ptr.hpp>

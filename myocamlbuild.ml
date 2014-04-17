@@ -23,6 +23,8 @@ let cxxflags = Sh"`llvm-config-3.4 --cxxflags`" :: atomise [
   "-Iplugin/c++";
   "-D__STDC_CONSTANT_MACROS";
   "-D__STDC_LIMIT_MACROS";
+
+  "-UNDEBUG";
 ]
 
 let ldflags = Sh"`llvm-config-3.4 --ldflags`" :: atomise [
