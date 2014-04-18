@@ -600,6 +600,7 @@ and expr_ = AstBridge.expr_ =
   | BlockExpr
   | ChooseExpr
   | CompoundAssignOperator
+  | ConvertVectorExpr
   | CUDAKernelCallExpr
   | CXXBindTemporaryExpr
   | CXXBoolLiteralExpr
@@ -709,6 +710,7 @@ and stmt_ = AstBridge.stmt_ =
   | ObjCAtTryStmt
   | ObjCAutoreleasePoolStmt
   | ObjCForCollectionStmt
+  | OMPParallelDirective
   | SEHExceptStmt
   | SEHFinallyStmt
   | SEHTryStmt
@@ -737,6 +739,7 @@ and tloc_ = AstBridge.tloc_ =
   | ElaboratedTypeLoc		of (* named-type *)tloc
   | EnumTypeLoc			of (* name *)string
   | RecordTypeLoc		of (* kind *)tag_type_kind * (* name *)string
+  | DecayedTypeLoc		of (* original *)tloc
   | TemplateTypeParmTypeLoc	of (* name *)string
 
   | AtomicTypeLoc
@@ -872,6 +875,7 @@ and decl_ = AstBridge.decl_ =
   | UsingDecl
   | UsingDirectiveDecl
   | UsingShadowDecl
+  | VarTemplateDecl
 
 
 and cxx_base_specifier = AstBridge.cxx_base_specifier = {

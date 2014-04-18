@@ -84,7 +84,7 @@ clang_is_from_main_file (value context, value sloc)
   clang_context &ctx = Context_val (context);
   clang::SourceLocation loc = clang::SourceLocation::getFromRawEncoding (Unsigned_int_val (sloc));
 
-  return Val_bool (ctx.SM.isFromMainFile (loc));
+  return Val_bool (ctx.SM.isInMainFile (loc));
 }
 
 

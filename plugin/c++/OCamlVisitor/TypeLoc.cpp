@@ -301,6 +301,19 @@ UNIMP_TYPE_LOC (Complex)
 
 
 bool
+OCamlVisitor::TraverseDecayedTypeLoc (clang::DecayedTypeLoc TL)
+{
+  TRACE;
+
+  ptr<Tloc> original = must_traverse (TL.getOriginalLoc ());
+
+  stack.push (mkDecayedTypeLoc (original));
+
+  return true;
+}
+
+
+bool
 OCamlVisitor::TraverseDecltypeTypeLoc (clang::DecltypeTypeLoc TL)
 {
   TRACE;
