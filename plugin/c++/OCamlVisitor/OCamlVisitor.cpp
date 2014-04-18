@@ -57,7 +57,7 @@ void OCamlVisitor::traverse (clang::DesignatedInitExpr::Designator const &D,
 { traverse<clang::DesignatedInitExpr::Designator, clang::DesignatedInitExpr *, &OCamlVisitor::TraverseDesignator> (D, S); }
 
 void OCamlVisitor::traverse (clang::CXXBaseSpecifier const &B)
-{ assert (B); traverse<clang::CXXBaseSpecifier const &, &OCamlVisitor::TraverseCXXBaseSpecifier> (B); }
+{ traverse<clang::CXXBaseSpecifier const &, &OCamlVisitor::TraverseCXXBaseSpecifier> (B); }
 
 
 // }}}
