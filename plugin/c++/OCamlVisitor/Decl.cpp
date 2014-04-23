@@ -130,7 +130,9 @@ OCamlVisitor::TraverseCXXRecordDecl (clang::CXXRecordDecl *D)
   // Some members may be implicit (from inline unions).
   list<Decl> members = traverse_explicit_decls (D);
   clang::StringRef name = D->getName ();
-  list<CxxBaseSpecifier> bases = traverse_list (base_spec_range (D));
+  list<CxxBaseSpecifier> bases;
+  if (D->isCompleteDefinition ())
+    bases = traverse_list (base_spec_range (D));
 
   stack.push (mkRecordDecl (name, members, bases));
 
