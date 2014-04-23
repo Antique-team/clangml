@@ -322,6 +322,40 @@ dbfd_init (void)
 
 
 static void
+print_backtrace ()
+{
+  std::vector<location> trace = stacktrace ();
+
+  size_t max_width = 0;
+  for (location loc : trace)
+    max_width = std::max ( max_width
+                         , 5 // 2 spaces + index (1-99) + 1 space
+                         + (loc.line == 0
+                            ? 0 // no line number
+                            : 1 // : before line number
+                              + int (ceil (log10 (loc.line))))
+                         + loc.file.length ()
+                         + 1 // space between location and function name
+                         );
+  assert ((int)max_width > 0);
+
+  printf ("stack trace:\n");
+  int i = 0;
+  for (location loc : trace)
+    {
+      int width = printf ("  %-2d %s", ++i, loc.file.c_str ());
+      if (loc.line != 0)
+        width += printf (":%d", loc.line);
+      assert (width <= (int)max_width);
+      for (size_t i = 0; i < max_width - width; i++)
+        fputc (' ', stdout);
+      puts (loc.func.c_str ());
+    }
+  printf ("\n");
+}
+
+
+static void
 terminate_handler (bool unexpected)
 {
   char separator[81];
@@ -357,34 +391,7 @@ terminate_handler (bool unexpected)
       printf ("%s\n", separator);
     }
 
-  std::vector<location> trace = stacktrace ();
-
-  size_t max_width = 0;
-  for (location loc : trace)
-    max_width = std::max ( max_width
-                         , 5 // 2 spaces + index (1-99) + 1 space
-                         + (loc.line == 0
-                            ? 0 // no line number
-                            : 1 // : before line number
-                              + int (ceil (log10 (loc.line))))
-                         + loc.file.length ()
-                         + 1 // space between location and function name
-                         );
-  assert ((int)max_width > 0);
-
-  printf ("stack trace:\n");
-  int i = 0;
-  for (location loc : trace)
-    {
-      int width = printf ("  %-2d %s", ++i, loc.file.c_str ());
-      if (loc.line != 0)
-        width += printf (":%d", loc.line);
-      assert (width <= (int)max_width);
-      for (size_t i = 0; i < max_width - width; i++)
-        fputc (' ', stdout);
-      puts (loc.func.c_str ());
-    }
-  printf ("\n");
+  print_backtrace ();
 
   exit (254);
 }
@@ -434,4 +441,9 @@ backtrace_init ()
     }
 
   signal (SIGTRAP, fork_debug);
+  signal (SIGABRT, [] (int) {
+            print_backtrace ();
+            signal (SIGABRT, SIG_DFL);
+            raise (SIGABRT);
+          });
 }
