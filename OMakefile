@@ -1,0 +1,12 @@
+FILES = $(foreach d => $(find $d -name *), clang consumer plugin tools util)
+
+FILES[] +=
+  Makefile
+  _tags
+  myocamlbuild.ml
+  test.cc
+
+_build: $(FILES)
+  make check
+
+.DEFAULT: _build

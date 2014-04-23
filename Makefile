@@ -54,7 +54,7 @@ CPPFLAGS =				\
 
 CCFLAGS =				\
 	$(CPPFLAGS)			\
-	-std=c89			\
+	-ansi				\
 	-pedantic			\
 	-Wall				\
 	-Wextra				\
@@ -85,8 +85,8 @@ GCCFLAGS =				\
 	-Wconversion			\
 	-Wno-sign-conversion
 
-check: processor.native test.c
-	./processor.native -w $(CLANGFLAGS) -include "memcad.h" test.c
+check: processor.native test.cc
+	./processor.native -w $(CLANGFLAGS) -include "memcad.h" test.cc
 
 %.test: % processor.native
 	./processor.native -w $(CLANGFLAGS) -include "memcad.h" $<

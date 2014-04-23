@@ -1,3 +1,5 @@
 /_build
+/.*omake*
 *.byte
 *.native
+*.omc
