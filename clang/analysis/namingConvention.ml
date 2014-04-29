@@ -46,7 +46,7 @@ let analyse_decl clang decl =
       match decl.d with
       | VarDecl (_, name, _) ->
           check_name name "variable"
-      | FunctionDecl (_, name, _) ->
+      | FunctionDecl (_, DN_Identifier name, _) ->
           check_name name "function"
       | TypedefDecl (_, name) ->
           check_name name "typedef"

@@ -229,8 +229,7 @@ static inline value
 value_of (value_of_context &ctx, clang::SourceLocation v)
 {
   unsigned raw = v.getRawEncoding ();
-  assert (raw < INT_MAX / 2);
-  return value_of (ctx, int (raw));
+  return caml_copy_int32 (raw);
 }
 
 

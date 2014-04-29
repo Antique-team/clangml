@@ -656,7 +656,7 @@ let rec collect_decls clang prog = function
       (* Function declarations (without definition) do nothing. *)
       collect_decls clang prog tl
 
-  | { d = FunctionDecl (ty, name, Some body) } :: tl ->
+  | { d = FunctionDecl (ty, DN_Identifier name, Some body) } :: tl ->
       let c_fun =
         (* Create the head of the function (without body), first,
            so that name lookups within the body work for the
@@ -744,6 +744,9 @@ let rec collect_decls clang prog = function
   | { d = EnumDecl (name, enumerators) } :: tl ->
       (* TODO *)
       collect_decls clang prog tl
+
+  | { d = LinkageSpecDecl (decls, lang) } :: tl ->
+      collect_decls clang (collect_decls clang prog decls) tl
 
   | { d = EnumConstantDecl    _ } :: _ -> Log.err "EnumConstantDecl found at file scope"
   | { d = FieldDecl           _ } :: _ -> Log.err "FieldDecl found at file scope"

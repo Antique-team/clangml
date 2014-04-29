@@ -177,10 +177,12 @@ private:
   {
     using namespace boost::adaptors;
 
-    return traverse_list (decl_range (D)
-      | filtered ([] (clang::Decl *D) {
-          return !D->isImplicit ();
-        }));
+    return traverse_list (
+             decl_range (D)
+             | filtered ([] (clang::Decl *D) {
+                 return !D->isImplicit ();
+               })
+           );
   }
 
 
@@ -191,10 +193,7 @@ private:
    * {{{1 Common helpers
    */
 
-  // Works for FunctionDecl and DeclRefExpr, who don't share an
-  // interface containing getNameInfo (hence the template).
-  template<typename DeclT>
-  static clang::StringRef getName (DeclT const *D)
+  static clang::StringRef getName (clang::DeclRefExpr const *D)
   {
     clang::IdentifierInfo *info = D->getNameInfo ().getName ().getAsIdentifierInfo ();
     assert (info);

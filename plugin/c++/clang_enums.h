@@ -14,4 +14,6 @@ ast_bridge::BuiltinType translate_builtin_type (clang::BuiltinType::Kind kind);
 ast_bridge::CastKind translate_cast_kind (clang::CastKind kind);
 ast_bridge::AccessSpecifier translate_access_specifier (clang::AccessSpecifier spec);
 
+ptr<ast_bridge::DeclarationName> translate_declaration_name (clang::DeclarationName const &name);
+
 #endif /* CLANG_ENUMS_H */

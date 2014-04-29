@@ -3,6 +3,22 @@
 open Ast
 open Util
 
+let string_of_language = function
+  | Lang_C -> "C"
+  | Lang_CXX -> "C++"
+
+let string_of_declaration_name = function
+  | DN_Identifier id -> id
+  | DN_ObjCZeroArgSelector -> "<ObjCZeroArgSelector>"
+  | DN_ObjCOneArgSelector -> "<ObjCOneArgSelector>"
+  | DN_ObjCMultiArgSelector -> "<ObjCMultiArgSelector>"
+  | DN_CXXConstructorName -> "<CXXConstructorName>"
+  | DN_CXXDestructorName -> "<CXXDestructorName>"
+  | DN_CXXConversionFunctionName -> "<CXXConversionFunctionName>"
+  | DN_CXXOperatorName -> "<CXXOperatorName>"
+  | DN_CXXLiteralOperatorName -> "<CXXLiteralOperatorName>"
+  | DN_CXXUsingDirective -> "<CXXUsingDirective>"
+
 let string_of_qualifier = function
   | TQ_Const -> "const"
   | TQ_Volatile -> "volatile"
@@ -261,6 +277,7 @@ and pp_expr_ ff = function
   | CXXNullPtrLiteralExpr ->
       Format.fprintf ff "nullptr"
 
+  | ConvertVectorExpr -> Format.pp_print_string ff "<ConvertVectorExpr>"
   | ArrayTypeTraitExpr -> Format.pp_print_string ff "<ArrayTypeTraitExpr>"
   | AsTypeExpr -> Format.pp_print_string ff "<AsTypeExpr>"
   | AtomicExpr -> Format.pp_print_string ff "<AtomicExpr>"
@@ -408,6 +425,7 @@ and pp_stmt_ ff = function
       Format.fprintf ff "%a;"
         (Formatx.pp_list pp_decl) decls
 
+  | OMPParallelDirective -> Format.pp_print_string ff "<OMPParallelDirective>"
   | AttributedStmt -> Format.pp_print_string ff "<AttributedStmt>"
   | CapturedStmt -> Format.pp_print_string ff "<CapturedStmt>"
   | CXXCatchStmt -> Format.pp_print_string ff "<CXXCatchStmt>"
@@ -491,6 +509,7 @@ and pp_tloc_ ff = function
       Format.pp_print_string ff
         (if name = "" then "<anonymous>" else name)
 
+  | DecayedTypeLoc _ -> Format.pp_print_string ff "<DecayedTypeLoc>"
   | AtomicTypeLoc -> Format.pp_print_string ff "<AtomicTypeLoc>"
   | AttributedTypeLoc -> Format.pp_print_string ff "<AttributedTypeLoc>"
   | AutoTypeLoc -> Format.pp_print_string ff "<AutoTypeLoc>"
@@ -622,7 +641,7 @@ and pp_decl_ ff = function
         pp_tloc ty
   | FunctionDecl (fd_type, fd_name, fd_body) ->
       Format.fprintf ff "@[<v2>%a@]%a"
-        pp_named_arg (fd_name, fd_type)
+        pp_named_arg (string_of_declaration_name fd_name, fd_type)
         (pp_option pp_stmt) fd_body
   | VarDecl (ty, name, Some init) ->
       Format.fprintf ff "%a = %a"
@@ -657,6 +676,13 @@ and pp_decl_ ff = function
         (if is_inline then "inline " else "")
         name
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) decls
+  | LinkageSpecDecl (decls, lang) ->
+      Format.fprintf ff "extern \"%s\" { %a }"
+        (string_of_language lang)
+        (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) decls
+  | UsingDecl (name) ->
+      Format.fprintf ff "using %s;@,"
+        (string_of_declaration_name name)
 
   | AccessSpecDecl -> Format.pp_print_string ff "<AccessSpecDecl>"
   | BlockDecl -> Format.pp_print_string ff "<BlockDecl>"
@@ -670,7 +696,6 @@ and pp_decl_ ff = function
   | ImportDecl -> Format.pp_print_string ff "<ImportDecl>"
   | IndirectFieldDecl -> Format.pp_print_string ff "<IndirectFieldDecl>"
   | LabelDecl -> Format.pp_print_string ff "<LabelDecl>"
-  | LinkageSpecDecl -> Format.pp_print_string ff "<LinkageSpecDecl>"
   | MSPropertyDecl -> Format.pp_print_string ff "<MSPropertyDecl>"
   | NamespaceAliasDecl -> Format.pp_print_string ff "<NamespaceAliasDecl>"
   | NonTypeTemplateParmDecl -> Format.pp_print_string ff "<NonTypeTemplateParmDecl>"
@@ -691,9 +716,9 @@ and pp_decl_ ff = function
   | TypeAliasTemplateDecl -> Format.pp_print_string ff "<TypeAliasTemplateDecl>"
   | UnresolvedUsingTypenameDecl -> Format.pp_print_string ff "<UnresolvedUsingTypenameDecl>"
   | UnresolvedUsingValueDecl -> Format.pp_print_string ff "<UnresolvedUsingValueDecl>"
-  | UsingDecl -> Format.pp_print_string ff "<UsingDecl>"
   | UsingDirectiveDecl -> Format.pp_print_string ff "<UsingDirectiveDecl>"
   | UsingShadowDecl -> Format.pp_print_string ff "<UsingShadowDecl>"
+  | VarTemplateDecl -> Format.pp_print_string ff "<VarTemplateDecl>"
 
 and pp_decl ff decl =
   pp_decl_ ff decl.d

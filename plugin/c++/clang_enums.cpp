@@ -205,3 +205,43 @@ translate_access_specifier (clang::AccessSpecifier spec)
     }
   throw std::runtime_error ("invalid access specifier");
 }
+
+
+ptr<DeclarationName>
+translate_declaration_name (clang::DeclarationName const &name)
+{
+  switch (name.getNameKind ())
+    {
+    case clang::DeclarationName::Identifier:
+      return mkDN_Identifier (strdup (name.getAsString ().c_str ()));
+    case clang::DeclarationName::ObjCZeroArgSelector:
+      printf ("ObjCZeroArgSelector: %s\n", name.getAsString ().c_str ());
+      break;
+    case clang::DeclarationName::ObjCOneArgSelector:
+      printf ("ObjCOneArgSelector: %s\n", name.getAsString ().c_str ());
+      break;
+    case clang::DeclarationName::ObjCMultiArgSelector:
+      printf ("ObjCMultiArgSelector: %s\n", name.getAsString ().c_str ());
+      break;
+    case clang::DeclarationName::CXXConstructorName:
+      printf ("CXXConstructorName: %s\n", name.getAsString ().c_str ());
+      break;
+    case clang::DeclarationName::CXXDestructorName:
+      printf ("CXXDestructorName: %s\n", name.getAsString ().c_str ());
+      break;
+    case clang::DeclarationName::CXXConversionFunctionName:
+      printf ("CXXConversionFunctionName: %s\n", name.getAsString ().c_str ());
+      break;
+    case clang::DeclarationName::CXXOperatorName:
+      printf ("CXXOperatorName: %s\n", name.getAsString ().c_str ());
+      break;
+    case clang::DeclarationName::CXXLiteralOperatorName:
+      printf ("CXXLiteralOperatorName: %s\n", name.getAsString ().c_str ());
+      break;
+    case clang::DeclarationName::CXXUsingDirective:
+      printf ("CXXUsingDirective: %s\n", name.getAsString ().c_str ());
+      break;
+    }
+
+  return mkDN_Identifier ("<invalid>");
+}

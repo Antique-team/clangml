@@ -64,7 +64,7 @@ CAMLprim value
 clang_presumed_loc (value context, value sloc)
 {
   clang_context &ctx = Context_val (context);
-  clang::SourceLocation loc = clang::SourceLocation::getFromRawEncoding (Unsigned_int_val (sloc));
+  clang::SourceLocation loc = clang::SourceLocation::getFromRawEncoding (Int32_val (sloc));
 
   clang::PresumedLoc presumed = ctx.SM.getPresumedLoc (loc);
 
@@ -82,7 +82,7 @@ CAMLprim value
 clang_is_from_main_file (value context, value sloc)
 {
   clang_context &ctx = Context_val (context);
-  clang::SourceLocation loc = clang::SourceLocation::getFromRawEncoding (Unsigned_int_val (sloc));
+  clang::SourceLocation loc = clang::SourceLocation::getFromRawEncoding (Int32_val (sloc));
 
   return Val_bool (ctx.SM.isInMainFile (loc));
 }
@@ -92,7 +92,7 @@ CAMLprim value
 clang_characteristic_kind (value context, value sloc)
 {
   clang_context &ctx = Context_val (context);
-  clang::SourceLocation loc = clang::SourceLocation::getFromRawEncoding (Unsigned_int_val (sloc));
+  clang::SourceLocation loc = clang::SourceLocation::getFromRawEncoding (Int32_val (sloc));
 
   switch (ctx.SM.getFileCharacteristic (loc))
     {

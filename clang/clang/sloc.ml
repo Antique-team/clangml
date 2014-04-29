@@ -1,13 +1,13 @@
 let version = "$Id$"
 
-type t = private int
+type t = private int32
 
 module Show_t = Deriving_Show.Defaults(struct
 
     type a = t
 
     let format fmt (a : a) =
-      Deriving_Show.Show_int.format fmt (a :> int)
+      Deriving_Show.Show_int32.format fmt (a :> int32)
 
   end)
 
@@ -31,7 +31,7 @@ let invalid_presumed = {
 
 
 let is_valid (sloc : t) =
-  (sloc :> int) <> 0
+  (sloc :> int32) <> Int32.zero
 
 let is_valid_presumed ploc =
   ploc <> invalid_presumed

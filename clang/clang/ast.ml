@@ -1,5 +1,27 @@
 let version = "$Id$"
 
+(* Represents the language in a linkage specification.
+   [clang/AST/DeclCXX.h] *)
+type language = AstBridge.language =
+  | Lang_C
+  | Lang_CXX
+  deriving (Show)
+
+
+type declaration_name = AstBridge.declaration_name =
+  | DN_Identifier of string
+  | DN_ObjCZeroArgSelector
+  | DN_ObjCOneArgSelector
+  | DN_ObjCMultiArgSelector
+  | DN_CXXConstructorName
+  | DN_CXXDestructorName
+  | DN_CXXConversionFunctionName
+  | DN_CXXOperatorName
+  | DN_CXXLiteralOperatorName
+  | DN_CXXUsingDirective
+  deriving (Show)
+
+
 (* Specifies the width of a type, e.g., short, long, or long long.
    [clang/Basic/Specifiers.h] *)
 type type_specifier_width = AstBridge.type_specifier_width =
@@ -829,7 +851,8 @@ and decl = AstBridge.decl = {
 and decl_ = AstBridge.decl_ =
   | EmptyDecl
   | TranslationUnitDecl		of (* decls *)decl list
-  | FunctionDecl		of (* type *)tloc * (* name *)string * (* body *)stmt option
+  | LinkageSpecDecl		of (* decls *)decl list * language
+  | FunctionDecl		of (* type *)tloc * (* name *)declaration_name * (* body *)stmt option
   | TypedefDecl			of (* type *)tloc * (* name *)string
   | VarDecl			of (* type *)tloc * (* name *)string * (* init *)expr option
   | ParmVarDecl			of (* type *)tloc * (* name *)string
@@ -840,6 +863,7 @@ and decl_ = AstBridge.decl_ =
   | NamespaceDecl		of (* name *)string * (* is_inline *)bool * (* decls *)decl list
   | ClassTemplateDecl		of (* templated *)decl * (* params *)decl list
   | TemplateTypeParmDecl	of (* type *)ctyp * (* default *)tloc option
+  | UsingDecl			of (* name *)declaration_name
 
   | AccessSpecDecl
   | BlockDecl
@@ -852,7 +876,6 @@ and decl_ = AstBridge.decl_ =
   | ImportDecl
   | IndirectFieldDecl
   | LabelDecl
-  | LinkageSpecDecl
   | MSPropertyDecl
   | NamespaceAliasDecl
   | NonTypeTemplateParmDecl
@@ -872,7 +895,6 @@ and decl_ = AstBridge.decl_ =
   | TypeAliasTemplateDecl
   | UnresolvedUsingTypenameDecl
   | UnresolvedUsingValueDecl
-  | UsingDecl
   | UsingDirectiveDecl
   | UsingShadowDecl
   | VarTemplateDecl

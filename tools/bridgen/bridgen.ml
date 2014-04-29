@@ -292,7 +292,7 @@ let gen_code_for_sum_type ctx (sum_type : sum_type) =
     @ List.map (fun (_, branch_name, types) ->
         let open Codegen in
         let ty =
-          TyName (cpp_name branch_name ^
+          TyName (branch_name ^
                   cpp_name sum_type_name)
         in
         let args =
@@ -303,7 +303,7 @@ let gen_code_for_sum_type ctx (sum_type : sum_type) =
         Function {
           flags  = [Static; Inline];
           retty  = TyTemplate ("ptr", ty);
-          name   = "mk" ^ cpp_name branch_name;
+          name   = "mk" ^ branch_name;
           params = constructor_params ctx types;
           this_flags = [];
           body   = CompoundStmt [

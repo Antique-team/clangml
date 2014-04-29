@@ -56,7 +56,7 @@ OCamlVisitor::TraverseFunctionDecl (clang::FunctionDecl *D)
   // TODO: Constructor initialisers.
 
   // Function name.
-  clang::StringRef name = getName (D);
+  ptr<DeclarationName> name = translate_declaration_name (D->getDeclName ());
 
   stack.push (mkFunctionDecl (type, name, body));
 
@@ -273,7 +273,30 @@ UNIMP_DECL (FunctionTemplateDecl)
 UNIMP_DECL (ImportDecl)
 UNIMP_DECL (IndirectFieldDecl)
 UNIMP_DECL (LabelDecl)
-UNIMP_DECL (LinkageSpecDecl)
+
+
+bool
+OCamlVisitor::TraverseLinkageSpecDecl (clang::LinkageSpecDecl *D)
+{
+  TRACE;
+
+  // We filter out implicit declarations before iterating.
+  list<Decl> decls = traverse_explicit_decls (D);
+  Language lang = Lang_C;
+  switch (D->getLanguage ())
+    {
+    case clang::LinkageSpecDecl::lang_c:
+      lang = Lang_C;
+      break;
+    case clang::LinkageSpecDecl::lang_cxx:
+      lang = Lang_CXX;
+      break;
+    }
+
+  stack.push (mkLinkageSpecDecl (decls, lang));
+
+  return true;
+}
 UNIMP_DECL (MSPropertyDecl)
 UNIMP_DECL (NamespaceAliasDecl)
 
@@ -324,7 +347,19 @@ UNIMP_DECL (TypeAliasDecl)
 UNIMP_DECL (TypeAliasTemplateDecl)
 UNIMP_DECL (UnresolvedUsingTypenameDecl)
 UNIMP_DECL (UnresolvedUsingValueDecl)
-UNIMP_DECL (UsingDecl)
+
+
+bool
+OCamlVisitor::TraverseUsingDecl (clang::UsingDecl *D)
+{
+  TRACE;
+
+  ptr<DeclarationName> dname = translate_declaration_name (D->getDeclName ());
+
+  stack.push (mkUsingDecl (dname));
+
+  return true;
+}
 UNIMP_DECL (UsingDirectiveDecl)
 UNIMP_DECL (UsingShadowDecl)
 UNIMP_DECL (VarTemplateDecl)
