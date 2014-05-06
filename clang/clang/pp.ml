@@ -677,11 +677,11 @@ and pp_type ff t =
 
 and pp_decl_ ff = function
   | EmptyDecl ->
-      Format.pp_print_string ff ";"
+      Format.pp_print_string ff ";@,"
   | TranslationUnitDecl decls ->
       Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl ff decls
   | TypedefDecl (ty, name) ->
-      Format.fprintf ff "typedef %s : %a;"
+      Format.fprintf ff "typedef %s : %a;@,"
         name
         pp_tloc ty
   | FunctionDecl (fd_type, fd_name, fd_body) ->
@@ -696,24 +696,24 @@ and pp_decl_ ff = function
   | ParmVarDecl (ty, name) ->
       pp_named_arg ff (name, ty)
   | RecordDecl (name, [], bases) ->
-      Format.fprintf ff "struct %s@;"
+      Format.fprintf ff "struct %s@;@,"
         (if name = "" then "<anonymous>" else name)
   | RecordDecl (name, members, bases) ->
-      Format.fprintf ff "struct %s@\n@[<v2>{@,%a@]@\n};"
+      Format.fprintf ff "struct %s@\n@[<v2>{@,%a@]@\n};@\n"
         (if name = "" then "<anonymous>" else name)
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) members
   | FieldDecl (ty, name, bitwidth, init) ->
-      Format.fprintf ff "%a;"
+      Format.fprintf ff "%a;@,"
         pp_named_arg (name, ty)
   | EnumDecl (name, enumerators) ->
-      Format.fprintf ff "enum %s { %a };"
+      Format.fprintf ff "enum %s { %a };@,"
         name
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) enumerators
   | EnumConstantDecl (name, None) ->
-      Format.fprintf ff "%s;"
+      Format.fprintf ff "%s;@,"
         name
   | EnumConstantDecl (name, Some init) ->
-      Format.fprintf ff "%s = %a;"
+      Format.fprintf ff "%s = %a;@,"
         name
         pp_expr init
   | NamespaceDecl (name, is_inline, decls) ->

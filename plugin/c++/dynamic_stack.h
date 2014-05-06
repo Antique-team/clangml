@@ -3,14 +3,12 @@
 
 #include <stdexcept>
 #include <type_traits>
-#include <typeinfo>
 
 #include "ast_bridge.h"
+#include "type_name.h"
 
 namespace dynamic_stack_detail
 {
-  std::string demangle (std::type_info const &ti);
-
   template<typename T>
   static std::string
   name (T const &p)
@@ -130,6 +128,8 @@ public:
 
   size_t size () const { return stack.size (); }
   bool empty () const { return stack.empty (); }
+
+  void dump (std::ostringstream &os, size_t count);
 };
 
 

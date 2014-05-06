@@ -241,14 +241,11 @@ translate_declaration_name (clang::DeclarationName const &name)
       printf ("ObjCMultiArgSelector: %s\n", name.getAsString ().c_str ());
       break;
     case clang::DeclarationName::CXXConstructorName:
-      printf ("CXXConstructorName: %s\n", name.getAsString ().c_str ());
-      break;
+      return mkDN_CXXConstructorName ();
     case clang::DeclarationName::CXXDestructorName:
-      printf ("CXXDestructorName: %s\n", name.getAsString ().c_str ());
-      break;
+      return mkDN_CXXDestructorName ();
     case clang::DeclarationName::CXXConversionFunctionName:
-      printf ("CXXConversionFunctionName: %s\n", name.getAsString ().c_str ());
-      break;
+      return mkDN_CXXConversionFunctionName ();
     case clang::DeclarationName::CXXOperatorName:
       return mkDN_CXXOperatorName (translate_overloaded_operator_kind (name.getCXXOverloadedOperator ()));
     case clang::DeclarationName::CXXLiteralOperatorName:

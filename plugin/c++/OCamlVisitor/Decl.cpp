@@ -25,8 +25,8 @@ OCamlVisitor::TraverseFunctionDecl (clang::FunctionDecl *D)
   TRACE;
 
   // TODO: what are these? probably irrelevant in C.
-  TraverseNestedNameSpecifierLoc (D->getQualifierLoc ());
-  TraverseDeclarationNameInfo (D->getNameInfo ());
+  //TraverseNestedNameSpecifierLoc (D->getQualifierLoc ());
+  //TraverseDeclarationNameInfo (D->getNameInfo ());
 
   // Function type, including parameters.
   ptr<Tloc> type;
@@ -166,7 +166,7 @@ OCamlVisitor::TraverseCXXRecordDecl (clang::CXXRecordDecl *D)
 
   for (auto it = D->decls_begin (); it != D->decls_end (); ++it)
     {
-      printf ("decl: %s\n", dynamic_stack_detail::demangle (typeid (**it)).c_str ());
+      printf ("decl: %s\n", type_name (*it).c_str ());
     }
 
   // Some members may be implicit (from inline unions).

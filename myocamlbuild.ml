@@ -65,6 +65,7 @@ let headers = [
   "plugin/c++/heterogenous_container.h";
   "plugin/c++/sloc_bridge.h";
   "plugin/c++/trace.h";
+  "plugin/c++/type_name.h";
 ]
 
 let objects = [
@@ -91,6 +92,7 @@ let objects = [
   "plugin/c++/heterogenous_container.o";
   "plugin/c++/sloc_bridge.o";
   "plugin/c++/trace.o";
+  "plugin/c++/type_name.o";
   "plugin/ocaml/clangLib.o";
 ]
 

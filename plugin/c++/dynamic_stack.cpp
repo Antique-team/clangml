@@ -1,33 +1,10 @@
 #include "dynamic_stack.h"
 #include "trace.h"
 
-#include <cxxabi.h>
+#include <sstream>
 
 namespace dynamic_stack_detail
 {
-  std::string
-  demangle (std::type_info const &ti)
-  {
-    size_t length;
-    int status;
-    if (char *name = __cxxabiv1::__cxa_demangle (ti.name (), NULL, &length, &status))
-      {
-        std::string result (name, length);
-        free (name);
-        return result;
-      }
-#if 0
-    switch (status)
-      {
-      case -1: return "A memory allocation failure occurred.";
-      case -2: return "Type name is not a valid name under the C++ ABI mangling rules.";
-      case -3: return "One of the arguments is invalid.";
-      }
-#endif
-    return ti.name ();
-  }
-
-
   // Special case for Expr -> Stmt
   template<>
   ptr<ast_bridge::Stmt>
@@ -68,8 +45,8 @@ dynamic_stack::pop ()
   adt_ptr p = stack.back ();
   stack.pop_back ();
 
-  printf ("%*s  pop () -> %s\n", tracer::level - 2, "",
-          dynamic_stack_detail::demangle (typeid (*p)).c_str ());
+  printf ("%*s  pop () -> %s@%zu\n", tracer::level - 2, "",
+          demangle (typeid (*p)).c_str (), p->id);
   return element { p };
 }
 
@@ -83,8 +60,8 @@ dynamic_stack::top () const
 void
 dynamic_stack::push_ptr (adt_ptr p)
 {
-  printf ("%*s  push (%s)\n", tracer::level - 2, "",
-          dynamic_stack_detail::demangle (typeid (*p)).c_str ());
+  printf ("%*s  push (%s@%zu)\n", tracer::level - 2, "",
+          demangle (typeid (*p)).c_str (), p->id);
   stack.push_back (p);
 }
 
@@ -121,4 +98,17 @@ dynamic_stack::pop_marked ()
   stack.erase (stack.end () - marker, stack.end ());
 
   return range { move (l) };
+}
+
+
+void
+dynamic_stack::dump (std::ostringstream &os, size_t count)
+{
+  for (size_t i = 0; i < count; i++)
+    {
+      adt_ptr p = *(stack.end () - (i + 1));
+      os << "\n\t  [" << i << "] "
+         << demangle (typeid (*p))
+         << "@" << p->id;
+    }
 }

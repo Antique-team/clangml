@@ -90,3 +90,16 @@ OCamlVisitor::OCamlVisitor (clang_context &ctx)
   : ctx (ctx)
 {
 }
+
+
+void
+OCamlVisitor::throw_size_error (std::string input, size_t count)
+{
+  std::ostringstream message;
+  message << "Traversal function postcondition not held:\n\t"
+          << "must create exactly 1 value, but created " << count << "\n\t"
+          << "input type: " << input << "\n\t"
+          << "output types:";
+  stack.dump (message, count);
+  throw std::runtime_error (message.str ());
+}

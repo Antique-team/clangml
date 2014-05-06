@@ -68,18 +68,17 @@ private:
   static void dump (clang::CXXBaseSpecifier const &p);
 
 
+  void throw_size_error (std::string input, size_t count);
+
+
   template<typename T>
-  static void check_size (T p, size_t size_before, size_t size_after)
+  void check_size (T p, size_t size_before, size_t size_after)
   {
     // Require stack to increase by exactly 1 (one value was pushed).
     if (size_after != size_before + 1)
       {
-        dump (p);
-        std::stringstream message;
-        message << "Traversal function postcondition not held: "
-                << "must create exactly 1 value, but created "
-                << size_after - size_before;
-        throw std::runtime_error (message.str ());
+        //dump (p);
+        throw_size_error (type_name (p), size_after - size_before);
       }
   }
 
