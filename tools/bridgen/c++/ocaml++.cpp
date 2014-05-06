@@ -1,5 +1,7 @@
 #include "ocaml++.h"
 
+#include <sstream>
+
 
 size_t OCamlADTBase::values_created;
 size_t OCamlADTBase::ids_assigned;
@@ -53,6 +55,8 @@ struct value_of_context::data
   void set (size_t index, value result)
   {
     assert (index < caml_array_length (cache));
+    assert (Is_block (result));
+    assert (result != 0);
     Store_field (cache, index, result);
   }
 
@@ -70,13 +74,22 @@ struct value_of_context::data
     CAMLparam0 ();
     CAMLlocal1 (new_cache);
 
-    new_cache = caml_alloc (max_id + max_id / 512 + 1, 0);
+    new_cache = caml_alloc (max_id + max_id / 512 + 10, 0);
 
     size_t length = caml_array_length (cache);
     for (size_t i = 0; i < length; i++)
       {
-        assert (Is_block (Field (cache, i)));
-        Store_field (new_cache, i, Field (cache, i));
+#if 0
+        printf ("%zu/%zu: %ld\n", i, length, get (i));
+#endif
+        if (!Is_block (get (i)))
+          {
+            std::ostringstream message;
+            message << "value at " << i << ": `" << get (i) << "' is not a block";
+            throw std::runtime_error (message.str ());
+          }
+        assert (i < caml_array_length (new_cache));
+        Store_field (new_cache, i, get (i));
       }
 
 #if 0
@@ -132,8 +145,8 @@ OCamlADTBase::to_value (value_of_context &ctx)
     {
       result = ToValue (ctx);
       values_created++;
-
-      ctx->set (id, result);
+      if (Is_block (result))
+        ctx->set (id, result);
     }
   else
     {
