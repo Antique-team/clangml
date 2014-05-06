@@ -97,6 +97,8 @@ public:
   element pop ();
   adt_ptr top () const;
 
+  void push_ptr (adt_ptr p);
+
   template<template<typename> class Ptr, typename Derived>
   void push (Ptr<Derived> p)
   {
@@ -112,7 +114,7 @@ public:
     // While members of a sum type may contain options, they can never
     // be null, themselves.
     assert (p);
-    stack.push_back (p);
+    push_ptr (p);
   }
 
 

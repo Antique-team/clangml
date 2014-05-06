@@ -313,39 +313,7 @@ public:
 
   bool TraverseDecl (clang::Decl *D);
 
-#define FUNCTION(CLASS, BASE)
-  bool TraverseFunctionDecl (clang::FunctionDecl *D);
-
-#define EMPTY(CLASS, BASE)
-  bool TraverseEmptyDecl (clang::EmptyDecl *D);
-
-#define TYPEDEF(CLASS, BASE)
-  bool TraverseTypedefDecl (clang::TypedefDecl *D);
-
-#define RECORD(CLASS, BASE)
-  bool TraverseRecordDecl (clang::RecordDecl *D);
-
-#define CXXRECORD(CLASS, BASE)
-  bool TraverseCXXRecordDecl (clang::CXXRecordDecl *D);
   bool TraverseCXXBaseSpecifier (clang::CXXBaseSpecifier const &B);
-
-#define FIELD(CLASS, BASE)
-  bool TraverseFieldDecl (clang::FieldDecl *D);
-
-#define ENUM(CLASS, BASE)
-  bool TraverseEnumDecl (clang::EnumDecl *D);
-
-#define ENUMCONSTANT(CLASS, BASE)
-  bool TraverseEnumConstantDecl (clang::EnumConstantDecl *D);
-
-#define PARMVAR(CLASS, BASE)
-  bool TraverseParmVarDecl (clang::ParmVarDecl *D);
-
-#define VAR(CLASS, BASE)
-  bool TraverseVarDecl (clang::VarDecl *D);
-
-#define TRANSLATIONUNIT(CLASS, BASE)
-  bool TraverseTranslationUnitDecl (clang::TranslationUnitDecl *D);
 
 #define ABSTRACT_DECL(DECL)
 #define DECL(CLASS, BASE)					\

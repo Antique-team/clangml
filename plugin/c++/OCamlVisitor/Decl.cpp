@@ -63,6 +63,43 @@ OCamlVisitor::TraverseFunctionDecl (clang::FunctionDecl *D)
   return true;
 }
 
+
+bool
+OCamlVisitor::TraverseCXXMethodDecl (clang::CXXMethodDecl *D)
+{
+  TRACE;
+
+  return TraverseFunctionDecl (D);
+}
+
+
+bool
+OCamlVisitor::TraverseCXXConstructorDecl (clang::CXXConstructorDecl *D)
+{
+  TRACE;
+
+  return TraverseCXXMethodDecl (D);
+}
+
+
+bool
+OCamlVisitor::TraverseCXXDestructorDecl (clang::CXXDestructorDecl *D)
+{
+  TRACE;
+
+  return TraverseCXXMethodDecl (D);
+}
+
+
+bool
+OCamlVisitor::TraverseCXXConversionDecl (clang::CXXConversionDecl *D)
+{
+  TRACE;
+
+  return TraverseCXXMethodDecl (D);
+}
+
+
 bool
 OCamlVisitor::TraverseEmptyDecl (clang::EmptyDecl *D)
 {
@@ -126,6 +163,11 @@ bool
 OCamlVisitor::TraverseCXXRecordDecl (clang::CXXRecordDecl *D)
 {
   TRACE;
+
+  for (auto it = D->decls_begin (); it != D->decls_end (); ++it)
+    {
+      printf ("decl: %s\n", dynamic_stack_detail::demangle (typeid (**it)).c_str ());
+    }
 
   // Some members may be implicit (from inline unions).
   list<Decl> members = traverse_explicit_decls (D);
@@ -363,5 +405,12 @@ OCamlVisitor::TraverseUsingDecl (clang::UsingDecl *D)
 UNIMP_DECL (UsingDirectiveDecl)
 UNIMP_DECL (UsingShadowDecl)
 UNIMP_DECL (VarTemplateDecl)
+UNIMP_DECL (ClassTemplateSpecializationDecl)
+UNIMP_DECL (ClassTemplatePartialSpecializationDecl)
+UNIMP_DECL (ObjCAtDefsFieldDecl)
+UNIMP_DECL (ObjCIvarDecl)
+UNIMP_DECL (ImplicitParamDecl)
+UNIMP_DECL (VarTemplateSpecializationDecl)
+UNIMP_DECL (VarTemplatePartialSpecializationDecl)
 
 // }}}

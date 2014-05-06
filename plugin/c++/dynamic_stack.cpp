@@ -1,4 +1,5 @@
 #include "dynamic_stack.h"
+#include "trace.h"
 
 #include <cxxabi.h>
 
@@ -67,6 +68,8 @@ dynamic_stack::pop ()
   adt_ptr p = stack.back ();
   stack.pop_back ();
 
+  printf ("%*s  pop () -> %s\n", tracer::level - 2, "",
+          dynamic_stack_detail::demangle (typeid (*p)).c_str ());
   return element { p };
 }
 
@@ -74,6 +77,15 @@ adt_ptr
 dynamic_stack::top () const
 {
   return stack.back ();
+}
+
+
+void
+dynamic_stack::push_ptr (adt_ptr p)
+{
+  printf ("%*s  push (%s)\n", tracer::level - 2, "",
+          dynamic_stack_detail::demangle (typeid (*p)).c_str ());
+  stack.push_back (p);
 }
 
 

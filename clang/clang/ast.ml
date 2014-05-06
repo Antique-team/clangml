@@ -8,20 +8,6 @@ type language = AstBridge.language =
   deriving (Show)
 
 
-type declaration_name = AstBridge.declaration_name =
-  | DN_Identifier of string
-  | DN_ObjCZeroArgSelector
-  | DN_ObjCOneArgSelector
-  | DN_ObjCMultiArgSelector
-  | DN_CXXConstructorName
-  | DN_CXXDestructorName
-  | DN_CXXConversionFunctionName
-  | DN_CXXOperatorName
-  | DN_CXXLiteralOperatorName
-  | DN_CXXUsingDirective
-  deriving (Show)
-
-
 (* Specifies the width of a type, e.g., short, long, or long long.
    [clang/Basic/Specifiers.h] *)
 type type_specifier_width = AstBridge.type_specifier_width =
@@ -502,6 +488,53 @@ type binary_operator = AstBridge.binary_operator =
   deriving (Show)
 
 
+type overloaded_operator_kind = AstBridge.overloaded_operator_kind =
+  | OO_New                  (* "new"      *)
+  | OO_Delete               (* "delete"   *)
+  | OO_Array_New            (* "new[]"    *)
+  | OO_Array_Delete         (* "delete[]" *)
+  | OO_Plus                 (* "+"        *)
+  | OO_Minus                (* "-"        *)
+  | OO_Star                 (* "*"        *)
+  | OO_Slash                (* "/"        *)
+  | OO_Percent              (* "%"        *)
+  | OO_Caret                (* "^"        *)
+  | OO_Amp                  (* "&"        *)
+  | OO_Pipe                 (* "|"        *)
+  | OO_Tilde                (* "~"        *)
+  | OO_Exclaim              (* "!"        *)
+  | OO_Equal                (* "="        *)
+  | OO_Less                 (* "<"        *)
+  | OO_Greater              (* ">"        *)
+  | OO_PlusEqual            (* "+="       *)
+  | OO_MinusEqual           (* "-="       *)
+  | OO_StarEqual            (* "*="       *)
+  | OO_SlashEqual           (* "/="       *)
+  | OO_PercentEqual         (* "%="       *)
+  | OO_CaretEqual           (* "^="       *)
+  | OO_AmpEqual             (* "&="       *)
+  | OO_PipeEqual            (* "|="       *)
+  | OO_LessLess             (* "<<"       *)
+  | OO_GreaterGreater       (* ">>"       *)
+  | OO_LessLessEqual        (* "<<="      *)
+  | OO_GreaterGreaterEqual  (* ">>="      *)
+  | OO_EqualEqual           (* "=="       *)
+  | OO_ExclaimEqual         (* "!="       *)
+  | OO_LessEqual            (* "<="       *)
+  | OO_GreaterEqual         (* ">="       *)
+  | OO_AmpAmp               (* "&&"       *)
+  | OO_PipePipe             (* "||"       *)
+  | OO_PlusPlus             (* "++"       *)
+  | OO_MinusMinus           (* "--"       *)
+  | OO_Comma                (* ","        *)
+  | OO_ArrowStar            (* "->*"      *)
+  | OO_Arrow                (* "->"       *)
+  | OO_Call                 (* "()"       *)
+  | OO_Subscript            (* "[]"       *)
+  | OO_Conditional          (* "?"        *)
+  deriving (Show)
+
+
 (* clang/AST/BuiltinTypes.def *)
 type builtin_type = AstBridge.builtin_type =
   | BT_Void
@@ -554,6 +587,20 @@ type builtin_type = AstBridge.builtin_type =
   | BT_UnknownAny
   | BT_BuiltinFn
   | BT_ARCUnbridgedCast
+  deriving (Show)
+
+
+type declaration_name = AstBridge.declaration_name =
+  | DN_Identifier			of string
+  | DN_ObjCZeroArgSelector
+  | DN_ObjCOneArgSelector
+  | DN_ObjCMultiArgSelector
+  | DN_CXXConstructorName
+  | DN_CXXDestructorName
+  | DN_CXXConversionFunctionName
+  | DN_CXXOperatorName			of overloaded_operator_kind
+  | DN_CXXLiteralOperatorName
+  | DN_CXXUsingDirective
   deriving (Show)
 
 
@@ -898,6 +945,16 @@ and decl_ = AstBridge.decl_ =
   | UsingDirectiveDecl
   | UsingShadowDecl
   | VarTemplateDecl
+  | ClassTemplateSpecializationDecl
+  | ClassTemplatePartialSpecializationDecl
+  | ObjCAtDefsFieldDecl
+  | ObjCIvarDecl
+  | CXXConstructorDecl
+  | CXXConversionDecl
+  | CXXDestructorDecl
+  | ImplicitParamDecl
+  | VarTemplateSpecializationDecl
+  | VarTemplatePartialSpecializationDecl
 
 
 and cxx_base_specifier = AstBridge.cxx_base_specifier = {

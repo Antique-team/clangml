@@ -207,6 +207,23 @@ translate_access_specifier (clang::AccessSpecifier spec)
 }
 
 
+OverloadedOperatorKind
+translate_overloaded_operator_kind (clang::OverloadedOperatorKind kind)
+{
+  switch (kind)
+    {
+    case clang::OO_None:
+      throw std::runtime_error ("invalid overloaded operator kind: OO_None");
+#define OVERLOADED_OPERATOR(Name,Spelling,Token,Unary,Binary,MemberOnly) \
+    case clang::OO_##Name: return OO_##Name;
+#include "clang/Basic/OperatorKinds.def"
+    case clang::NUM_OVERLOADED_OPERATORS:
+      throw std::runtime_error ("invalid overloaded operator kind: NUM_OVERLOADED_OPERATORS");
+    }
+  throw std::runtime_error ("invalid overloaded operator kind");
+}
+
+
 ptr<DeclarationName>
 translate_declaration_name (clang::DeclarationName const &name)
 {
@@ -233,8 +250,7 @@ translate_declaration_name (clang::DeclarationName const &name)
       printf ("CXXConversionFunctionName: %s\n", name.getAsString ().c_str ());
       break;
     case clang::DeclarationName::CXXOperatorName:
-      printf ("CXXOperatorName: %s\n", name.getAsString ().c_str ());
-      break;
+      return mkDN_CXXOperatorName (translate_overloaded_operator_kind (name.getCXXOverloadedOperator ()));
     case clang::DeclarationName::CXXLiteralOperatorName:
       printf ("CXXLiteralOperatorName: %s\n", name.getAsString ().c_str ());
       break;
