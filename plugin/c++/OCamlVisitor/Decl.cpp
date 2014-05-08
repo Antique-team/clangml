@@ -1,6 +1,42 @@
 #include "OCamlVisitor.h"
 
 
+ptr<DeclarationName>
+OCamlVisitor::translate_declaration_name (clang::DeclarationName const &name)
+{
+  switch (name.getNameKind ())
+    {
+    case clang::DeclarationName::Identifier:
+      return mkDN_Identifier (strdup (name.getAsString ().c_str ()));
+    case clang::DeclarationName::ObjCZeroArgSelector:
+      printf ("ObjCZeroArgSelector: %s\n", name.getAsString ().c_str ());
+      break;
+    case clang::DeclarationName::ObjCOneArgSelector:
+      printf ("ObjCOneArgSelector: %s\n", name.getAsString ().c_str ());
+      break;
+    case clang::DeclarationName::ObjCMultiArgSelector:
+      printf ("ObjCMultiArgSelector: %s\n", name.getAsString ().c_str ());
+      break;
+    case clang::DeclarationName::CXXConstructorName:
+      return mkDN_CXXConstructorName (must_traverse (name.getCXXNameType ()));
+    case clang::DeclarationName::CXXDestructorName:
+      return mkDN_CXXDestructorName (must_traverse (name.getCXXNameType ()));
+    case clang::DeclarationName::CXXConversionFunctionName:
+      return mkDN_CXXConversionFunctionName ();
+    case clang::DeclarationName::CXXOperatorName:
+      return mkDN_CXXOperatorName (translate_overloaded_operator_kind (name.getCXXOverloadedOperator ()));
+    case clang::DeclarationName::CXXLiteralOperatorName:
+      printf ("CXXLiteralOperatorName: %s\n", name.getAsString ().c_str ());
+      break;
+    case clang::DeclarationName::CXXUsingDirective:
+      printf ("CXXUsingDirective: %s\n", name.getAsString ().c_str ());
+      break;
+    }
+
+  return mkDN_Identifier ("<invalid>");
+}
+
+
 /****************************************************
  * {{{1 Declarations
  */
@@ -130,12 +166,13 @@ OCamlVisitor::TraverseRecordDecl (clang::RecordDecl *D)
 {
   TRACE;
 
+  TagTypeKind kind = translate_tag_type_kind (D->getTagKind ());
   // Some members may be implicit (from inline unions).
   list<Decl> members = traverse_explicit_decls (D);
   clang::StringRef name = D->getName ();
   list<CxxBaseSpecifier> bases;
 
-  stack.push (mkRecordDecl (name, members, bases));
+  stack.push (mkRecordDecl (kind, name, members, bases));
 
   return true;
 }
@@ -164,11 +201,7 @@ OCamlVisitor::TraverseCXXRecordDecl (clang::CXXRecordDecl *D)
 {
   TRACE;
 
-  for (auto it = D->decls_begin (); it != D->decls_end (); ++it)
-    {
-      printf ("decl: %s\n", type_name (*it).c_str ());
-    }
-
+  TagTypeKind kind = translate_tag_type_kind (D->getTagKind ());
   // Some members may be implicit (from inline unions).
   list<Decl> members = traverse_explicit_decls (D);
   clang::StringRef name = D->getName ();
@@ -176,7 +209,7 @@ OCamlVisitor::TraverseCXXRecordDecl (clang::CXXRecordDecl *D)
   if (D->isCompleteDefinition ())
     bases = traverse_list (base_spec_range (D));
 
-  stack.push (mkRecordDecl (name, members, bases));
+  stack.push (mkRecordDecl (kind, name, members, bases));
 
   return true;
 }
@@ -290,7 +323,19 @@ OCamlVisitor::TraverseTranslationUnitDecl (clang::TranslationUnitDecl *D)
   }
 
 
-UNIMP_DECL (AccessSpecDecl)
+bool
+OCamlVisitor::TraverseAccessSpecDecl (clang::AccessSpecDecl *D)
+{
+  TRACE;
+
+  AccessSpecifier spec = translate_access_specifier (D->getAccess ());
+
+  stack.push (mkAccessSpecDecl (spec));
+
+  return true;
+}
+
+
 UNIMP_DECL (BlockDecl)
 UNIMP_DECL (CapturedDecl)
 UNIMP_DECL (ClassScopeFunctionSpecializationDecl)

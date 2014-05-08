@@ -7,6 +7,12 @@ let string_of_language = function
   | Lang_C -> "C"
   | Lang_CXX -> "C++"
 
+let string_of_access_specifier = function
+  | AS_public -> "public"
+  | AS_protected -> "protected"
+  | AS_private -> "private"
+  | AS_none -> ""
+
 let string_of_overloaded_operator_kind = function
   | OO_New                  -> "new"
   | OO_Delete               -> "delete"
@@ -51,18 +57,6 @@ let string_of_overloaded_operator_kind = function
   | OO_Call                 -> "()"
   | OO_Subscript            -> "[]"
   | OO_Conditional          -> "?"
-
-let string_of_declaration_name = function
-  | DN_Identifier id -> id
-  | DN_ObjCZeroArgSelector -> "<ObjCZeroArgSelector>"
-  | DN_ObjCOneArgSelector -> "<ObjCOneArgSelector>"
-  | DN_ObjCMultiArgSelector -> "<ObjCMultiArgSelector>"
-  | DN_CXXConstructorName -> "<CXXConstructorName>"
-  | DN_CXXDestructorName -> "<CXXDestructorName>"
-  | DN_CXXConversionFunctionName -> "<CXXConversionFunctionName>"
-  | DN_CXXOperatorName kind -> "operator" ^ string_of_overloaded_operator_kind kind
-  | DN_CXXLiteralOperatorName -> "<CXXLiteralOperatorName>"
-  | DN_CXXUsingDirective -> "<CXXUsingDirective>"
 
 let string_of_qualifier = function
   | TQ_Const -> "const"
@@ -629,12 +623,12 @@ and pp_type_ ff = function
       Format.fprintf ff "%a"
         pp_type ty
   | RecordType (kind, name) ->
-      Format.fprintf ff "%s %s"
+      Format.fprintf ff "<%s> %s"
         (string_of_tag_type_kind kind)
         (if name = "" then "<anonymous>" else name)
   | EnumType name ->
       Format.pp_print_string ff
-        (if name = "" then "<anonymous>" else name)
+        (if name = "" then "enum <anonymous>" else "enum " ^ name)
   | DecayedType (decayed, original) ->
       Format.fprintf ff "%a"
         pp_type decayed
@@ -675,6 +669,38 @@ and pp_type ff t =
      | Some aspace -> " addr_space_" ^ string_of_int aspace)
 
 
+and pp_cxx_base_specifier ff base =
+  if base.cbs_virtual then
+    Format.pp_print_string ff "virtual ";
+  Format.pp_print_string ff (string_of_access_specifier base.cbs_access_spec);
+  Format.pp_print_string ff " ";
+  pp_type ff base.cbs_type;
+
+
+and pp_bases ff = function
+  | [] -> ()
+  | bases ->
+      Formatx.pp_print_string ff " : ";
+      Formatx.pp_list pp_cxx_base_specifier ff bases
+
+
+and string_of_declaration_name = function
+  | DN_Identifier id -> id
+  | DN_ObjCZeroArgSelector -> "<ObjCZeroArgSelector>"
+  | DN_ObjCOneArgSelector -> "<ObjCOneArgSelector>"
+  | DN_ObjCMultiArgSelector -> "<ObjCMultiArgSelector>"
+  | DN_CXXConstructorName ty ->
+      pp_type Format.str_formatter ty;
+      Format.flush_str_formatter ()
+  | DN_CXXDestructorName ty ->
+      pp_type Format.str_formatter ty;
+      "~" ^ Format.flush_str_formatter ()
+  | DN_CXXConversionFunctionName -> "<CXXConversionFunctionName>"
+  | DN_CXXOperatorName kind -> "operator" ^ string_of_overloaded_operator_kind kind
+  | DN_CXXLiteralOperatorName -> "<CXXLiteralOperatorName>"
+  | DN_CXXUsingDirective -> "<CXXUsingDirective>"
+
+
 and pp_decl_ ff = function
   | EmptyDecl ->
       Format.pp_print_string ff ";@,"
@@ -695,12 +721,15 @@ and pp_decl_ ff = function
   | VarDecl (ty, name, None)
   | ParmVarDecl (ty, name) ->
       pp_named_arg ff (name, ty)
-  | RecordDecl (name, [], bases) ->
-      Format.fprintf ff "struct %s@;@,"
+  | RecordDecl (kind, name, [], bases) ->
+      Format.fprintf ff "%s %s@;@,"
+        (string_of_tag_type_kind kind)
         (if name = "" then "<anonymous>" else name)
-  | RecordDecl (name, members, bases) ->
-      Format.fprintf ff "struct %s@\n@[<v2>{@,%a@]@\n};@\n"
+  | RecordDecl (kind, name, members, bases) ->
+      Format.fprintf ff "%s %s%a@\n@[<v2>{@,%a@]@\n};@\n"
+        (string_of_tag_type_kind kind)
         (if name = "" then "<anonymous>" else name)
+        pp_bases bases
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) members
   | FieldDecl (ty, name, bitwidth, init) ->
       Format.fprintf ff "%a;@,"
@@ -728,8 +757,10 @@ and pp_decl_ ff = function
   | UsingDecl (name) ->
       Format.fprintf ff "using %s;@,"
         (string_of_declaration_name name)
+  | AccessSpecDecl spec ->
+      Format.fprintf ff "%s:"
+        (string_of_access_specifier spec)
 
-  | AccessSpecDecl -> Format.pp_print_string ff "<AccessSpecDecl>"
   | BlockDecl -> Format.pp_print_string ff "<BlockDecl>"
   | CapturedDecl -> Format.pp_print_string ff "<CapturedDecl>"
   | ClassScopeFunctionSpecializationDecl -> Format.pp_print_string ff "<ClassScopeFunctionSpecializationDecl>"

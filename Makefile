@@ -86,7 +86,7 @@ GCCFLAGS =				\
 	-Wno-sign-conversion
 
 check: processor.native test.cc
-	./processor.native -w $(CLANGFLAGS) -include "memcad.h" test.cc
+	./processor.native -w $(CLANGFLAGS) -include "memcad.h" test.cc -std=c++11
 
 %.test: % processor.native
 	./processor.native -w $(CLANGFLAGS) -include "memcad.h" $<

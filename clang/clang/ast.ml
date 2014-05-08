@@ -590,20 +590,6 @@ type builtin_type = AstBridge.builtin_type =
   deriving (Show)
 
 
-type declaration_name = AstBridge.declaration_name =
-  | DN_Identifier			of string
-  | DN_ObjCZeroArgSelector
-  | DN_ObjCOneArgSelector
-  | DN_ObjCMultiArgSelector
-  | DN_CXXConstructorName
-  | DN_CXXDestructorName
-  | DN_CXXConversionFunctionName
-  | DN_CXXOperatorName			of overloaded_operator_kind
-  | DN_CXXLiteralOperatorName
-  | DN_CXXUsingDirective
-  deriving (Show)
-
-
 type sloc = AstBridge.sloc = {
   loc_s : Sloc.t;
   loc_e : Sloc.t;
@@ -903,7 +889,7 @@ and decl_ = AstBridge.decl_ =
   | TypedefDecl			of (* type *)tloc * (* name *)string
   | VarDecl			of (* type *)tloc * (* name *)string * (* init *)expr option
   | ParmVarDecl			of (* type *)tloc * (* name *)string
-  | RecordDecl			of (* name *)string * (* members *)decl list * (* bases *)cxx_base_specifier list
+  | RecordDecl			of tag_type_kind * (* name *)string * (* members *)decl list * (* bases *)cxx_base_specifier list
   | FieldDecl			of (* type *)tloc * (* name *)string * (* bitwidth *)expr option * (* initialiser *)expr option
   | EnumDecl			of (* name *)string * (* enumerators *)decl list
   | EnumConstantDecl		of (* name *)string * (* value *)expr option
@@ -911,8 +897,8 @@ and decl_ = AstBridge.decl_ =
   | ClassTemplateDecl		of (* templated *)decl * (* params *)decl list
   | TemplateTypeParmDecl	of (* type *)ctyp * (* default *)tloc option
   | UsingDecl			of (* name *)declaration_name
+  | AccessSpecDecl		of access_specifier
 
-  | AccessSpecDecl
   | BlockDecl
   | CapturedDecl
   | ClassScopeFunctionSpecializationDecl
@@ -965,6 +951,20 @@ and cxx_base_specifier = AstBridge.cxx_base_specifier = {
   cbs_access_spec    : access_specifier;
   cbs_type           : ctyp;
 }
+
+
+and declaration_name = AstBridge.declaration_name =
+  | DN_Identifier			of string
+  | DN_ObjCZeroArgSelector
+  | DN_ObjCOneArgSelector
+  | DN_ObjCMultiArgSelector
+  | DN_CXXConstructorName		of ctyp
+  | DN_CXXDestructorName		of ctyp
+  | DN_CXXConversionFunctionName
+  | DN_CXXOperatorName			of overloaded_operator_kind
+  | DN_CXXLiteralOperatorName
+  | DN_CXXUsingDirective
+
 
   (* All of the above derive Show. *)
   deriving (Show)

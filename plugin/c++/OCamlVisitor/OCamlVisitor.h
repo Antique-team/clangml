@@ -310,6 +310,8 @@ public:
    * {{{1 Declarations
    */
 
+  ptr<DeclarationName> translate_declaration_name (clang::DeclarationName const &name);
+
   bool TraverseDecl (clang::Decl *D);
 
   bool TraverseCXXBaseSpecifier (clang::CXXBaseSpecifier const &B);

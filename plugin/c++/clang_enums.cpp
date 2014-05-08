@@ -222,39 +222,3 @@ translate_overloaded_operator_kind (clang::OverloadedOperatorKind kind)
     }
   throw std::runtime_error ("invalid overloaded operator kind");
 }
-
-
-ptr<DeclarationName>
-translate_declaration_name (clang::DeclarationName const &name)
-{
-  switch (name.getNameKind ())
-    {
-    case clang::DeclarationName::Identifier:
-      return mkDN_Identifier (strdup (name.getAsString ().c_str ()));
-    case clang::DeclarationName::ObjCZeroArgSelector:
-      printf ("ObjCZeroArgSelector: %s\n", name.getAsString ().c_str ());
-      break;
-    case clang::DeclarationName::ObjCOneArgSelector:
-      printf ("ObjCOneArgSelector: %s\n", name.getAsString ().c_str ());
-      break;
-    case clang::DeclarationName::ObjCMultiArgSelector:
-      printf ("ObjCMultiArgSelector: %s\n", name.getAsString ().c_str ());
-      break;
-    case clang::DeclarationName::CXXConstructorName:
-      return mkDN_CXXConstructorName ();
-    case clang::DeclarationName::CXXDestructorName:
-      return mkDN_CXXDestructorName ();
-    case clang::DeclarationName::CXXConversionFunctionName:
-      return mkDN_CXXConversionFunctionName ();
-    case clang::DeclarationName::CXXOperatorName:
-      return mkDN_CXXOperatorName (translate_overloaded_operator_kind (name.getCXXOverloadedOperator ()));
-    case clang::DeclarationName::CXXLiteralOperatorName:
-      printf ("CXXLiteralOperatorName: %s\n", name.getAsString ().c_str ());
-      break;
-    case clang::DeclarationName::CXXUsingDirective:
-      printf ("CXXUsingDirective: %s\n", name.getAsString ().c_str ());
-      break;
-    }
-
-  return mkDN_Identifier ("<invalid>");
-}

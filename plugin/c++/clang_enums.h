@@ -13,7 +13,6 @@ ast_bridge::ElaboratedTypeKeyword translate_elaborated_type_keyword (clang::Elab
 ast_bridge::BuiltinType translate_builtin_type (clang::BuiltinType::Kind kind);
 ast_bridge::CastKind translate_cast_kind (clang::CastKind kind);
 ast_bridge::AccessSpecifier translate_access_specifier (clang::AccessSpecifier spec);
-
-ptr<ast_bridge::DeclarationName> translate_declaration_name (clang::DeclarationName const &name);
+ast_bridge::OverloadedOperatorKind translate_overloaded_operator_kind (clang::OverloadedOperatorKind kind);
 
 #endif /* CLANG_ENUMS_H */
