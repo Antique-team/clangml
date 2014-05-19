@@ -46,11 +46,16 @@ let dump_expr s =
 
 
 let add_type name ty prog =
-  let name = prog.ns ^ name in
-  assert (not (StringMap.mem name prog.prog.cp_types));
-  { prog with prog = {
-       prog.prog with cp_types = StringMap.add name ty prog.prog.cp_types }
-  }
+  match name with
+  | "__int128_t"
+  | "__uint128_t"
+  | "__builtin_va_list" -> prog
+  | name ->
+      let name = prog.ns ^ name in
+      assert (not (StringMap.mem name prog.prog.cp_types));
+      { prog with prog = {
+           prog.prog with cp_types = StringMap.add name ty prog.prog.cp_types }
+      }
 
 let add_fun name fn prog =
   let name = prog.ns ^ name in
@@ -118,6 +123,7 @@ let rec c_type_of_type = function
       Ctarray (c_type_of_type memty.t, size)
 
   | TypedefType name ->
+      assert (name <> "");
       Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
 
   | ElaboratedType ty ->
@@ -126,7 +132,9 @@ let rec c_type_of_type = function
   | EnumType name
   | RecordType (_, name) ->
       (* TODO: this is wrong. *)
-      Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
+      (*assert (name <> "");*)
+      (*Ctnamed { cnt_name = name; cnt_type = Ctvoid; }*)
+      Ctvoid
 
   | PointerType pointee ->
       Ctptr (Some (c_type_of_type pointee.t))
@@ -137,7 +145,8 @@ let rec c_type_of_type = function
   | FunctionNoProtoType _
   | FunctionProtoType _ ->
       (* TODO *)
-      Ctnamed { cnt_name = "FunctionProtoType"; cnt_type = Ctvoid; }
+      (*Ctnamed { cnt_name = "FunctionProtoType"; cnt_type = Ctvoid; }*)
+      Ctvoid
 
   | TypeOfExprType _ -> Log.unimp "TypeOfExprType"
   | TypeOfType _ -> Log.unimp "TypeOfType"
@@ -157,6 +166,7 @@ let rec c_type_of_type_loc tl =
       Ctarray (c_type_of_type_loc memty, size)
 
   | TypedefTypeLoc name ->
+      assert (name <> "");
       Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
 
   | ElaboratedTypeLoc ty ->
@@ -164,6 +174,7 @@ let rec c_type_of_type_loc tl =
 
   | EnumTypeLoc name
   | RecordTypeLoc (_, name) ->
+      assert (name <> "");
       Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
 
   | PointerTypeLoc pointee ->
@@ -195,7 +206,7 @@ let make_aggregate agg = function
 
 let rec c_agg_fields_of_decls decls =
   let rec loop fields = function
-    | [] -> fields
+    | [] -> List.rev fields
 
     | { d = RecordDecl (_, name1, members, _) }
       :: { d = FieldDecl ({ tl = ElaboratedTypeLoc {

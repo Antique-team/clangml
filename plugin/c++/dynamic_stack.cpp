@@ -3,6 +3,8 @@
 
 #include <sstream>
 
+#define TRACING 0
+
 namespace dynamic_stack_detail
 {
   // Special case for Expr -> Stmt
@@ -45,8 +47,10 @@ dynamic_stack::pop ()
   adt_ptr p = stack.back ();
   stack.pop_back ();
 
+#if TRACING
   printf ("%*s  pop () -> %s@%zu\n", tracer::level - 2, "",
           demangle (typeid (*p)).c_str (), p->id);
+#endif
   return element { p };
 }
 
@@ -60,8 +64,10 @@ dynamic_stack::top () const
 void
 dynamic_stack::push_ptr (adt_ptr p)
 {
+#if TRACING
   printf ("%*s  push (%s@%zu)\n", tracer::level - 2, "",
           demangle (typeid (*p)).c_str (), p->id);
+#endif
   stack.push_back (p);
 }
 

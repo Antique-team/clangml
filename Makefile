@@ -1,10 +1,19 @@
+APRON_INST := $(HOME)/code/git/apron-dist/install/lib
+export LD_LIBRARY_PATH := $(APRON_INST)
+
 NCPU := $(shell expr $(shell cat /proc/cpuinfo | grep processor | grep -o '[0-9]\+' | tail -n1) + 1)
 
-TARGETS =			\
-	clangaml.dylib		\
-	consumer/processor.native
+MAIN = mainClang
 
-processor.native: $(shell find */ -type f -not -wholename "_build/*") myocamlbuild.ml
+TARGETS =					\
+	clangaml.dylib				\
+	consumer/processor.native		\
+	consumer/mainClang.native		\
+	consumer/memcad/main/batch.native	\
+	consumer/memcad/main/main.native	\
+	#
+
+$(MAIN).native: $(shell find */ -type f -not -wholename "_build/*") myocamlbuild.ml Makefile
 	ocamlbuild -j $(NCPU) $(TARGETS)
 	@touch $@
 
@@ -20,7 +29,7 @@ wc:
 	  | sort | xargs wc -l
 
 
-install: processor.native
+install: $(MAIN).native
 	ocamlfind install clang META		\
 		_build/clangaml.dylib		\
 		_build/clang/*.cm[iox]		\
@@ -54,8 +63,6 @@ CPPFLAGS =				\
 
 CCFLAGS =				\
 	$(CPPFLAGS)			\
-	-ansi				\
-	-pedantic			\
 	-Wall				\
 	-Wextra				\
 	-Wfatal-errors			\
@@ -63,6 +70,11 @@ CCFLAGS =				\
 	-Wno-unused-parameter		\
 	-Wno-sign-compare		\
 	-Wno-missing-field-initializers	\
+	#
+
+#CCFLAGS +=				\
+	-ansi				\
+	-pedantic			\
 	#
 
 CLANGFLAGS =				\
@@ -85,15 +97,16 @@ GCCFLAGS =				\
 	-Wconversion			\
 	-Wno-sign-conversion
 
-check: processor.native test.cc
-	./processor.native -w $(CLANGFLAGS) -include "memcad.h" test.cc -std=c++11
+check: $(MAIN).native test.cc
+	#./processor.native -w $(CLANGFLAGS) -include "memcad.h" test.cc -std=c++11
+	./processor.native -w $(CLANGFLAGS) -include "memcad.h" test.c
 
-%.test: % processor.native
+%.test: % $(MAIN).native
 	./processor.native -w $(CLANGFLAGS) -include "memcad.h" $<
 
 define testsuite
 TESTSUITE.$1 = $2
-check-$1: processor.native
+check-$1: $(MAIN).native
 	./processor.native -w $(CLANGFLAGS) -include "memcad.h" $$(TESTSUITE.$1)
 
 check-$1-separate: $$(TESTSUITE.$1:=.test)
@@ -294,7 +307,15 @@ ANALYSIS_FLAGS =		\
 	-Xclang -analyze	\
 	-Xclang -analyzer-checker=core.NullDereference
 
-analyze-self: processor.native
+prtp: $(MAIN).native
+	cd consumer/memcad && \
+	  $(realpath batch.native)	\
+	    -in-file rt.txt		\
+	    -pure-regtest		\
+	    -very-silent		\
+	    -analyzer $(realpath $(MAIN).native)
+
+analyze-self: $(MAIN).native
 	./processor.native $(shell llvm-config-3.4 --cxxflags) -fexceptions -std=c++11 -w -I_build/plugin/c++ -Itools/bridgen/c++ plugin/c++/OCamlVisitor/Expr.cpp
 
 analyze-whopr: aldor.c processor.native

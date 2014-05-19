@@ -104,6 +104,14 @@ let () =
         Options.ocaml_cflags := ["-I"; "+camlp4/Camlp4Parsers"];
         Options.use_ocamlfind := true;
 
+        flag ["c++"; "compile"; "no-rtti"] & A"-fno-rtti";
+
+        pflag ["ocaml"; "link"; "byte"] "apron-link"
+          (fun x -> Sh("`ocamlfind query apron`/" ^ x ^ ".cma"));
+        pflag ["ocaml"; "link"; "native"] "apron-link"
+          (fun x -> Sh("`ocamlfind query apron`/" ^ x ^ ".cmxa"));
+
+
     | After_rules ->
         rule "Generate map and fold visitors from bridge AST"
           ~prods:[
@@ -173,13 +181,11 @@ let () =
             ])
           end;
 
-        flag ["compile"; "c++"; "no-rtti"] (A"-fno-rtti");
-
         rule "C++ compilation"
           ~prod:"%.o"
           ~deps:("%.cpp" :: headers)
           begin fun env build ->
-            let tags = tags_of_pathname (env "%.cpp") ++ "compile" ++ "c++" in
+            let tags = tags_of_pathname (env "%.cpp") ++ "c++" ++ "compile" in
 
             Cmd (S(atomise [
               "clang++";

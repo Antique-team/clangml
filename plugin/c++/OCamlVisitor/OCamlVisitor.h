@@ -20,8 +20,8 @@ using namespace ast_bridge;
 
 #define TODO std::printf ("TODO: %s\n", __func__); delayed_exit E { 1 }
 
-//#undef TRACE
-//#define TRACE
+#undef TRACE
+#define TRACE
 
 
 struct OCamlVisitor

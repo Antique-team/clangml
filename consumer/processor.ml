@@ -2,6 +2,27 @@ open Clang.Api
 open Clang.Ast
 
 
+let dump_ast ast =
+  let open C_sig in
+  let open Data_structures in
+  print_endline "---- vars ----";
+  StringMap.iter (fun name ob ->
+      Format.printf "%s: %a\n"
+        name Show_c_var.format ob
+    ) ast.cp_vars;
+  print_endline "---- funs ----";
+  StringMap.iter (fun name ob ->
+      Format.printf "%s: %a\n"
+        name Show_c_fun.format ob
+    ) ast.cp_funs;
+  print_endline "---- types ----";
+  StringMap.iter (fun name ob ->
+      Format.printf "%s: %a\n"
+        name Show_c_type.format ob
+    ) ast.cp_types;
+;;
+
+
 let memcad_parse file =
   let fh = open_in file in
 
@@ -9,6 +30,7 @@ let memcad_parse file =
     let lexbuf = Lexing.from_channel fh in
     let ast = C_parser.entry C_lexer.token lexbuf in
     C_utils.ppi_c_prog "" stdout ast;
+    dump_ast ast;
   with
   | Parsing.Parse_error ->
       print_endline "!!!! MemCAD failed to parse file";
@@ -43,7 +65,9 @@ let process clang =
     Clang.Pp.pp_decl decl;
 
   print_endline "----------------- Clang -> MemCAD -------------------";
-  C_utils.ppi_c_prog "" stdout (Transform.c_prog_from_decl clang decl);
+  let ast = Transform.c_prog_from_decl clang decl in
+  C_utils.ppi_c_prog "" stdout ast;
+  dump_ast ast;
   print_endline "-----------------------------------------------------";
 ;;
 

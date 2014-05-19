@@ -123,6 +123,7 @@ let parse args continue =
       ) [
         "clangaml.dylib";
         "_build/clangaml.dylib";
+        "../../_build/clangaml.dylib";
         Config.destdir ^ "/clang/clangaml.dylib";
       ]
     with Not_found ->
