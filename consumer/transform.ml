@@ -146,20 +146,22 @@ let rec c_type_of_type = function
   | RecordType (_, name) ->
       (* TODO: this is wrong. *)
       (*assert (name <> "");*)
-      (*Ctnamed { cnt_name = name; cnt_type = Ctvoid; }*)
-      Ctvoid
-
-  | PointerType pointee ->
-      Ctptr (Some (c_type_of_type pointee.t))
+      Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
+      (*Ctvoid*)
 
   | ParenType inner ->
       c_type_of_type inner.t
 
+  | PointerType { t = FunctionNoProtoType _
+                    | FunctionProtoType _
+                }
   | FunctionNoProtoType _
   | FunctionProtoType _ ->
-      (* TODO *)
-      (*Ctnamed { cnt_name = "FunctionProtoType"; cnt_type = Ctvoid; }*)
+      (* MemCAD ignores the type of functions (and function pointers). *)
       Ctvoid
+
+  | PointerType pointee ->
+      Ctptr (Some (c_type_of_type pointee.t))
 
   | TypeOfExprType _ -> Log.unimp "TypeOfExprType"
   | TypeOfType _ -> Log.unimp "TypeOfType"

@@ -5,9 +5,9 @@ open Clang.Ast
 let dump_vars ast =
   let open C_sig in
   let open Data_structures in
-  Format.print_string "---- <vars> ----\n";
+  Format.printf "---- <vars> ----@\n";
   StringMap.iter (fun name ob ->
-      Format.printf "%s: %a\n"
+      Format.printf "%s: %a@\n"
         name Show_c_var.format ob
     ) ast.cp_vars;
 ;;
@@ -16,9 +16,9 @@ let dump_vars ast =
 let dump_funs ast =
   let open C_sig in
   let open Data_structures in
-  Format.print_string "---- <funs> ----\n";
+  Format.printf "---- <funs> ----@\n";
   StringMap.iter (fun name ob ->
-      Format.printf "%s: %a\n"
+      Format.printf "%s: %a@\n"
         name Show_c_fun.format ob
     ) ast.cp_funs;
 ;;
@@ -27,18 +27,18 @@ let dump_funs ast =
 let dump_types ast =
   let open C_sig in
   let open Data_structures in
-  Format.print_string "---- <types> ----\n";
+  Format.printf "---- <types> ----@\n";
   StringMap.iter (fun name ob ->
-      Format.printf "%s: %a\n"
+      Format.printf "%s: %a@\n"
         name Show_c_type.format ob
     ) ast.cp_types;
 ;;
 
 
 let dump_ast ast =
-  dump_vars ast;
+  (*dump_vars ast;*)
   dump_funs ast;
-  dump_types ast;
+  (*dump_types ast;*)
 ;;
 
 
@@ -95,10 +95,6 @@ let process clang =
 
   let () = Analysis.All.analyse_decl clang decl in
 
-  print_string "--------------------- Clang AST ---------------------";
-  Format.printf "@[<v2>@,%a@]@."
-    Clang.Ast.Show_decl.format decl;
-
   (*
   print_string "--------------------- Clang CST ---------------------";
   Format.printf "@[<v2>@,%a@]@."
@@ -112,8 +108,15 @@ let process clang =
     Clang.Pp.pp_decl decl;
   *)
 
+  print_string "--------------------- Clang AST ---------------------";
+  Format.printf "@[<v2>@,%a@]@."
+    Clang.Ast.Show_decl.format decl;
+
   print_endline "----------------- Clang -> MemCAD -------------------";
   let ast = Transform.c_prog_from_decl clang decl in
+  let ast = C_process.c_prog_fix_types ast in
+  C_utils.max_c_var_id := 0;
+  let ast = C_process.bind_c_prog ast in
   C_utils.ppi_c_prog "" stdout ast;
   dump_ast ast;
   print_endline "-----------------------------------------------------";
@@ -121,6 +124,7 @@ let process clang =
   match memcad_ast with
   | None -> ()
   | Some memcad_ast ->
+      let open C_sig in
       if memcad_ast = ast then
         print_endline "MEMCAD AST = CLANG AST"
 ;;
