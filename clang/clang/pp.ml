@@ -721,18 +721,24 @@ and pp_decl_ ff = function
   | VarDecl (ty, name, None)
   | ParmVarDecl (ty, name) ->
       pp_named_arg ff (name, ty)
-  | RecordDecl (kind, name, [], bases) ->
+  | RecordDecl (kind, name, None, bases) ->
       Format.fprintf ff "%s %s@;@,"
         (string_of_tag_type_kind kind)
         (if name = "" then "<anonymous>" else name)
-  | RecordDecl (kind, name, members, bases) ->
+  | RecordDecl (kind, name, Some members, bases) ->
       Format.fprintf ff "%s %s%a@\n@[<v2>{@,%a@]@\n};@\n"
         (string_of_tag_type_kind kind)
         (if name = "" then "<anonymous>" else name)
         pp_bases bases
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) members
-  | FieldDecl (ty, name, bitwidth, init) ->
-      Format.fprintf ff "%a;@,"
+  | FieldDecl { fd_type = ty;
+                fd_name = name;
+                fd_bitw = bitwidth;
+                fd_init = init;
+                fd_mutable = is_mutable;
+              } ->
+      Format.fprintf ff "%s%a;@,"
+        (if is_mutable then "mutable " else "")
         pp_named_arg (name, ty)
   | EnumDecl (name, enumerators) ->
       Format.fprintf ff "enum %s { %a };@,"

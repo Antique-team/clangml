@@ -1,6 +1,10 @@
 open Ast
 open Prelude
 
+(* Debug communication *)
+(*let debug = true*)
+let debug = false
+
 (* Server context *)
 type context
 
@@ -11,6 +15,8 @@ type _ request =
   | TranslationUnit : Ast.decl request
   | Filename : string request
   | CanonicalType : Ast.ctyp Ref.t -> Ast.ctyp request
+  | SizeofType : Ast.ctyp Ref.t -> int64 request
+  | AlignofType : Ast.ctyp Ref.t -> int request
   | TypePtr : Ast.tloc Ref.t -> Ast.ctyp request
   | PresumedLoc : Sloc.t -> Sloc.presumed_loc request
   | IsFromMainFile : Sloc.t -> bool request
@@ -44,6 +50,8 @@ let name_of_request : type a. a request -> string = function
   | PresumedLoc		_ -> "PresumedLoc"
   | IsFromMainFile	_ -> "IsFromMainFile"
   | FileCharacteristic	_ -> "FileCharacteristic"
+  | SizeofType		_ -> "SizeofType"
+  | AlignofType		_ -> "AlignofType"
 
 
 (* Server functions. *)
@@ -101,6 +109,12 @@ type clang = {
 }
 
 let request { input; output } (msg : 'a request) : 'a =
+  if debug then (
+    Printf.printf "request (%s)\n"
+      (name_of_request msg);
+    flush stdout;
+  );
+
   Marshal.to_channel output msg [];
   flush output;
   match Marshal.from_channel input with

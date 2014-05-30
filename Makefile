@@ -168,6 +168,7 @@ ALDOR_SRC =		\
 	doc.c		\
 	dword.c		\
 	emit.c		\
+	errorset.c	\
 	fbox.c		\
 	file.c		\
 	file_t.c	\
@@ -189,6 +190,7 @@ ALDOR_SRC =		\
 	forg.c		\
 	format.c	\
 	format_t.c	\
+	formatters.c	\
 	fortran.c	\
 	freevar.c	\
 	ftype.c		\
@@ -202,6 +204,7 @@ ALDOR_SRC =		\
 	gf_gener.c	\
 	gf_implicit.c	\
 	gf_imps.c	\
+	gf_java.c	\
 	gf_prog.c	\
 	gf_reference.c	\
 	gf_rtime.c	\

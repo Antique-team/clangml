@@ -61,6 +61,7 @@ let codegen kind ocaml_types =
             List.mapi (fun i -> function
               | ListOfType (_, NamedType (_loc, name))
               | OptionType (_, NamedType (_loc, name))
+              | OptionType (_, ListOfType (_, NamedType (_loc, name)))
               | NamedType (_loc, name) ->
                   _loc, mkty i _loc name
               | _ ->

@@ -6,19 +6,24 @@
 
 namespace clang
 {
-  class SourceManager;
+  class ASTContext;
 }
 
 struct clang_context
 {
-  clang::SourceManager &SM;
+  clang::ASTContext &Ctx;
   clang_ref_holder refs;
   bridge_cache cache;
   value_of_context values;
 
-  clang_context (clang::SourceManager &SM)
-    : SM (SM)
+  clang_context (clang::ASTContext &Ctx)
+    : Ctx (Ctx)
   {
+  }
+
+  clang::ASTContext *operator -> ()
+  {
+    return &Ctx;
   }
 };
 

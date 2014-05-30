@@ -398,7 +398,7 @@ terminate_handler (bool unexpected)
 
 
 static void
-fork_debug (int signum)
+fork_debug (int signum, siginfo_t *info, void *context)
 {
   if (int pid = fork ())
     {
@@ -431,6 +431,16 @@ fork_debug (int signum)
 }
 
 
+static void
+catch_signal (int signum, void (*handler)(int, siginfo_t *, void *))
+{
+  struct sigaction action;
+  memset (&action, 0, sizeof action);
+  action.sa_sigaction = handler;
+  sigaction (signum, &action, NULL);
+}
+
+
 void
 backtrace_init ()
 {
@@ -440,10 +450,13 @@ backtrace_init ()
       std::set_unexpected ([] { terminate_handler (true ); });
     }
 
-  signal (SIGTRAP, fork_debug);
-  signal (SIGABRT, [] (int) {
-            print_backtrace ();
-            signal (SIGABRT, SIG_DFL);
-            raise (SIGABRT);
-          });
+  catch_signal (SIGTRAP, fork_debug);
+
+  auto handle = [] (int signum, siginfo_t *info, void *context) {
+    print_backtrace ();
+    signal (signum, SIG_DFL);
+    raise (signum);
+  };
+  catch_signal (SIGABRT, handle);
+  catch_signal (SIGSEGV, handle);
 }

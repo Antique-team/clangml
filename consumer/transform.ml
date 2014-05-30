@@ -13,7 +13,20 @@ type env = {
 
 
 let start_line clang loc =
-  Api.(request clang @@ PresumedLoc loc.loc_s).Sloc.loc_line
+  Api.(request clang @@ PresumedLoc loc.loc_s).Sloc.loc_line - 1
+
+
+let sizeof clang tl_cref =
+  let open Api in
+  let ctyp = request clang @@ TypePtr tl_cref in
+  request clang @@ SizeofType ctyp.t_cref
+  |> Int64.to_int
+
+
+let alignof clang tl_cref =
+  let open Api in
+  let ctyp = request clang @@ TypePtr tl_cref in
+  request clang @@ AlignofType ctyp.t_cref
 
 
 let lookup_var prog decl_env name =
@@ -204,56 +217,92 @@ let make_aggregate agg = function
   | _ -> Log.unimp "Unhandled tag type kind"
 
 
-let rec c_agg_fields_of_decls decls =
-  let rec loop fields = function
+let compute_offset off align =
+  ((off + align - 1) / align) * align
+
+
+let rec c_agg_fields_of_decls clang is_union (decls : decl list) =
+  let rec loop off fields = function
     | [] -> List.rev fields
 
-    | { d = RecordDecl (_, name1, members, _) }
-      :: { d = FieldDecl ({ tl = ElaboratedTypeLoc {
-          tl = RecordTypeLoc (kind, name2)
-        } }, name, bitwidth, init) } :: tl
+    | { d = RecordDecl (_, name1, Some members, _) }
+      :: { d = FieldDecl {
+            fd_type = {
+              tl = ElaboratedTypeLoc {
+                tl = RecordTypeLoc (kind, name2);
+                tl_cref;
+              }
+            };
+            fd_name = name;
+            fd_bitw = bitwidth;
+            fd_init = init;
+        } } :: tl
       when name1 = name2 ->
         if bitwidth <> None then
           Log.unimp "Bit fields not implemented";
         if init <> None then
           Log.unimp "Member initialisers not implemented";
 
+        let size  = sizeof  clang tl_cref in
+        let align = alignof clang tl_cref in
+
         let agg = {
           cag_name   = if name1 = "" then None else Some name1;
-          cag_align  = -1;
-          cag_size   = -1;
-          cag_fields = c_agg_fields_of_decls members;
+          cag_align  = align;
+          cag_size   = size;
+          cag_fields = c_agg_fields_of_decls clang (kind = TTK_Union) members;
         } in
+
+        (* offset for the current field *)
+        let off = compute_offset off align in
 
         let field = {
           caf_typ  = make_aggregate agg kind;
-          caf_off  = -1;
-          caf_size = -1;
+          caf_off  = if is_union then 0 else off;
+          caf_size = size;
           caf_name = name;
         } in
 
-        loop (field :: fields) tl
+        (* offset for the next field *)
+        let off = off + size in
 
-    | { d = FieldDecl (ty, name, bitwidth, init) } :: tl ->
+        loop off (field :: fields) tl
+
+    | { d = FieldDecl { fd_type = ty;
+                        fd_name = name;
+                        fd_bitw = bitwidth;
+                        fd_init = init;
+                        fd_index;
+                      } } :: tl ->
         if bitwidth <> None then
           Log.unimp "Bit fields not implemented";
         if init <> None then
           Log.unimp "Member initialisers not implemented";
+
+        let size  = sizeof  clang ty.tl_cref in
+        let align = alignof clang ty.tl_cref in
+
+        (* offset for the current field *)
+        let off = compute_offset off align in
+
         let field = {
           caf_typ  = c_type_of_type_loc ty;
-          caf_off  = -1;
-          caf_size = -1;
+          caf_off  = if is_union then 0 else off;
+          caf_size = size;
           caf_name = name;
         } in
 
-        loop (field :: fields) tl
+        (* offset for the next field *)
+        let off = off + size in
+
+        loop off (field :: fields) tl
 
     | { d } :: tl ->
         print_endline (Show.show<decl_> d);
         Log.err "Only FieldDecls allowed within RecordDecl"
   in
 
-  loop [] decls
+  loop 0 [] decls
 
 
 let c_var_of_parm_decl = function
@@ -710,35 +759,44 @@ let rec collect_decls clang prog = function
     and the memcad parser doesn't parse it, so we match this construct
     explicitly and transform it to the appropriate memcad AST.
    *)
-  |   { d = RecordDecl (_, name1, members, _) }
+  |   { d = RecordDecl (_, name1, Some members, _) }
     :: { d = TypedefDecl (
         { tl = ElaboratedTypeLoc {
-             tl = RecordTypeLoc (kind, name2)
-           }
+            tl = RecordTypeLoc (kind, name2);
+          };
+          tl_cref;
         },
         name)
       }
     :: tl
     when name1 = name2 ->
+      let size  = sizeof  clang tl_cref in
+      let align = alignof clang tl_cref in
+
       let c_type =
         make_aggregate {
           cag_name   = if name1 = "" then None else Some name1;
-          cag_align  = -1;
-          cag_size   = -1;
-          cag_fields = c_agg_fields_of_decls members;
+          cag_align  = align;
+          cag_size   = size;
+          cag_fields = c_agg_fields_of_decls clang (kind = TTK_Union) members;
         } kind
       in
       collect_decls clang (add_type name c_type prog) tl
 
   (* Handle "typedef struct foo *Foo;" (where struct foo was not
      yet defined) specially, as well. *)
-  |   { d = RecordDecl (_, name1, members, _) }
+  |   { d = RecordDecl (_, name1, _, _) }
     :: { d = TypedefDecl (
-        { tl = PointerTypeLoc
-          { tl = ElaboratedTypeLoc {
-               tl = RecordTypeLoc (_, name2)
-             }
-          }
+        { tl = (
+            PointerTypeLoc
+              { tl = ElaboratedTypeLoc {
+                  tl = RecordTypeLoc (_, name2)
+                }
+              }
+          | ElaboratedTypeLoc {
+                tl = RecordTypeLoc (_, name2)
+              }
+          )
         } as ty,
         name)
       }
@@ -750,10 +808,11 @@ let rec collect_decls clang prog = function
   (* There may be other typedefs involving a preceding record definition,
      so this case is printed with a better diagnostic than the catch-all
      case below. *)
-  |   { d = RecordDecl (_, name, members, _) }
+  |   { d = RecordDecl (_, name, members, _) as decl }
     :: { d = TypedefDecl _ as tdef }
     :: tl ->
-      Log.unimp "unsupported record/typedef combination: %a"
+      Log.unimp "unsupported record/typedef combination: [%a;\n%a;]"
+        Show.format<decl_> decl
         Show.format<decl_> tdef
 
   (* Any lone RecordDecls are not supported. *)

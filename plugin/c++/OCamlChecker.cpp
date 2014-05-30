@@ -68,7 +68,7 @@ OCamlChecker::checkASTDecl (clang::TranslationUnitDecl const *D,
       OCamlADTBase::reset_statistics ();
 
       clang_context ctx {
-        Mgr.getSourceManager (),
+        Mgr.getASTContext (),
       };
 
       result = to_value (D, ctx);
@@ -78,7 +78,8 @@ OCamlChecker::checkASTDecl (clang::TranslationUnitDecl const *D,
       // If this fails, then sharing didn't work.
       assert (OCamlADTBase::values_created == OCamlADTBase::ids_assigned);
 
-      char const *filename = ctx.SM.getFileEntryForID (ctx.SM.getMainFileID ())->getName ();
+      clang::SourceManager &SM = ctx->getSourceManager ();
+      char const *filename = SM.getFileEntryForID (SM.getMainFileID ())->getName ();
 
       value *cb = caml_named_value ("success");
       // val success : decl -> string -> context -> unit

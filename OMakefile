@@ -4,10 +4,11 @@ FILES[] +=
   Makefile
   _tags
   myocamlbuild.ml
+  test.c
   test.cc
 
 _build: $(FILES)
-  #make check
-  make prtp
+  make check
+  #make prtp
 
 .DEFAULT: _build

@@ -889,8 +889,8 @@ and decl_ = AstBridge.decl_ =
   | TypedefDecl			of (* type *)tloc * (* name *)string
   | VarDecl			of (* type *)tloc * (* name *)string * (* init *)expr option
   | ParmVarDecl			of (* type *)tloc * (* name *)string
-  | RecordDecl			of tag_type_kind * (* name *)string * (* members *)decl list * (* bases *)cxx_base_specifier list
-  | FieldDecl			of (* type *)tloc * (* name *)string * (* bitwidth *)expr option * (* initialiser *)expr option
+  | RecordDecl			of tag_type_kind * (* name *)string * (* members *)decl list option * (* bases *)cxx_base_specifier list
+  | FieldDecl			of field_decl
   | EnumDecl			of (* name *)string * (* enumerators *)decl list
   | EnumConstantDecl		of (* name *)string * (* value *)expr option
   | NamespaceDecl		of (* name *)string * (* is_inline *)bool * (* decls *)decl list
@@ -941,6 +941,16 @@ and decl_ = AstBridge.decl_ =
   | ImplicitParamDecl
   | VarTemplateSpecializationDecl
   | VarTemplatePartialSpecializationDecl
+
+
+and field_decl = AstBridge.field_decl = {
+  fd_type : tloc;
+  fd_name : string;
+  fd_bitw : expr option; (* bit width *)
+  fd_init : expr option; (* initialiser *)
+  fd_index : int;
+  fd_mutable : bool;
+}
 
 
 and cxx_base_specifier = AstBridge.cxx_base_specifier = {

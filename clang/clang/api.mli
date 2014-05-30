@@ -34,6 +34,11 @@ type _ request =
      is the type with any typedef names stripped out of it or
      the types it references. *)
   | CanonicalType : Ast.ctyp Ref.t -> Ast.ctyp request
+  (* Returns the size of type source info data block for the given type. *)
+  | SizeofType : Ast.ctyp Ref.t -> int64 request
+  (* Returns the alignment of type source info data block for
+     the given type. *)
+  | AlignofType : Ast.ctyp Ref.t -> int request
 
   (* Get the type for a type_loc. *)
   | TypePtr : Ast.tloc Ref.t -> Ast.ctyp request

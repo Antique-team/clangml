@@ -167,8 +167,12 @@ OCamlVisitor::TraverseRecordDecl (clang::RecordDecl *D)
   TRACE;
 
   TagTypeKind kind = translate_tag_type_kind (D->getTagKind ());
-  // Some members may be implicit (from inline unions).
-  list<Decl> members = traverse_explicit_decls (D);
+  option<list<Decl>> members;
+  if (D->isCompleteDefinition ())
+    {
+      // Some members may be implicit (from inline unions).
+      members = implicit_cast<list<Decl>> (traverse_explicit_decls (D));
+    }
   clang::StringRef name = D->getName ();
   list<CxxBaseSpecifier> bases;
 
@@ -220,19 +224,18 @@ OCamlVisitor::TraverseFieldDecl (clang::FieldDecl *D)
 {
   TRACE;
 
-  ptr<Tloc> type = getTypeLoc (D);
+  ptr<FieldDecl> field = mkFieldDecl ();
 
-  option<Expr> bitwidth;
+  field->fd_type = getTypeLoc (D);
+  field->fd_name = D->getName ();
   if (D->isBitField ())
-    bitwidth = must_traverse (D->getBitWidth ());
-
-  option<Expr> init;
+    field->fd_bitw = must_traverse (D->getBitWidth ());
   if (D->hasInClassInitializer ())
-    init = must_traverse (D->getInClassInitializer ());
+    field->fd_init = must_traverse (D->getInClassInitializer ());
+  field->fd_index = D->getFieldIndex ();
+  field->fd_mutable = D->isMutable ();
 
-  clang::StringRef name = D->getName ();
-
-  stack.push (mkFieldDecl (type, name, bitwidth, init));
+  stack.push (mkFieldDecl (field));
 
   return true;
 }

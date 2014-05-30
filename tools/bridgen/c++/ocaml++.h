@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <boost/intrusive_ptr.hpp>
+#include <boost/implicit_cast.hpp>
 #include <type_traits>
 
 #define O_BEGIN_DECLS	extern "C" {
@@ -22,6 +23,8 @@ O_END_DECLS
 
 #include <clang/Basic/SourceLocation.h>
 #include <llvm/ADT/StringRef.h>
+
+using boost::implicit_cast;
 
 /********************************************************
  * Value construction context.

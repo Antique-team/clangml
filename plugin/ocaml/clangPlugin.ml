@@ -6,6 +6,8 @@ external clang_type_ptr			: Api.context -> tloc Ref.t -> ctyp = "clang_type_ptr"
 external clang_presumed_loc		: Api.context -> Sloc.t -> Sloc.presumed_loc = "clang_presumed_loc"
 external clang_is_from_main_file	: Api.context -> Sloc.t -> bool = "clang_is_from_main_file"
 external clang_characteristic_kind	: Api.context -> Sloc.t -> Sloc.characteristic_kind = "clang_characteristic_kind"
+external clang_type_sizeof		: Api.context -> ctyp Ref.t -> int64 = "clang_type_sizeof"
+external clang_type_alignof		: Api.context -> ctyp Ref.t -> int = "clang_type_alignof"
 
 
 let run_processor (tu : decl) (file : string) (ctx : Api.context) =
@@ -31,6 +33,10 @@ let run_processor (tu : decl) (file : string) (ctx : Api.context) =
 
     | CanonicalType id ->
         clang_canonical_type ctx id
+    | SizeofType ty ->
+        clang_type_sizeof ctx ty
+    | AlignofType ty ->
+        clang_type_alignof ctx ty
 
     | TypePtr tloc ->
         if Ref.is_null tloc then

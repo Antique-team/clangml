@@ -8,6 +8,13 @@
 bool
 OCamlVisitor::TraverseTypeLoc (clang::TypeLoc TL)
 {
+#if 0
+  TL.getType ().dump ();
+  printf ("size = %u, align = %u\n",
+          clang::TypeLoc::getFullDataSizeForType   (TL.getType ()),
+          clang::TypeLoc::getLocalAlignmentForType (TL.getType ()));
+#endif
+
   stack.push_mark ();
   Base::TraverseTypeLoc (TL);
   size_t marker = stack.pop_mark ();
