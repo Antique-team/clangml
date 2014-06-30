@@ -1,0 +1,248 @@
+#############################################################################
+##
+## Clang API/AST
+##
+#############################################################################
+
+
+clang/				OCaml side reusable components defining and
+                                operating on the OCaml Clang AST.
+
+
+Analysis
+========
+
+clang/analysis/			Program analyses based on the provided Clang
+				AST and API.
+clang/analysis/diagnostic.ml	Module providing a diagnostic container type
+				and a printer.
+clang/analysis/namingConvention.ml
+				Check for the use of reserved names in user
+                                definitions. E.g. names starting with "_A".
+
+
+API/AST
+=======
+
+clang/clang/api.ml		Defines the interface to the running clang
+				instance. Can be used to perform queries on
+                                C++-side AST nodes.
+clang/clang/ast.ml		OCaml definition of Clang AST. Closely
+				resembles the C++ AST. All definitions derive
+                                Show and can thus be printed.
+clang/clang/invariants.ml	Informally defines and establishes (through
+				assertions) a number of invariants for Clang
+                                data structures.
+clang/clang/pp.ml		Pretty printer for the Clang AST. Does not
+				currently produce valid C code, but can be
+                                used to inspect the code in a less cluttered
+                                (but also less informative) way than using the
+                                derived Show operations.
+clang/clang/query.ml		Common utility functions for the Clang AST.
+clang/clang/ref.ml		Defines the proxy type for C++ side AST node
+				objects. These are used to refer to C++ values
+                                in the running clang instance.
+clang/clang/sloc.ml		32 bit number representing a source location.
+				This is exactly the SourceLocation type in
+                                Clang and can be resolved and queried using
+                                API functions (see api.mli).
+clang/clang/types.ml		Create fake TypeLoc (tloc) of Type (ctyp). The
+				resulting TypeLoc does not have a C++ side, so
+                                queries won't work (and will raise an
+                                exception).
+clang/clang/visitor.ml		Defines some helper functions for the
+				generated visitors.
+
+
+Generated code
+--------------
+clang/clang/astBridge.ml	Generated from ast.ml, stripping off the
+				deriving (Show) annotations, so that it can be
+                                parsed by vanilla camlp4, which is used for
+                                code generation.
+clang/clang/config.ml		Contains build-time configuration (destdir)
+				required to find the Clang plugin.
+clang/clang/foldVisitor.ml	Visitor with signature
+				'a visitor ->
+                                  'a ->
+                                    Ast.{ctyp,decl,...} ->
+                                      'a
+clang/clang/iterVisitor.ml	Visitor with signature
+				visitor ->
+                                  Ast.{ctyp,decl,...} ->
+                                    unit
+clang/clang/mapVisitor.ml	Visitor with signature
+				'a visitor ->
+                                  'a ->
+                                    Ast.{ctyp,decl,...} ->
+                                      'a * Ast.{ctyp,decl,...}
+clang/clang/slocBridge.ml	Same as AstBridge but for the Sloc module.
+
+
+Transformations
+===============
+
+clang/transformation/all.ml	Meta-module performing all transformations in
+				a sensible order.
+clang/transformation/codegen.ml	Utility functions for creating declarations,
+				assignments, etc. and modifying/inserting
+                                statements.
+clang/transformation/forToWhile.ml
+				Transform "for" loops to "while" loops.
+clang/transformation/liftConditionals.ml
+				Transform "a?b:c" to "if/else" with
+                                temporaries.
+clang/transformation/mapStmt.ml
+				Perform a map operation on compound
+                                statements.
+clang/transformation/nameAnonymousTypes.ml
+				Generate a name for every anonymous type. E.g.
+                                struct foo { struct { int i; } inner; };
+                                ->
+                                struct foo { struct __anon0 { int i; } inner; };
+clang/transformation/removeImplicitCast.ml
+				Removes ImplicitCast nodes from all
+                                expressions.
+clang/transformation/simplifyDeclStmt.ml
+				Ensure that every DeclStmt only contains
+                                exactly one declaration. E.g.
+                                int a, b;
+                                ->
+                                int a; int b;
+clang/transformation/splitInitialisers.ml
+				Split declarations and initialisers. E.g.
+                                int a = 1;
+                                ->
+                                int a;
+                                a = 1;
+clang/transformation/switchToIf.ml
+				Transform "switch" statements to a cascade of
+                                "if/else" statements.
+
+
+#############################################################################
+##
+## MemCAD
+##
+#############################################################################
+
+
+consumer/memcad/		MemCAD source tree (from git)
+consumer/mainClang.ml		MemCAD main file (from git) modified to use
+				Clang as its parser.
+consumer/processor.ml		Test program for the Clang parser and
+				transformation to MemCAD AST.
+consumer/transform.ml		Transform Clang AST to MemCAD AST. Must be run
+				after Clang.Transform.All.
+
+
+#############################################################################
+##
+## Clang plugin
+##
+#############################################################################
+
+
+C++ side
+========
+
+plugin/c++/			C++ side of the plugin.
+plugin/c++/OCamlVisitor/	Implementation of RecursiveASTVisitor
+				derivative doing the bulk of the work to
+                                create C++ counterparts for the OCaml side
+                                AST. Files are split by Clang AST node kind.
+plugin/c++/OCamlChecker.cpp	Entry point for the plugin. This calls the
+				OCaml success or failure function with the C++
+                                side context, which is then used to perform
+                                other queries.
+plugin/c++/PluginRegistration.cpp
+				DLL entry point for registering the OCaml
+                                checker with the static analyser core.
+plugin/c++/ast_bridge_of.cpp	Entry point for Clang AST -> Bridge AST
+				transformation using the visitor.
+plugin/c++/backtrace.cpp	Better backtrace support in case of
+				exceptions (better than what clang or glibc
+                                provide).
+plugin/c++/bridge_cache.cpp	Map from Clang AST to Bridge AST, amended on
+				every successful transformation. This prevents
+                                visited Clang AST nodes from being visited
+                                again (most relevant for Types, which may be
+                                referenced many times).
+plugin/c++/clang_context.cpp	The C++ side context containing caches, maps
+				and the Clang ASTContext.
+plugin/c++/clang_enums.cpp	Maps Clang enums to OCaml nullary sum types.
+plugin/c++/clang_operations.cpp	C++ implementation of operations exposed via
+				Clang.API requests.
+plugin/c++/clang_ranges.h	Helper functions to create range objects
+				(usable in e.g. range-for) from declarations,
+                                argument lists, designator lists, etc.
+plugin/c++/clang_ref.cpp	Typed reference number to identify Clang side
+				AST nodes. Used e.g. to get a TypeLoc from an
+                                OCaml Clang.tloc object. Necessary, because we
+                                cannot serialise Clang AST nodes to send them
+                                over the API I/O.
+plugin/c++/clang_ref_holder.cpp	Container mapping the above Refs to AST nodes.
+plugin/c++/delayed_exit.cpp	Class that exits the program when an object of
+				this class goes out of scope.
+plugin/c++/dynamic_stack.cpp	Heterogenous stack of OCamlADT pointers with
+				helpers to dynamically cast them to derived
+                                pointers and homogenous ranges.
+plugin/c++/heterogenous_container.cpp
+				Base class for type-safe heterogenous
+                                containers such as the clang_ref_holder and
+                                bridge_cache.
+plugin/c++/trace.cpp		Helpers for timing and tracing of C++ function
+				calls.
+plugin/c++/type_name.cpp	Platform dependent pretty-printing of C++
+				dynamic type names.
+
+plugin/testsuite/
+
+
+OCaml side
+==========
+
+plugin/ocaml/clangPlugin.ml	Response module for Clang.Api requests.
+
+
+#############################################################################
+##
+## Code generation tools
+##
+#############################################################################
+
+
+tools/bridgen/			C++ bridge type generator.
+tools/bridgen/bridgen.ml	OCaml types -> C++ types.
+tools/bridgen/codegen.ml	C++ code generation.
+
+tools/ocamlTypes/		Defines and operates on OCaml types.
+tools/ocamlTypes/define.ml	Inductive definition of a subset of the OCaml
+				type system.
+tools/ocamlTypes/parse.ml	Camlp4-based parser for OCaml, extracting
+				Define.ocaml_type values for easier
+                                processing.
+tools/ocamlTypes/print.ml	Camlp4 AST pretty printer and dumper.
+tools/ocamlTypes/process.ml	Common queries and transformations on Define
+				types.
+
+tools/visitgen/			Visitor generators.
+tools/visitgen/generateVisitor.ml
+				Generates Map, Fold, and Iter visitors for any
+                                inductive type definition.
+tools/visitgen/visitgen.ml	Entry point for visitor generator.
+
+
+#############################################################################
+##
+## Common data structures and algorithms.
+##
+#############################################################################
+
+
+util/denseIntMap.ml		Array based immutable map from int to 'a,
+				using 'a Id.t as index.
+util/formatx.ml			Extensions to the standard Format module.
+util/logger.ml			Logging module based on the Format module.
+util/option.ml			Common operations on the OCaml option type.
+util/prelude.ml			Defines globally used operators and functions.

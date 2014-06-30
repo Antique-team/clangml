@@ -1,0 +1,48 @@
+#############################################################################
+##
+## Clang/ML interface architecture
+##
+#############################################################################
+
+
+Process and information flow
+============================
+
+The interface uses a thin plugin for clang whose only job is to mediate
+between OCaml and C++, translate values from C++ to OCaml, and answer to
+queries from the OCaml program. This plugin is loaded into a vanilla clang
+compiler and receives a type-checked C++ AST. The C++ AST is translated into a
+bridge AST, which is a representation of an OCaml ADT in C++. The bridge AST
+contains automatically generated functions for translating it to OCaml values.
+
+The process flow (with some communication) is as follows:
+
+  ------------------------                         -----------------
+  | OCaml client program | ------- spawns -------> | Clang process |
+  ------------------------                         -----------------
+             |    ^                                        |
+             |    |                                        |
+             |    \-------- communicates -------------\  loads
+             |                                        |    |
+             |                                        |    |
+             |                                        v    v
+             |                                     ----------------
+             \------------- queries -------------> | OCaml plugin |
+                                                   ----------------
+
+The information flow is as follows:
+
+  1. [Clang process] reads input ({Obj,}C{++,} source).
+     => <Clang AST>
+  2. [OCaml plugin] transforms <Clang AST> to <Bridge AST>
+     => <Bridge AST>
+  3. [OCaml plugin] creates OCaml values from <Bridge AST>
+     => <OCaml AST>
+  4. <OCaml AST> is transferred over pipe (or other device) to the requesting
+     [OCaml client program].
+  5. [OCaml client program] receives marshalled <OCaml AST>, unmarshals it,
+     and performs additional queries to the [OCaml plugin] using the pipe.
+
+
+Possible queries are defined in Clang.Api. It is currently not possible to
+read more than one input file using the same Clang process (TODO).
