@@ -4,6 +4,12 @@
 type context
 
 
+(* Identifier to select the cache to be returned in the
+   CacheFor request. *)
+type _ cache_type =
+  | Cache_ctyp : Ast.ctyp cache_type
+
+
 (* Request messages use a GADT to enable type-safe communication.
    Messages are designed to be compact, so most clang query
    messages will operate on 'a Ref.t references. A wrapper
@@ -71,6 +77,11 @@ type _ request =
      which changes all source locations in the current file after that to be
      considered to be from a system header. *)
   | FileCharacteristic : Sloc.t -> Sloc.characteristic_kind request
+
+  (* Return the internal cache for an OCaml type. This is an array containing
+     every value of that type returned by the API, including recursively
+     reachable values. *)
+  | CacheFor : 'a cache_type -> 'a Util.DenseIntMap.t request
 
 
 type error =

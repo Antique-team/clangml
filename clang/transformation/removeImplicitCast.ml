@@ -1,11 +1,23 @@
 open Clang
-open Prelude
+open Util.Prelude
 
 
 let transform_decl clang =
   let open Ast in
 
+  let types = Api.(request clang @@ CacheFor Cache_ctyp) in
+
   let rec map_expr v state expr =
+    let () =
+      let canon = Api.(request clang @@ CanonicalType expr.e_type.t_cref) in
+      assert (canon.t_self = expr.e_type.t_canon);
+      assert (
+        Util.DenseIntMap.find canon.t_self types
+        =
+        Util.DenseIntMap.find expr.e_type.t_canon types
+      );
+    in
+
     match expr.e with
     | ParenExpr e
     | ImplicitCastExpr (_, e) ->

@@ -146,8 +146,10 @@ let rec c_type_of_type = function
   | RecordType (_, name) ->
       (* TODO: this is wrong. *)
       (*assert (name <> "");*)
-      Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
-      (*Ctvoid*)
+      if name <> "" then
+        Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
+      else
+        Ctvoid
 
   | ParenType inner ->
       c_type_of_type inner.t
@@ -219,8 +221,14 @@ let make_aggregate agg = function
   | _ -> Log.unimp "Unhandled tag type kind"
 
 
-let compute_offset off align =
-  ((off + align - 1) / align) * align
+let compute_offset is_union off align =
+  if true then
+    -1
+  else
+    if is_union then
+      0
+    else
+      ((off + align - 1) / align) * align
 
 
 let rec c_agg_fields_of_decls clang is_union (decls : decl list) =
@@ -256,11 +264,11 @@ let rec c_agg_fields_of_decls clang is_union (decls : decl list) =
         } in
 
         (* offset for the current field *)
-        let off = compute_offset off align in
+        let off = compute_offset is_union off align in
 
         let field = {
           caf_typ  = make_aggregate agg kind;
-          caf_off  = if is_union then 0 else off;
+          caf_off  = off;
           caf_size = size;
           caf_name = name;
         } in
@@ -285,11 +293,11 @@ let rec c_agg_fields_of_decls clang is_union (decls : decl list) =
         let align = alignof clang ty.tl_cref in
 
         (* offset for the current field *)
-        let off = compute_offset off align in
+        let off = compute_offset is_union off align in
 
         let field = {
           caf_typ  = c_type_of_type_loc ty;
-          caf_off  = if is_union then 0 else off;
+          caf_off  = off;
           caf_size = size;
           caf_name = name;
         } in
@@ -410,8 +418,6 @@ let rec c_lvalk_of_expr prog decl_env = function
 
 
 and c_lval_of_expr prog decl_env { e = expr; e_type; } =
-  (*let canon = Api.(request clang @@ CanonicalType e_type.t_cref) in*)
-  (*print_endline (Show.show<ctyp> canon);*)
   {
     clk = c_lvalk_of_expr prog decl_env expr;
     clt = c_type_of_type e_type.t;
@@ -852,9 +858,14 @@ let rec collect_decls clang prog = function
 
 let c_prog_from_decl clang = function
   | { d = TranslationUnitDecl decls } ->
+      C_utils.max_c_var_id := 0;
+
       let prog = {
         prog = C_utils.empty_unit;
         ns   = "";
       } in
       (collect_decls clang prog decls).prog
+      |> C_process.c_prog_fix_types
+      |> C_process.bind_c_prog
+
   | _ -> Log.err "c_prog_from_decl requires a translation unit"

@@ -40,6 +40,7 @@ OCamlVisitor::TraverseTypeLoc (clang::TypeLoc TL)
   type_loc->tl      = stack.pop ();
   type_loc->tl_cref = ref (TL);
   type_loc->tl_sloc = sloc (TL);
+  type_loc->tl_type = must_traverse (TL.getType ());
   stack.push (type_loc);
 
   return true;

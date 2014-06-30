@@ -26,6 +26,12 @@ O_END_DECLS
 
 using boost::implicit_cast;
 
+template<typename T>
+using ptr = boost::intrusive_ptr<T>;
+
+template<typename Derived>
+struct OCamlADT;
+
 /********************************************************
  * Value construction context.
  */
@@ -38,13 +44,41 @@ class value_of_context
   struct data;
   data *self;
 
+  void resize (size_t type, size_t max_id);
+  value get (size_t type) const;
+
 public:
   value_of_context ();
   ~value_of_context ();
 
-  void resize (size_t max_id);
+  template<typename T>
+  void resize (ptr<T> const &p)
+  {
+    resize (p->class_type_id, p->id ());
+  }
 
-  data *operator -> ();
+  data const *operator -> ();
+
+  template<typename T>
+  value get () const
+  {
+    return get (OCamlADT<T>::class_type_id);
+  }
+
+  void postpone (std::function<void ()> fun);
+  void finish ();
+
+  template<typename T>
+  value to_value (T p)
+  {
+    CAMLparam0 ();
+    CAMLlocal1 (v);
+
+    v = p->to_value (*this);
+    finish ();
+
+    CAMLreturn (v);
+  }
 };
 
 
@@ -52,13 +86,27 @@ public:
 // Base class for all ADT types.
 struct OCamlADTBase
 {
+  friend class value_of_context;
+
 private:
   virtual value ToValue (value_of_context &ctx) const = 0;
+
+  virtual size_t type_id   () const = 0;
+  virtual size_t local_id  () const = 0;
+  virtual bool initialised () const = 0;
+
+protected:
+  static bool class_init (size_t type_id, std::type_info const &ti);
+
+public:
+  static size_t num_type_ids;
+  static std::vector<size_t> num_local_ids;
 
 public:
   virtual mlsize_t size () const = 0;
   virtual tag_t tag () const = 0;
 
+  OCamlADTBase ();
   virtual ~OCamlADTBase () { }
 
   int refcnt = 0;
@@ -68,22 +116,38 @@ public:
 
   static size_t values_created;
 
-  static size_t ids_assigned;
-  size_t id = ids_assigned++;
+  static size_t num_global_ids;
+
+  size_t id () const;
 
   static size_t bytes_allocated;
 
-  value to_value (value_of_context &ctx);
+  value to_value (value_of_context &ctx) const;
 
   void *operator new (size_t size);
   void operator delete (void *ptr);
 };
 
 
-// OCaml bridge object.
-template<typename T>
-using ptr = boost::intrusive_ptr<T>;
+template<typename Derived>
+struct OCamlADT
+  : OCamlADTBase
+{
+public:
+  static size_t const class_type_id;
+  size_t type_id  () const final { return class_type_id ; }
 
+public:
+  size_t const class_local_id = num_local_ids.at (class_type_id)++;
+  size_t local_id () const final { return class_local_id; }
+
+private:
+  static bool const class_initialised;
+  bool initialised () const final { return class_initialised; }
+};
+
+
+// OCaml bridge object.
 typedef ptr<OCamlADTBase> adt_ptr;
 
 
@@ -157,6 +221,25 @@ intrusive_ptr_release (OCamlADTBase *p)
 
 
 /********************************************************
+ * Recursive pointer, actually translated to an index in
+ * a global immutable array of T, as to allow recursion in
+ * purely functional data structures.
+ */
+template<typename T>
+struct recursive_ptr;
+
+template<typename T>
+struct recursive_ptr<ptr<T>>
+  : private ptr<T> // don't allow conversion from recursive_ptr to ptr
+{
+  using ptr<T>::ptr;
+  using ptr<T>::operator bool;
+  using ptr<T>::operator ->;
+  using ptr<T>::operator =;
+};
+
+
+/********************************************************
  * Forward declarations.
  */
 
@@ -207,6 +290,18 @@ value_of (value_of_context &ctx, option<T> ob)
     }
 
   CAMLreturn (option);
+}
+
+// Index.
+template<typename T>
+value
+value_of (value_of_context &ctx, recursive_ptr<T> ob)
+{
+  // Ignore return value, it will be in the cache.
+  //ob->to_value (ctx);
+  ctx.postpone ([ob, &ctx] { ob->to_value (ctx); });
+
+  return Val_int (ob->local_id ());
 }
 
 
@@ -262,7 +357,7 @@ value_of_range (value_of_context &ctx, Iterator begin, Iterator end)
   ++begin;
   for (; begin != end; begin++)
     {
-      tmp_value = caml_alloc (2, 0); 
+      tmp_value = caml_alloc (2, 0);
       // tail is not yet fully constructed rest of list
       Store_field (cons_value, 1, tmp_value);
 

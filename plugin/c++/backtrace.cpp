@@ -16,6 +16,7 @@
 #include <cstring>
 
 #include <exception>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -284,6 +285,16 @@ stacktrace ()
 
       locations.push_back (loc);
     }
+
+  // remove other symbols we don't care about
+  static std::set<std::string> skip_symbols = {
+    "__assert_fail",
+    "__assert_fail_base",
+    "__cxa_throw",
+  };
+  while (!locations.empty () &&
+         skip_symbols.find (locations.front ().func) != skip_symbols.end ())
+    locations.erase (locations.begin ());
 
   return locations;
 }

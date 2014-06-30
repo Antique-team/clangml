@@ -37,8 +37,8 @@ let dump_types ast =
 
 let dump_ast ast =
   (*dump_vars ast;*)
-  dump_funs ast;
-  (*dump_types ast;*)
+  (*dump_funs ast;*)
+  dump_types ast;
 ;;
 
 
@@ -114,9 +114,6 @@ let process clang =
 
   print_endline "----------------- Clang -> MemCAD -------------------";
   let ast = Transform.c_prog_from_decl clang decl in
-  let ast = C_process.c_prog_fix_types ast in
-  C_utils.max_c_var_id := 0;
-  let ast = C_process.bind_c_prog ast in
   C_utils.ppi_c_prog "" stdout ast;
   dump_ast ast;
   print_endline "-----------------------------------------------------";

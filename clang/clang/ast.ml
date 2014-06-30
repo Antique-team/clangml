@@ -775,6 +775,7 @@ and tloc = AstBridge.tloc = {
   tl      : tloc_;
   tl_cref : tloc Ref.t;
   tl_sloc : sloc;
+  tl_type : ctyp;
 }
 
 and tloc_ = AstBridge.tloc_ =
@@ -828,6 +829,8 @@ and ctyp = AstBridge.ctyp = {
   t_cref   : ctyp Ref.t;
   t_qual   : type_qualifier list;
   t_aspace : int option;
+  t_self   : ctyp Util.DenseIntMap.key;
+  t_canon  : ctyp Util.DenseIntMap.key;
 }
 
 and ctyp_ = AstBridge.ctyp_ =

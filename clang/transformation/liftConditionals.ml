@@ -1,5 +1,5 @@
 open Clang
-open Prelude
+open Util.Prelude
 
 
 type state = {
@@ -96,7 +96,7 @@ let transform_decl clang =
     | IfStmt (cond, then_stmt, else_stmt) ->
         let (state, cond) = map_expr v state cond in
         let then_stmt = map_sub_stmt v state then_stmt in
-        let else_stmt = Option.map (map_sub_stmt v state) else_stmt in
+        let else_stmt = Util.Option.map (map_sub_stmt v state) else_stmt in
 
         (state, { stmt with s = IfStmt (cond, then_stmt, else_stmt) })
 

@@ -115,6 +115,6 @@ dynamic_stack::dump (std::ostringstream &os, size_t count)
       adt_ptr p = *(stack.end () - (i + 1));
       os << "\n\t  [" << i << "] "
          << demangle (typeid (*p))
-         << "@" << p->id;
+         << "@" << p->id ();
     }
 }

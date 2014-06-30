@@ -1,6 +1,6 @@
 open Clang
-open Prelude
 open Diagnostic
+open Util.Prelude
 
 
 let is_uppercase ch =

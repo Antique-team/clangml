@@ -43,8 +43,24 @@ to_value (clang::TranslationUnitDecl const *D, clang_context &ctx)
   ptr<ast_bridge::Decl> decl
     = ast_bridge_of<ast_bridge::Decl>
         (const_cast<clang::TranslationUnitDecl *> (D), ctx);
-  ctx.values.resize (decl->id);
-  return decl->to_value (ctx.values);;
+  ctx.values.resize (decl);
+  return ctx.values.to_value (decl);
+}
+
+
+static std::string
+strprintf (char const *fmt, ...)
+{
+  char *str;
+
+  va_list ap;
+  va_start (ap, fmt);
+  int len = vasprintf (&str, fmt, ap);
+  va_end (ap);
+
+  std::string msg (str, len);
+  free (str);
+  return msg;
 }
 
 
@@ -75,8 +91,17 @@ OCamlChecker::checkASTDecl (clang::TranslationUnitDecl const *D,
 
       OCamlADTBase::print_statistics ();
 
-      // If this fails, then sharing didn't work.
-      assert (OCamlADTBase::values_created == OCamlADTBase::ids_assigned);
+      // If this fails, then sharing didn't work, or we created a C++ object
+      // that was not serialised.
+      if (OCamlADTBase::values_created > OCamlADTBase::num_global_ids)
+        throw std::runtime_error (strprintf ("sharing didn't work: %zu values > %zu ids",
+                                             OCamlADTBase::values_created,
+                                             OCamlADTBase::num_global_ids));
+      if (OCamlADTBase::values_created < OCamlADTBase::num_global_ids)
+        throw std::runtime_error (strprintf ("some C++ objects not in object graph/not serialised: %zu values < %zu ids",
+                                             OCamlADTBase::values_created,
+                                             OCamlADTBase::num_global_ids));
+      assert (OCamlADTBase::values_created == OCamlADTBase::num_global_ids);
 
       clang::SourceManager &SM = ctx->getSourceManager ();
       char const *filename = SM.getFileEntryForID (SM.getMainFileID ())->getName ();

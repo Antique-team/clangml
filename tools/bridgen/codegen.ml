@@ -429,6 +429,7 @@ let emit_impls basename cg cpp_types =
   in
   Formatx.fprintf cg.output
     "#include \"%s.h\"@\n\
+     #include \"ocaml++/bridge.h\"@,\
      namespace %s {@\n\
      @[<v>%a@]@,\
      }@."

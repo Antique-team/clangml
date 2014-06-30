@@ -1,5 +1,5 @@
 open Ast
-open Prelude
+open Util.Prelude
 
 (* Debug communication *)
 (*let debug = true*)
@@ -7,6 +7,10 @@ let debug = false
 
 (* Server context *)
 type context
+
+type _ cache_type =
+  | Cache_ctyp : Ast.ctyp cache_type
+
 
 (* Common communication types *)
 type _ request =
@@ -21,6 +25,7 @@ type _ request =
   | PresumedLoc : Sloc.t -> Sloc.presumed_loc request
   | IsFromMainFile : Sloc.t -> bool request
   | FileCharacteristic : Sloc.t -> Sloc.characteristic_kind request
+  | CacheFor : 'a cache_type -> 'a Util.DenseIntMap.t request
 
 type error =
   | E_Unhandled of string
@@ -46,12 +51,13 @@ let name_of_request : type a. a request -> string = function
   | TranslationUnit	  -> "TranslationUnit"
   | Filename		  -> "Filename"
   | CanonicalType	_ -> "CanonicalType"
+  | SizeofType		_ -> "SizeofType"
+  | AlignofType		_ -> "AlignofType"
   | TypePtr		_ -> "TypePtr"
   | PresumedLoc		_ -> "PresumedLoc"
   | IsFromMainFile	_ -> "IsFromMainFile"
   | FileCharacteristic	_ -> "FileCharacteristic"
-  | SizeofType		_ -> "SizeofType"
-  | AlignofType		_ -> "AlignofType"
+  | CacheFor		_ -> "CacheFor"
 
 
 (* Server functions. *)

@@ -40,8 +40,8 @@ clang_canonical_type (value context, value tloc)
 
   ptr<Ctyp> ctyp = ast_bridge_of<Ctyp> (type, ctx);
 
-  ctx.values.resize (ctyp->id);
-  return ctyp->to_value (ctx.values);
+  ctx.values.resize (ctyp);
+  return ctx.values.to_value (ctyp);
 }
 
 
@@ -87,8 +87,8 @@ clang_type_ptr (value context, value tloc)
 
   ptr<Ctyp> ctyp = ast_bridge_of<Ctyp> (type, ctx);
 
-  ctx.values.resize (ctyp->id);
-  return ctyp->to_value (ctx.values);
+  ctx.values.resize (ctyp);
+  return ctx.values.to_value (ctyp);
 }
 
 
@@ -105,8 +105,8 @@ clang_presumed_loc (value context, value sloc)
   result->loc_line = presumed.getLine ();
   result->loc_column = presumed.getColumn ();
 
-  ctx.values.resize (result->id);
-  return result->to_value (ctx.values);
+  ctx.values.resize (result);
+  return ctx.values.to_value (result);
 }
 
 
@@ -134,6 +134,15 @@ clang_characteristic_kind (value context, value sloc)
     }
 
   failwith ("invalid file characteristic kind");
+}
+
+
+CAMLprim value
+clang_cache_for_ctyp (value context)
+{
+  clang_context &ctx = Context_val (context);
+
+  return ctx.values.get<Ctyp> ();
 }
 
 

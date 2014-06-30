@@ -1,5 +1,5 @@
 open Clang
-open Prelude
+open Util.Prelude
 
 
 let transform_decl clang =
@@ -16,25 +16,27 @@ let transform_decl clang =
         let (state, incr) = Visitor.map_option MapVisitor.visit_expr v state incr in
         let (state, body) = map_stmt v state body in
 
-        let init = Option.to_list init in
+        let init = Util.Option.to_list init in
         let incr =
-          Option.map (fun incr ->
+          Util.Option.map (fun incr ->
               { s = ExprStmt incr;
                 s_sloc = incr.e_sloc;
                 s_cref = Ref.null;
               }
             ) incr
-          |> Option.to_list
+          |> Util.Option.to_list
         in
 
         let cond =
-          Option.default {
+          Util.Option.default {
             e = IntegerLiteral 1;
             e_type = {
-              t = BuiltinType BT_Int;
-              t_qual = [];
+              t        = BuiltinType BT_Int;
+              t_qual   = [];
               t_aspace = None;
-              t_cref = Ref.null;
+              t_cref   = Ref.null;
+              t_self   = Util.DenseIntMap.null_key;
+              t_canon  = Util.DenseIntMap.null_key;
             };
             e_sloc = stmt.s_sloc;
             e_cref = Ref.null;

@@ -48,6 +48,8 @@ let ldflags = Sh"`llvm-config-3.4 --ldflags`" :: atomise [
 
 let headers = [
   "tools/bridgen/c++/ocaml++.h";
+  "tools/bridgen/c++/ocaml++/bridge.h";
+  "tools/bridgen/c++/ocaml++/private.h";
   "plugin/c++/OCamlVisitor/OCamlVisitor.h";
   "plugin/c++/OCamlChecker.h";
   "plugin/c++/ast_bridge.h";
@@ -69,7 +71,8 @@ let headers = [
 ]
 
 let objects = [
-  "tools/bridgen/c++/ocaml++.o";
+  "tools/bridgen/c++/OCamlADT.o";
+  "tools/bridgen/c++/value_of_context.o";
   "plugin/c++/OCamlVisitor/OCamlVisitor.o";
   "plugin/c++/OCamlVisitor/Decl.o";
   "plugin/c++/OCamlVisitor/Expr.o";

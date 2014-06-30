@@ -57,11 +57,16 @@ OCamlVisitor::TraverseType (clang::QualType T)
   if (quals.hasAddressSpace ())
     addressSpace = quals.getAddressSpace ();
 
-  ptr<Ctyp> ctyp = mkCtyp ();
-  ctyp->t = unqual;
-  ctyp->t_cref = ref (T);
-  ctyp->t_qual = qualifiers;
-  ctyp->t_aspace = addressSpace;
+  ptr<Ctyp> ctyp  = mkCtyp ();
+  ctyp->t         = unqual;
+  ctyp->t_cref    = ref (T);
+  ctyp->t_qual    = qualifiers;
+  ctyp->t_aspace  = addressSpace;
+  ctyp->t_self    = ctyp;
+  if (T.getCanonicalType () == T)
+    ctyp->t_canon = ctyp;
+  else
+    ctyp->t_canon = must_traverse (T.getCanonicalType ());
   stack.push (ctyp);
 
   return true;

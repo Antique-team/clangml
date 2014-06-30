@@ -26,13 +26,18 @@ let rec ast_type_to_type (ctyp: Ast.ctyp) =
       let list_of_type = ast_type_to_type ty in
       OptionType (loc, list_of_type)
 
+  | <:ctyp@loc<Util.DenseIntMap.key $ty$>> ->
+      let ref_type = ast_type_to_type ty in
+      RefType (loc, ref_type)
+
   | <:ctyp@loc<Ref.t $lid:node_type$>> ->
       ClangType (loc, node_type)
 
   | <:ctyp@loc<Sloc.t>> ->
       SourceLocation (loc)
 
-  | _ ->
+  | ty ->
+      Print.print_ctyp ty;
       Log.unimp "ast_type_to_type"
 
 

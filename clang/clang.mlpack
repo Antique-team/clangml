@@ -1,17 +1,20 @@
 # common
 clang/Api
 clang/Ast
-clang/AstBridge
 clang/Config
-clang/FoldVisitor
-clang/IterVisitor
-clang/MapVisitor
-clang/Option
+clang/Invariants
 clang/Pp
-clang/Prelude
 clang/Query
 clang/Ref
 clang/Sloc
-clang/SlocBridge
 clang/Types
 clang/Visitor
+
+# generated bridges
+clang/AstBridge
+clang/SlocBridge
+
+# generated visitors
+clang/FoldVisitor
+clang/IterVisitor
+clang/MapVisitor

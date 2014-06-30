@@ -9,3 +9,6 @@ let finally f after =
   in
   after ();
   result
+
+
+external identity : 'a -> 'a = "%identity"

@@ -4,6 +4,7 @@ transformation/Codegen
 transformation/ForToWhile
 transformation/LiftConditionals
 transformation/MapStmt
+transformation/NameAnonymousTypes
 transformation/RemoveImplicitCast
 transformation/SimplifyDeclStmt
 transformation/SplitInitialisers

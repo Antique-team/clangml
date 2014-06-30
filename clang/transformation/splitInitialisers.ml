@@ -1,5 +1,5 @@
 open Clang
-open Prelude
+open Util.Prelude
 
 
 let transform_decl clang =

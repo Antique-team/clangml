@@ -111,6 +111,9 @@ let rec translate_type ctx = let open Codegen in function
         (* Plain pointers to anything unknown. *)
         TyPointer (ty)
       )
+  | RefType (_, ty) ->
+      (* Plain pointers to Clang AST nodes. *)
+      TyTemplate ("recursive_ptr", translate_type ctx ty)
   | ClangType (_, name) ->
       (* Plain pointers to Clang AST nodes. *)
       TyTemplate ("clang_ref", TyName (cpp_name name))
@@ -190,10 +193,12 @@ let toValue fields =
 let class_intf_for_sum_type ctx (_, sum_type_name, branches) =
   let open Codegen in
 
+  let class_name = cpp_name sum_type_name in
+
   (* Base class *)
   let base = {
-    class_name = cpp_name sum_type_name;
-    class_bases = ["OCamlADTBase"];
+    class_name;
+    class_bases = ["OCamlADT<" ^ class_name ^ ">"];
     class_fields = [];
     class_methods = [];
   } in
@@ -332,9 +337,11 @@ let class_intf_for_record_type ctx (_, record_name, fields) =
     toValue (List.map (fun (_, name, _) -> IdExpr (name)) fields)
   in
 
+  let class_name = cpp_name record_name in
+
   {
-    class_name = cpp_name record_name;
-    class_bases = ["OCamlADTBase"];
+    class_name;
+    class_bases = ["OCamlADT<" ^ class_name ^ ">"];
     class_fields;
     class_methods = [size_const (List.length fields); tag_const 0; toValue];
   }

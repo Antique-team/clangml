@@ -37,8 +37,8 @@ let rec tloc_of_ctyp sloc ty =
         IncompleteArrayTypeLoc (tloc_of_ctyp sloc memty)
     | ElaboratedType (ty) ->
         ElaboratedTypeLoc (tloc_of_ctyp sloc ty)
-    | EnumType (name) ->
-        EnumTypeLoc (name)
+    | EnumType name ->
+        EnumTypeLoc name
     | RecordType (kind, name) ->
         RecordTypeLoc (kind, name)
     | DecayedType (decayed, original) ->
@@ -81,6 +81,7 @@ let rec tloc_of_ctyp sloc ty =
             tl;
             tl_sloc = sloc;
             tl_cref = Ref.null;
+            tl_type = ty;
           }, qual, aspace)
   in
 
@@ -88,4 +89,5 @@ let rec tloc_of_ctyp sloc ty =
     tl;
     tl_sloc = sloc;
     tl_cref = Ref.null;
+    tl_type = ty;
   }
