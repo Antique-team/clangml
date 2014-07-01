@@ -168,8 +168,11 @@ struct option<T, true>
   : private ptr<T> // don't allow conversion from option to ptr
 {
   using ptr<T>::ptr;
-//  using ptr<T>::operator bool;
+#if BOOST_VERSION >= 105400
+  using ptr<T>::operator bool;
+#else
   explicit operator bool () const { return this->get(); }
+#endif
 
   using ptr<T>::operator ->;
 
@@ -235,8 +238,11 @@ struct recursive_ptr<ptr<T>>
   : private ptr<T> // don't allow conversion from recursive_ptr to ptr
 {
   using ptr<T>::ptr;
-  // using ptr<T>::operator bool;
+#if BOOST_VERSION >= 105400
+  using ptr<T>::operator bool;
+#else
   explicit operator bool () const { return this->get(); }
+#endif
   using ptr<T>::operator ->;
   using ptr<T>::operator =;
 };

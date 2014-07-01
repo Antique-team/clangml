@@ -154,11 +154,13 @@ let cxxflags = Sh("`" ^ llvm_config ^ " --cxxflags`") :: atomise [
   "-ggdb3";
   "-O0";
 
+  "-I" ^ ocamlpicdir ^ "/lib/ocaml";
+
   "-Itools/bridgen/c++";
   "-Iplugin/c++";
   "-D__STDC_CONSTANT_MACROS";
   "-D__STDC_LIMIT_MACROS";
-  "-I" ^ ocamlpicdir ^ "/lib/ocaml";
+
   "-UNDEBUG";
 ]
 
