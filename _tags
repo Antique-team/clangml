@@ -4,3 +4,6 @@
 
 true: annot
 true: debug
+
+# OCaml build directory
+"ocaml-4.01.0": -traverse

@@ -1,10 +1,138 @@
 open Ocamlbuild_plugin
 
-let ocamldir = Sys.getenv "HOME" ^ "/.opam/4.01.0+PIC"
+
+module Config = struct
+  let ocaml_ver = "4.01"
+  let ocaml_rev = "0"
+
+  let ocaml_version = ocaml_ver ^ "." ^ ocaml_rev
+
+  let clang_version = "3.4"
+end
+
+
+type _ prompt_question =
+  | PQ_YN : [`PQ_YN] prompt_question
+
+type _ prompt_answer =
+  | PA_Y : [`PQ_YN] prompt_answer
+  | PA_N : [`PQ_YN] prompt_answer
+
+let prompt_string = function
+  | PQ_YN -> "[Y/n]"
+
+let prompt_answer : type a. a prompt_question -> string -> a prompt_answer =
+  fun kind answer ->
+    match kind with
+    | PQ_YN ->
+        (match String.lowercase answer with
+         | "y" | "yes" | "" -> PA_Y
+         | _ -> PA_N
+        )
+
+let prompt kind =
+  Printf.kfprintf (fun out ->
+    Printf.fprintf out " %s "
+      (prompt_string kind);
+    flush stdout;
+    Scanf.fscanf stdin "%s" (prompt_answer kind)
+  ) stdout
+
+
+let pread cmd =
+  let proc = Unix.open_process_in cmd in
+  String.trim @@ input_line proc
+
+
+let find_ocamlpicdir_no_opam () =
+  let src =
+    "http://caml.inria.fr/pub/distrib/ocaml-4.01/ocaml-4.01.0.tar.gz"
+  in
+
+  (* download and extract *)
+  if not (Sys.file_exists "ocaml-4.01.0" &&
+          Sys.is_directory "ocaml-4.01.0") then (
+    if not (Sys.file_exists "ocaml-4.01.0.tar.gz") then
+      if Sys.command @@ "wget " ^ src <> 0 then
+        failwith "could not download ocaml source tarball";
+    if Sys.command "tar zxf ocaml-4.01.0.tar.gz" <> 0 then
+      failwith "unable to extract ocaml source tarball";
+  );
+
+  Unix.chdir "ocaml-4.01.0";
+
+  (* runtime *)
+  if not (Sys.file_exists "asmrun/libasmrun.a") then (
+    if Sys.command "make world" <> 0 then
+      failwith "unable to build ocaml runtime";
+    if Sys.command "make world.opt" <> 0 then
+      failwith "unable to build ocaml runtime";
+  );
+
+  (* install *)
+  if not (Sys.file_exists "_install/lib/ocaml/libasmrun.a") then (
+    if Sys.command "make install" <> 0 then
+      failwith "unable to install ocaml runtime";
+  );
+
+  Sys.getenv "PWD" ^ "/ocaml-4.01.0/_install"
+
+
+let find_ocamlpicdir () : string =
+  try
+    let opamdir = pread "opam config var root" in
+    (* See if opam exists. *)
+    if Sys.file_exists opamdir then (
+      let picdir      = opamdir ^ "/" ^ Config.ocaml_version ^ "+PIC" in
+      let libasmrun_a = picdir ^ "/lib/ocaml/libasmrun.a" in
+      (* See if there is the library we need. *)
+      if Sys.file_exists libasmrun_a then
+        picdir
+
+      (* No opam version of 4.01.0+PIC. Ask the user whether he wants
+         to use opam to install one. *)
+      else if prompt PQ_YN
+          "Clang/ML needs a special PIC version of the OCaml runtime; we can \
+           try to install it using OPAM.\nWould you like to attempt this?"
+              = PA_Y then (
+        (* Yes, try to install. *)
+        let preferred = pread "opam switch show" in
+        if Sys.command @@ "opam switch " ^ Config.ocaml_version ^ "+PIC" <> 0 then
+          failwith "opam failed to switch to PIC compiler";
+        if  Sys.command @@ "opam switch " ^ preferred <> 0 then
+          failwith "opam failed to switch back to preferred compiler";
+        (* Now our file should exist. *)
+        if Sys.file_exists libasmrun_a then
+          picdir
+        else
+          failwith "despite installing ocaml with PIC, the required runtime \
+                    library was not found."
+      ) else (
+        (* We want to install locally. *)
+        find_ocamlpicdir_no_opam ()
+      )
+    ) else (
+      (* No opam. *)
+      find_ocamlpicdir_no_opam ()
+    )
+
+  with Unix.Unix_error _ ->
+    (* No opam. *)
+    find_ocamlpicdir_no_opam ()
+
+
+let ocamlpicdir =
+  if not (Sys.file_exists "ocaml-4.01.0/_install/lib/ocaml/libasmrun.a") then
+    find_ocamlpicdir ()
+  else
+    find_ocamlpicdir_no_opam ()
+
 
 let atomise = List.map (fun a -> A a)
 
-let cxxflags = Sh"`llvm-config-3.4 --cxxflags`" :: atomise [
+let llvm_config = "llvm-config-" ^ Config.clang_version
+
+let cxxflags = Sh("`" ^ llvm_config ^ " --cxxflags`") :: atomise [
   "-Wall";
   "-Wextra";
   "-Werror";
@@ -27,7 +155,7 @@ let cxxflags = Sh"`llvm-config-3.4 --cxxflags`" :: atomise [
   "-UNDEBUG";
 ]
 
-let ldflags = Sh"`llvm-config-3.4 --ldflags`" :: atomise [
+let ldflags = Sh("`" ^ llvm_config ^ " --ldflags`") :: atomise [
   "-Wl,-z,defs";
   "-shared";
   "-lclangStaticAnalyzerCore";
@@ -41,8 +169,8 @@ let ldflags = Sh"`llvm-config-3.4 --ldflags`" :: atomise [
   "-ltinfo";
   "-lasmrun";
   "-lunix";
-  "-L" ^ ocamldir ^ "/lib/ocaml";
-  "-Wl,-rpath," ^ ocamldir ^ "/lib/ocaml";
+  "-L" ^ ocamlpicdir ^ "/lib/ocaml";
+  "-Wl,-rpath," ^ ocamlpicdir ^ "/lib/ocaml";
   "-ggdb3";
 ]
 

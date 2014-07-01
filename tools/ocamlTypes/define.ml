@@ -19,7 +19,7 @@ type basic_type =
   | SourceLocation of loc
   (* Clang pointer *)
   | ClangType of loc * string
-  (* 'a Id (index in TypedArrays) *)
+  (* 'a DenseIntMap.key *)
   | RefType of loc * basic_type
   (* List of basic_type *)
   | ListOfType of loc * basic_type
