@@ -158,7 +158,7 @@ let cxxflags = Sh("`" ^ llvm_config ^ " --cxxflags`") :: atomise [
   "-Iplugin/c++";
   "-D__STDC_CONSTANT_MACROS";
   "-D__STDC_LIMIT_MACROS";
-
+  "-I" ^ ocamlpicdir ^ "/lib/ocaml";
   "-UNDEBUG";
 ]
 
