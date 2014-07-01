@@ -1,7 +1,7 @@
 APRON_INST := $(HOME)/code/git/apron-dist/install/lib
 export LD_LIBRARY_PATH := $(APRON_INST)
 
-NCPU := $(shell expr $(shell cat /proc/cpuinfo | grep processor | grep -o '[0-9]\+' | tail -n1) + 1)
+NCPU := $(shell grep -c processor /proc/cpuinfo)
 
 MAIN = mainClang
 
