@@ -5,9 +5,16 @@ module Config = struct
   let ocaml_ver = "4.01"
   let ocaml_rev = "0"
 
-  let ocaml_version = ocaml_ver ^ "." ^ ocaml_rev
-
   let clang_version = "3.4"
+end
+
+
+module Vars = struct
+  include Config
+
+  let ocaml_version = ocaml_ver ^ "." ^ ocaml_rev
+  let ocaml_dist = "ocaml-" ^ ocaml_version
+  let ocaml_tar = ocaml_dist ^ ".tar.gz"
 end
 
 
@@ -46,20 +53,23 @@ let pread cmd =
 
 let find_ocamlpicdir_no_opam () =
   let src =
-    "http://caml.inria.fr/pub/distrib/ocaml-4.01/ocaml-4.01.0.tar.gz"
+    "http://caml.inria.fr/pub/distrib/ocaml-"
+    ^ Vars.ocaml_ver
+    ^ "/ocaml-" ^ Vars.ocaml_version
+    ^ ".tar.gz"
   in
 
   (* download and extract *)
-  if not (Sys.file_exists "ocaml-4.01.0" &&
-          Sys.is_directory "ocaml-4.01.0") then (
-    if not (Sys.file_exists "ocaml-4.01.0.tar.gz") then
+  if not (Sys.file_exists Vars.ocaml_dist &&
+          Sys.is_directory Vars.ocaml_dist) then (
+    if not (Sys.file_exists Vars.ocaml_tar) then
       if Sys.command @@ "wget " ^ src <> 0 then
         failwith "could not download ocaml source tarball";
-    if Sys.command "tar zxf ocaml-4.01.0.tar.gz" <> 0 then
+    if Sys.command @@ "tar zxf " ^ Vars.ocaml_tar <> 0 then
       failwith "unable to extract ocaml source tarball";
   );
 
-  Unix.chdir "ocaml-4.01.0";
+  Unix.chdir Vars.ocaml_dist;
 
   (* runtime *)
   if not (Sys.file_exists "asmrun/libasmrun.a") then (
@@ -75,7 +85,7 @@ let find_ocamlpicdir_no_opam () =
       failwith "unable to install ocaml runtime";
   );
 
-  Sys.getenv "PWD" ^ "/ocaml-4.01.0/_install"
+  Sys.getenv "PWD" ^ "/" ^ Vars.ocaml_dist ^ "/_install"
 
 
 let find_ocamlpicdir () : string =
@@ -83,7 +93,7 @@ let find_ocamlpicdir () : string =
     let opamdir = pread "opam config var root" in
     (* See if opam exists. *)
     if Sys.file_exists opamdir then (
-      let picdir      = opamdir ^ "/" ^ Config.ocaml_version ^ "+PIC" in
+      let picdir      = opamdir ^ "/" ^ Vars.ocaml_version ^ "+PIC" in
       let libasmrun_a = picdir ^ "/lib/ocaml/libasmrun.a" in
       (* See if there is the library we need. *)
       if Sys.file_exists libasmrun_a then
@@ -97,7 +107,7 @@ let find_ocamlpicdir () : string =
               = PA_Y then (
         (* Yes, try to install. *)
         let preferred = pread "opam switch show" in
-        if Sys.command @@ "opam switch " ^ Config.ocaml_version ^ "+PIC" <> 0 then
+        if Sys.command @@ "opam switch " ^ Vars.ocaml_version ^ "+PIC" <> 0 then
           failwith "opam failed to switch to PIC compiler";
         if  Sys.command @@ "opam switch " ^ preferred <> 0 then
           failwith "opam failed to switch back to preferred compiler";
@@ -122,7 +132,7 @@ let find_ocamlpicdir () : string =
 
 
 let ocamlpicdir =
-  if not (Sys.file_exists "ocaml-4.01.0/_install/lib/ocaml/libasmrun.a") then
+  if not (Sys.file_exists @@ Vars.ocaml_dist ^ "/_install/lib/ocaml/libasmrun.a") then
     find_ocamlpicdir ()
   else
     find_ocamlpicdir_no_opam ()
@@ -130,7 +140,7 @@ let ocamlpicdir =
 
 let atomise = List.map (fun a -> A a)
 
-let llvm_config = "llvm-config-" ^ Config.clang_version
+let llvm_config = "llvm-config-" ^ Vars.clang_version
 
 let cxxflags = Sh("`" ^ llvm_config ^ " --cxxflags`") :: atomise [
   "-Wall";
