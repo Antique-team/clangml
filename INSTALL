@@ -21,15 +21,7 @@ they fail, you can try them, yourself.
 Using OPAM
 ==========
 
-First, find out (if you don't know), which compiler you are currently using.
-$ CURRENT=`opam switch show`
-
-Next, install the special runtime (compiled with -fPIC, necessary on some
-platforms for shared libraries and plugins).
-$ opam switch 4.01.0+PIC
-
-Switch back to the preferred compiler.
-$ opam switch $CURRENT
+$ opam switch --no-switch 4.01.0+PIC
 
 
 Without OPAM
