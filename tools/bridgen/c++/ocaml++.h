@@ -168,7 +168,9 @@ struct option<T, true>
   : private ptr<T> // don't allow conversion from option to ptr
 {
   using ptr<T>::ptr;
-  using ptr<T>::operator bool;
+//  using ptr<T>::operator bool;
+  explicit operator bool () const { return this->get(); }
+
   using ptr<T>::operator ->;
 
   value to_value (value_of_context &ctx) const { return (*this)->to_value (ctx); }
@@ -233,7 +235,8 @@ struct recursive_ptr<ptr<T>>
   : private ptr<T> // don't allow conversion from recursive_ptr to ptr
 {
   using ptr<T>::ptr;
-  using ptr<T>::operator bool;
+  // using ptr<T>::operator bool;
+  explicit operator bool () const { return this->get(); }
   using ptr<T>::operator ->;
   using ptr<T>::operator =;
 };
