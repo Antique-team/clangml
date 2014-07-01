@@ -1,5 +1,7 @@
 #include "clang_ref.h"
 
+#include <stdexcept>
+
 clang_ref_base::clang_ref_base ()
   : id (-1u)
 {
