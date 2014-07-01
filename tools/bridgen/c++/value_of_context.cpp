@@ -1,6 +1,7 @@
 #include "ocaml++/private.h"
 
 #include <sstream>
+#include <stdexcept>
 
 
 #define DEBUG_DUMP		0

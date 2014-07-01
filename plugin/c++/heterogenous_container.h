@@ -2,6 +2,7 @@
 #define HETEROGENOUS_CONTAINER_H
 
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 
