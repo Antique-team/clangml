@@ -1,5 +1,7 @@
 #include "clang_enums.h"
 
+#include <stdexcept>
+
 using namespace ast_bridge;
 
 
