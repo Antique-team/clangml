@@ -26,6 +26,12 @@ let find idx arr =
 let iter = Array.iteri
 
 
+let fold f arr x =
+  snd @@ Array.fold_left (fun (i, x) value ->
+    (i + 1, f i value x)
+  ) (0, x) arr
+
+
 let map f arr =
   let mapped = Array.mapi f arr in
   (Array.init (Array.length arr) identity, mapped)

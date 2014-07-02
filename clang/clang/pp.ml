@@ -464,7 +464,7 @@ and pp_stmt_ fmt = function
       Format.fprintf fmt "%a;"
         (Formatx.pp_list pp_decl) decls
   | GCCAsmStmt (asm_string, outputs, inputs, clobbers) ->
-      Format.fprintf fmt "asm(%a); (%a); (%a); (%a)"
+      Format.fprintf fmt "asm (%a:%a:%a:%a);"
         pp_expr asm_string
         (Formatx.pp_list pp_asm_arg) outputs
         (Formatx.pp_list pp_asm_arg) inputs

@@ -2,6 +2,8 @@ open Clang
 open Diagnostic
 open Util.Prelude
 
+module Log = Util.Logger.Make(struct let tag = "NamingConvention" end)
+
 
 let is_uppercase ch =
   ch = Char.uppercase ch
@@ -73,5 +75,5 @@ let analyse_decl clang decl =
   | [] -> () (* OK *)
   | warnings ->
       List.iter (Diagnostic.show clang) warnings;
-      failwith @@ "naming convention check failed with " ^ string_of_int
-                    (List.length warnings) ^ " violations"
+      Log.warn "naming convention check failed with %d violations"
+        (List.length warnings)

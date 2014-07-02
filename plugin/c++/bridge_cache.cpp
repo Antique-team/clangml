@@ -11,8 +11,12 @@ namespace clang
   bool
   operator < (QualType a, QualType b)
   {
-    return a.getTypePtr () < b.getTypePtr ()
-        || a.getLocalQualifiers () < b.getLocalQualifiers ();
+    int result = a.getTypePtr ()
+               - b.getTypePtr ();
+    if (result == 0)
+      result = a.getLocalQualifiers ().getAsOpaqueValue ()
+             - b.getLocalQualifiers ().getAsOpaqueValue ();
+    return result < 0;
   }
 
   bool

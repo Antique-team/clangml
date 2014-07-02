@@ -14,14 +14,16 @@ module Show_key :
 type 'a t = private 'a array
 
 
-(* Retrieve a value for a key. *)
 val find : 'a key -> 'a t -> 'a
-(* Iterate over keys and their respective values. *)
+  (* Retrieve a value for a key. *)
 val iter : ('a key -> 'a -> unit) -> 'a t -> unit
-(* [map f m] creates a new map of the same cardinality and maps the 'a keys to
-   'b keys with the same index. The keys are returned as an additional array. *)
+  (* Iterate over keys and their respective values. *)
+val fold : ('a key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
+  (* Fold over the map as in Map.S.fold. *)
 val map : ('a key -> 'a -> 'b) -> 'a t -> 'b key array * 'b t
-(* [map f m] creates a new map of the same cardinality, but changes the order
-   of the mappings according to the first return value of [f]. This number
-   must be lower than the cardinality of the map. *)
+  (* [map f m] creates a new map of the same cardinality and maps the 'a keys to
+     'b keys with the same index. The keys are returned as an additional array. *)
 (*val mapi : ('a key -> 'a -> int * 'b) -> 'a t -> 'b t*) (* TODO *)
+  (* [map f m] creates a new map of the same cardinality, but changes the order
+     of the mappings according to the first return value of [f]. This number
+     must be lower than the cardinality of the map. *)
