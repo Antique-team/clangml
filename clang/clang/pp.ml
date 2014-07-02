@@ -463,10 +463,11 @@ and pp_stmt_ fmt = function
   | DeclStmt decls ->
       Format.fprintf fmt "%a;"
         (Formatx.pp_list pp_decl) decls
-  | GCCAsmStmt (asm_string, outputs, clobbers) ->
-      Format.fprintf fmt "asm(%a); (%a); (%a)"
+  | GCCAsmStmt (asm_string, outputs, inputs, clobbers) ->
+      Format.fprintf fmt "asm(%a); (%a); (%a); (%a)"
         pp_expr asm_string
         (Formatx.pp_list pp_asm_arg) outputs
+        (Formatx.pp_list pp_asm_arg) inputs
         (Formatx.pp_list Format.pp_print_string) clobbers
 
   | OMPParallelDirective -> Format.pp_print_string fmt "<OMPParallelDirective>"

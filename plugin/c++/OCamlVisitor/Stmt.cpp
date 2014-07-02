@@ -251,6 +251,13 @@ OCamlVisitor::TraverseGCCAsmStmt (clang::GCCAsmStmt *S)
   }
 
   // add inputs
+  list<AsmArg> inputs;
+  for (unsigned int i = 0 ; i < S->getNumInputs() ; ++i) {
+      ptr<AsmArg> input = mkAsmArg();
+      input->aa_constraint = S->getInputConstraint(i);
+      input->aa_expr = must_traverse (S->getInputExpr(i));
+      inputs.push_back(input);
+  }
 
   // clobbers
   std::vector<clang::StringRef> clobbers;
@@ -259,7 +266,7 @@ OCamlVisitor::TraverseGCCAsmStmt (clang::GCCAsmStmt *S)
   }
 
   // TODO: implement
-  stack.push (ast_bridge::mkGCCAsmStmt (asm_string, outputs, clobbers));
+  stack.push (ast_bridge::mkGCCAsmStmt (asm_string, outputs, inputs, clobbers));
 
   return true;
 }

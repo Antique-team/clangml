@@ -752,6 +752,7 @@ and stmt_ = AstBridge.stmt_ =
   | GCCAsmStmt                  of
       (* asm string *)expr
       * (* asm outputs *)asm_arg list
+      * (* asm inputs *)asm_arg list
       * (* clobbers *)string list
   | AttributedStmt
   | CapturedStmt
