@@ -435,18 +435,18 @@ type cast_kind = AstBridge.cast_kind =
 
 (* [clang/AST/OperationKinds.h] *)
 type unary_operator = AstBridge.unary_operator =
-  | UO_PostInc	(* i++ [C99 6.5.2.4] Postfix increment and decrement *)
+  | UO_PostInc	(* i++ *) (* [C99 6.5.2.4] Postfix increment and decrement *)
   | UO_PostDec  (* i-- *)
   | UO_PreInc	(* ++i *) (* [C99 6.5.3.1] Prefix increment and decrement *)
   | UO_PreDec   (* --i *)
-  | UO_AddrOf	(* [C99 6.5.3.2] Address and indirection *)
-  | UO_Deref
-  | UO_Plus	(* [C99 6.5.3.3] Unary arithmetic *)
-  | UO_Minus
-  | UO_Not
-  | UO_LNot
-  | UO_Real	(* "__real expr"/"__imag expr" Extension. *)
-  | UO_Imag
+  | UO_AddrOf	(* &a  *) (* [C99 6.5.3.2] Address and indirection *)
+  | UO_Deref    (* *a  *)
+  | UO_Plus	(* +a  *) (* [C99 6.5.3.3] Unary arithmetic *)
+  | UO_Minus    (* -a  *)
+  | UO_Not      (* ~a  *)
+  | UO_LNot     (* !a  *)
+  | UO_Real	(* __real *) (* "__real expr"/"__imag expr" Extension. *)
+  | UO_Imag     (* __imag *)
   | UO_Extension(* __extension__ marker. *)
   deriving (Show)
 
@@ -748,12 +748,11 @@ and stmt_ = AstBridge.stmt_ =
   | DoStmt			of (* body *)stmt * (* cond *)expr
   | SwitchStmt			of (* value *)expr * (* body *)stmt
   | DeclStmt			of (* decls *)decl list
+  | GCCAsmStmt			of (* asm string *)expr
+                                 * (* asm outputs *)asm_arg list
+                                 * (* asm inputs *)asm_arg list
+                                 * (* clobbers *)string list
 
-  | GCCAsmStmt                  of
-      (* asm string *)expr
-      * (* asm outputs *)asm_arg list
-      * (* asm inputs *)asm_arg list
-      * (* clobbers *)string list
   | AttributedStmt
   | CapturedStmt
   | CXXCatchStmt
@@ -775,8 +774,8 @@ and stmt_ = AstBridge.stmt_ =
   | SEHTryStmt
 
 and asm_arg = AstBridge.asm_arg = {
-    aa_constraint : string;
-    aa_expr : expr
+  aa_constraint : string;
+  aa_expr : expr;
 }
 
 and tloc = AstBridge.tloc = {
