@@ -31,6 +31,7 @@ struct concrete_bridge_cache
   void put (T p, adt_ptr value)
   {
     cache.insert (std::make_pair (p, value));
+    assert (get (p) == value);
   }
 };
 
@@ -44,6 +45,7 @@ struct bridge_cache
     if (value)
       {
         get_concrete<T> ().put (p, value);
+        assert (get_concrete<T> ().get (p) == value);
         return value;
       }
     return get_concrete<T> ().get (p);
