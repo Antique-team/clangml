@@ -197,309 +197,309 @@ let string_of_binary_op = function
   | BO_XorAssign	-> "^*"
 
 
-let pp_option f ff = function
-  | None -> Format.pp_print_string ff "<null>"
-  | Some x -> f ff x
+let pp_option f fmt = function
+  | None -> Format.pp_print_string fmt "<null>"
+  | Some x -> f fmt x
 
-let pp_sloc ff ploc =
+let pp_sloc fmt ploc =
   if Sloc.is_valid_presumed ploc then
-    Format.fprintf ff "# %d \"%s\"\n"
+    Format.fprintf fmt "# %d \"%s\"\n"
       ploc.Sloc.loc_line
       ploc.Sloc.loc_filename
   else
-    Format.pp_print_string ff "# <invalid sloc>\n"
+    Format.pp_print_string fmt "# <invalid sloc>\n"
 
 
-let rec pp_desg_ ff = function
+let rec pp_desg_ fmt = function
   | FieldDesignator name ->
-      Format.fprintf ff ".%s" name
+      Format.fprintf fmt ".%s" name
   | ArrayDesignator index ->
-      Format.fprintf ff "[%a]"
+      Format.fprintf fmt "[%a]"
         pp_expr index
   | ArrayRangeDesignator (left, right) ->
-      Format.fprintf ff "[%a ... %a]"
+      Format.fprintf fmt "[%a ... %a]"
         pp_expr left
         pp_expr right
 
-and pp_desg ff desg =
-  pp_desg_ ff desg.dr
+and pp_desg fmt desg =
+  pp_desg_ fmt desg.dr
 
 
-and pp_expr_ ff = function
-  | CharacterLiteral c -> Format.pp_print_string ff (Char.escaped c)
-  | IntegerLiteral i -> Format.pp_print_int ff i
-  | FloatingLiteral f -> Format.pp_print_float ff f
-  | StringLiteral s -> Format.fprintf ff "\"%s\"" (String.escaped s)
+and pp_expr_ fmt = function
+  | CharacterLiteral c -> Format.pp_print_string fmt (Char.escaped c)
+  | IntegerLiteral i -> Format.pp_print_int fmt i
+  | FloatingLiteral f -> Format.pp_print_float fmt f
+  | StringLiteral s -> Format.fprintf fmt "\"%s\"" (String.escaped s)
   | UnaryOperator (op, e) ->
       if is_prefix op then
-        Format.fprintf ff "(%s %a)" (string_of_unary_op op) pp_expr e
+        Format.fprintf fmt "(%s %a)" (string_of_unary_op op) pp_expr e
       else
-        Format.fprintf ff "(%a %s)" pp_expr e (string_of_unary_op op)
+        Format.fprintf fmt "(%a %s)" pp_expr e (string_of_unary_op op)
   | BinaryOperator (op, e1, e2) ->
-      Format.fprintf ff "(%a %s %a)"
+      Format.fprintf fmt "(%a %s %a)"
         pp_expr e1
         (string_of_binary_op op)
         pp_expr e2
 
   | DeclRefExpr name ->
-      Format.pp_print_string ff name
+      Format.pp_print_string fmt name
   | PredefinedExpr kind ->
-      Format.pp_print_string ff (string_of_predefined_expr kind)
+      Format.pp_print_string fmt (string_of_predefined_expr kind)
   | ImplicitCastExpr (_, expr) ->
-      Format.fprintf ff "%a"
+      Format.fprintf fmt "%a"
         pp_expr expr
   | CompoundLiteralExpr (ty, expr)
   | CStyleCastExpr (_, ty, expr) ->
-      Format.fprintf ff "(%a)%a"
+      Format.fprintf fmt "(%a)%a"
         pp_tloc ty
         pp_expr expr
   | ParenExpr expr ->
-      Format.fprintf ff "(%a)"
+      Format.fprintf fmt "(%a)"
         pp_expr expr
   | VAArgExpr (sub, ty) ->
-      Format.fprintf ff "va_arg (%a, %a)"
+      Format.fprintf fmt "va_arg (%a, %a)"
         pp_expr sub
         pp_tloc ty
   | CallExpr (callee, args) ->
-      Format.fprintf ff "%a (%a)"
+      Format.fprintf fmt "%a (%a)"
         pp_expr callee
         (Formatx.pp_list pp_expr) args
   | MemberExpr (base, member, is_arrow) ->
-      Format.fprintf ff "%a%s%s"
+      Format.fprintf fmt "%a%s%s"
         pp_expr base
         (if is_arrow then "->" else ".")
         member
   | ConditionalOperator (cond, true_expr, false_expr) ->
-      Format.fprintf ff "%a ? %a : %a"
+      Format.fprintf fmt "%a ? %a : %a"
         pp_expr cond
         pp_expr true_expr
         pp_expr false_expr
   | DesignatedInitExpr (designators, init) ->
-      Format.fprintf ff "%a = %a"
+      Format.fprintf fmt "%a = %a"
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_desg) designators
         pp_expr init
   | InitListExpr inits ->
-      Format.fprintf ff "{ %a }"
+      Format.fprintf fmt "{ %a }"
         (Formatx.pp_list pp_expr) inits
   | ImplicitValueInitExpr ->
-      Format.pp_print_string ff "<implicit value>"
+      Format.pp_print_string fmt "<implicit value>"
   | ArraySubscriptExpr (base, idx) ->
-      Format.fprintf ff "%a[%a]"
+      Format.fprintf fmt "%a[%a]"
         pp_expr base
         pp_expr idx
   | StmtExpr stmt ->
-      Format.fprintf ff "(%a)"
+      Format.fprintf fmt "(%a)"
         pp_stmt stmt
   | AddrLabelExpr label ->
-      Format.fprintf ff "&&%s"
+      Format.fprintf fmt "&&%s"
         label
 
   | SizeOfExpr expr ->
-      Format.fprintf ff "sizeof %a"
+      Format.fprintf fmt "sizeof %a"
         pp_expr expr
   | SizeOfType ty ->
-      Format.fprintf ff "sizeof (%a)"
+      Format.fprintf fmt "sizeof (%a)"
         pp_tloc ty
   | AlignOfExpr expr ->
-      Format.fprintf ff "alignof %a"
+      Format.fprintf fmt "alignof %a"
         pp_expr expr
   | AlignOfType ty ->
-      Format.fprintf ff "alignof (%a)"
+      Format.fprintf fmt "alignof (%a)"
         pp_tloc ty
   | VecStepExpr expr ->
-      Format.fprintf ff "vec_step %a"
+      Format.fprintf fmt "vec_step %a"
         pp_expr expr
   | VecStepType ty ->
-      Format.fprintf ff "vec_step (%a)"
+      Format.fprintf fmt "vec_step (%a)"
         pp_tloc ty
 
   | CXXNullPtrLiteralExpr ->
-      Format.fprintf ff "nullptr"
+      Format.fprintf fmt "nullptr"
 
-  | ConvertVectorExpr -> Format.pp_print_string ff "<ConvertVectorExpr>"
-  | ArrayTypeTraitExpr -> Format.pp_print_string ff "<ArrayTypeTraitExpr>"
-  | AsTypeExpr -> Format.pp_print_string ff "<AsTypeExpr>"
-  | AtomicExpr -> Format.pp_print_string ff "<AtomicExpr>"
-  | BinaryConditionalOperator -> Format.pp_print_string ff "<BinaryConditionalOperator>"
-  | BinaryTypeTraitExpr -> Format.pp_print_string ff "<BinaryTypeTraitExpr>"
-  | BlockExpr -> Format.pp_print_string ff "<BlockExpr>"
-  | ChooseExpr -> Format.pp_print_string ff "<ChooseExpr>"
-  | CompoundAssignOperator -> Format.pp_print_string ff "<CompoundAssignOperator>"
-  | CUDAKernelCallExpr -> Format.pp_print_string ff "<CUDAKernelCallExpr>"
-  | CXXBindTemporaryExpr -> Format.pp_print_string ff "<CXXBindTemporaryExpr>"
-  | CXXBoolLiteralExpr -> Format.pp_print_string ff "<CXXBoolLiteralExpr>"
-  | CXXConstCastExpr -> Format.pp_print_string ff "<CXXConstCastExpr>"
-  | CXXConstructExpr -> Format.pp_print_string ff "<CXXConstructExpr>"
-  | CXXDefaultArgExpr -> Format.pp_print_string ff "<CXXDefaultArgExpr>"
-  | CXXDefaultInitExpr -> Format.pp_print_string ff "<CXXDefaultInitExpr>"
-  | CXXDeleteExpr -> Format.pp_print_string ff "<CXXDeleteExpr>"
-  | CXXDependentScopeMemberExpr -> Format.pp_print_string ff "<CXXDependentScopeMemberExpr>"
-  | CXXDynamicCastExpr -> Format.pp_print_string ff "<CXXDynamicCastExpr>"
-  | CXXFunctionalCastExpr -> Format.pp_print_string ff "<CXXFunctionalCastExpr>"
-  | CXXMemberCallExpr -> Format.pp_print_string ff "<CXXMemberCallExpr>"
-  | CXXNewExpr -> Format.pp_print_string ff "<CXXNewExpr>"
-  | CXXNoexceptExpr -> Format.pp_print_string ff "<CXXNoexceptExpr>"
-  | CXXOperatorCallExpr -> Format.pp_print_string ff "<CXXOperatorCallExpr>"
-  | CXXPseudoDestructorExpr -> Format.pp_print_string ff "<CXXPseudoDestructorExpr>"
-  | CXXReinterpretCastExpr -> Format.pp_print_string ff "<CXXReinterpretCastExpr>"
-  | CXXScalarValueInitExpr -> Format.pp_print_string ff "<CXXScalarValueInitExpr>"
-  | CXXStaticCastExpr -> Format.pp_print_string ff "<CXXStaticCastExpr>"
-  | CXXStdInitializerListExpr -> Format.pp_print_string ff "<CXXStdInitializerListExpr>"
-  | CXXTemporaryObjectExpr -> Format.pp_print_string ff "<CXXTemporaryObjectExpr>"
-  | CXXThisExpr -> Format.pp_print_string ff "<CXXThisExpr>"
-  | CXXThrowExpr -> Format.pp_print_string ff "<CXXThrowExpr>"
-  | CXXTypeidExpr -> Format.pp_print_string ff "<CXXTypeidExpr>"
-  | CXXUnresolvedConstructExpr -> Format.pp_print_string ff "<CXXUnresolvedConstructExpr>"
-  | CXXUuidofExpr -> Format.pp_print_string ff "<CXXUuidofExpr>"
-  | DependentScopeDeclRefExpr -> Format.pp_print_string ff "<DependentScopeDeclRefExpr>"
-  | ExpressionTraitExpr -> Format.pp_print_string ff "<ExpressionTraitExpr>"
-  | ExprWithCleanups -> Format.pp_print_string ff "<ExprWithCleanups>"
-  | ExtVectorElementExpr -> Format.pp_print_string ff "<ExtVectorElementExpr>"
-  | FunctionParmPackExpr -> Format.pp_print_string ff "<FunctionParmPackExpr>"
-  | GenericSelectionExpr -> Format.pp_print_string ff "<GenericSelectionExpr>"
-  | GNUNullExpr -> Format.pp_print_string ff "<GNUNullExpr>"
-  | ImaginaryLiteral -> Format.pp_print_string ff "<ImaginaryLiteral>"
-  | LambdaExpr -> Format.pp_print_string ff "<LambdaExpr>"
-  | MaterializeTemporaryExpr -> Format.pp_print_string ff "<MaterializeTemporaryExpr>"
-  | MSPropertyRefExpr -> Format.pp_print_string ff "<MSPropertyRefExpr>"
-  | ObjCArrayLiteral -> Format.pp_print_string ff "<ObjCArrayLiteral>"
-  | ObjCBoolLiteralExpr -> Format.pp_print_string ff "<ObjCBoolLiteralExpr>"
-  | ObjCBoxedExpr -> Format.pp_print_string ff "<ObjCBoxedExpr>"
-  | ObjCBridgedCastExpr -> Format.pp_print_string ff "<ObjCBridgedCastExpr>"
-  | ObjCDictionaryLiteral -> Format.pp_print_string ff "<ObjCDictionaryLiteral>"
-  | ObjCEncodeExpr -> Format.pp_print_string ff "<ObjCEncodeExpr>"
-  | ObjCIndirectCopyRestoreExpr -> Format.pp_print_string ff "<ObjCIndirectCopyRestoreExpr>"
-  | ObjCIsaExpr -> Format.pp_print_string ff "<ObjCIsaExpr>"
-  | ObjCIvarRefExpr -> Format.pp_print_string ff "<ObjCIvarRefExpr>"
-  | ObjCMessageExpr -> Format.pp_print_string ff "<ObjCMessageExpr>"
-  | ObjCPropertyRefExpr -> Format.pp_print_string ff "<ObjCPropertyRefExpr>"
-  | ObjCProtocolExpr -> Format.pp_print_string ff "<ObjCProtocolExpr>"
-  | ObjCSelectorExpr -> Format.pp_print_string ff "<ObjCSelectorExpr>"
-  | ObjCStringLiteral -> Format.pp_print_string ff "<ObjCStringLiteral>"
-  | ObjCSubscriptRefExpr -> Format.pp_print_string ff "<ObjCSubscriptRefExpr>"
-  | OffsetOfExpr -> Format.pp_print_string ff "<OffsetOfExpr>"
-  | OpaqueValueExpr -> Format.pp_print_string ff "<OpaqueValueExpr>"
-  | PackExpansionExpr -> Format.pp_print_string ff "<PackExpansionExpr>"
-  | ParenListExpr -> Format.pp_print_string ff "<ParenListExpr>"
-  | PseudoObjectExpr -> Format.pp_print_string ff "<PseudoObjectExpr>"
-  | ShuffleVectorExpr -> Format.pp_print_string ff "<ShuffleVectorExpr>"
-  | SizeOfPackExpr -> Format.pp_print_string ff "<SizeOfPackExpr>"
-  | SubstNonTypeTemplateParmExpr -> Format.pp_print_string ff "<SubstNonTypeTemplateParmExpr>"
-  | SubstNonTypeTemplateParmPackExpr -> Format.pp_print_string ff "<SubstNonTypeTemplateParmPackExpr>"
-  | TypeTraitExpr -> Format.pp_print_string ff "<TypeTraitExpr>"
-  | UnaryTypeTraitExpr -> Format.pp_print_string ff "<UnaryTypeTraitExpr>"
-  | UnresolvedLookupExpr -> Format.pp_print_string ff "<UnresolvedLookupExpr>"
-  | UnresolvedMemberExpr -> Format.pp_print_string ff "<UnresolvedMemberExpr>"
-  | UserDefinedLiteral -> Format.pp_print_string ff "<UserDefinedLiteral>"
+  | ConvertVectorExpr -> Format.pp_print_string fmt "<ConvertVectorExpr>"
+  | ArrayTypeTraitExpr -> Format.pp_print_string fmt "<ArrayTypeTraitExpr>"
+  | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
+  | AtomicExpr -> Format.pp_print_string fmt "<AtomicExpr>"
+  | BinaryConditionalOperator -> Format.pp_print_string fmt "<BinaryConditionalOperator>"
+  | BinaryTypeTraitExpr -> Format.pp_print_string fmt "<BinaryTypeTraitExpr>"
+  | BlockExpr -> Format.pp_print_string fmt "<BlockExpr>"
+  | ChooseExpr -> Format.pp_print_string fmt "<ChooseExpr>"
+  | CompoundAssignOperator -> Format.pp_print_string fmt "<CompoundAssignOperator>"
+  | CUDAKernelCallExpr -> Format.pp_print_string fmt "<CUDAKernelCallExpr>"
+  | CXXBindTemporaryExpr -> Format.pp_print_string fmt "<CXXBindTemporaryExpr>"
+  | CXXBoolLiteralExpr -> Format.pp_print_string fmt "<CXXBoolLiteralExpr>"
+  | CXXConstCastExpr -> Format.pp_print_string fmt "<CXXConstCastExpr>"
+  | CXXConstructExpr -> Format.pp_print_string fmt "<CXXConstructExpr>"
+  | CXXDefaultArgExpr -> Format.pp_print_string fmt "<CXXDefaultArgExpr>"
+  | CXXDefaultInitExpr -> Format.pp_print_string fmt "<CXXDefaultInitExpr>"
+  | CXXDeleteExpr -> Format.pp_print_string fmt "<CXXDeleteExpr>"
+  | CXXDependentScopeMemberExpr -> Format.pp_print_string fmt "<CXXDependentScopeMemberExpr>"
+  | CXXDynamicCastExpr -> Format.pp_print_string fmt "<CXXDynamicCastExpr>"
+  | CXXFunctionalCastExpr -> Format.pp_print_string fmt "<CXXFunctionalCastExpr>"
+  | CXXMemberCallExpr -> Format.pp_print_string fmt "<CXXMemberCallExpr>"
+  | CXXNewExpr -> Format.pp_print_string fmt "<CXXNewExpr>"
+  | CXXNoexceptExpr -> Format.pp_print_string fmt "<CXXNoexceptExpr>"
+  | CXXOperatorCallExpr -> Format.pp_print_string fmt "<CXXOperatorCallExpr>"
+  | CXXPseudoDestructorExpr -> Format.pp_print_string fmt "<CXXPseudoDestructorExpr>"
+  | CXXReinterpretCastExpr -> Format.pp_print_string fmt "<CXXReinterpretCastExpr>"
+  | CXXScalarValueInitExpr -> Format.pp_print_string fmt "<CXXScalarValueInitExpr>"
+  | CXXStaticCastExpr -> Format.pp_print_string fmt "<CXXStaticCastExpr>"
+  | CXXStdInitializerListExpr -> Format.pp_print_string fmt "<CXXStdInitializerListExpr>"
+  | CXXTemporaryObjectExpr -> Format.pp_print_string fmt "<CXXTemporaryObjectExpr>"
+  | CXXThisExpr -> Format.pp_print_string fmt "<CXXThisExpr>"
+  | CXXThrowExpr -> Format.pp_print_string fmt "<CXXThrowExpr>"
+  | CXXTypeidExpr -> Format.pp_print_string fmt "<CXXTypeidExpr>"
+  | CXXUnresolvedConstructExpr -> Format.pp_print_string fmt "<CXXUnresolvedConstructExpr>"
+  | CXXUuidofExpr -> Format.pp_print_string fmt "<CXXUuidofExpr>"
+  | DependentScopeDeclRefExpr -> Format.pp_print_string fmt "<DependentScopeDeclRefExpr>"
+  | ExpressionTraitExpr -> Format.pp_print_string fmt "<ExpressionTraitExpr>"
+  | ExprWithCleanups -> Format.pp_print_string fmt "<ExprWithCleanups>"
+  | ExtVectorElementExpr -> Format.pp_print_string fmt "<ExtVectorElementExpr>"
+  | FunctionParmPackExpr -> Format.pp_print_string fmt "<FunctionParmPackExpr>"
+  | GenericSelectionExpr -> Format.pp_print_string fmt "<GenericSelectionExpr>"
+  | GNUNullExpr -> Format.pp_print_string fmt "<GNUNullExpr>"
+  | ImaginaryLiteral -> Format.pp_print_string fmt "<ImaginaryLiteral>"
+  | LambdaExpr -> Format.pp_print_string fmt "<LambdaExpr>"
+  | MaterializeTemporaryExpr -> Format.pp_print_string fmt "<MaterializeTemporaryExpr>"
+  | MSPropertyRefExpr -> Format.pp_print_string fmt "<MSPropertyRefExpr>"
+  | ObjCArrayLiteral -> Format.pp_print_string fmt "<ObjCArrayLiteral>"
+  | ObjCBoolLiteralExpr -> Format.pp_print_string fmt "<ObjCBoolLiteralExpr>"
+  | ObjCBoxedExpr -> Format.pp_print_string fmt "<ObjCBoxedExpr>"
+  | ObjCBridgedCastExpr -> Format.pp_print_string fmt "<ObjCBridgedCastExpr>"
+  | ObjCDictionaryLiteral -> Format.pp_print_string fmt "<ObjCDictionaryLiteral>"
+  | ObjCEncodeExpr -> Format.pp_print_string fmt "<ObjCEncodeExpr>"
+  | ObjCIndirectCopyRestoreExpr -> Format.pp_print_string fmt "<ObjCIndirectCopyRestoreExpr>"
+  | ObjCIsaExpr -> Format.pp_print_string fmt "<ObjCIsaExpr>"
+  | ObjCIvarRefExpr -> Format.pp_print_string fmt "<ObjCIvarRefExpr>"
+  | ObjCMessageExpr -> Format.pp_print_string fmt "<ObjCMessageExpr>"
+  | ObjCPropertyRefExpr -> Format.pp_print_string fmt "<ObjCPropertyRefExpr>"
+  | ObjCProtocolExpr -> Format.pp_print_string fmt "<ObjCProtocolExpr>"
+  | ObjCSelectorExpr -> Format.pp_print_string fmt "<ObjCSelectorExpr>"
+  | ObjCStringLiteral -> Format.pp_print_string fmt "<ObjCStringLiteral>"
+  | ObjCSubscriptRefExpr -> Format.pp_print_string fmt "<ObjCSubscriptRefExpr>"
+  | OffsetOfExpr -> Format.pp_print_string fmt "<OffsetOfExpr>"
+  | OpaqueValueExpr -> Format.pp_print_string fmt "<OpaqueValueExpr>"
+  | PackExpansionExpr -> Format.pp_print_string fmt "<PackExpansionExpr>"
+  | ParenListExpr -> Format.pp_print_string fmt "<ParenListExpr>"
+  | PseudoObjectExpr -> Format.pp_print_string fmt "<PseudoObjectExpr>"
+  | ShuffleVectorExpr -> Format.pp_print_string fmt "<ShuffleVectorExpr>"
+  | SizeOfPackExpr -> Format.pp_print_string fmt "<SizeOfPackExpr>"
+  | SubstNonTypeTemplateParmExpr -> Format.pp_print_string fmt "<SubstNonTypeTemplateParmExpr>"
+  | SubstNonTypeTemplateParmPackExpr -> Format.pp_print_string fmt "<SubstNonTypeTemplateParmPackExpr>"
+  | TypeTraitExpr -> Format.pp_print_string fmt "<TypeTraitExpr>"
+  | UnaryTypeTraitExpr -> Format.pp_print_string fmt "<UnaryTypeTraitExpr>"
+  | UnresolvedLookupExpr -> Format.pp_print_string fmt "<UnresolvedLookupExpr>"
+  | UnresolvedMemberExpr -> Format.pp_print_string fmt "<UnresolvedMemberExpr>"
+  | UserDefinedLiteral -> Format.pp_print_string fmt "<UserDefinedLiteral>"
 
-and pp_expr ff expr =
-  pp_expr_ ff expr.e
+and pp_expr fmt expr =
+  pp_expr_ fmt expr.e
 
 
-and pp_stmt_ ff = function
+and pp_stmt_ fmt = function
   | NullStmt ->
-      Format.pp_print_string ff ";"
+      Format.pp_print_string fmt ";"
   | BreakStmt ->
-      Format.pp_print_string ff "break;"
+      Format.pp_print_string fmt "break;"
   | ContinueStmt ->
-      Format.pp_print_string ff "continue;"
+      Format.pp_print_string fmt "continue;"
   | LabelStmt (name, sub) ->
-      Format.fprintf ff "%s: %a"
+      Format.fprintf fmt "%s: %a"
         name
         pp_stmt sub
   | GotoStmt name ->
-      Format.fprintf ff "goto %s;"
+      Format.fprintf fmt "goto %s;"
         name
   | ExprStmt e ->
-      Format.fprintf ff "%a;"
+      Format.fprintf fmt "%a;"
         pp_expr e
   | CompoundStmt ss ->
-      Format.fprintf ff "@\n@[<v2>{@\n%a@]@\n}"
+      Format.fprintf fmt "@\n@[<v2>{@\n%a@]@\n}"
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_stmt) ss
   | ReturnStmt None ->
-      Format.fprintf ff "return;"
+      Format.fprintf fmt "return;"
   | ReturnStmt (Some e) ->
-      Format.fprintf ff "return %a;"
+      Format.fprintf fmt "return %a;"
         pp_expr e
   | DefaultStmt sub ->
-      Format.fprintf ff "default: %a"
+      Format.fprintf fmt "default: %a"
         pp_stmt sub
   | CaseStmt (lhs, None, sub) ->
-      Format.fprintf ff "case %a: %a"
+      Format.fprintf fmt "case %a: %a"
         pp_expr lhs
         pp_stmt sub
   | CaseStmt (lhs, Some rhs, sub) ->
-      Format.fprintf ff "case %a ... %a: %a"
+      Format.fprintf fmt "case %a ... %a: %a"
         pp_expr lhs
         pp_expr rhs
         pp_stmt sub
   | ForStmt (init, cond, inc, body) ->
-      Format.fprintf ff "for (%a%a;%a) %a"
+      Format.fprintf fmt "for (%a%a;%a) %a"
         (pp_option pp_stmt) init
         (pp_option pp_expr) cond
         (pp_option pp_expr) inc
         pp_stmt body
   | WhileStmt (cond, body) ->
-      Format.fprintf ff "while (%a) %a"
+      Format.fprintf fmt "while (%a) %a"
         pp_expr cond
         pp_stmt body
   | DoStmt (body, cond) ->
-      Format.fprintf ff "do %a while (%a)"
+      Format.fprintf fmt "do %a while (%a)"
         pp_stmt body
         pp_expr cond
   | SwitchStmt (cond, body) ->
-      Format.fprintf ff "switch (%a) %a"
+      Format.fprintf fmt "switch (%a) %a"
         pp_expr cond
         pp_stmt body
   | IfStmt (cond, thn, None) ->
-      Format.fprintf ff "if (%a) %a"
+      Format.fprintf fmt "if (%a) %a"
         pp_expr cond
         pp_stmt thn
   | IfStmt (cond, thn, Some els) ->
-      Format.fprintf ff "if (%a) %a@\nelse %a"
+      Format.fprintf fmt "if (%a) %a@\nelse %a"
         pp_expr cond
         pp_stmt thn
         pp_stmt els
   | DeclStmt decls ->
-      Format.fprintf ff "%a;"
+      Format.fprintf fmt "%a;"
         (Formatx.pp_list pp_decl) decls
   | GCCAsmStmt (asm_string, outputs, clobbers) ->
-      Format.fprintf ff "asm(%a); (%a); (%a)"
+      Format.fprintf fmt "asm(%a); (%a); (%a)"
         pp_expr asm_string
         (Formatx.pp_list pp_asm_arg) outputs
         (Formatx.pp_list Format.pp_print_string) clobbers
 
-  | OMPParallelDirective -> Format.pp_print_string ff "<OMPParallelDirective>"
-  | AttributedStmt -> Format.pp_print_string ff "<AttributedStmt>"
-  | CapturedStmt -> Format.pp_print_string ff "<CapturedStmt>"
-  | CXXCatchStmt -> Format.pp_print_string ff "<CXXCatchStmt>"
-  | CXXForRangeStmt -> Format.pp_print_string ff "<CXXForRangeStmt>"
-  | CXXTryStmt -> Format.pp_print_string ff "<CXXTryStmt>"
-  | IndirectGotoStmt -> Format.pp_print_string ff "<IndirectGotoStmt>"
-  | MSAsmStmt -> Format.pp_print_string ff "<MSAsmStmt>"
-  | MSDependentExistsStmt -> Format.pp_print_string ff "<MSDependentExistsStmt>"
-  | ObjCAtCatchStmt -> Format.pp_print_string ff "<ObjCAtCatchStmt>"
-  | ObjCAtFinallyStmt -> Format.pp_print_string ff "<ObjCAtFinallyStmt>"
-  | ObjCAtSynchronizedStmt -> Format.pp_print_string ff "<ObjCAtSynchronizedStmt>"
-  | ObjCAtThrowStmt -> Format.pp_print_string ff "<ObjCAtThrowStmt>"
-  | ObjCAtTryStmt -> Format.pp_print_string ff "<ObjCAtTryStmt>"
-  | ObjCAutoreleasePoolStmt -> Format.pp_print_string ff "<ObjCAutoreleasePoolStmt>"
-  | ObjCForCollectionStmt -> Format.pp_print_string ff "<ObjCForCollectionStmt>"
-  | SEHExceptStmt -> Format.pp_print_string ff "<SEHExceptStmt>"
-  | SEHFinallyStmt -> Format.pp_print_string ff "<SEHFinallyStmt>"
-  | SEHTryStmt -> Format.pp_print_string ff "<SEHTryStmt>"
+  | OMPParallelDirective -> Format.pp_print_string fmt "<OMPParallelDirective>"
+  | AttributedStmt -> Format.pp_print_string fmt "<AttributedStmt>"
+  | CapturedStmt -> Format.pp_print_string fmt "<CapturedStmt>"
+  | CXXCatchStmt -> Format.pp_print_string fmt "<CXXCatchStmt>"
+  | CXXForRangeStmt -> Format.pp_print_string fmt "<CXXForRangeStmt>"
+  | CXXTryStmt -> Format.pp_print_string fmt "<CXXTryStmt>"
+  | IndirectGotoStmt -> Format.pp_print_string fmt "<IndirectGotoStmt>"
+  | MSAsmStmt -> Format.pp_print_string fmt "<MSAsmStmt>"
+  | MSDependentExistsStmt -> Format.pp_print_string fmt "<MSDependentExistsStmt>"
+  | ObjCAtCatchStmt -> Format.pp_print_string fmt "<ObjCAtCatchStmt>"
+  | ObjCAtFinallyStmt -> Format.pp_print_string fmt "<ObjCAtFinallyStmt>"
+  | ObjCAtSynchronizedStmt -> Format.pp_print_string fmt "<ObjCAtSynchronizedStmt>"
+  | ObjCAtThrowStmt -> Format.pp_print_string fmt "<ObjCAtThrowStmt>"
+  | ObjCAtTryStmt -> Format.pp_print_string fmt "<ObjCAtTryStmt>"
+  | ObjCAutoreleasePoolStmt -> Format.pp_print_string fmt "<ObjCAutoreleasePoolStmt>"
+  | ObjCForCollectionStmt -> Format.pp_print_string fmt "<ObjCForCollectionStmt>"
+  | SEHExceptStmt -> Format.pp_print_string fmt "<SEHExceptStmt>"
+  | SEHFinallyStmt -> Format.pp_print_string fmt "<SEHFinallyStmt>"
+  | SEHTryStmt -> Format.pp_print_string fmt "<SEHTryStmt>"
 
-and pp_stmt ff stmt =
-  pp_stmt_ ff stmt.s
+and pp_stmt fmt stmt =
+  pp_stmt_ fmt stmt.s
 
-and pp_asm_arg ff arg =
-  Format.fprintf ff "%s %a"
+and pp_asm_arg fmt arg =
+  Format.fprintf fmt "%s %a"
     arg.aa_constraint
     pp_expr arg.aa_expr
 
-and pp_tloc_ ff = function
+and pp_tloc_ fmt = function
   | QualifiedTypeLoc (unqual, quals, addr_space) ->
-      Format.fprintf ff "%a %a%s"
+      Format.fprintf fmt "%a %a%s"
         pp_tloc unqual
         Formatx.(pp_list ~sep:(pp_sep "") pp_print_string)
           (List.map string_of_qualifier quals)
@@ -507,168 +507,168 @@ and pp_tloc_ ff = function
          | None -> ""
          | Some aspace -> " addr_space_" ^ string_of_int aspace)
   | BuiltinTypeLoc bt ->
-      Format.fprintf ff "%s"
+      Format.fprintf fmt "%s"
         (string_of_builtin_type bt)
   | TypedefTypeLoc name ->
-      Format.fprintf ff "%s"
+      Format.fprintf fmt "%s"
         name
   | TypeOfExprTypeLoc expr ->
-      Format.fprintf ff "typeof (%a)"
+      Format.fprintf fmt "typeof (%a)"
         pp_expr expr
   | DecltypeTypeLoc expr ->
-      Format.fprintf ff "decltype (%a)"
+      Format.fprintf fmt "decltype (%a)"
         pp_expr expr
   | TypeOfTypeLoc ty ->
-      Format.fprintf ff "typeof (%a)"
+      Format.fprintf fmt "typeof (%a)"
         pp_tloc ty
   | ParenTypeLoc ty ->
-      Format.fprintf ff "(%a)"
+      Format.fprintf fmt "(%a)"
         pp_tloc ty
   | PointerTypeLoc ty ->
-      Format.fprintf ff "%a ptr"
+      Format.fprintf fmt "%a ptr"
         pp_tloc ty
   | FunctionNoProtoTypeLoc ty ->
-      Format.fprintf ff "? -> %a"
+      Format.fprintf fmt "? -> %a"
         pp_tloc ty
   | FunctionProtoTypeLoc (ty, args) ->
-      Format.fprintf ff "(%a) -> %a"
+      Format.fprintf fmt "(%a) -> %a"
         (Formatx.pp_list pp_decl) args
         pp_tloc ty
   | ConstantArrayTypeLoc (ty, size) ->
-      Format.fprintf ff "%a[%d]"
+      Format.fprintf fmt "%a[%d]"
         pp_tloc ty
         size
   | VariableArrayTypeLoc (ty, size) ->
-      Format.fprintf ff "%a[%a]"
+      Format.fprintf fmt "%a[%a]"
         pp_tloc ty
         pp_expr size
   | IncompleteArrayTypeLoc ty ->
-      Format.fprintf ff "%a[]"
+      Format.fprintf fmt "%a[]"
         pp_tloc ty
   | ElaboratedTypeLoc ty ->
-      Format.fprintf ff "%a"
+      Format.fprintf fmt "%a"
         pp_tloc ty
   | RecordTypeLoc (kind, name) ->
-      Format.fprintf ff "%s %s"
+      Format.fprintf fmt "%s %s"
         (string_of_tag_type_kind kind)
         (if name = "" then "<anonymous>" else name)
   | EnumTypeLoc name ->
-      Format.pp_print_string ff
+      Format.pp_print_string fmt
         (if name = "" then "<anonymous>" else name)
 
-  | DecayedTypeLoc _ -> Format.pp_print_string ff "<DecayedTypeLoc>"
-  | AtomicTypeLoc -> Format.pp_print_string ff "<AtomicTypeLoc>"
-  | AttributedTypeLoc -> Format.pp_print_string ff "<AttributedTypeLoc>"
-  | AutoTypeLoc -> Format.pp_print_string ff "<AutoTypeLoc>"
-  | BlockPointerTypeLoc -> Format.pp_print_string ff "<BlockPointerTypeLoc>"
-  | ComplexTypeLoc -> Format.pp_print_string ff "<ComplexTypeLoc>"
-  | DependentNameTypeLoc -> Format.pp_print_string ff "<DependentNameTypeLoc>"
-  | DependentSizedArrayTypeLoc -> Format.pp_print_string ff "<DependentSizedArrayTypeLoc>"
-  | DependentSizedExtVectorTypeLoc -> Format.pp_print_string ff "<DependentSizedExtVectorTypeLoc>"
-  | DependentTemplateSpecializationTypeLoc -> Format.pp_print_string ff "<DependentTemplateSpecializationTypeLoc>"
-  | ExtVectorTypeLoc -> Format.pp_print_string ff "<ExtVectorTypeLoc>"
-  | InjectedClassNameTypeLoc -> Format.pp_print_string ff "<InjectedClassNameTypeLoc>"
-  | LValueReferenceTypeLoc -> Format.pp_print_string ff "<LValueReferenceTypeLoc>"
-  | MemberPointerTypeLoc -> Format.pp_print_string ff "<MemberPointerTypeLoc>"
-  | ObjCInterfaceTypeLoc -> Format.pp_print_string ff "<ObjCInterfaceTypeLoc>"
-  | ObjCObjectTypeLoc -> Format.pp_print_string ff "<ObjCObjectTypeLoc>"
-  | ObjCObjectPointerTypeLoc -> Format.pp_print_string ff "<ObjCObjectPointerTypeLoc>"
-  | PackExpansionTypeLoc -> Format.pp_print_string ff "<PackExpansionTypeLoc>"
-  | RValueReferenceTypeLoc -> Format.pp_print_string ff "<RValueReferenceTypeLoc>"
-  | SubstTemplateTypeParmTypeLoc -> Format.pp_print_string ff "<SubstTemplateTypeParmTypeLoc>"
-  | SubstTemplateTypeParmPackTypeLoc -> Format.pp_print_string ff "<SubstTemplateTypeParmPackTypeLoc>"
-  | TemplateSpecializationTypeLoc -> Format.pp_print_string ff "<TemplateSpecializationTypeLoc>"
-  | TemplateTypeParmTypeLoc _ -> Format.pp_print_string ff "<TemplateTypeParmTypeLoc>"
-  | UnaryTransformTypeLoc -> Format.pp_print_string ff "<UnaryTransformTypeLoc>"
-  | UnresolvedUsingTypeLoc -> Format.pp_print_string ff "<UnresolvedUsingTypeLoc>"
-  | VectorTypeLoc -> Format.pp_print_string ff "<VectorTypeLoc>"
+  | DecayedTypeLoc _ -> Format.pp_print_string fmt "<DecayedTypeLoc>"
+  | AtomicTypeLoc -> Format.pp_print_string fmt "<AtomicTypeLoc>"
+  | AttributedTypeLoc -> Format.pp_print_string fmt "<AttributedTypeLoc>"
+  | AutoTypeLoc -> Format.pp_print_string fmt "<AutoTypeLoc>"
+  | BlockPointerTypeLoc -> Format.pp_print_string fmt "<BlockPointerTypeLoc>"
+  | ComplexTypeLoc -> Format.pp_print_string fmt "<ComplexTypeLoc>"
+  | DependentNameTypeLoc -> Format.pp_print_string fmt "<DependentNameTypeLoc>"
+  | DependentSizedArrayTypeLoc -> Format.pp_print_string fmt "<DependentSizedArrayTypeLoc>"
+  | DependentSizedExtVectorTypeLoc -> Format.pp_print_string fmt "<DependentSizedExtVectorTypeLoc>"
+  | DependentTemplateSpecializationTypeLoc -> Format.pp_print_string fmt "<DependentTemplateSpecializationTypeLoc>"
+  | ExtVectorTypeLoc -> Format.pp_print_string fmt "<ExtVectorTypeLoc>"
+  | InjectedClassNameTypeLoc -> Format.pp_print_string fmt "<InjectedClassNameTypeLoc>"
+  | LValueReferenceTypeLoc -> Format.pp_print_string fmt "<LValueReferenceTypeLoc>"
+  | MemberPointerTypeLoc -> Format.pp_print_string fmt "<MemberPointerTypeLoc>"
+  | ObjCInterfaceTypeLoc -> Format.pp_print_string fmt "<ObjCInterfaceTypeLoc>"
+  | ObjCObjectTypeLoc -> Format.pp_print_string fmt "<ObjCObjectTypeLoc>"
+  | ObjCObjectPointerTypeLoc -> Format.pp_print_string fmt "<ObjCObjectPointerTypeLoc>"
+  | PackExpansionTypeLoc -> Format.pp_print_string fmt "<PackExpansionTypeLoc>"
+  | RValueReferenceTypeLoc -> Format.pp_print_string fmt "<RValueReferenceTypeLoc>"
+  | SubstTemplateTypeParmTypeLoc -> Format.pp_print_string fmt "<SubstTemplateTypeParmTypeLoc>"
+  | SubstTemplateTypeParmPackTypeLoc -> Format.pp_print_string fmt "<SubstTemplateTypeParmPackTypeLoc>"
+  | TemplateSpecializationTypeLoc -> Format.pp_print_string fmt "<TemplateSpecializationTypeLoc>"
+  | TemplateTypeParmTypeLoc _ -> Format.pp_print_string fmt "<TemplateTypeParmTypeLoc>"
+  | UnaryTransformTypeLoc -> Format.pp_print_string fmt "<UnaryTransformTypeLoc>"
+  | UnresolvedUsingTypeLoc -> Format.pp_print_string fmt "<UnresolvedUsingTypeLoc>"
+  | VectorTypeLoc -> Format.pp_print_string fmt "<VectorTypeLoc>"
 
-and pp_tloc ff tloc =
-  pp_tloc_ ff tloc.tl
+and pp_tloc fmt tloc =
+  pp_tloc_ fmt tloc.tl
 
 
-and pp_type_ ff = function
+and pp_type_ fmt = function
   | BuiltinType bt ->
-      Format.fprintf ff "%s"
+      Format.fprintf fmt "%s"
         (string_of_builtin_type bt)
   | TypedefType name ->
-      Format.fprintf ff "%s"
+      Format.fprintf fmt "%s"
         name
   | TypeOfExprType expr ->
-      Format.fprintf ff "typeof (%a)"
+      Format.fprintf fmt "typeof (%a)"
         pp_expr expr
   | TypeOfType ty ->
-      Format.fprintf ff "typeof (%a)"
+      Format.fprintf fmt "typeof (%a)"
         pp_type ty
   | DecltypeType expr ->
-      Format.fprintf ff "decltype (%a)"
+      Format.fprintf fmt "decltype (%a)"
         pp_expr expr
   | ParenType ty ->
-      Format.fprintf ff "(%a)"
+      Format.fprintf fmt "(%a)"
         pp_type ty
   | PointerType ty ->
-      Format.fprintf ff "%a ptr"
+      Format.fprintf fmt "%a ptr"
         pp_type ty
   | FunctionNoProtoType ty ->
-      Format.fprintf ff "? -> %a"
+      Format.fprintf fmt "? -> %a"
         pp_type ty
   | FunctionProtoType (ty, args) ->
-      Format.fprintf ff "(%a) -> %a"
+      Format.fprintf fmt "(%a) -> %a"
         (Formatx.pp_list pp_type) args
         pp_type ty
   | ConstantArrayType (ty, size) ->
-      Format.fprintf ff "%a[%d]"
+      Format.fprintf fmt "%a[%d]"
         pp_type ty
         size
   | VariableArrayType (ty, size) ->
-      Format.fprintf ff "%a[%a]"
+      Format.fprintf fmt "%a[%a]"
         pp_type ty
         pp_expr size
   | IncompleteArrayType ty ->
-      Format.fprintf ff "%a[]"
+      Format.fprintf fmt "%a[]"
         pp_type ty
   | ElaboratedType ty ->
-      Format.fprintf ff "%a"
+      Format.fprintf fmt "%a"
         pp_type ty
   | RecordType (kind, name) ->
-      Format.fprintf ff "<%s> %s"
+      Format.fprintf fmt "<%s> %s"
         (string_of_tag_type_kind kind)
         (if name = "" then "<anonymous>" else name)
   | EnumType name ->
-      Format.pp_print_string ff
+      Format.pp_print_string fmt
         (if name = "" then "enum <anonymous>" else "enum " ^ name)
   | DecayedType (decayed, original) ->
-      Format.fprintf ff "%a"
+      Format.fprintf fmt "%a"
         pp_type decayed
 
-  | AtomicType -> Format.pp_print_string ff "<AtomicType>"
-  | AttributedType -> Format.pp_print_string ff "<AttributedType>"
-  | AutoType -> Format.pp_print_string ff "<AutoType>"
-  | BlockPointerType -> Format.pp_print_string ff "<BlockPointerType>"
-  | ComplexType -> Format.pp_print_string ff "<ComplexType>"
-  | DependentNameType -> Format.pp_print_string ff "<DependentNameType>"
-  | DependentSizedArrayType -> Format.pp_print_string ff "<DependentSizedArrayType>"
-  | DependentSizedExtVectorType -> Format.pp_print_string ff "<DependentSizedExtVectorType>"
-  | DependentTemplateSpecializationType -> Format.pp_print_string ff "<DependentTemplateSpecializationType>"
-  | ExtVectorType -> Format.pp_print_string ff "<ExtVectorType>"
-  | InjectedClassNameType -> Format.pp_print_string ff "<InjectedClassNameType>"
-  | LValueReferenceType -> Format.pp_print_string ff "<LValueReferenceType>"
-  | MemberPointerType -> Format.pp_print_string ff "<MemberPointerType>"
-  | ObjCInterfaceType -> Format.pp_print_string ff "<ObjCInterfaceType>"
-  | ObjCObjectPointerType -> Format.pp_print_string ff "<ObjCObjectPointerType>"
-  | ObjCObjectType -> Format.pp_print_string ff "<ObjCObjectType>"
-  | PackExpansionType -> Format.pp_print_string ff "<PackExpansionType>"
-  | RValueReferenceType -> Format.pp_print_string ff "<RValueReferenceType>"
-  | SubstTemplateTypeParmPackType -> Format.pp_print_string ff "<SubstTemplateTypeParmPackType>"
-  | SubstTemplateTypeParmType -> Format.pp_print_string ff "<SubstTemplateTypeParmType>"
-  | TemplateSpecializationType -> Format.pp_print_string ff "<TemplateSpecializationType>"
-  | TemplateTypeParmType _ -> Format.pp_print_string ff "<TemplateTypeParmType>"
-  | UnaryTransformType -> Format.pp_print_string ff "<UnaryTransformType>"
-  | UnresolvedUsingType -> Format.pp_print_string ff "<UnresolvedUsingType>"
-  | VectorType -> Format.pp_print_string ff "<VectorType>"
+  | AtomicType -> Format.pp_print_string fmt "<AtomicType>"
+  | AttributedType -> Format.pp_print_string fmt "<AttributedType>"
+  | AutoType -> Format.pp_print_string fmt "<AutoType>"
+  | BlockPointerType -> Format.pp_print_string fmt "<BlockPointerType>"
+  | ComplexType -> Format.pp_print_string fmt "<ComplexType>"
+  | DependentNameType -> Format.pp_print_string fmt "<DependentNameType>"
+  | DependentSizedArrayType -> Format.pp_print_string fmt "<DependentSizedArrayType>"
+  | DependentSizedExtVectorType -> Format.pp_print_string fmt "<DependentSizedExtVectorType>"
+  | DependentTemplateSpecializationType -> Format.pp_print_string fmt "<DependentTemplateSpecializationType>"
+  | ExtVectorType -> Format.pp_print_string fmt "<ExtVectorType>"
+  | InjectedClassNameType -> Format.pp_print_string fmt "<InjectedClassNameType>"
+  | LValueReferenceType -> Format.pp_print_string fmt "<LValueReferenceType>"
+  | MemberPointerType -> Format.pp_print_string fmt "<MemberPointerType>"
+  | ObjCInterfaceType -> Format.pp_print_string fmt "<ObjCInterfaceType>"
+  | ObjCObjectPointerType -> Format.pp_print_string fmt "<ObjCObjectPointerType>"
+  | ObjCObjectType -> Format.pp_print_string fmt "<ObjCObjectType>"
+  | PackExpansionType -> Format.pp_print_string fmt "<PackExpansionType>"
+  | RValueReferenceType -> Format.pp_print_string fmt "<RValueReferenceType>"
+  | SubstTemplateTypeParmPackType -> Format.pp_print_string fmt "<SubstTemplateTypeParmPackType>"
+  | SubstTemplateTypeParmType -> Format.pp_print_string fmt "<SubstTemplateTypeParmType>"
+  | TemplateSpecializationType -> Format.pp_print_string fmt "<TemplateSpecializationType>"
+  | TemplateTypeParmType _ -> Format.pp_print_string fmt "<TemplateTypeParmType>"
+  | UnaryTransformType -> Format.pp_print_string fmt "<UnaryTransformType>"
+  | UnresolvedUsingType -> Format.pp_print_string fmt "<UnresolvedUsingType>"
+  | VectorType -> Format.pp_print_string fmt "<VectorType>"
 
-and pp_type ff t =
-  Format.fprintf ff "%a %a%s"
+and pp_type fmt t =
+  Format.fprintf fmt "%a %a%s"
     pp_type_ t.t
     Formatx.(pp_list ~sep:(pp_sep "") pp_print_string)
       (List.map string_of_qualifier t.t_qual)
@@ -677,19 +677,19 @@ and pp_type ff t =
      | Some aspace -> " addr_space_" ^ string_of_int aspace)
 
 
-and pp_cxx_base_specifier ff base =
+and pp_cxx_base_specifier fmt base =
   if base.cbs_virtual then
-    Format.pp_print_string ff "virtual ";
-  Format.pp_print_string ff (string_of_access_specifier base.cbs_access_spec);
-  Format.pp_print_string ff " ";
-  pp_type ff base.cbs_type;
+    Format.pp_print_string fmt "virtual ";
+  Format.pp_print_string fmt (string_of_access_specifier base.cbs_access_spec);
+  Format.pp_print_string fmt " ";
+  pp_type fmt base.cbs_type;
 
 
-and pp_bases ff = function
+and pp_bases fmt = function
   | [] -> ()
   | bases ->
-      Formatx.pp_print_string ff " : ";
-      Formatx.pp_list pp_cxx_base_specifier ff bases
+      Formatx.pp_print_string fmt " : ";
+      Formatx.pp_list pp_cxx_base_specifier fmt bases
 
 
 and string_of_declaration_name = function
@@ -709,32 +709,32 @@ and string_of_declaration_name = function
   | DN_CXXUsingDirective -> "<CXXUsingDirective>"
 
 
-and pp_decl_ ff = function
+and pp_decl_ fmt = function
   | EmptyDecl ->
-      Format.pp_print_string ff ";@,"
+      Format.pp_print_string fmt ";@,"
   | TranslationUnitDecl decls ->
-      Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl ff decls
+      Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl fmt decls
   | TypedefDecl (ty, name) ->
-      Format.fprintf ff "typedef %s : %a;@,"
+      Format.fprintf fmt "typedef %s : %a;@,"
         name
         pp_tloc ty
   | FunctionDecl (fd_type, fd_name, fd_body) ->
-      Format.fprintf ff "@[<v2>%a@]%a"
+      Format.fprintf fmt "@[<v2>%a@]%a"
         pp_named_arg (string_of_declaration_name fd_name, fd_type)
         (pp_option pp_stmt) fd_body
   | VarDecl (ty, name, Some init) ->
-      Format.fprintf ff "%a = %a"
+      Format.fprintf fmt "%a = %a"
         pp_named_arg (name, ty)
         pp_expr init
   | VarDecl (ty, name, None)
   | ParmVarDecl (ty, name) ->
-      pp_named_arg ff (name, ty)
+      pp_named_arg fmt (name, ty)
   | RecordDecl (kind, name, None, bases) ->
-      Format.fprintf ff "%s %s@;@,"
+      Format.fprintf fmt "%s %s@;@,"
         (string_of_tag_type_kind kind)
         (if name = "" then "<anonymous>" else name)
   | RecordDecl (kind, name, Some members, bases) ->
-      Format.fprintf ff "%s %s%a@\n@[<v2>{@,%a@]@\n};@\n"
+      Format.fprintf fmt "%s %s%a@\n@[<v2>{@,%a@]@\n};@\n"
         (string_of_tag_type_kind kind)
         (if name = "" then "<anonymous>" else name)
         pp_bases bases
@@ -745,89 +745,89 @@ and pp_decl_ ff = function
                 fd_init = init;
                 fd_mutable = is_mutable;
               } ->
-      Format.fprintf ff "%s%a;@,"
+      Format.fprintf fmt "%s%a;@,"
         (if is_mutable then "mutable " else "")
         pp_named_arg (name, ty)
   | EnumDecl (name, enumerators) ->
-      Format.fprintf ff "enum %s { %a };@,"
+      Format.fprintf fmt "enum %s { %a };@,"
         name
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) enumerators
   | EnumConstantDecl (name, None) ->
-      Format.fprintf ff "%s;@,"
+      Format.fprintf fmt "%s;@,"
         name
   | EnumConstantDecl (name, Some init) ->
-      Format.fprintf ff "%s = %a;@,"
+      Format.fprintf fmt "%s = %a;@,"
         name
         pp_expr init
   | NamespaceDecl (name, is_inline, decls) ->
-      Format.fprintf ff "%snamespace %s { %a }"
+      Format.fprintf fmt "%snamespace %s { %a }"
         (if is_inline then "inline " else "")
         name
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) decls
   | LinkageSpecDecl (decls, lang) ->
-      Format.fprintf ff "extern \"%s\" { %a }"
+      Format.fprintf fmt "extern \"%s\" { %a }"
         (string_of_language lang)
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) decls
   | UsingDecl (name) ->
-      Format.fprintf ff "using %s;@,"
+      Format.fprintf fmt "using %s;@,"
         (string_of_declaration_name name)
   | AccessSpecDecl spec ->
-      Format.fprintf ff "%s:"
+      Format.fprintf fmt "%s:"
         (string_of_access_specifier spec)
 
-  | BlockDecl -> Format.pp_print_string ff "<BlockDecl>"
-  | CapturedDecl -> Format.pp_print_string ff "<CapturedDecl>"
-  | ClassScopeFunctionSpecializationDecl -> Format.pp_print_string ff "<ClassScopeFunctionSpecializationDecl>"
-  | ClassTemplateDecl _ -> Format.pp_print_string ff "<ClassTemplateDecl>"
-  | FileScopeAsmDecl -> Format.pp_print_string ff "<FileScopeAsmDecl>"
-  | FriendDecl -> Format.pp_print_string ff "<FriendDecl>"
-  | FriendTemplateDecl -> Format.pp_print_string ff "<FriendTemplateDecl>"
-  | FunctionTemplateDecl -> Format.pp_print_string ff "<FunctionTemplateDecl>"
-  | ImportDecl -> Format.pp_print_string ff "<ImportDecl>"
-  | IndirectFieldDecl -> Format.pp_print_string ff "<IndirectFieldDecl>"
-  | LabelDecl -> Format.pp_print_string ff "<LabelDecl>"
-  | MSPropertyDecl -> Format.pp_print_string ff "<MSPropertyDecl>"
-  | NamespaceAliasDecl -> Format.pp_print_string ff "<NamespaceAliasDecl>"
-  | NonTypeTemplateParmDecl -> Format.pp_print_string ff "<NonTypeTemplateParmDecl>"
-  | ObjCCategoryDecl -> Format.pp_print_string ff "<ObjCCategoryDecl>"
-  | ObjCCategoryImplDecl -> Format.pp_print_string ff "<ObjCCategoryImplDecl>"
-  | ObjCCompatibleAliasDecl -> Format.pp_print_string ff "<ObjCCompatibleAliasDecl>"
-  | ObjCImplementationDecl -> Format.pp_print_string ff "<ObjCImplementationDecl>"
-  | ObjCInterfaceDecl -> Format.pp_print_string ff "<ObjCInterfaceDecl>"
-  | ObjCMethodDecl -> Format.pp_print_string ff "<ObjCMethodDecl>"
-  | ObjCPropertyDecl -> Format.pp_print_string ff "<ObjCPropertyDecl>"
-  | ObjCPropertyImplDecl -> Format.pp_print_string ff "<ObjCPropertyImplDecl>"
-  | ObjCProtocolDecl -> Format.pp_print_string ff "<ObjCProtocolDecl>"
-  | OMPThreadPrivateDecl -> Format.pp_print_string ff "<OMPThreadPrivateDecl>"
-  | StaticAssertDecl -> Format.pp_print_string ff "<StaticAssertDecl>"
-  | TemplateTemplateParmDecl -> Format.pp_print_string ff "<TemplateTemplateParmDecl>"
-  | TemplateTypeParmDecl _ -> Format.pp_print_string ff "<TemplateTypeParmDecl>"
-  | TypeAliasDecl -> Format.pp_print_string ff "<TypeAliasDecl>"
-  | TypeAliasTemplateDecl -> Format.pp_print_string ff "<TypeAliasTemplateDecl>"
-  | UnresolvedUsingTypenameDecl -> Format.pp_print_string ff "<UnresolvedUsingTypenameDecl>"
-  | UnresolvedUsingValueDecl -> Format.pp_print_string ff "<UnresolvedUsingValueDecl>"
-  | UsingDirectiveDecl -> Format.pp_print_string ff "<UsingDirectiveDecl>"
-  | UsingShadowDecl -> Format.pp_print_string ff "<UsingShadowDecl>"
-  | VarTemplateDecl -> Format.pp_print_string ff "<VarTemplateDecl>"
-  | ClassTemplateSpecializationDecl -> Format.pp_print_string ff "<ClassTemplateSpecializationDecl>"
-  | ClassTemplatePartialSpecializationDecl -> Format.pp_print_string ff "<ClassTemplatePartialSpecializationDecl>"
-  | ObjCAtDefsFieldDecl -> Format.pp_print_string ff "<ObjCAtDefsFieldDecl>"
-  | ObjCIvarDecl -> Format.pp_print_string ff "<ObjCIvarDecl>"
-  | CXXConstructorDecl -> Format.pp_print_string ff "<CXXConstructorDecl>"
-  | CXXConversionDecl -> Format.pp_print_string ff "<CXXConversionDecl>"
-  | CXXDestructorDecl -> Format.pp_print_string ff "<CXXDestructorDecl>"
-  | ImplicitParamDecl -> Format.pp_print_string ff "<ImplicitParamDecl>"
-  | VarTemplateSpecializationDecl -> Format.pp_print_string ff "<VarTemplateSpecializationDecl>"
-  | VarTemplatePartialSpecializationDecl -> Format.pp_print_string ff "<VarTemplatePartialSpecializationDecl>"
+  | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"
+  | CapturedDecl -> Format.pp_print_string fmt "<CapturedDecl>"
+  | ClassScopeFunctionSpecializationDecl -> Format.pp_print_string fmt "<ClassScopeFunctionSpecializationDecl>"
+  | ClassTemplateDecl _ -> Format.pp_print_string fmt "<ClassTemplateDecl>"
+  | FileScopeAsmDecl -> Format.pp_print_string fmt "<FileScopeAsmDecl>"
+  | FriendDecl -> Format.pp_print_string fmt "<FriendDecl>"
+  | FriendTemplateDecl -> Format.pp_print_string fmt "<FriendTemplateDecl>"
+  | FunctionTemplateDecl -> Format.pp_print_string fmt "<FunctionTemplateDecl>"
+  | ImportDecl -> Format.pp_print_string fmt "<ImportDecl>"
+  | IndirectFieldDecl -> Format.pp_print_string fmt "<IndirectFieldDecl>"
+  | LabelDecl -> Format.pp_print_string fmt "<LabelDecl>"
+  | MSPropertyDecl -> Format.pp_print_string fmt "<MSPropertyDecl>"
+  | NamespaceAliasDecl -> Format.pp_print_string fmt "<NamespaceAliasDecl>"
+  | NonTypeTemplateParmDecl -> Format.pp_print_string fmt "<NonTypeTemplateParmDecl>"
+  | ObjCCategoryDecl -> Format.pp_print_string fmt "<ObjCCategoryDecl>"
+  | ObjCCategoryImplDecl -> Format.pp_print_string fmt "<ObjCCategoryImplDecl>"
+  | ObjCCompatibleAliasDecl -> Format.pp_print_string fmt "<ObjCCompatibleAliasDecl>"
+  | ObjCImplementationDecl -> Format.pp_print_string fmt "<ObjCImplementationDecl>"
+  | ObjCInterfaceDecl -> Format.pp_print_string fmt "<ObjCInterfaceDecl>"
+  | ObjCMethodDecl -> Format.pp_print_string fmt "<ObjCMethodDecl>"
+  | ObjCPropertyDecl -> Format.pp_print_string fmt "<ObjCPropertyDecl>"
+  | ObjCPropertyImplDecl -> Format.pp_print_string fmt "<ObjCPropertyImplDecl>"
+  | ObjCProtocolDecl -> Format.pp_print_string fmt "<ObjCProtocolDecl>"
+  | OMPThreadPrivateDecl -> Format.pp_print_string fmt "<OMPThreadPrivateDecl>"
+  | StaticAssertDecl -> Format.pp_print_string fmt "<StaticAssertDecl>"
+  | TemplateTemplateParmDecl -> Format.pp_print_string fmt "<TemplateTemplateParmDecl>"
+  | TemplateTypeParmDecl _ -> Format.pp_print_string fmt "<TemplateTypeParmDecl>"
+  | TypeAliasDecl -> Format.pp_print_string fmt "<TypeAliasDecl>"
+  | TypeAliasTemplateDecl -> Format.pp_print_string fmt "<TypeAliasTemplateDecl>"
+  | UnresolvedUsingTypenameDecl -> Format.pp_print_string fmt "<UnresolvedUsingTypenameDecl>"
+  | UnresolvedUsingValueDecl -> Format.pp_print_string fmt "<UnresolvedUsingValueDecl>"
+  | UsingDirectiveDecl -> Format.pp_print_string fmt "<UsingDirectiveDecl>"
+  | UsingShadowDecl -> Format.pp_print_string fmt "<UsingShadowDecl>"
+  | VarTemplateDecl -> Format.pp_print_string fmt "<VarTemplateDecl>"
+  | ClassTemplateSpecializationDecl -> Format.pp_print_string fmt "<ClassTemplateSpecializationDecl>"
+  | ClassTemplatePartialSpecializationDecl -> Format.pp_print_string fmt "<ClassTemplatePartialSpecializationDecl>"
+  | ObjCAtDefsFieldDecl -> Format.pp_print_string fmt "<ObjCAtDefsFieldDecl>"
+  | ObjCIvarDecl -> Format.pp_print_string fmt "<ObjCIvarDecl>"
+  | CXXConstructorDecl -> Format.pp_print_string fmt "<CXXConstructorDecl>"
+  | CXXConversionDecl -> Format.pp_print_string fmt "<CXXConversionDecl>"
+  | CXXDestructorDecl -> Format.pp_print_string fmt "<CXXDestructorDecl>"
+  | ImplicitParamDecl -> Format.pp_print_string fmt "<ImplicitParamDecl>"
+  | VarTemplateSpecializationDecl -> Format.pp_print_string fmt "<VarTemplateSpecializationDecl>"
+  | VarTemplatePartialSpecializationDecl -> Format.pp_print_string fmt "<VarTemplatePartialSpecializationDecl>"
 
-and pp_decl ff decl =
-  pp_decl_ ff decl.d
+and pp_decl fmt decl =
+  pp_decl_ fmt decl.d
 
 
-and pp_named_arg ff = function
+and pp_named_arg fmt = function
   | ("", ty) ->
-      pp_tloc ff ty
+      pp_tloc fmt ty
   | (name, ty) ->
-      Format.fprintf ff "%s : %a"
+      Format.fprintf fmt "%s : %a"
         name
         pp_tloc ty
