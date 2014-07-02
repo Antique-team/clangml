@@ -4,6 +4,7 @@ open Clang.Ast
 
 let dump_vars ast =
   let open C_sig in
+  let open C_show in
   let open Data_structures in
   Format.printf "---- <vars> ----@\n";
   StringMap.iter (fun name ob ->
@@ -15,6 +16,7 @@ let dump_vars ast =
 
 let dump_funs ast =
   let open C_sig in
+  let open C_show in
   let open Data_structures in
   Format.printf "---- <funs> ----@\n";
   StringMap.iter (fun name ob ->
@@ -26,6 +28,7 @@ let dump_funs ast =
 
 let dump_types ast =
   let open C_sig in
+  let open C_show in
   let open Data_structures in
   Format.printf "---- <types> ----@\n";
   StringMap.iter (fun name ob ->
@@ -121,7 +124,6 @@ let process clang =
   match memcad_ast with
   | None -> ()
   | Some memcad_ast ->
-      let open C_sig in
       if memcad_ast = ast then
         print_endline "MEMCAD AST = CLANG AST"
 ;;
