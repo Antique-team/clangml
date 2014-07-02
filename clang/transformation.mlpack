@@ -5,6 +5,7 @@ transformation/ForToWhile
 transformation/LiftConditionals
 transformation/MapStmt
 transformation/NameAnonymousTypes
+transformation/PreIncrement
 transformation/RemoveImplicitCast
 transformation/SimplifyDeclStmt
 transformation/SplitInitialisers
