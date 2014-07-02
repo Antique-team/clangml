@@ -1,4 +1,17 @@
 TODO:
+- generate simplified AST structure where types_ are types and no
+  wrapper-records are used. I.e.
+    { e = UnaryOperator (UO_Plus, { e = IntegerLiteral 1; ...}); ... }
+    =>
+    UnaryOperator (UO_Plus, IntegerLiteral 1)
+  We will lose source locations, but this type can be useful to look
+  up ctyps. E.g.
+    lookup (PointerType (BuiltinType BT_Int))
+    =
+    { t = PointerType ({ t = BuiltinType BT_Int; ... }); ... }
+  This will lose type qualifiers, which is bad, so we may want lookup to
+  return a set of types with different qualifiers (all types present
+  in the analysed program).
 - make it possible to read more than one input source file using the same
   clang process
 - add a way to create new clang AST nodes from ocaml AST nodes
