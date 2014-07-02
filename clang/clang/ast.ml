@@ -749,7 +749,10 @@ and stmt_ = AstBridge.stmt_ =
   | SwitchStmt			of (* value *)expr * (* body *)stmt
   | DeclStmt			of (* decls *)decl list
 
-  | GCCAsmStmt                  of (* asm string *)expr * (* clobbers *)string list
+  | GCCAsmStmt                  of
+      (* asm string *)expr
+      * (* asm outputs *)asm_arg list
+      * (* clobbers *)string list
   | AttributedStmt
   | CapturedStmt
   | CXXCatchStmt
@@ -770,6 +773,10 @@ and stmt_ = AstBridge.stmt_ =
   | SEHFinallyStmt
   | SEHTryStmt
 
+and asm_arg = AstBridge.asm_arg = {
+    aa_constraint : string;
+    aa_expr : expr
+}
 
 and tloc = AstBridge.tloc = {
   tl      : tloc_;
