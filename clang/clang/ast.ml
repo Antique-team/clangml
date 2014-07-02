@@ -749,12 +749,12 @@ and stmt_ = AstBridge.stmt_ =
   | SwitchStmt			of (* value *)expr * (* body *)stmt
   | DeclStmt			of (* decls *)decl list
 
+  | GCCAsmStmt                  of (* asm string *)expr * (* clobbers *)string list
   | AttributedStmt
   | CapturedStmt
   | CXXCatchStmt
   | CXXForRangeStmt
   | CXXTryStmt
-  | GCCAsmStmt
   | IndirectGotoStmt
   | MSAsmStmt
   | MSDependentExistsStmt

@@ -238,8 +238,14 @@ OCamlVisitor::TraverseGCCAsmStmt (clang::GCCAsmStmt *S)
 {
   TRACE;
 
+  ptr<Expr> asm_string = must_traverse (S->getAsmString ());
+  std::vector<clang::StringRef> clobbers;
+  for (unsigned int i = 0 ; i < S->getNumClobbers() ; ++i) {
+      clobbers.push_back(S->getClobber(i));
+  }
+
   // TODO: implement
-  stack.push (ast_bridge::mkGCCAsmStmt ());
+  stack.push (ast_bridge::mkGCCAsmStmt (asm_string, clobbers));
 
   return true;
 }

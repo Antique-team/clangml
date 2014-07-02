@@ -463,6 +463,10 @@ and pp_stmt_ ff = function
   | DeclStmt decls ->
       Format.fprintf ff "%a;"
         (Formatx.pp_list pp_decl) decls
+  | GCCAsmStmt (asm_string, clobbers) ->
+      Format.fprintf ff "asm(%a); (%a)"
+        pp_expr asm_string
+        (Formatx.pp_list Format.pp_print_string) clobbers
 
   | OMPParallelDirective -> Format.pp_print_string ff "<OMPParallelDirective>"
   | AttributedStmt -> Format.pp_print_string ff "<AttributedStmt>"
@@ -470,7 +474,6 @@ and pp_stmt_ ff = function
   | CXXCatchStmt -> Format.pp_print_string ff "<CXXCatchStmt>"
   | CXXForRangeStmt -> Format.pp_print_string ff "<CXXForRangeStmt>"
   | CXXTryStmt -> Format.pp_print_string ff "<CXXTryStmt>"
-  | GCCAsmStmt -> Format.pp_print_string ff "<GCCAsmStmt>"
   | IndirectGotoStmt -> Format.pp_print_string ff "<IndirectGotoStmt>"
   | MSAsmStmt -> Format.pp_print_string ff "<MSAsmStmt>"
   | MSDependentExistsStmt -> Format.pp_print_string ff "<MSDependentExistsStmt>"
