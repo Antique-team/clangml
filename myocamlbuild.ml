@@ -106,8 +106,11 @@ let find_ocamlpicdir () : string =
            try to install it using OPAM.\nWould you like to attempt this?"
               = PA_Y then (
         (* Yes, try to install. *)
-        if Sys.command @@ "opam switch --no-switch " ^ Vars.ocaml_version ^ "+PIC" <> 0 then
+        let preferred = pread "opam switch show" in
+        if Sys.command @@ "opam switch " ^ Vars.ocaml_version ^ "+PIC" <> 0 then
           failwith "opam failed to switch to PIC compiler";
+        if  Sys.command @@ "opam switch " ^ preferred <> 0 then
+          failwith "opam failed to switch back to preferred compiler";
         (* Now our file should exist. *)
         if Sys.file_exists libasmrun_a then
           picdir
