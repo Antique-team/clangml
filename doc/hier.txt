@@ -1,5 +1,24 @@
 #############################################################################
 ##
+## Built programs
+##
+#############################################################################
+
+main.native			MemCAD analyser with original ocamlyacc-based
+				parser. Called by batch.native on "make prtp".
+mainClang.native		MemCAD analyser with Clang-based parser.
+				Called by "batch.native -analyzer mainClang.native"
+processor.native		Test program for transformation from Clang AST
+				to MemCAD AST.
+batch.native			Regression testing batch program.
+
+clangaml.dylib			Clang plugin with OCaml linked in.
+				Communicates with mainClang and processor via
+                                pipes, and with clang via C++ native calls.
+
+
+#############################################################################
+##
 ## Clang API/AST
 ##
 #############################################################################
