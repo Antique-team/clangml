@@ -435,10 +435,10 @@ type cast_kind = AstBridge.cast_kind =
 
 (* [clang/AST/OperationKinds.h] *)
 type unary_operator = AstBridge.unary_operator =
-  | UO_PostInc	(* [C99 6.5.2.4] Postfix increment and decrement *)
-  | UO_PostDec
-  | UO_PreInc	(* [C99 6.5.3.1] Prefix increment and decrement *)
-  | UO_PreDec
+  | UO_PostInc	(* i++ [C99 6.5.2.4] Postfix increment and decrement *)
+  | UO_PostDec  (* i-- *)
+  | UO_PreInc	(* ++i *) (* [C99 6.5.3.1] Prefix increment and decrement *)
+  | UO_PreDec   (* --i *)
   | UO_AddrOf	(* [C99 6.5.3.2] Address and indirection *)
   | UO_Deref
   | UO_Plus	(* [C99 6.5.3.3] Unary arithmetic *)
