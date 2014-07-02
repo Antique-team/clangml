@@ -435,10 +435,10 @@ type cast_kind = AstBridge.cast_kind =
 
 (* [clang/AST/OperationKinds.h] *)
 type unary_operator = AstBridge.unary_operator =
-  | UO_PostInc	(* [C99 6.5.2.4] Postfix increment and decrement *)
-  | UO_PostDec
-  | UO_PreInc	(* [C99 6.5.3.1] Prefix increment and decrement *)
-  | UO_PreDec
+  | UO_PostInc	(* i++ [C99 6.5.2.4] Postfix increment and decrement *)
+  | UO_PostDec  (* i-- *)
+  | UO_PreInc	(* ++i *) (* [C99 6.5.3.1] Prefix increment and decrement *)
+  | UO_PreDec   (* --i *)
   | UO_AddrOf	(* [C99 6.5.3.2] Address and indirection *)
   | UO_Deref
   | UO_Plus	(* [C99 6.5.3.3] Unary arithmetic *)
@@ -749,12 +749,16 @@ and stmt_ = AstBridge.stmt_ =
   | SwitchStmt			of (* value *)expr * (* body *)stmt
   | DeclStmt			of (* decls *)decl list
 
+  | GCCAsmStmt                  of
+      (* asm string *)expr
+      * (* asm outputs *)asm_arg list
+      * (* asm inputs *)asm_arg list
+      * (* clobbers *)string list
   | AttributedStmt
   | CapturedStmt
   | CXXCatchStmt
   | CXXForRangeStmt
   | CXXTryStmt
-  | GCCAsmStmt
   | IndirectGotoStmt
   | MSAsmStmt
   | MSDependentExistsStmt
@@ -770,6 +774,10 @@ and stmt_ = AstBridge.stmt_ =
   | SEHFinallyStmt
   | SEHTryStmt
 
+and asm_arg = AstBridge.asm_arg = {
+    aa_constraint : string;
+    aa_expr : expr
+}
 
 and tloc = AstBridge.tloc = {
   tl      : tloc_;

@@ -98,11 +98,9 @@ let process clang =
 
   let () = Analysis.All.analyse_decl clang decl in
 
-  (*
   print_string "--------------------- Clang CST ---------------------";
   Format.printf "@[<v2>@,%a@]@."
     Clang.Pp.pp_decl decl;
-  *)
 
   let decl = Transformation.All.transform_decl clang decl in
   (*

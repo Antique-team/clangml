@@ -1,0 +1,11 @@
+
+- adding a new AST node
+
+  - populate a test.c file in clangaml root with the new feature to support
+  - make check # should crash
+  - edit plugin/c++/OCamlVisitor/Stmt.cpp and clang/clang/ast.ml and
+    clang/clang/pp.ml
+  - look at /usr/lib/llvm-3.4/include/clang/AST/Stmt.h or Decl*.h or Expr*.h
+    or ... for clang AST manipulation in C++ 
+  - copy then rename then add and commit the test.c file to
+    ./plugin/testsuite/test_asm.c for example
