@@ -134,6 +134,13 @@ let parse args continue =
   (* Try to find our clang plugin. *)
   let plugin =
     try
+      let clangml_path =
+        try
+          Sys.getenv "CLANGML_PATH"
+        with Not_found ->
+          "."
+      in
+
       List.find (fun candidate ->
         try
           Unix.(access candidate [R_OK]);
@@ -144,8 +151,10 @@ let parse args continue =
         "clangaml.dylib";
         "_build/clangaml.dylib";
         "../../_build/clangaml.dylib";
+        clangml_path ^ "/clangaml.dylib";
         Config.destdir ^ "/clang/clangaml.dylib";
       ]
+
     with Not_found ->
       failwith "could not find the clang ocaml plugin"
   in
