@@ -10,7 +10,7 @@
 
 
 value_of_context::data::data ()
-  : cache (caml_alloc (OCamlADTBase::num_type_ids, 0))
+  : cache (caml_alloc (OCamlADTBase::num_type_ids (), 0))
 {
   caml_register_generational_global_root (&cache);
 }
@@ -201,7 +201,7 @@ value_of_context::resize (size_t type, size_t max_id)
   if (self == nullptr)
     {
       self = new data;
-      for (size_t type = 0; type < OCamlADTBase::num_type_ids; type++)
+      for (size_t type = 0; type < OCamlADTBase::num_type_ids (); type++)
         {
           size_t local_ids = OCamlADTBase::num_local_ids.at (type);
           if (local_ids > 0)
