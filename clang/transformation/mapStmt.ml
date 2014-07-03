@@ -11,7 +11,7 @@ let mapCompoundStmt ?(replace=true) map_stmt v state stmt stmts =
           if replace then
             replacement @ stmts
           else
-            replacement @ stmt :: stmts
+            stmt :: replacement @ stmts
     ) [] stmts
   in
 
