@@ -683,7 +683,7 @@ and pp_cxx_base_specifier fmt base =
     Format.pp_print_string fmt "virtual ";
   Format.pp_print_string fmt (string_of_access_specifier base.cbs_access_spec);
   Format.pp_print_string fmt " ";
-  pp_type fmt base.cbs_type;
+  pp_tloc fmt base.cbs_type;
 
 
 and pp_bases fmt = function
