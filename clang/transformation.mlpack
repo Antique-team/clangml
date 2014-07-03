@@ -6,6 +6,7 @@ transformation/LiftConditionals
 transformation/MapStmt
 transformation/NameAnonymousTypes
 transformation/PreIncrDecr
+transformation/PostIncrDecr
 transformation/RemoveImplicitCast
 transformation/SimplifyDeclStmt
 transformation/SplitInitialisers
