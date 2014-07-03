@@ -93,10 +93,9 @@ private:
 
   virtual size_t type_id   () const = 0;
   virtual size_t local_id  () const = 0;
-  virtual bool initialised () const = 0;
 
 protected:
-  static bool class_init (size_t type_id, std::type_info const &ti);
+  static size_t class_init (std::type_info const &ti);
 
 public:
   static size_t num_type_ids;
@@ -140,10 +139,6 @@ public:
 public:
   size_t const class_local_id = num_local_ids.at (class_type_id)++;
   size_t local_id () const final { return class_local_id; }
-
-private:
-  static bool const class_initialised;
-  bool initialised () const final { return class_initialised; }
 };
 
 
