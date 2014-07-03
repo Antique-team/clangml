@@ -15,7 +15,8 @@ let transform_decl clang =
               e_cref = Ref.null ;
               e_sloc = expr.e_sloc ;
               e_type = operand.e_type (* FIXME THIS SHOULD BE INTEGER *)
-            } in
+            }
+          in
           let final_op = match op with
             | UO_PreInc -> BO_Add
             | UO_PreDec -> BO_Sub
@@ -26,13 +27,15 @@ let transform_decl clang =
               e_cref = Ref.null ;
               e_sloc = expr.e_sloc ;
               e_type = operand.e_type
-            } in
+            }
+          in
           let store_a_plus_or_minus_one = 
             { e = BinaryOperator (BO_Assign, operand, a_plus_or_minus_one) ;
               e_cref = Ref.null ;
               e_sloc = expr.e_sloc ;
               e_type = operand.e_type
-            } in
+            }
+          in
           map_expr v state store_a_plus_or_minus_one
       | _ ->
           MapVisitor.visit_expr v state expr
