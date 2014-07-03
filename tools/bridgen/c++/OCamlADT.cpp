@@ -7,34 +7,22 @@
 #define STATIC_MEMORY		0
 
 
-static size_t num_type_ids;
-
 size_t OCamlADTBase::values_created;
 size_t OCamlADTBase::num_global_ids;
 size_t OCamlADTBase::bytes_allocated;
+size_t OCamlADTBase::num_type_ids;
 std::vector<size_t> OCamlADTBase::num_local_ids;
 
-size_t
-OCamlADTBase::num_type_ids ()
-{
-  return ::num_type_ids;
-}
-
 
 size_t
-OCamlADTBase::next_type_id ()
+OCamlADTBase::class_init (std::type_info const &ti)
 {
-  return ::num_type_ids++;
-}
-
-
-bool
-OCamlADTBase::class_init (size_t type_id, std::type_info const &ti)
-{
+  size_t type_id = num_type_ids++;
   printf ("create new ocaml adt with id %2zu: %s\n",
           type_id,
           ti.name ());
-  return true;
+  num_local_ids.resize (num_type_ids);
+  return type_id;
 }
 
 
