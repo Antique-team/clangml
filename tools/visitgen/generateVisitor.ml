@@ -1,5 +1,5 @@
 open Camlp4.PreCast
-open OcamlTypes.Define
+open OcamlTypes.Sig
 open OcamlTypes.Process
 
 
@@ -20,35 +20,9 @@ let reduce f = function
 
 
 let codegen kind ocaml_types =
-  let ctx = make_context @@ snd @@ List.split ocaml_types in
-
   let prefix = name_of_kind kind ^ "_" in
-
-  let visit_types =
-    List.filter (fun (name, _) ->
-      List.mem (name ^ "_") ctx.class_types
-    ) ocaml_types
-    |> List.map (fun (name, rec_ty) ->
-        let rec_ty =
-          match rec_ty with
-          | RecordType ty -> ty
-          | _ -> failwith @@ "type " ^ name ^ "_ is not a record type"
-        in
-        let sum_ty =
-          match List.assoc (name ^ "_") ocaml_types with
-          | SumType ty -> ty
-          | _ -> failwith @@ "type " ^ name ^ " is not a sum type"
-        in
-        (name, rec_ty, sum_ty)
-      )
-  in
-
-  let visit_type_names =
-    List.map
-      (fun (name, _, _) -> name)
-      visit_types
-  in
-
+  let visit_types = visit_types ocaml_types in
+  let visit_type_names = visit_type_names visit_types in
 
   let functions =
     List.map (fun (name, rec_ty, sum_ty) ->
@@ -69,8 +43,8 @@ let codegen kind ocaml_types =
                   failwith @@ "unsupported argument type in tycon " ^ tycon
             ) tycon_args
             |> List.fold_left (fun tycon (_loc, param) ->
-                reduce _loc tycon param
-              ) init
+                 reduce _loc tycon param
+               ) init
           in
 
           let pattern =
@@ -102,68 +76,68 @@ let codegen kind ocaml_types =
             List.mapi (fun i ty -> (i, ty)) tycon_args
             |> List.rev
             |> List.fold_left (fun expr (i, ty) ->
-                let mangle name =
-                  name ^ string_of_int i
-                in
-
-                let mkmap name = function
-                  | None ->
-                      let var = mangle name in
-                      begin match kind with
-                      | Map | Fold ->
-                          <:expr<v.$lid:prefix ^ name$ v state $lid:var$>>
-                      | Iter ->
-                          <:expr<v.$lid:prefix ^ name$ v $lid:var$>>
-                      end
-                  | Some fn ->
-                      let var = mangle name in
-                      begin match kind with
-                      | Map | Fold ->
-                          <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v state $lid:var$>>
-                      | Iter ->
-                          <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v $lid:var$>>
-                      end
-                in
-
-                let update =
-                  match ty with
-                  | ListOfType (_, NamedType (_loc, name))
-                    when List.mem name visit_type_names ->
-                      Some (name, mkmap name (Some "list"))
-                  | OptionType (_, NamedType (_loc, name))
-                    when List.mem name visit_type_names ->
-                      Some (name, mkmap name (Some "option"))
-                  | NamedType (_loc, name)
-                    when List.mem name visit_type_names ->
-                      Some (name, mkmap name None)
-                  | _ ->
-                      None
-                in
-
-                match update with
-                | None -> expr
-                | Some (name, update) ->
-                    let name = mangle name in
-                    let patt =
-                      match kind with
-                      | Map -> <:patt<(state, $lid:name$)>>
-                      | Fold -> <:patt<state>>
-                      | Iter -> <:patt<()>>
-                    in
-                    <:expr<
-                      let $patt$ = $update$ in
-                      $expr$
-                    >>
-              ) result
+                 let mangle name =
+                   name ^ string_of_int i
+                 in
+ 
+                 let mkmap name = function
+                   | None ->
+                       let var = mangle name in
+                       begin match kind with
+                       | Map | Fold ->
+                           <:expr<v.$lid:prefix ^ name$ v state $lid:var$>>
+                       | Iter ->
+                           <:expr<v.$lid:prefix ^ name$ v $lid:var$>>
+                       end
+                   | Some fn ->
+                       let var = mangle name in
+                       begin match kind with
+                       | Map | Fold ->
+                           <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v state $lid:var$>>
+                       | Iter ->
+                           <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v $lid:var$>>
+                       end
+                 in
+ 
+                 let update =
+                   match ty with
+                   | ListOfType (_, NamedType (_loc, name))
+                     when List.mem name visit_type_names ->
+                       Some (name, mkmap name (Some "list"))
+                   | OptionType (_, NamedType (_loc, name))
+                     when List.mem name visit_type_names ->
+                       Some (name, mkmap name (Some "option"))
+                   | NamedType (_loc, name)
+                     when List.mem name visit_type_names ->
+                       Some (name, mkmap name None)
+                   | _ ->
+                       None
+                 in
+ 
+                 match update with
+                 | None -> expr
+                 | Some (name, update) ->
+                     let name = mangle name in
+                     let patt =
+                       match kind with
+                       | Map -> <:patt<(state, $lid:name$)>>
+                       | Fold -> <:patt<state>>
+                       | Iter -> <:patt<()>>
+                     in
+                     <:expr<
+                       let $patt$ = $update$ in
+                       $expr$
+                     >>
+               ) result
           in
 
           <:match_case<$pattern$ -> $update$>>
         ) sum_mems
 
         |> reduce (fun cases case ->
-            let _loc = Ast.loc_of_match_case case in
-            <:match_case<$cases$ | $case$>>
-          )
+             let _loc = Ast.loc_of_match_case case in
+             <:match_case<$cases$ | $case$>>
+           )
       in
 
       let (_, main_member, _) =
@@ -206,9 +180,9 @@ let codegen kind ocaml_types =
           >>
     ) visit_types
     |> reduce (fun functions fn ->
-        let _loc = Ast.loc_of_str_item fn in
-        <:str_item<$functions$;; $fn$>>
-      )
+         let _loc = Ast.loc_of_str_item fn in
+         <:str_item<$functions$;; $fn$>>
+       )
   in
 
 
@@ -237,9 +211,9 @@ let codegen kind ocaml_types =
 
     List.map mkty visit_types
     |> reduce (fun members ty ->
-        let _loc = Ast.loc_of_ctyp ty in
-        <:ctyp<$members$; $ty$>>
-      )
+         let _loc = Ast.loc_of_ctyp ty in
+         <:ctyp<$members$; $ty$>>
+       )
   in
 
 
@@ -250,9 +224,9 @@ let codegen kind ocaml_types =
 
     List.map mkbinding visit_types
     |> reduce (fun members ty ->
-        let _loc = Ast.loc_of_rec_binding ty in
-        <:rec_binding<$members$; $ty$>>
-      )
+         let _loc = Ast.loc_of_rec_binding ty in
+         <:rec_binding<$members$; $ty$>>
+       )
   in
 
 

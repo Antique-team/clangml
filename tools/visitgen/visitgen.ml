@@ -1,5 +1,5 @@
 open Camlp4.PreCast
-open OcamlTypes.Define
+open OcamlTypes.Sig
 open OcamlTypes.Print
 open OcamlTypes.Process
 

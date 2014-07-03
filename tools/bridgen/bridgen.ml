@@ -1,5 +1,5 @@
 open Util
-open OcamlTypes.Define
+open OcamlTypes.Sig
 open OcamlTypes.Process
 
 module Log = Logger.Make(struct let tag = "main" end)
@@ -411,23 +411,6 @@ let gen_code_for_rec_type ctx = function
 let code_gen dir basename (ocaml_types : ocaml_type list) =
   let ctx = make_context ocaml_types in
 
-  (* Get AST version. *)
-  begin
-    match
-      List.map (function
-        | Version (_, version) -> [version]
-        | _ -> []
-      ) ocaml_types
-      |> List.flatten
-    with
-    | [version] -> ()
-    | [] ->
-        Log.err "No version found"
-    | versions ->
-        Log.err "Multiple versions found: [%a]"
-          (Formatx.pp_list Formatx.pp_print_string) versions
-  end;
-
   let cpp_types =
     List.map (gen_code_for_rec_type ctx) ocaml_types
     |> List.flatten
@@ -451,6 +434,24 @@ let code_gen dir basename (ocaml_types : ocaml_type list) =
 
 let parse_and_generate dir basename source =
   let ocaml_types = OcamlTypes.Parse.parse_file source in
+
+  (* Get AST version. *)
+  begin
+    match
+      List.map (function
+        | Version (_, version) -> [version]
+        | _ -> []
+      ) ocaml_types
+      |> List.flatten
+    with
+    | [version] -> ()
+    | [] ->
+        Log.err "No version found"
+    | versions ->
+        Log.err "Multiple versions found: [%a]"
+          (Formatx.pp_list Formatx.pp_print_string) versions
+  end;
+
   (*print_endline (Show.show_list<ocaml_type> ocaml_types);*)
   code_gen dir basename ocaml_types
 
