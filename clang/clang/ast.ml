@@ -636,7 +636,7 @@ and expr_ = AstBridge.expr_ =
   | InitListExpr		of (* inits *)expr list
   | ImplicitValueInitExpr
   | ArraySubscriptExpr		of (* base *)expr * (* index *)expr
-  | StmtExpr			of stmt
+  | StmtExpr			of (* body *)stmt
 
   | SizeOfExpr			of expr
   | SizeOfType			of tloc
