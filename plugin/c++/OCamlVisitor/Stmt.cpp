@@ -284,13 +284,23 @@ OCamlVisitor::TraverseDeclStmt (clang::DeclStmt *S)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseIndirectGotoStmt (clang::IndirectGotoStmt *S)
+{
+  TRACE;
+
+  ptr<Expr> expr = must_traverse (S->getTarget ());
+
+  stack.push (mkIndirectGotoStmt (expr));
+
+  return true;
+}
 
 UNIMP_STMT (Stmt, AttributedStmt)
 UNIMP_STMT (Stmt, CapturedStmt)
 UNIMP_STMT (Stmt, CXXCatchStmt)
 UNIMP_STMT (Stmt, CXXForRangeStmt)
 UNIMP_STMT (Stmt, CXXTryStmt)
-UNIMP_STMT (Stmt, IndirectGotoStmt)
 UNIMP_STMT (Stmt, MSAsmStmt)
 UNIMP_STMT (Stmt, MSDependentExistsStmt)
 UNIMP_STMT (Stmt, ObjCAtCatchStmt)

@@ -469,6 +469,9 @@ and pp_stmt_ fmt = function
         (Formatx.pp_list pp_asm_arg) outputs
         (Formatx.pp_list pp_asm_arg) inputs
         (Formatx.pp_list Format.pp_print_string) clobbers
+  | IndirectGotoStmt expr ->
+      Format.fprintf fmt "indirect_goto %a"
+        pp_expr expr
 
   | OMPParallelDirective -> Format.pp_print_string fmt "<OMPParallelDirective>"
   | AttributedStmt -> Format.pp_print_string fmt "<AttributedStmt>"
@@ -476,7 +479,6 @@ and pp_stmt_ fmt = function
   | CXXCatchStmt -> Format.pp_print_string fmt "<CXXCatchStmt>"
   | CXXForRangeStmt -> Format.pp_print_string fmt "<CXXForRangeStmt>"
   | CXXTryStmt -> Format.pp_print_string fmt "<CXXTryStmt>"
-  | IndirectGotoStmt -> Format.pp_print_string fmt "<IndirectGotoStmt>"
   | MSAsmStmt -> Format.pp_print_string fmt "<MSAsmStmt>"
   | MSDependentExistsStmt -> Format.pp_print_string fmt "<MSDependentExistsStmt>"
   | ObjCAtCatchStmt -> Format.pp_print_string fmt "<ObjCAtCatchStmt>"
