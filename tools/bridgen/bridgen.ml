@@ -89,7 +89,7 @@ let rec translate_type ctx = let open Codegen in function
   | NamedType (_, "bool") ->
       TyBool
   | NamedType (_, "char") ->
-      TyChar
+      TyUChar
   | NamedType (_, "int") ->
       TyInt
   | NamedType (_, "float") ->

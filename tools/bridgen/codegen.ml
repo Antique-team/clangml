@@ -36,6 +36,7 @@ type cpp_type =
   | TyVoid
   | TyBool
   | TyChar
+  | TyUChar
   | TyInt
   | TyFloat
   | TyString
@@ -137,6 +138,7 @@ let string_of_flag = function
 let rec string_of_cpp_type = function
   | TyBool -> "bool"
   | TyChar -> "char"
+  | TyUChar -> "unsigned char"
   | TyInt -> "int"
   | TyFloat -> "float"
   | TyString -> "llvm::StringRef"
