@@ -1,7 +1,7 @@
 open Clang
 
 
-let declare sloc var ty =
+let declare ?init sloc var ty =
   let open Ast in
 
   {
@@ -9,7 +9,7 @@ let declare sloc var ty =
         d = VarDecl (
             ty,
             var,
-            None
+            init
           );
         d_sloc = sloc;
         d_cref = Ref.null;
