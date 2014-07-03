@@ -274,6 +274,24 @@ let () =
             ])
           end;
 
+
+        rule "Generate simplified AST without sloc/cref/..."
+          ~prods:[
+            "clang/clang/astSimple.ml";
+          ]
+          ~deps:[
+            "tools/simplify/simplify.native";
+            "clang/clang/astBridge.ml";
+          ]
+          begin fun env build ->
+            Cmd (S[
+              A"tools/simplify/simplify.native";
+              A"clang/clang/astSimple.ml";
+              A"clang/clang/astBridge.ml";
+            ])
+          end;
+
+
         rule "Generate file containing the search path for clangaml.dylib"
           ~prod:"clang/clang/config.ml"
           begin fun env build ->

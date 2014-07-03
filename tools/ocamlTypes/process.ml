@@ -1,6 +1,6 @@
 (* Common functionality. *)
 open Util
-open Define
+open Sig
 
 module Log = Logger.Make(struct let tag = "ProcessOCamlTypes" end)
 
@@ -64,3 +64,30 @@ let make_context ocaml_types =
 
   (* Extract type names. *)
   { enum_types; class_types; }
+
+
+let visit_types ocaml_types : type_map list =
+  let ctx = make_context @@ snd @@ List.split ocaml_types in
+
+  List.filter (fun (name, _) ->
+    List.mem (name ^ "_") ctx.class_types
+  ) ocaml_types
+  |> List.map (fun (name, rec_ty) ->
+      let rec_ty =
+        match rec_ty with
+        | RecordType ty -> ty
+        | _ -> failwith @@ "type " ^ name ^ "_ is not a record type"
+      in
+      let sum_ty =
+        match List.assoc (name ^ "_") ocaml_types with
+        | SumType ty -> ty
+        | _ -> failwith @@ "type " ^ name ^ " is not a sum type"
+      in
+      (name, rec_ty, sum_ty)
+    )
+
+
+let visit_type_names visit_types =
+  List.map
+    (fun (name, _, _) -> name)
+    visit_types

@@ -1,6 +1,6 @@
 open Camlp4.PreCast
 open Util
-open Define
+open Sig
 open Print
 
 let (%) f g x = f (g x)
