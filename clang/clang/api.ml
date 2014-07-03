@@ -18,10 +18,8 @@ type _ request =
   | Compose : 'a request * 'b request -> ('a * 'b) request
   | TranslationUnit : Ast.decl request
   | Filename : string request
-  | CanonicalType : Ast.ctyp Ref.t -> Ast.ctyp request
   | SizeofType : Ast.ctyp Ref.t -> int64 request
   | AlignofType : Ast.ctyp Ref.t -> int request
-  | TypePtr : Ast.tloc Ref.t -> Ast.ctyp request
   | PresumedLoc : Sloc.t -> Sloc.presumed_loc request
   | IsFromMainFile : Sloc.t -> bool request
   | FileCharacteristic : Sloc.t -> Sloc.characteristic_kind request
@@ -50,10 +48,8 @@ let name_of_request : type a. a request -> string = function
   | Compose		_ -> "Compose"
   | TranslationUnit	  -> "TranslationUnit"
   | Filename		  -> "Filename"
-  | CanonicalType	_ -> "CanonicalType"
   | SizeofType		_ -> "SizeofType"
   | AlignofType		_ -> "AlignofType"
-  | TypePtr		_ -> "TypePtr"
   | PresumedLoc		_ -> "PresumedLoc"
   | IsFromMainFile	_ -> "IsFromMainFile"
   | FileCharacteristic	_ -> "FileCharacteristic"

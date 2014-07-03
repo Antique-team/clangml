@@ -1,8 +1,6 @@
 open Clang
 open Ast
 
-external clang_canonical_type		: Api.context -> ctyp Ref.t -> ctyp = "clang_canonical_type"
-external clang_type_ptr			: Api.context -> tloc Ref.t -> ctyp = "clang_type_ptr"
 external clang_presumed_loc		: Api.context -> Sloc.t -> Sloc.presumed_loc = "clang_presumed_loc"
 external clang_is_from_main_file	: Api.context -> Sloc.t -> bool = "clang_is_from_main_file"
 external clang_characteristic_kind	: Api.context -> Sloc.t -> Sloc.characteristic_kind = "clang_characteristic_kind"
@@ -33,18 +31,10 @@ let run_processor (tu : decl) (file : string) (ctx : Api.context) =
     | Filename ->
         file
 
-    | CanonicalType id ->
-        clang_canonical_type ctx id
     | SizeofType ty ->
         clang_type_sizeof ctx ty
     | AlignofType ty ->
         clang_type_alignof ctx ty
-
-    | TypePtr tloc ->
-        if Ref.is_null tloc then
-          failure E_NullRef
-        else
-          clang_type_ptr ctx tloc
 
     | PresumedLoc sloc ->
         if Sloc.is_valid sloc then

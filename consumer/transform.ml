@@ -16,16 +16,14 @@ let start_line clang loc =
   Api.(request clang @@ PresumedLoc loc.loc_s).Sloc.loc_line - 1
 
 
-let sizeof clang tl_cref =
+let sizeof clang ctyp =
   let open Api in
-  let ctyp = request clang @@ TypePtr tl_cref in
   request clang @@ SizeofType ctyp.t_cref
   |> Int64.to_int
 
 
-let alignof clang tl_cref =
+let alignof clang ctyp =
   let open Api in
-  let ctyp = request clang @@ TypePtr tl_cref in
   request clang @@ AlignofType ctyp.t_cref
 
 
@@ -240,7 +238,7 @@ let rec c_agg_fields_of_decls clang is_union (decls : decl list) =
             fd_type = {
               tl = ElaboratedTypeLoc {
                 tl = RecordTypeLoc (kind, name2);
-                tl_cref;
+                tl_type;
               }
             };
             fd_name = name;
@@ -253,8 +251,8 @@ let rec c_agg_fields_of_decls clang is_union (decls : decl list) =
         if init <> None then
           Log.unimp "Member initialisers not implemented";
 
-        let size  = sizeof  clang tl_cref in
-        let align = alignof clang tl_cref in
+        let size  = sizeof  clang tl_type in
+        let align = alignof clang tl_type in
 
         let agg = {
           cag_name   = if name1 = "" then None else Some name1;
@@ -289,8 +287,8 @@ let rec c_agg_fields_of_decls clang is_union (decls : decl list) =
         if init <> None then
           Log.unimp "Member initialisers not implemented";
 
-        let size  = sizeof  clang ty.tl_cref in
-        let align = alignof clang ty.tl_cref in
+        let size  = sizeof  clang ty.tl_type in
+        let align = alignof clang ty.tl_type in
 
         (* offset for the current field *)
         let off = compute_offset is_union off align in
@@ -772,14 +770,14 @@ let rec collect_decls clang prog = function
         { tl = ElaboratedTypeLoc {
             tl = RecordTypeLoc (kind, name2);
           };
-          tl_cref;
+          tl_type;
         },
         name)
       }
     :: tl
     when name1 = name2 ->
-      let size  = sizeof  clang tl_cref in
-      let align = alignof clang tl_cref in
+      let size  = sizeof  clang tl_type in
+      let align = alignof clang tl_type in
 
       let c_type =
         make_aggregate {
