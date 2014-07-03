@@ -284,6 +284,7 @@ OCamlVisitor::TraverseDeclStmt (clang::DeclStmt *S)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseIndirectGotoStmt (clang::IndirectGotoStmt *S)
 {
@@ -295,6 +296,7 @@ OCamlVisitor::TraverseIndirectGotoStmt (clang::IndirectGotoStmt *S)
 
   return true;
 }
+
 
 UNIMP_STMT (Stmt, AttributedStmt)
 UNIMP_STMT (Stmt, CapturedStmt)

@@ -752,7 +752,7 @@ and stmt_ = AstBridge.stmt_ =
                                  * (* asm outputs *)asm_arg list
                                  * (* asm inputs *)asm_arg list
                                  * (* clobbers *)string list
-  | IndirectGotoStmt            of (* target *)expr
+  | IndirectGotoStmt		of (* target *)expr
 
   | AttributedStmt
   | CapturedStmt

@@ -470,7 +470,7 @@ and pp_stmt_ fmt = function
         (Formatx.pp_list pp_asm_arg) inputs
         (Formatx.pp_list Format.pp_print_string) clobbers
   | IndirectGotoStmt expr ->
-      Format.fprintf fmt "indirect_goto %a"
+      Format.fprintf fmt "goto *%a"
         pp_expr expr
 
   | OMPParallelDirective -> Format.pp_print_string fmt "<OMPParallelDirective>"

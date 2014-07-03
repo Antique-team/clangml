@@ -169,10 +169,8 @@ OCamlVisitor::TraverseRecordDecl (clang::RecordDecl *D)
   TagTypeKind kind = translate_tag_type_kind (D->getTagKind ());
   option<list<Decl>> members;
   if (D->isCompleteDefinition ())
-    {
-      // Some members may be implicit (from inline unions).
-      members = implicit_cast<list<Decl>> (traverse_explicit_decls (D));
-    }
+    // Some members may be implicit (from inline unions).
+    members = implicit_cast<list<Decl>> (traverse_explicit_decls (D));
   clang::StringRef name = D->getName ();
   list<CxxBaseSpecifier> bases;
 
