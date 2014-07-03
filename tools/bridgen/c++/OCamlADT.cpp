@@ -7,25 +7,11 @@
 #define STATIC_MEMORY		0
 
 
-static size_t num_type_ids;
-
 size_t OCamlADTBase::values_created;
 size_t OCamlADTBase::num_global_ids;
 size_t OCamlADTBase::bytes_allocated;
+size_t OCamlADTBase::num_type_ids;
 std::vector<size_t> OCamlADTBase::num_local_ids;
-
-size_t
-OCamlADTBase::num_type_ids ()
-{
-  return ::num_type_ids;
-}
-
-
-size_t
-OCamlADTBase::next_type_id ()
-{
-  return ::num_type_ids++;
-}
 
 
 bool

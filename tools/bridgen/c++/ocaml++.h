@@ -99,8 +99,7 @@ protected:
   static bool class_init (size_t type_id, std::type_info const &ti);
 
 public:
-  static size_t next_type_id ();
-  static size_t num_type_ids ();
+  static size_t num_type_ids;
   static std::vector<size_t> num_local_ids;
 
 public:
