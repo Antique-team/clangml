@@ -70,6 +70,14 @@ let transform_decl clang =
         ({ state with inserted_stmts; inserted_decls },
          { expr with e })
 
+    | StmtExpr body ->
+        let saved_state = state in
+        let (state, body) = map_stmt v (clear_state state) body in
+        assert (state.inserted_decls == []);
+        assert (state.inserted_stmts == []);
+        (saved_state,
+        { expr with e = StmtExpr body })
+
     | _ ->
         MapVisitor.visit_expr v state expr
 
