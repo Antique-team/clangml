@@ -264,7 +264,6 @@ let make_default kind visit_types =
 
 
 let codegen kind ocaml_types =
-  let prefix = name_of_kind kind ^ "_" in
   let visit_types = visit_types ocaml_types in
 
   let functions = make_functions kind visit_types in
