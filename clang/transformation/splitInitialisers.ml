@@ -17,7 +17,7 @@ let transform_decl clang =
                   BO_Assign,
                   { e = DeclRefExpr name;
                     e_sloc = decl.d_sloc;
-                    e_type = Api.(request clang @@ TypePtr ty.tl_cref);
+                    e_type = ty.tl_type;
                     e_cref = Ref.null;
                   },
                   init
