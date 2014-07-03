@@ -15,7 +15,7 @@ module OCamlDumper  = Printers.DumpOCamlAst
 
 let print_meta_expr (e : Ast.expr) : unit =
   P4Printer.print None (fun o -> o#expr) e;
-  print_endline ""
+  Format.print_newline ()
 
 let print_str_item_as_meta (str_item : Ast.str_item) : unit =
   let meta_e = Quotation.MetaAst.Expr.meta_str_item Ast.Loc.ghost str_item in
