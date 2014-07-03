@@ -969,7 +969,7 @@ and cxx_base_specifier = AstBridge.cxx_base_specifier = {
   cbs_pack_expansion : bool;
   cbs_inherit_ctors  : bool;
   cbs_access_spec    : access_specifier;
-  cbs_type           : ctyp;
+  cbs_type           : tloc;
 }
 
 

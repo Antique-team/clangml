@@ -193,7 +193,7 @@ OCamlVisitor::TraverseCXXBaseSpecifier (clang::CXXBaseSpecifier const &B)
   base->cbs_pack_expansion   = B.isPackExpansion ();
   base->cbs_inherit_ctors    = B.getInheritConstructors ();
   base->cbs_access_spec      = translate_access_specifier (B.getAccessSpecifier ());
-  base->cbs_type             = must_traverse (B.getType ());
+  base->cbs_type             = must_traverse (B.getTypeSourceInfo ());
 
   stack.push (base);
 
