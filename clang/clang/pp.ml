@@ -293,6 +293,10 @@ and pp_expr_ fmt = function
   | AddrLabelExpr label ->
       Format.fprintf fmt "&&%s"
         label
+  | OffsetOfExpr (ty, components) ->
+      Format.fprintf fmt "%a (%a)"
+        pp_tloc ty
+        (Formatx.pp_list pp_offsetof_node) components
 
   | SizeOfExpr expr ->
       Format.fprintf fmt "sizeof %a"
@@ -377,7 +381,6 @@ and pp_expr_ fmt = function
   | ObjCSelectorExpr -> Format.pp_print_string fmt "<ObjCSelectorExpr>"
   | ObjCStringLiteral -> Format.pp_print_string fmt "<ObjCStringLiteral>"
   | ObjCSubscriptRefExpr -> Format.pp_print_string fmt "<ObjCSubscriptRefExpr>"
-  | OffsetOfExpr _ -> Format.pp_print_string fmt "<OffsetOfExpr>"
   | OpaqueValueExpr -> Format.pp_print_string fmt "<OpaqueValueExpr>"
   | PackExpansionExpr -> Format.pp_print_string fmt "<PackExpansionExpr>"
   | ParenListExpr -> Format.pp_print_string fmt "<ParenListExpr>"
@@ -395,6 +398,11 @@ and pp_expr_ fmt = function
 and pp_expr fmt expr =
   pp_expr_ fmt expr.e
 
+and pp_offsetof_node fmt = function
+  | OON_Array expr      -> pp_expr fmt expr
+  | OON_Field name      -> Format.fprintf fmt "field_name: %s" name
+  | OON_Identifier name -> Format.fprintf fmt "field_id: %s" name
+  | OON_Base spec       -> pp_cxx_base_specifier fmt spec
 
 and pp_stmt_ fmt = function
   | NullStmt ->
