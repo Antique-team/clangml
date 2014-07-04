@@ -753,12 +753,22 @@ and pp_decl_ fmt = function
   | FieldDecl { fd_type = ty;
                 fd_name = name;
                 fd_bitw = bitwidth;
-                fd_init = init;
+                fd_init = None;
                 fd_mutable = is_mutable;
               } ->
       Format.fprintf fmt "%s%a;@,"
         (if is_mutable then "mutable " else "")
         pp_named_arg (name, ty)
+  | FieldDecl { fd_type = ty;
+                fd_name = name;
+                fd_bitw = bitwidth;
+                fd_init = Some init;
+                fd_mutable = is_mutable;
+              } ->
+      Format.fprintf fmt "%s%a = %a;@,"
+        (if is_mutable then "mutable " else "")
+        pp_named_arg (name, ty)
+        pp_expr init
   | EnumDecl (name, enumerators) ->
       Format.fprintf fmt "enum %s { %a };@,"
         name
