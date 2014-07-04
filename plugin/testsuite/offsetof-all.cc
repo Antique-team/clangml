@@ -16,4 +16,4 @@ struct parent
   int i = __builtin_offsetof (T, myarray);
 };
 
-int i = __builtin_offsetof (parent<derived>, d.myarray[0][1][1]);
+int i = __builtin_offsetof (derived, myarray[0][1][1]);
