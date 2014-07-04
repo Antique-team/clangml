@@ -118,6 +118,14 @@ let transform_decl clang =
 
         (state, { stmt with s = WhileStmt (cond, body) })
 
+    | SwitchStmt (cond, body) ->
+        let (saved_state, cond) = map_expr v state cond in
+        let (state, body) = map_stmt v (clear_state state) body in
+        assert (state.inserted_decls == []);
+        assert (state.inserted_stmts == []);
+        (saved_state,
+        { stmt with s = SwitchStmt (cond, body) })
+
     | _ ->
         MapVisitor.visit_stmt v state stmt
 
