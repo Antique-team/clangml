@@ -14,12 +14,26 @@ compile all code as Position Independent Code and require no special
 recompilation of the runtime. On x86, it is also probably not required. On
 x86_64, however, it is.
 
+
+Installation procedure
+======================
+
 The following two options are both attempted by the build system, but in case
 they fail, you can try them, yourself.
 
 
+Dependencies
+------------
+
+- deriving-ocsigen
+- ANSITerminal
+- unix
+- camlp4.fulllib (Debian package: camlp4-extra)
+- apron (for MemCAD)
+
+
 Using OPAM
-==========
+----------
 
 First, find out (if you don't know), which compiler you are currently using.
 $ CURRENT=`opam switch show`
@@ -33,7 +47,7 @@ $ opam switch $CURRENT
 
 
 Without OPAM
-============
+------------
 
 You can download the compiler from
 http://caml.inria.fr/pub/distrib/ocaml-4.01/ocaml-4.01.0.tar.gz and build it
