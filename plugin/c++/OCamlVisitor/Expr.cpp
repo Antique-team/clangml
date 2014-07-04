@@ -84,8 +84,9 @@ OCamlVisitor::TraverseCharacterLiteral (clang::CharacterLiteral *S)
 bool
 OCamlVisitor::TraverseFloatingLiteral (clang::FloatingLiteral *S)
 {
+  // TODO: using approximate value here; should be using exact format
   stack.push (mkFloatingLiteral
-              (S->getValue ().convertToDouble ()));
+              (S->getValueAsApproximateDouble ()));
 
   return true;
 }
