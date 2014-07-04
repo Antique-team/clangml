@@ -809,12 +809,12 @@ and tloc_ = AstBridge.tloc_ =
   | RecordTypeLoc		of (* kind *)tag_type_kind * (* name *)string
   | DecayedTypeLoc		of (* original *)tloc
   | TemplateTypeParmTypeLoc	of (* name *)string
+  | ComplexTypeLoc              of (* element *)ctyp
 
   | AtomicTypeLoc
   | AttributedTypeLoc
   | AutoTypeLoc
   | BlockPointerTypeLoc
-  | ComplexTypeLoc
   | DependentNameTypeLoc
   | DependentSizedArrayTypeLoc
   | DependentSizedExtVectorTypeLoc
@@ -863,12 +863,12 @@ and ctyp_ = AstBridge.ctyp_ =
   | RecordType			of (* kind *)tag_type_kind * (* name *)string
   | DecayedType			of (* decayed *)ctyp * (* original *)ctyp
   | TemplateTypeParmType	of (* name *)string option
+  | ComplexType                 of (* element *)ctyp
 
   | AtomicType
   | AttributedType
   | AutoType
   | BlockPointerType
-  | ComplexType
   | DependentNameType
   | DependentSizedArrayType
   | DependentSizedExtVectorType

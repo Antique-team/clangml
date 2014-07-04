@@ -305,8 +305,18 @@ UNIMP_TYPE_LOC (Atomic)
 UNIMP_TYPE_LOC (Attributed)
 UNIMP_TYPE_LOC (Auto)
 UNIMP_TYPE_LOC (BlockPointer)
-UNIMP_TYPE_LOC (Complex)
 
+bool
+OCamlVisitor::TraverseComplexTypeLoc (clang::ComplexTypeLoc TL)
+{
+  TRACE;
+
+  ptr<Ctyp> element = must_traverse (TL.getTypePtr()->getElementType());
+
+  stack.push (mkComplexTypeLoc (element));
+
+  return true;
+}
 
 bool
 OCamlVisitor::TraverseDecayedTypeLoc (clang::DecayedTypeLoc TL)

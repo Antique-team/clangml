@@ -566,13 +566,15 @@ and pp_tloc_ fmt = function
   | EnumTypeLoc name ->
       Format.pp_print_string fmt
         (if name = "" then "<anonymous>" else name)
+  | ComplexTypeLoc elt ->
+      Format.fprintf fmt "complex: %a"
+        pp_ctyp elt
 
   | DecayedTypeLoc _ -> Format.pp_print_string fmt "<DecayedTypeLoc>"
   | AtomicTypeLoc -> Format.pp_print_string fmt "<AtomicTypeLoc>"
   | AttributedTypeLoc -> Format.pp_print_string fmt "<AttributedTypeLoc>"
   | AutoTypeLoc -> Format.pp_print_string fmt "<AutoTypeLoc>"
   | BlockPointerTypeLoc -> Format.pp_print_string fmt "<BlockPointerTypeLoc>"
-  | ComplexTypeLoc -> Format.pp_print_string fmt "<ComplexTypeLoc>"
   | DependentNameTypeLoc -> Format.pp_print_string fmt "<DependentNameTypeLoc>"
   | DependentSizedArrayTypeLoc -> Format.pp_print_string fmt "<DependentSizedArrayTypeLoc>"
   | DependentSizedExtVectorTypeLoc -> Format.pp_print_string fmt "<DependentSizedExtVectorTypeLoc>"
@@ -598,7 +600,7 @@ and pp_tloc fmt tloc =
   pp_tloc_ fmt tloc.tl
 
 
-and pp_type_ fmt = function
+and pp_ctyp_ fmt = function
   | BuiltinType bt ->
       Format.fprintf fmt "%s"
         (string_of_builtin_type bt)
@@ -610,37 +612,37 @@ and pp_type_ fmt = function
         pp_expr expr
   | TypeOfType ty ->
       Format.fprintf fmt "typeof (%a)"
-        pp_type ty
+        pp_ctyp ty
   | DecltypeType expr ->
       Format.fprintf fmt "decltype (%a)"
         pp_expr expr
   | ParenType ty ->
       Format.fprintf fmt "(%a)"
-        pp_type ty
+        pp_ctyp ty
   | PointerType ty ->
       Format.fprintf fmt "%a ptr"
-        pp_type ty
+        pp_ctyp ty
   | FunctionNoProtoType ty ->
       Format.fprintf fmt "? -> %a"
-        pp_type ty
+        pp_ctyp ty
   | FunctionProtoType (ty, args) ->
       Format.fprintf fmt "(%a) -> %a"
-        (Formatx.pp_list pp_type) args
-        pp_type ty
+        (Formatx.pp_list pp_ctyp) args
+        pp_ctyp ty
   | ConstantArrayType (ty, size) ->
       Format.fprintf fmt "%a[%d]"
-        pp_type ty
+        pp_ctyp ty
         size
   | VariableArrayType (ty, size) ->
       Format.fprintf fmt "%a[%a]"
-        pp_type ty
+        pp_ctyp ty
         pp_expr size
   | IncompleteArrayType ty ->
       Format.fprintf fmt "%a[]"
-        pp_type ty
+        pp_ctyp ty
   | ElaboratedType ty ->
       Format.fprintf fmt "%a"
-        pp_type ty
+        pp_ctyp ty
   | RecordType (kind, name) ->
       Format.fprintf fmt "<%s> %s"
         (string_of_tag_type_kind kind)
@@ -650,13 +652,15 @@ and pp_type_ fmt = function
         (if name = "" then "enum <anonymous>" else "enum " ^ name)
   | DecayedType (decayed, original) ->
       Format.fprintf fmt "%a"
-        pp_type decayed
+        pp_ctyp decayed
+  | ComplexType elt ->
+      Format.fprintf fmt "complex: %a"
+        pp_ctyp elt
 
   | AtomicType -> Format.pp_print_string fmt "<AtomicType>"
   | AttributedType -> Format.pp_print_string fmt "<AttributedType>"
   | AutoType -> Format.pp_print_string fmt "<AutoType>"
   | BlockPointerType -> Format.pp_print_string fmt "<BlockPointerType>"
-  | ComplexType -> Format.pp_print_string fmt "<ComplexType>"
   | DependentNameType -> Format.pp_print_string fmt "<DependentNameType>"
   | DependentSizedArrayType -> Format.pp_print_string fmt "<DependentSizedArrayType>"
   | DependentSizedExtVectorType -> Format.pp_print_string fmt "<DependentSizedExtVectorType>"
@@ -678,9 +682,9 @@ and pp_type_ fmt = function
   | UnresolvedUsingType -> Format.pp_print_string fmt "<UnresolvedUsingType>"
   | VectorType -> Format.pp_print_string fmt "<VectorType>"
 
-and pp_type fmt t =
+and pp_ctyp fmt t =
   Format.fprintf fmt "%a %a%s"
-    pp_type_ t.t
+    pp_ctyp_ t.t
     Formatx.(pp_list ~sep:(pp_sep "") pp_print_string)
       (List.map string_of_qualifier t.t_qual)
     (match t.t_aspace with
@@ -709,10 +713,10 @@ and string_of_declaration_name = function
   | DN_ObjCOneArgSelector -> "<ObjCOneArgSelector>"
   | DN_ObjCMultiArgSelector -> "<ObjCMultiArgSelector>"
   | DN_CXXConstructorName ty ->
-      pp_type Format.str_formatter ty;
+      pp_ctyp Format.str_formatter ty;
       Format.flush_str_formatter ()
   | DN_CXXDestructorName ty ->
-      pp_type Format.str_formatter ty;
+      pp_ctyp Format.str_formatter ty;
       "~" ^ Format.flush_str_formatter ()
   | DN_CXXConversionFunctionName -> "<CXXConversionFunctionName>"
   | DN_CXXOperatorName kind -> "operator" ^ string_of_overloaded_operator_kind kind
@@ -801,10 +805,10 @@ and pp_decl_ fmt = function
         pp_decl templated
   | TemplateTypeParmDecl (ty, None) ->
       Format.fprintf fmt "type: %a"
-        pp_type ty
+        pp_ctyp ty
   | TemplateTypeParmDecl (ty, Some tloc) ->
       Format.fprintf fmt "type: %a = %a"
-        pp_type ty
+        pp_ctyp ty
         pp_tloc tloc
 
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"

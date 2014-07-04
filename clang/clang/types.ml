@@ -57,12 +57,12 @@ let rec tloc_of_ctyp sloc ty =
         TemplateTypeParmTypeLoc name
     | TemplateTypeParmType None ->
         TemplateTypeParmTypeLoc "<anon>"
+    | ComplexType elt -> ComplexTypeLoc elt
 
     | AtomicType -> AtomicTypeLoc
     | AttributedType -> AttributedTypeLoc
     | AutoType -> AutoTypeLoc
     | BlockPointerType -> BlockPointerTypeLoc
-    | ComplexType -> ComplexTypeLoc
     | DecltypeType expr -> DecltypeTypeLoc expr
     | DependentNameType -> DependentNameTypeLoc
     | DependentSizedArrayType -> DependentSizedArrayTypeLoc
