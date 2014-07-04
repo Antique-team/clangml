@@ -619,6 +619,7 @@ and expr_ = AstBridge.expr_ =
   | CharacterLiteral		of char
   | FloatingLiteral		of float
   | StringLiteral		of string
+  | ImaginaryLiteral            of (* sub *)expr
   | BinaryOperator		of binary_operator * (* lhs *)expr * (* rhs *)expr
   | UnaryOperator		of unary_operator * (* operand *)expr
 
@@ -690,7 +691,6 @@ and expr_ = AstBridge.expr_ =
   | FunctionParmPackExpr
   | GenericSelectionExpr
   | GNUNullExpr
-  | ImaginaryLiteral
   | LambdaExpr
   | MaterializeTemporaryExpr
   | MSPropertyRefExpr

@@ -230,6 +230,8 @@ and pp_expr_ fmt = function
   | IntegerLiteral i -> Format.pp_print_int fmt i
   | FloatingLiteral f -> Format.pp_print_float fmt f
   | StringLiteral s -> Format.fprintf fmt "\"%s\"" (String.escaped s)
+  | ImaginaryLiteral sub -> Format.fprintf fmt "%ai" pp_expr sub
+
   | UnaryOperator (op, e) ->
       if is_prefix op then
         Format.fprintf fmt "(%s %a)" (string_of_unary_op op) pp_expr e
@@ -362,7 +364,6 @@ and pp_expr_ fmt = function
   | FunctionParmPackExpr -> Format.pp_print_string fmt "<FunctionParmPackExpr>"
   | GenericSelectionExpr -> Format.pp_print_string fmt "<GenericSelectionExpr>"
   | GNUNullExpr -> Format.pp_print_string fmt "<GNUNullExpr>"
-  | ImaginaryLiteral -> Format.pp_print_string fmt "<ImaginaryLiteral>"
   | LambdaExpr -> Format.pp_print_string fmt "<LambdaExpr>"
   | MaterializeTemporaryExpr -> Format.pp_print_string fmt "<MaterializeTemporaryExpr>"
   | MSPropertyRefExpr -> Format.pp_print_string fmt "<MSPropertyRefExpr>"

@@ -100,6 +100,18 @@ OCamlVisitor::TraverseStringLiteral (clang::StringLiteral *S)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseImaginaryLiteral (clang::ImaginaryLiteral *S)
+{
+  TRACE;
+
+  ptr<Expr> sub = must_traverse (S->getSubExpr ());
+
+  stack.push (mkImaginaryLiteral (sub));
+
+  return true;
+}
+
 // }}}
 
 /****************************************************
@@ -480,7 +492,6 @@ UNIMP_STMT (Expr, ExtVectorElementExpr)
 UNIMP_STMT (Expr, FunctionParmPackExpr)
 UNIMP_STMT (Expr, GenericSelectionExpr)
 UNIMP_STMT (Expr, GNUNullExpr)
-UNIMP_STMT (Expr, ImaginaryLiteral)
 UNIMP_STMT (Expr, LambdaExpr)
 UNIMP_STMT (Expr, MaterializeTemporaryExpr)
 UNIMP_STMT (Expr, MSPropertyRefExpr)
