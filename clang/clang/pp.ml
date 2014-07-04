@@ -799,6 +799,13 @@ and pp_decl_ fmt = function
       Format.fprintf fmt "template<%a> %a"
         (Formatx.pp_list pp_decl) params
         pp_decl templated
+  | TemplateTypeParmDecl (ty, None) ->
+      Format.fprintf fmt "type: %a"
+        pp_type ty
+  | TemplateTypeParmDecl (ty, Some tloc) ->
+      Format.fprintf fmt "type: %a = %a"
+        pp_type ty
+        pp_tloc tloc
 
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"
   | CapturedDecl -> Format.pp_print_string fmt "<CapturedDecl>"
@@ -825,7 +832,6 @@ and pp_decl_ fmt = function
   | OMPThreadPrivateDecl -> Format.pp_print_string fmt "<OMPThreadPrivateDecl>"
   | StaticAssertDecl -> Format.pp_print_string fmt "<StaticAssertDecl>"
   | TemplateTemplateParmDecl -> Format.pp_print_string fmt "<TemplateTemplateParmDecl>"
-  | TemplateTypeParmDecl _ -> Format.pp_print_string fmt "<TemplateTypeParmDecl>"
   | TypeAliasDecl -> Format.pp_print_string fmt "<TypeAliasDecl>"
   | TypeAliasTemplateDecl -> Format.pp_print_string fmt "<TypeAliasTemplateDecl>"
   | UnresolvedUsingTypenameDecl -> Format.pp_print_string fmt "<UnresolvedUsingTypenameDecl>"
