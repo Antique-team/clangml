@@ -420,10 +420,10 @@ OCamlVisitor::TraverseOffsetOfExpr (clang::OffsetOfExpr *S)
 {
   TRACE;
 
-  // components
+  ptr<Tloc> type = must_traverse (S->getTypeSourceInfo()->getTypeLoc());
   list<OffsetofNode> components = traverse_list (offsetof_node_range (S), S);
 
-  stack.push(mkOffsetOfExpr(components));
+  stack.push(mkOffsetOfExpr(type, components));
 
   return true;
 }
