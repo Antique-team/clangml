@@ -637,6 +637,7 @@ and expr_ = AstBridge.expr_ =
   | ImplicitValueInitExpr
   | ArraySubscriptExpr		of (* base *)expr * (* index *)expr
   | StmtExpr			of (* body *)stmt
+  | AddrLabelExpr		of string
 
   | SizeOfExpr			of expr
   | SizeOfType			of tloc
@@ -645,7 +646,7 @@ and expr_ = AstBridge.expr_ =
   | VecStepExpr			of expr
   | VecStepType			of tloc
 
-  | AddrLabelExpr		of string
+  | OffsetOfExpr
 
   | ArrayTypeTraitExpr
   | AsTypeExpr
@@ -709,7 +710,6 @@ and expr_ = AstBridge.expr_ =
   | ObjCSelectorExpr
   | ObjCStringLiteral
   | ObjCSubscriptRefExpr
-  | OffsetOfExpr
   | OpaqueValueExpr
   | PackExpansionExpr
   | ParenListExpr
@@ -723,6 +723,12 @@ and expr_ = AstBridge.expr_ =
   | UnresolvedLookupExpr
   | UnresolvedMemberExpr
   | UserDefinedLiteral
+
+and offsetof_node =
+  | OON_Array			of expr
+  | OON_Field			of string
+  | OON_Identifier		of string
+  | OON_Base			of cxx_base_specifier
 
 
 and stmt = AstBridge.stmt = {
