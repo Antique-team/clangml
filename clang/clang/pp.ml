@@ -377,7 +377,7 @@ and pp_expr_ fmt = function
   | ObjCSelectorExpr -> Format.pp_print_string fmt "<ObjCSelectorExpr>"
   | ObjCStringLiteral -> Format.pp_print_string fmt "<ObjCStringLiteral>"
   | ObjCSubscriptRefExpr -> Format.pp_print_string fmt "<ObjCSubscriptRefExpr>"
-  | OffsetOfExpr -> Format.pp_print_string fmt "<OffsetOfExpr>"
+  | OffsetOfExpr _ -> Format.pp_print_string fmt "<OffsetOfExpr>"
   | OpaqueValueExpr -> Format.pp_print_string fmt "<OpaqueValueExpr>"
   | PackExpansionExpr -> Format.pp_print_string fmt "<PackExpansionExpr>"
   | ParenListExpr -> Format.pp_print_string fmt "<ParenListExpr>"

@@ -386,6 +386,29 @@ OCamlVisitor::TraverseAddrLabelExpr (clang::AddrLabelExpr *S)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseOffsetOfNode (clang::OffsetOfExpr::OffsetOfNode N,
+                                    clang::OffsetOfExpr* S)
+{
+  TRACE;
+
+  stack.push (mkOON_Field("field"));
+
+  return true;
+}
+
+bool
+OCamlVisitor::TraverseOffsetOfExpr (clang::OffsetOfExpr *S)
+{
+  TRACE;
+
+  // components
+  list<OffsetofNode> components = traverse_list (offset_of_node_range (S), S);
+
+  stack.push(mkOffsetOfExpr(components));
+
+  return true;
+}
 
 UNIMP_STMT (Expr, ArrayTypeTraitExpr)
 UNIMP_STMT (Expr, AsTypeExpr)
@@ -458,7 +481,6 @@ UNIMP_STMT (Expr, ObjCProtocolExpr)
 UNIMP_STMT (Expr, ObjCSelectorExpr)
 UNIMP_STMT (Expr, ObjCStringLiteral)
 UNIMP_STMT (Expr, ObjCSubscriptRefExpr)
-UNIMP_STMT (Expr, OffsetOfExpr)
 UNIMP_STMT (Expr, OpaqueValueExpr)
 UNIMP_STMT (Expr, PackExpansionExpr)
 UNIMP_STMT (Expr, ParenListExpr)
