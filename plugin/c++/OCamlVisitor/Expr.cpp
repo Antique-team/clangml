@@ -403,7 +403,7 @@ OCamlVisitor::TraverseOffsetOfExpr (clang::OffsetOfExpr *S)
   TRACE;
 
   // components
-  list<OffsetofNode> components = traverse_list (offset_of_node_range (S), S);
+  list<OffsetofNode> components = traverse_list (offsetof_node_range (S), S);
 
   stack.push(mkOffsetOfExpr(components));
 

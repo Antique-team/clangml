@@ -70,6 +70,63 @@ base_spec_range = [] (clang::CXXRecordDecl *D)
 };
 
 
+
+struct offsetof_node_iterator
+{
+  typedef clang::OffsetOfExpr::OffsetOfNode *	iterator_type;
+private:
+  clang::OffsetOfExpr *S;
+  unsigned component;
+
+  typedef std::iterator_traits<iterator_type>	traits_type;
+
+public:
+  typedef traits_type::iterator_category	iterator_category;
+  typedef traits_type::value_type		value_type;
+  typedef traits_type::difference_type		difference_type;
+  typedef traits_type::reference		reference;
+  typedef traits_type::pointer			pointer;
+
+public:
+  offsetof_node_iterator (clang::OffsetOfExpr *S, unsigned component = 0)
+    : S (S)
+    , component (component)
+  {
+  }
+
+  bool operator < (offsetof_node_iterator const &rhs) const
+  {
+    assert (S == rhs.S);
+    return component < rhs.component;
+  }
+
+  bool operator != (offsetof_node_iterator const &rhs) const
+  {
+    assert (S == rhs.S);
+    return component != rhs.component;
+  }
+
+  offsetof_node_iterator &operator++ ()
+  {
+    ++component;
+    return *this;
+  }
+
+  clang::OffsetOfExpr::OffsetOfNode const &operator* () const
+  {
+    return S->getComponent (component);
+  }
+};
+
+
+static const auto
+offsetof_node_range = [] (clang::OffsetOfExpr *S)
+{
+  return boost::make_iterator_range (offsetof_node_iterator (S),
+                                     offsetof_node_iterator (S, S->getNumComponents ()));
+};
+
+
 namespace clang
 {
   static inline auto
