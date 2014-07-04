@@ -1,6 +1,7 @@
 #include "ocaml++/private.h"
 
 
+#define DEBUG_INIT		0
 #define DEBUG_CREATE		0
 #define DEBUG_ACCOUNTING	0
 
@@ -18,9 +19,11 @@ size_t
 OCamlADTBase::class_init (std::type_info const &ti)
 {
   size_t type_id = num_type_ids++;
+#if DEBUG_INIT
   printf ("create new ocaml adt with id %2zu: %s\n",
           type_id,
           ti.name ());
+#endif
   num_local_ids.resize (num_type_ids);
   return type_id;
 }
