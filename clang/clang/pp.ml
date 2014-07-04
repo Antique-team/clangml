@@ -777,11 +777,14 @@ and pp_decl_ fmt = function
   | AccessSpecDecl spec ->
       Format.fprintf fmt "%s:"
         (string_of_access_specifier spec)
+  | ClassTemplateDecl (templated, params) ->
+      Format.fprintf fmt "template<%a> %a"
+        (Formatx.pp_list pp_decl) params
+        pp_decl templated
 
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"
   | CapturedDecl -> Format.pp_print_string fmt "<CapturedDecl>"
   | ClassScopeFunctionSpecializationDecl -> Format.pp_print_string fmt "<ClassScopeFunctionSpecializationDecl>"
-  | ClassTemplateDecl _ -> Format.pp_print_string fmt "<ClassTemplateDecl>"
   | FileScopeAsmDecl -> Format.pp_print_string fmt "<FileScopeAsmDecl>"
   | FriendDecl -> Format.pp_print_string fmt "<FriendDecl>"
   | FriendTemplateDecl -> Format.pp_print_string fmt "<FriendTemplateDecl>"
