@@ -9,3 +9,5 @@ Working
 
 Not working
 - glibc 2.19 (does not compile with clang)
+- linux 3.15 (perhaps 3.16, see
+  http://www.phoronix.com/scan.php?page=news_item&px=MTY2MjY)
