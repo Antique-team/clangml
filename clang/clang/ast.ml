@@ -862,7 +862,7 @@ and ctyp_ = AstBridge.ctyp_ =
   | EnumType			of (* name *)string
   | RecordType			of (* kind *)tag_type_kind * (* name *)string
   | DecayedType			of (* decayed *)ctyp * (* original *)ctyp
-  | TemplateTypeParmType	of (* name *)string
+  | TemplateTypeParmType	of (* name *)string option
 
   | AtomicType
   | AttributedType

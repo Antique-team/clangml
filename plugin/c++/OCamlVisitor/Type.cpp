@@ -274,7 +274,9 @@ OCamlVisitor::TraverseTemplateTypeParmType (clang::TemplateTypeParmType *T)
 {
   TRACE;
 
-  clang::StringRef name = T->getDecl ()->getName ();
+  option<clang::StringRef> name;
+  if (T->getDecl ())
+    name = T->getDecl ()->getName ();
 
   stack.push (mkTemplateTypeParmType (name));
 

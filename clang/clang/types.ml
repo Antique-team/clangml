@@ -1,6 +1,16 @@
 open Ast
 
 
+let make_type_map (types : ctyp Util.DenseIntMap.t) =
+  let map = Hashtbl.create 10 in
+
+  Util.DenseIntMap.fold (fun key ctyp map ->
+    Hashtbl.add map ctyp.t ctyp;
+    map
+  ) types map
+
+
+
 let rec tloc_of_ctyp sloc ty =
   let tl =
     match ty.t with
@@ -43,8 +53,10 @@ let rec tloc_of_ctyp sloc ty =
         RecordTypeLoc (kind, name)
     | DecayedType (decayed, original) ->
         (tloc_of_ctyp sloc original).tl
-    | TemplateTypeParmType name ->
+    | TemplateTypeParmType (Some name) ->
         TemplateTypeParmTypeLoc name
+    | TemplateTypeParmType None ->
+        TemplateTypeParmTypeLoc "<anon>"
 
     | AtomicType -> AtomicTypeLoc
     | AttributedType -> AttributedTypeLoc
