@@ -392,7 +392,25 @@ OCamlVisitor::TraverseOffsetOfNode (clang::OffsetOfExpr::OffsetOfNode N,
 {
   TRACE;
 
-  stack.push (mkOON_Field("field"));
+  ptr<OffsetofNode> node;
+
+  switch (N.getKind())
+    {
+    case clang::OffsetOfExpr::OffsetOfNode::Array:
+      node = mkOON_Array(must_traverse(S->getIndexExpr(N.getArrayExprIndex())));
+      break;
+    case clang::OffsetOfExpr::OffsetOfNode::Field:
+      node = mkOON_Field(N.getField()->getName());
+      break;
+    case clang::OffsetOfExpr::OffsetOfNode::Identifier:
+      node = mkOON_Identifier(N.getFieldName()->getName());
+      break;
+    case clang::OffsetOfExpr::OffsetOfNode::Base:
+      node = mkOON_Base(must_traverse(*N.getBase()));
+      break;
+    }
+
+  stack.push (node);
 
   return true;
 }
