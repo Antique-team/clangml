@@ -638,6 +638,7 @@ and expr_ = AstBridge.expr_ =
   | ArraySubscriptExpr		of (* base *)expr * (* index *)expr
   | StmtExpr			of (* body *)stmt
   | AddrLabelExpr		of string
+  | OffsetOfExpr		of offsetof_node list
 
   | SizeOfExpr			of expr
   | SizeOfType			of tloc
@@ -645,8 +646,6 @@ and expr_ = AstBridge.expr_ =
   | AlignOfType			of tloc
   | VecStepExpr			of expr
   | VecStepType			of tloc
-
-  | OffsetOfExpr
 
   | ArrayTypeTraitExpr
   | AsTypeExpr
@@ -724,7 +723,7 @@ and expr_ = AstBridge.expr_ =
   | UnresolvedMemberExpr
   | UserDefinedLiteral
 
-and offsetof_node =
+and offsetof_node = AstBridge.offsetof_node =
   | OON_Array			of expr
   | OON_Field			of string
   | OON_Identifier		of string
