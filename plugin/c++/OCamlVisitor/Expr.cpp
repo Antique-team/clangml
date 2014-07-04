@@ -96,7 +96,7 @@ bool
 OCamlVisitor::TraverseStringLiteral (clang::StringLiteral *S)
 {
   stack.push (mkStringLiteral
-              (S->getString ()));
+              (S->getBytes ()));
 
   return true;
 }
