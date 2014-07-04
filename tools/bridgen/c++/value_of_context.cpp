@@ -5,6 +5,7 @@
 
 
 #define DEBUG_DUMP		0
+#define DEBUG_INIT		0
 #define DEBUG_POSTPONE		0
 #define DEBUG_RESIZE		0
 
@@ -132,7 +133,7 @@ value_of_context::data::resize (size_t type, size_t max_id) const
   if (old_cache == 0)
     {
       new_cache = caml_alloc (max_id + max_id / 8 + 10, 0);
-#if 1
+#if DEBUG_INIT
       printf ("created new ocaml value cache for type id %2zu of size %ld (at least %ld)\n",
               type,
               caml_array_length (new_cache),
@@ -163,7 +164,7 @@ value_of_context::data::resize (size_t type, size_t max_id) const
           Store_field (new_cache, i, tmp);
         }
 
-#if 1
+#if DEBUG_RESIZE
       printf ("resized ocaml value cache for type %2zu from %ld to %ld (at least %ld)\n",
               type,
               caml_array_length (old_cache),
