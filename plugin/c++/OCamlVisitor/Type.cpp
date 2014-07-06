@@ -343,7 +343,7 @@ OCamlVisitor::TraverseVariableArrayType (clang::VariableArrayType *T)
   TRACE;
 
   ptr<Ctyp> element = must_traverse (T->getElementType ());
-  ptr<Expr> size = must_traverse (T->getSizeExpr ());
+  option<Expr> size = maybe_traverse (T->getSizeExpr ());
 
   stack.push (mkVariableArrayType (element, size));
 

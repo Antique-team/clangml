@@ -550,10 +550,13 @@ and pp_tloc_ fmt = function
       Format.fprintf fmt "%a[%d]"
         pp_tloc ty
         size
-  | VariableArrayTypeLoc (ty, size) ->
+  | VariableArrayTypeLoc (ty, Some size) ->
       Format.fprintf fmt "%a[%a]"
         pp_tloc ty
         pp_expr size
+  | VariableArrayTypeLoc (ty, None) ->
+      Format.fprintf fmt "%a[*]"
+        pp_tloc ty
   | IncompleteArrayTypeLoc ty ->
       Format.fprintf fmt "%a[]"
         pp_tloc ty
@@ -634,10 +637,13 @@ and pp_ctyp_ fmt = function
       Format.fprintf fmt "%a[%d]"
         pp_ctyp ty
         size
-  | VariableArrayType (ty, size) ->
+  | VariableArrayType (ty, Some size) ->
       Format.fprintf fmt "%a[%a]"
         pp_ctyp ty
         pp_expr size
+  | VariableArrayType (ty, None) ->
+      Format.fprintf fmt "%a[*]"
+        pp_ctyp ty
   | IncompleteArrayType ty ->
       Format.fprintf fmt "%a[]"
         pp_ctyp ty

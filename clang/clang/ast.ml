@@ -802,7 +802,7 @@ and tloc_ = AstBridge.tloc_ =
   | FunctionNoProtoTypeLoc	of (* result *)tloc
   | FunctionProtoTypeLoc	of (* result *)tloc * (* args *)decl list
   | ConstantArrayTypeLoc	of (* member-type *)tloc * (* size *)int
-  | VariableArrayTypeLoc	of (* member-type *)tloc * (* size *)expr
+  | VariableArrayTypeLoc	of (* member-type *)tloc * (* size *)expr option
   | IncompleteArrayTypeLoc	of (* member-type *)tloc
   | ElaboratedTypeLoc		of (* named-type *)tloc
   | EnumTypeLoc			of (* name *)string
@@ -856,7 +856,7 @@ and ctyp_ = AstBridge.ctyp_ =
   | FunctionNoProtoType		of (* result *)ctyp
   | FunctionProtoType		of (* result *)ctyp * (* args *)ctyp list
   | ConstantArrayType		of (* member-type *)ctyp * (* size *)int
-  | VariableArrayType		of (* member-type *)ctyp * (* size *)expr
+  | VariableArrayType		of (* member-type *)ctyp * (* size *)expr option
   | IncompleteArrayType		of (* member-type *)ctyp
   | ElaboratedType		of (* named-type *)ctyp
   | EnumType			of (* name *)string
