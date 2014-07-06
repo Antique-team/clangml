@@ -113,7 +113,8 @@ check: $(MAIN).native
 define testsuite
 TESTSUITE.$1 = $2
 check-$1: $(MAIN).native
-	./processor.native -w $(CLANGFLAGS) -include "memcad.h" $$(TESTSUITE.$1)
+#	./processor.native -w $(CLANGFLAGS) -include "memcad.h" $$(TESTSUITE.$1)
+	@echo "make: *** check-$1 target currently not supported; use 'make check-$1-separate'"
 
 check-$1-separate: $$(TESTSUITE.$1:=.test)
 endef
@@ -123,7 +124,7 @@ BROKEN =					\
 	consumer/memcad/bench/c-micro-10.c	\
 	consumer/memcad/bench/typ-03.c
 
-$(eval $(call testsuite,testsuite,$(wildcard plugin/testsuite/*.[ci])))
+$(eval $(call testsuite,testsuite,$(shell find plugin/testsuite -name "*.[ci]")))
 $(eval $(call testsuite,memcad,$(filter-out $(BROKEN),$(wildcard consumer/memcad/bench/*.c))))
 
 
