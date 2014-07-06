@@ -42,6 +42,7 @@ OCamlVisitor::TraverseStmt (clang::Stmt *S)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseNullStmt (clang::NullStmt *S)
 {

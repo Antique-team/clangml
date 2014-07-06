@@ -76,7 +76,7 @@ let transform_decl clang =
         assert (state.inserted_decls == []);
         assert (state.inserted_stmts == []);
         (saved_state,
-        { expr with e = StmtExpr body })
+         { expr with e = StmtExpr body })
 
     | _ ->
         MapVisitor.visit_expr v state expr
@@ -124,7 +124,7 @@ let transform_decl clang =
         assert (state.inserted_decls == []);
         assert (state.inserted_stmts == []);
         (saved_state,
-        { stmt with s = SwitchStmt (cond, body) })
+         { stmt with s = SwitchStmt (cond, body) })
 
     | _ ->
         MapVisitor.visit_stmt v state stmt

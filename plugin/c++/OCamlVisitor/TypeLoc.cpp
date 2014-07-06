@@ -306,6 +306,7 @@ UNIMP_TYPE_LOC (Attributed)
 UNIMP_TYPE_LOC (Auto)
 UNIMP_TYPE_LOC (BlockPointer)
 
+
 bool
 OCamlVisitor::TraverseComplexTypeLoc (clang::ComplexTypeLoc TL)
 {
@@ -317,6 +318,7 @@ OCamlVisitor::TraverseComplexTypeLoc (clang::ComplexTypeLoc TL)
 
   return true;
 }
+
 
 bool
 OCamlVisitor::TraverseDecayedTypeLoc (clang::DecayedTypeLoc TL)
