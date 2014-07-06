@@ -42,10 +42,10 @@ void OCamlVisitor::dump (clang::CXXBaseSpecifier const &p)
 
 // Overloads to call appropriate traversal functions.
 void OCamlVisitor::traverse (clang::Decl *D)
-{ assert (D); traverse<clang::Decl *, &OCamlVisitor::TraverseDecl> (D); }
+{ assert (D != nullptr); traverse<clang::Decl *, &OCamlVisitor::TraverseDecl> (D); }
 
 void OCamlVisitor::traverse (clang::Stmt *S)
-{ assert (S); traverse<clang::Stmt *, &OCamlVisitor::TraverseStmt> (S); }
+{ assert (S != nullptr); traverse<clang::Stmt *, &OCamlVisitor::TraverseStmt> (S); }
 
 void OCamlVisitor::traverse (clang::TypeLoc TL)
 { assert (TL); traverse<clang::TypeLoc, &OCamlVisitor::TraverseTypeLoc> (TL); }
@@ -54,7 +54,7 @@ void OCamlVisitor::traverse (clang::QualType T)
 { assert (!T.isNull ()); traverse<clang::QualType, &OCamlVisitor::TraverseType> (T); }
 
 void OCamlVisitor::traverse (clang::TypeSourceInfo *TSI)
-{ assert (TSI); traverse (TSI->getTypeLoc ()); }
+{ assert (TSI != nullptr); traverse (TSI->getTypeLoc ()); }
 
 // This is an object without a notion of nullability, so the
 // assert is missing.
