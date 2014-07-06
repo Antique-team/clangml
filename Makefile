@@ -13,7 +13,13 @@ TARGETS =					\
 	consumer/memcad/main/main.native	\
 	#
 
-$(MAIN).native: $(shell find */ -type f -not -wholename "_build/*" -and -not -wholename "ocaml-4.01.0/*") myocamlbuild.ml Makefile
+ALL_FILES := $(shell find */ -type f -not -wholename "_build/*" \
+	                        -and -not -wholename "ocaml-4.01.0/*" \
+	                        -and -not -wholename "big-tests/*" \
+				) myocamlbuild.ml Makefile
+
+
+$(MAIN).native: $(ALL_FILES)
 	ocamlbuild -j $(NCPU) $(TARGETS)
 	@touch $@
 
