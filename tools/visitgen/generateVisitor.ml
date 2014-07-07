@@ -3,6 +3,31 @@ open OcamlTypes.Sig
 open OcamlTypes.Process
 
 
+(* TODO: two new function shapes:
+
+let map_field_decl v state field_decl =
+  let (state, fd_type) = v.map_tloc v state field_decl.fd_type in
+  let (state, fd_bitw) = map_option v.map_tloc v state field_decl.fd_bitw in
+  let (state, fd_init) = map_option v.map_tloc v state field_decl.fd_init in
+  (state, {
+      field_decl with
+      fd_type;
+      fd_bitw;
+      fd_init;
+  })
+
+
+let map_offsetof_node v state = function
+  | OON_Array expr0 ->
+      let (state, expr0) = v.visit_expr v state expr0 in
+      (state, OON_Array expr0)
+  | OON_Field name -> (state, OON_Field name)
+  | OON_Identifier name -> (state, OON_Identifier name)
+  | OON_Base cxx_base_specifier0 ->
+      (state, OON_Base cxx_base_specifier0)
+*)
+
+
 type kind =
   | Map
   | Fold
