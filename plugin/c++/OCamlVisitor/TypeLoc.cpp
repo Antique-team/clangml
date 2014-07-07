@@ -254,12 +254,32 @@ OCamlVisitor::TraverseFunctionProtoTypeLoc (clang::FunctionProtoTypeLoc TL)
 {
   TRACE;
 
+#if !CLANG_BUG_WAS_FIXED
+  bool is_buggy = false;
+  for (auto param : TL.getParams ())
+    if (!param)
+      is_buggy = true;
+
+  if (is_buggy)
+    {
+      ptr<Tloc> result = must_traverse (TL.getResultLoc ());
+
+      stack.push (mkFunctionNoProtoTypeLoc (result));
+    }
+  else
+    {
+#endif
+
   ptr<Tloc> result = must_traverse (TL.getResultLoc ());
   list<Decl> args = traverse_list (TL.getParams ());
 
   // TODO: exceptions
 
   stack.push (mkFunctionProtoTypeLoc (result, args));
+
+#if !CLANG_BUG_WAS_FIXED
+    }
+#endif
 
   return true;
 }
