@@ -9,17 +9,19 @@ let parse_and_generate dir source =
     OcamlTypes.Parse.parse_file source
     |> flatten_recursive_types
     |> List.map (function
-        | RecordType (_, name, _)
-        | SumType (_, name, _) as ty ->
+        | RecordType { rt_name = name }
+        | SumType { st_name = name } as ty ->
             (name, ty)
         | _ -> failwith "invalid type returned from flatten_recursive_types"
       )
   in
 
+  let visit_types = OcamlTypes.Type_graph.must_visit ocaml_types in
+
   List.iter (fun kind ->
     let name = GenerateVisitor.name_of_kind kind in
     let output_file = dir ^ "/" ^ name ^ "Visitor.ml" in
-    let impl = GenerateVisitor.codegen kind ocaml_types in
+    let impl = GenerateVisitor.codegen kind visit_types ocaml_types in
     OCamlPrinter.print_implem ~output_file impl;
     (*OCamlDumper.print_implem ~output_file impl;*)
   ) GenerateVisitor.([Map; Fold; Iter])

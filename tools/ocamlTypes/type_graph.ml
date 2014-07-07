@@ -21,14 +21,14 @@ let rec is_visitable_basic_type visited name types = function
         with Not_found -> false
 
 and is_visitable_sum_type_branch
-    visited name types (_location, _name, basic_types) =
+    visited name types { stb_types = basic_types } =
 
   List.exists
     (is_visitable_basic_type visited name types)
     basic_types
 
 and is_visitable_record_type_member
-    visited name types (_location, _name, basic_type) =
+    visited name types { rtm_type = basic_type } =
 
   is_visitable_basic_type visited name types basic_type
 
@@ -39,26 +39,26 @@ and is_visitable visited types name ocaml_type =
     begin
       HT.add visited ocaml_type ();
       match ocaml_type with
-        | SumType (_location, _name, sum_type_branches) ->
-            List.exists
-              (is_visitable_sum_type_branch visited name types)
-              sum_type_branches
-        | RecordType (_location, _name, members) ->
-            List.exists
-              (is_visitable_record_type_member visited name types)
-              members
-        | _ -> false
+      | SumType { st_branches = sum_type_branches } ->
+          List.exists
+            (is_visitable_sum_type_branch visited name types)
+            sum_type_branches
+      | RecordType { rt_members = members } ->
+          List.exists
+            (is_visitable_record_type_member visited name types)
+            members
+      | _ -> false
     end;
 
 and must_visit (types : ocaml_types) =
   let res = 
     List.fold_left
       (fun acc (name, ocaml_type) ->
-        let visited = HT.create 10 in
-        if is_visitable visited types name ocaml_type then
-          name :: acc
-        else
-          acc
+         let visited = HT.create 10 in
+         if is_visitable visited types name ocaml_type then
+           name :: acc
+         else
+           acc
       )
       []
       types
