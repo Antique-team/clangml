@@ -55,6 +55,7 @@ OCamlVisitor::TraverseConditionalOperator (clang::ConditionalOperator *S)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseBinaryConditionalOperator (clang::BinaryConditionalOperator *S)
 {
@@ -68,6 +69,7 @@ OCamlVisitor::TraverseBinaryConditionalOperator (clang::BinaryConditionalOperato
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseOpaqueValueExpr (clang::OpaqueValueExpr *S)
 {
@@ -79,6 +81,7 @@ OCamlVisitor::TraverseOpaqueValueExpr (clang::OpaqueValueExpr *S)
 
   return true;
 }
+
 
 // }}}
 
