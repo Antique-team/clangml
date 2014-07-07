@@ -913,7 +913,7 @@ and decl_ = AstBridge.decl_ =
   | TemplateTypeParmDecl	of (* type *)ctyp * (* default *)tloc option
   | UsingDecl			of (* name *)declaration_name
   | AccessSpecDecl		of access_specifier
-  | FileScopeAsmDecl            of (* insns *)expr
+  | FileScopeAsmDecl		of (* insns *)expr
 
   | BlockDecl
   | CapturedDecl

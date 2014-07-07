@@ -823,7 +823,7 @@ and pp_decl_ fmt = function
         pp_ctyp ty
         pp_tloc tloc
   | FileScopeAsmDecl insns ->
-      Format.fprintf fmt "asm(%a)"
+      Format.fprintf fmt "asm (%a)"
         pp_expr insns
 
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"

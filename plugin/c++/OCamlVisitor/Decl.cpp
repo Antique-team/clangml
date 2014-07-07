@@ -357,6 +357,7 @@ OCamlVisitor::TraverseClassTemplateDecl (clang::ClassTemplateDecl *D)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseFileScopeAsmDecl (clang::FileScopeAsmDecl *D)
 {
@@ -368,6 +369,7 @@ OCamlVisitor::TraverseFileScopeAsmDecl (clang::FileScopeAsmDecl *D)
 
   return true;
 }
+
 
 UNIMP_DECL (FriendDecl)
 UNIMP_DECL (FriendTemplateDecl)

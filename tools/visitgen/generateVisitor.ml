@@ -49,25 +49,30 @@ type type_kind =
   | Combined_type of record_type * sum_type
   | Sum_type of sum_type
 
+
 let classify_type ocaml_types name =
-  (* a combined type has a member with the same type name followed by _ *)
-  if List.mem_assoc (name ^ "_") ocaml_types then
-    let r_type = match List.assoc name ocaml_types with
-      | RecordType rt -> rt
-      | _ -> assert false
-    in
+  (* a combined type is a record type with an associated sum type
+     named the same but with a trailing _ *)
+  try
     let s_type = match List.assoc (name ^ "_") ocaml_types with
       | SumType st -> st
       | _ -> assert false
     in
+    let r_type = match List.assoc name ocaml_types with
+      | RecordType rt -> rt
+      | _ -> assert false
+    in
     Combined_type (r_type, s_type)
-  else
+
+  with Not_found ->
+
     match List.assoc name ocaml_types with
     (* a record type is any record that is not a combined type *)
     | RecordType rt -> Record_type rt
     (* a sum type is given by the remaining cases *)
     | SumType st -> Sum_type st
     | _ -> assert false
+
 
 type kind =
   | Map
@@ -217,122 +222,59 @@ let make_match_case prefix kind visit_type_names sum_ty =
  ****************************************************************************)
 
 let make_combined_function kind visit_types name rec_ty sum_ty =
-
-   let prefix = name_of_kind kind ^ "_" in
-
-   let rec_loc = rec_ty.rt_loc in
-
-   let match_cases =
-     List.map
-       (make_match_case prefix kind visit_types)
-       sum_ty.st_branches
-     |> reduce (fun cases case ->
-          let _loc = Ast.loc_of_match_case case in
-          <:match_case<$cases$ | $case$>>
-        )
-   in
-
-   let { rtm_name = main_member } =
-     List.find (function
-       | { rtm_type = NamedType (_, member) } -> member = name ^ "_"
-       | _ -> false
-     ) rec_ty.rt_members
-   in
-
-   let do_match =
-     <:expr@rec_loc<
-       match $lid:name$.$lid:main_member$ with
-           $match_cases$
-           >>
-   in
-
-   let body =
-     match kind with
-       | Map ->
-           <:expr@rec_loc<
-             let (state, $lid:main_member$) =
-               $do_match$
-             in
-               (state, { $lid:name$ with $lid:main_member$ })
-               >>
-       | Fold | Iter ->
-           do_match
-   in
-
-     match kind with
-       | Map | Fold ->
-           <:str_item@rec_loc<
-             let $lid:"visit_" ^ name$ v state $lid:name$ =
-               $body$
-               >>
-       | Iter ->
-           <:str_item@rec_loc<
-             let $lid:"visit_" ^ name$ v $lid:name$ =
-               $body$
-               >>
-
-let make_functions' kind type_map =
   let prefix = name_of_kind kind ^ "_" in
 
-  let visit_type_names = make_visit_type_names type_map in
+  let rec_loc = rec_ty.rt_loc in
 
-  List.map (fun (name, rec_ty, sum_ty) ->
-    let rec_loc = rec_ty.rt_loc in
+  let match_cases =
+    List.map
+      (make_match_case prefix kind visit_types)
+      sum_ty.st_branches
+    |> reduce (fun cases case ->
+         let _loc = Ast.loc_of_match_case case in
+         <:match_case<$cases$ | $case$>>
+       )
+  in
 
-    let match_cases =
-      List.map
-        (make_match_case prefix kind visit_type_names)
-        sum_ty.st_branches
+  let { rtm_name = main_member } =
+    List.find (function
+      | { rtm_type = NamedType (_, member) } -> member = name ^ "_"
+      | _ -> false
+    ) rec_ty.rt_members
+  in
 
-      |> reduce (fun cases case ->
-           let _loc = Ast.loc_of_match_case case in
-           <:match_case<$cases$ | $case$>>
-         )
-    in
+  let do_match =
+    <:expr@rec_loc<
+      match $lid:name$.$lid:main_member$ with
+      $match_cases$
+    >>
+  in
 
-    let { rtm_name = main_member } =
-      List.find (function
-        | { rtm_type = NamedType (_, member) } -> member = name ^ "_"
-        | _ -> false
-      ) rec_ty.rt_members
-    in
-
-    let do_match =
-      <:expr@rec_loc<
-        match $lid:name$.$lid:main_member$ with
-        $match_cases$
-      >>
-    in
-
-    let body =
-      match kind with
-      | Map ->
-          <:expr@rec_loc<
-            let (state, $lid:main_member$) =
-              $do_match$
-            in
-            (state, { $lid:name$ with $lid:main_member$ })
-          >>
-      | Fold | Iter ->
-          do_match
-    in
-
+  let body =
     match kind with
-    | Map | Fold ->
-        <:str_item@rec_loc<
-          let $lid:"visit_" ^ name$ v state $lid:name$ =
-            $body$
+    | Map ->
+        <:expr@rec_loc<
+          let (state, $lid:main_member$) =
+            $do_match$
+          in
+          (state, { $lid:name$ with $lid:main_member$ })
         >>
-    | Iter ->
-        <:str_item@rec_loc<
-          let $lid:"visit_" ^ name$ v $lid:name$ =
-            $body$
-        >>
-  ) type_map
-  |> reduce (fun functions fn ->
-       let _loc = Ast.loc_of_str_item fn in
-       <:str_item<$functions$;; $fn$>>
-     )
+    | Fold | Iter ->
+        do_match
+  in
+
+  match kind with
+  | Map | Fold ->
+      <:str_item@rec_loc<
+        let $lid:"visit_" ^ name$ v state $lid:name$ =
+          $body$
+      >>
+  | Iter ->
+      <:str_item@rec_loc<
+        let $lid:"visit_" ^ name$ v $lid:name$ =
+          $body$
+      >>
+
 
 let make_functions kind visit_types ocaml_types =
   let prefix = name_of_kind kind ^ "_" in
@@ -341,27 +283,27 @@ let make_functions kind visit_types ocaml_types =
     (fun name ->
       let _loc = loc_of_type ocaml_types name in
       match classify_type ocaml_types name with
-        | Record_type rt -> 
-            <:str_item<
-              let $lid:"visit_" ^ name$ v $lid:name$ =
-                record_body
-            >>
-        | Combined_type (rt, st) ->
-            make_combined_function kind visit_types name rt st
-        | Sum_type st -> 
-            let match_cases =
-              List.map
-                (make_match_case prefix kind visit_types)
-                st.st_branches
-              |> reduce (fun cases case ->
-                   let _loc = Ast.loc_of_match_case case in
-                   <:match_case<$cases$ | $case$>>
-                 )
-            in
-            <:str_item<
-              let $lid:"visit_" ^ name$ v state = function
-                  $match_cases$
-            >>
+      | Record_type rt -> 
+          <:str_item<
+            let $lid:"visit_" ^ name$ v $lid:name$ =
+              record_body
+          >>
+      | Combined_type (rt, st) ->
+          make_combined_function kind visit_types name rt st
+      | Sum_type st -> 
+          let match_cases =
+            List.map
+              (make_match_case prefix kind visit_types)
+              st.st_branches
+            |> reduce (fun cases case ->
+                 let _loc = Ast.loc_of_match_case case in
+                 <:match_case<$cases$ | $case$>>
+               )
+          in
+          <:str_item<
+            let $lid:"visit_" ^ name$ v state = function
+              $match_cases$
+          >>
     )
     visit_types
   |> reduce (fun functions fn ->
@@ -440,8 +382,6 @@ let codegen kind (visit_types : string list) ocaml_types =
       (fun name -> name.[String.length name - 1] <> '_')
       visit_types
   in
-
-  let type_map = make_type_map ocaml_types in
 
   let members = make_members kind ocaml_types visit_types in
 
