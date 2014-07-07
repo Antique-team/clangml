@@ -84,6 +84,10 @@ let name_of_kind = function
   | Fold -> "fold"
   | Iter -> "iter"
 
+let kind_has_state = function
+  | Map | Fold -> true
+  | Iter -> false
+
 
 let reduce f = function
   | [] -> assert false
@@ -166,20 +170,16 @@ let make_match_case prefix kind visit_type_names sum_ty =
          let mkmap name = function
            | None ->
                let var = mangle name in
-               begin match kind with
-               | Map | Fold ->
-                   <:expr<v.$lid:prefix ^ name$ v state $lid:var$>>
-               | Iter ->
-                   <:expr<v.$lid:prefix ^ name$ v $lid:var$>>
-               end
+               if kind_has_state kind then
+                 <:expr<v.$lid:prefix ^ name$ v state $lid:var$>>
+               else
+                 <:expr<v.$lid:prefix ^ name$ v $lid:var$>>
            | Some fn ->
                let var = mangle name in
-               begin match kind with
-               | Map | Fold ->
-                   <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v state $lid:var$>>
-               | Iter ->
-                   <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v $lid:var$>>
-               end
+               if kind_has_state kind then
+                 <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v state $lid:var$>>
+               else
+                 <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v $lid:var$>>
          in
 
          let update =
@@ -263,17 +263,16 @@ let make_combined_function kind visit_types name rec_ty sum_ty =
         do_match
   in
 
-  match kind with
-  | Map | Fold ->
-      <:str_item@rec_loc<
-        let $lid:"visit_" ^ name$ v state $lid:name$ =
-          $body$
-      >>
-  | Iter ->
-      <:str_item@rec_loc<
-        let $lid:"visit_" ^ name$ v $lid:name$ =
-          $body$
-      >>
+  if kind_has_state kind then
+    <:str_item@rec_loc<
+      let $lid:"visit_" ^ name$ v state $lid:name$ =
+        $body$
+    >>
+  else
+    <:str_item@rec_loc<
+      let $lid:"visit_" ^ name$ v $lid:name$ =
+        $body$
+    >>
 
 
 let make_functions kind visit_types ocaml_types =
@@ -284,10 +283,24 @@ let make_functions kind visit_types ocaml_types =
       let _loc = loc_of_type ocaml_types name in
       match classify_type ocaml_types name with
       | Record_type rt -> 
-          <:str_item<
-            let $lid:"visit_" ^ name$ v $lid:name$ =
-              record_body
-          >>
+          let visit_name = "visit_" ^ name in
+          begin match kind with
+            | Map ->
+                <:str_item<
+                  let $lid:visit_name$ v state $lid:name$ =
+                    (state, $lid:name$)
+                >>
+            | Fold ->
+                <:str_item<
+                  let $lid:visit_name$ v state $lid:name$ =
+                    state
+                >>
+            | Iter ->
+                <:str_item<
+                  let $lid:visit_name$ v $lid:name$ =
+                    ()
+                >>
+          end
       | Combined_type (rt, st) ->
           make_combined_function kind visit_types name rt st
       | Sum_type st -> 
@@ -300,10 +313,16 @@ let make_functions kind visit_types ocaml_types =
                  <:match_case<$cases$ | $case$>>
                )
           in
-          <:str_item<
-            let $lid:"visit_" ^ name$ v state = function
-              $match_cases$
-          >>
+          if kind_has_state kind then
+            <:str_item<
+              let $lid:"visit_" ^ name$ v state = function
+                $match_cases$
+            >>
+          else
+            <:str_item<
+              let $lid:"visit_" ^ name$ v = function
+                $match_cases$
+            >>
     )
     visit_types
   |> reduce (fun functions fn ->
