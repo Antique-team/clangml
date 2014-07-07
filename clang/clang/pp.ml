@@ -822,11 +822,13 @@ and pp_decl_ fmt = function
       Format.fprintf fmt "%a = %a"
         pp_ctyp ty
         pp_tloc tloc
+  | FileScopeAsmDecl insns ->
+      Format.fprintf fmt "asm(%a)"
+        pp_expr insns
 
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"
   | CapturedDecl -> Format.pp_print_string fmt "<CapturedDecl>"
   | ClassScopeFunctionSpecializationDecl -> Format.pp_print_string fmt "<ClassScopeFunctionSpecializationDecl>"
-  | FileScopeAsmDecl -> Format.pp_print_string fmt "<FileScopeAsmDecl>"
   | FriendDecl -> Format.pp_print_string fmt "<FriendDecl>"
   | FriendTemplateDecl -> Format.pp_print_string fmt "<FriendTemplateDecl>"
   | FunctionTemplateDecl -> Format.pp_print_string fmt "<FunctionTemplateDecl>"
