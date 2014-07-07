@@ -276,6 +276,10 @@ and pp_expr_ fmt = function
         pp_expr cond
         pp_expr true_expr
         pp_expr false_expr
+  | BinaryConditionalOperator (cond, false_expr) ->
+      Format.fprintf fmt "%a ?: %a"
+        pp_expr cond
+        pp_expr false_expr
   | DesignatedInitExpr (designators, init) ->
       Format.fprintf fmt "%a = %a"
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_desg) designators
@@ -322,11 +326,14 @@ and pp_expr_ fmt = function
   | CXXNullPtrLiteralExpr ->
       Format.fprintf fmt "nullptr"
 
+  | OpaqueValueExpr expr ->
+      Format.fprintf fmt "opaque_value %a"
+        pp_expr expr
+
   | ConvertVectorExpr -> Format.pp_print_string fmt "<ConvertVectorExpr>"
   | ArrayTypeTraitExpr -> Format.pp_print_string fmt "<ArrayTypeTraitExpr>"
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
   | AtomicExpr -> Format.pp_print_string fmt "<AtomicExpr>"
-  | BinaryConditionalOperator -> Format.pp_print_string fmt "<BinaryConditionalOperator>"
   | BinaryTypeTraitExpr -> Format.pp_print_string fmt "<BinaryTypeTraitExpr>"
   | BlockExpr -> Format.pp_print_string fmt "<BlockExpr>"
   | ChooseExpr -> Format.pp_print_string fmt "<ChooseExpr>"
@@ -382,7 +389,6 @@ and pp_expr_ fmt = function
   | ObjCSelectorExpr -> Format.pp_print_string fmt "<ObjCSelectorExpr>"
   | ObjCStringLiteral -> Format.pp_print_string fmt "<ObjCStringLiteral>"
   | ObjCSubscriptRefExpr -> Format.pp_print_string fmt "<ObjCSubscriptRefExpr>"
-  | OpaqueValueExpr -> Format.pp_print_string fmt "<OpaqueValueExpr>"
   | PackExpansionExpr -> Format.pp_print_string fmt "<PackExpansionExpr>"
   | ParenListExpr -> Format.pp_print_string fmt "<ParenListExpr>"
   | PseudoObjectExpr -> Format.pp_print_string fmt "<PseudoObjectExpr>"
