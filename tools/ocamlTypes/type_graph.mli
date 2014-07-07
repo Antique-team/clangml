@@ -23,5 +23,10 @@
   A type T is reachable from another type U, if U is a record type
   containing a member of type T, T list, or T option, or if U is a
   sum type containing at least one variant with a T, T list, or T option.
+
+  The function must_visit will return ["t1"; "t2"].
+
+  There is no requirement on the order of this list. In this example, it
+  was lexicographically ordered, but it may be random.
  *)
 val must_visit : Sig.ocaml_types -> string list
