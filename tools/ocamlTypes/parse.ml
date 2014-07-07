@@ -97,7 +97,11 @@ let ast_sum_type_branch_to_branch (ctyp: Ast.ctyp) : sum_type_branch =
         (loc, identifier, n_ary_components)
     | _ -> Log.err "Unhandled sum type branch"
   in
-  (loc, identifier, List.map ast_type_to_type ast_branch_components)
+  {
+    stb_loc = loc;
+    stb_name = identifier;
+    stb_types = List.map ast_type_to_type ast_branch_components;
+  }
 
 
 let rec flatten_ast_rec_types list = function
@@ -121,7 +125,11 @@ let map_sum_type =
 
 let map_record_member = function
   | <:ctyp@loc<$lid:name$ : $ty$>> ->
-      (loc, name, ast_type_to_type ty)
+      {
+        rtm_loc = loc;
+        rtm_name = name;
+        rtm_type = ast_type_to_type ty;
+      }
   | ty ->
       Log.err "unhandled record member format"
 
@@ -133,9 +141,17 @@ let map_record_members =
 
 let map_rec_type = function
   | Ast.TyDcl (loc, name, [], <:ctyp<[ $ast_branches$ ]>>, []) ->
-      SumType (loc, name, map_sum_type ast_branches)
+      SumType {
+        st_loc = loc;
+        st_name = name;
+        st_branches = map_sum_type ast_branches;
+      }
   | Ast.TyDcl (loc, name, [], <:ctyp<{ $members$ }>>, []) ->
-      RecordType (loc, name, map_record_members members)
+      RecordType {
+        rt_loc = loc;
+        rt_name = name;
+        rt_members = map_record_members members;
+      }
   | Ast.TyDcl (loc, name, [], other, []) ->
       AliasType (loc, name, ast_type_to_type other)
   | ty ->
@@ -146,10 +162,18 @@ let map_rec_type = function
 let ast_str_item_to_sum_type types (str_item : Ast.str_item) : ocaml_type list =
   match str_item with
   | <:str_item@loc<type $lid:name$ = [ $ast_branches$ ]>> ->
-      SumType (loc, name, map_sum_type ast_branches) :: types
+      SumType {
+        st_loc = loc;
+        st_name = name;
+        st_branches = map_sum_type ast_branches;
+      } :: types
 
   | <:str_item@loc<type $lid:name$ = { $members$ }>> ->
-      RecordType (loc, name, map_record_members members) :: types
+      RecordType {
+        rt_loc = loc;
+        rt_name = name;
+        rt_members = map_record_members members;
+      } :: types
 
   | <:str_item@loc<type $ty1$ and $ty2$>> ->
       let flattened = flatten_ast_rec_types [ty2] ty1 in
