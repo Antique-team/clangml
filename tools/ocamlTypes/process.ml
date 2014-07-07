@@ -66,7 +66,7 @@ let make_context ocaml_types =
   { enum_types; class_types; }
 
 
-let visit_types ocaml_types : type_map list =
+let make_visit_types ocaml_types : type_map list =
   let ctx = make_context @@ snd @@ List.split ocaml_types in
 
   List.filter (fun (name, _) ->
@@ -87,7 +87,7 @@ let visit_types ocaml_types : type_map list =
     )
 
 
-let visit_type_names visit_types =
+let make_visit_type_names visit_types =
   List.map
     (fun (name, _, _) -> name)
     visit_types

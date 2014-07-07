@@ -51,3 +51,7 @@ type ocaml_type =
 
 type type_map = (* name *)string * record_type * sum_type
   deriving (Show)
+
+
+type ocaml_types = (string * ocaml_type) list
+  deriving (Show)
