@@ -1,4 +1,17 @@
 TODO:
+- implement missing AST nodes
+    TODO: TraverseAtomicExpr
+    TODO: TraverseAtomicTypeLoc
+    TODO: TraverseAttributedTypeLoc
+    TODO: TraverseBinaryTypeTraitExpr
+    TODO: TraverseCapturedDecl
+    TODO: TraverseCapturedStmt
+    TODO: TraverseChooseExpr
+    TODO: TraverseExtVectorTypeLoc
+    TODO: TraverseLabelDecl
+    TODO: TraverseStaticAssertDecl
+    TODO: TraverseVectorTypeLoc
+
 - generate simplified AST structure where types_ are types and no
   wrapper-records are used. I.e.
     { e = UnaryOperator (UO_Plus, { e = IntegerLiteral 1; ...}); ... }
