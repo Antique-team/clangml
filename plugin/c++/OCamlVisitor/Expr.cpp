@@ -55,6 +55,31 @@ OCamlVisitor::TraverseConditionalOperator (clang::ConditionalOperator *S)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseBinaryConditionalOperator (clang::BinaryConditionalOperator *S)
+{
+  TRACE;
+
+  ptr<Expr> cond = must_traverse (S->getCond ());
+  ptr<Expr> falseExpr = must_traverse (S->getFalseExpr ());
+
+  stack.push (mkBinaryConditionalOperator (cond, falseExpr));
+
+  return true;
+}
+
+bool
+OCamlVisitor::TraverseOpaqueValueExpr (clang::OpaqueValueExpr *S)
+{
+  TRACE;
+
+  ptr<Expr> sourceExpr = must_traverse (S->getSourceExpr ());
+
+  stack.push (mkOpaqueValueExpr (sourceExpr));
+
+  return true;
+}
+
 // }}}
 
 
@@ -451,7 +476,6 @@ OCamlVisitor::TraverseOffsetOfExpr (clang::OffsetOfExpr *S)
 UNIMP_STMT (Expr, ArrayTypeTraitExpr)
 UNIMP_STMT (Expr, AsTypeExpr)
 UNIMP_STMT (Expr, AtomicExpr)
-UNIMP_STMT (Expr, BinaryConditionalOperator)
 UNIMP_STMT (Expr, BinaryTypeTraitExpr)
 UNIMP_STMT (Expr, BlockExpr)
 UNIMP_STMT (Expr, ChooseExpr)
@@ -518,7 +542,6 @@ UNIMP_STMT (Expr, ObjCProtocolExpr)
 UNIMP_STMT (Expr, ObjCSelectorExpr)
 UNIMP_STMT (Expr, ObjCStringLiteral)
 UNIMP_STMT (Expr, ObjCSubscriptRefExpr)
-UNIMP_STMT (Expr, OpaqueValueExpr)
 UNIMP_STMT (Expr, PackExpansionExpr)
 UNIMP_STMT (Expr, ParenListExpr)
 UNIMP_STMT (Expr, PseudoObjectExpr)
