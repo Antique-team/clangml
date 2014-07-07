@@ -145,17 +145,19 @@ UNIMP_TYPE(Attributed)
 UNIMP_TYPE(Auto)
 UNIMP_TYPE(BlockPointer)
 
+
 bool
 OCamlVisitor::TraverseComplexType (clang::ComplexType *T)
 {
   TRACE;
 
-  ptr<Ctyp> element = must_traverse (T->getElementType());
+  ptr<Ctyp> element = must_traverse (T->getElementType ());
 
   stack.push (mkComplexType (element));
 
   return true;
 }
+
 
 bool
 OCamlVisitor::TraverseConstantArrayType (clang::ConstantArrayType *T)
@@ -343,7 +345,7 @@ OCamlVisitor::TraverseVariableArrayType (clang::VariableArrayType *T)
   TRACE;
 
   ptr<Ctyp> element = must_traverse (T->getElementType ());
-  ptr<Expr> size = must_traverse (T->getSizeExpr ());
+  option<Expr> size = maybe_traverse (T->getSizeExpr ());
 
   stack.push (mkVariableArrayType (element, size));
 

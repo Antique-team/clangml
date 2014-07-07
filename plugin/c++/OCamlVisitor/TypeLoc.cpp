@@ -106,7 +106,7 @@ OCamlVisitor::TraverseVariableArrayTypeLoc (clang::VariableArrayTypeLoc TL)
   TRACE;
 
   ptr<Tloc> element = must_traverse (TL.getElementLoc ());
-  ptr<Expr> size = must_traverse (TL.getSizeExpr ());
+  option<Expr> size = maybe_traverse (TL.getSizeExpr ());
 
   stack.push (mkVariableArrayTypeLoc (element, size));
 
@@ -306,6 +306,7 @@ UNIMP_TYPE_LOC (Attributed)
 UNIMP_TYPE_LOC (Auto)
 UNIMP_TYPE_LOC (BlockPointer)
 
+
 bool
 OCamlVisitor::TraverseComplexTypeLoc (clang::ComplexTypeLoc TL)
 {
@@ -317,6 +318,7 @@ OCamlVisitor::TraverseComplexTypeLoc (clang::ComplexTypeLoc TL)
 
   return true;
 }
+
 
 bool
 OCamlVisitor::TraverseDecayedTypeLoc (clang::DecayedTypeLoc TL)

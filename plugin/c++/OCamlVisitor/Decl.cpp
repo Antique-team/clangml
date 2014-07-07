@@ -55,6 +55,7 @@ OCamlVisitor::TraverseDecl (clang::Decl *D)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseFunctionDecl (clang::FunctionDecl *D)
 {
@@ -197,6 +198,7 @@ OCamlVisitor::TraverseCXXBaseSpecifier (clang::CXXBaseSpecifier const &B)
 
   return true;
 }
+
 
 bool
 OCamlVisitor::TraverseCXXRecordDecl (clang::CXXRecordDecl *D)

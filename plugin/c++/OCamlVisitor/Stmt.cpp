@@ -42,6 +42,7 @@ OCamlVisitor::TraverseStmt (clang::Stmt *S)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseNullStmt (clang::NullStmt *S)
 {
@@ -166,7 +167,7 @@ OCamlVisitor::TraverseWhileStmt (clang::WhileStmt *S)
 {
   TRACE;
 
-  ptr<Expr> cond = maybe_traverse (S->getCond ());
+  ptr<Expr> cond = must_traverse (S->getCond ());
   ptr<Stmt> body = must_traverse (S->getBody ());
 
   stack.push (mkWhileStmt (cond, body));
@@ -181,7 +182,7 @@ OCamlVisitor::TraverseDoStmt (clang::DoStmt *S)
   TRACE;
 
   ptr<Stmt> body = must_traverse (S->getBody ());
-  ptr<Expr> cond = maybe_traverse (S->getCond ());
+  ptr<Expr> cond = must_traverse (S->getCond ());
 
   stack.push (mkDoStmt (body, cond));
 

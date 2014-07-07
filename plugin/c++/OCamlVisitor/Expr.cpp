@@ -33,6 +33,7 @@ OCamlVisitor::TraverseBinaryOperator (clang::BinaryOperator *S)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseCompoundAssignOperator (clang::CompoundAssignOperator *S)
 {
@@ -101,6 +102,7 @@ OCamlVisitor::TraverseStringLiteral (clang::StringLiteral *S)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseImaginaryLiteral (clang::ImaginaryLiteral *S)
 {
@@ -112,6 +114,7 @@ OCamlVisitor::TraverseImaginaryLiteral (clang::ImaginaryLiteral *S)
 
   return true;
 }
+
 
 // }}}
 
@@ -280,6 +283,7 @@ OCamlVisitor::TraverseDesignator (clang::DesignatedInitExpr::Designator D,
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseDesignatedInitExpr (clang::DesignatedInitExpr *S)
 {
@@ -399,27 +403,28 @@ OCamlVisitor::TraverseAddrLabelExpr (clang::AddrLabelExpr *S)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseOffsetOfNode (clang::OffsetOfExpr::OffsetOfNode N,
-                                    clang::OffsetOfExpr* S)
+                                    clang::OffsetOfExpr *S)
 {
   TRACE;
 
   ptr<OffsetofNode> node;
 
-  switch (N.getKind())
+  switch (N.getKind ())
     {
     case clang::OffsetOfExpr::OffsetOfNode::Array:
-      node = mkOON_Array(must_traverse(S->getIndexExpr(N.getArrayExprIndex())));
+      node = mkOON_Array (must_traverse (S->getIndexExpr (N.getArrayExprIndex ())));
       break;
     case clang::OffsetOfExpr::OffsetOfNode::Field:
-      node = mkOON_Field(N.getField()->getName());
+      node = mkOON_Field (N.getField ()->getName ());
       break;
     case clang::OffsetOfExpr::OffsetOfNode::Identifier:
-      node = mkOON_Identifier(N.getFieldName()->getName());
+      node = mkOON_Identifier (N.getFieldName ()->getName ());
       break;
     case clang::OffsetOfExpr::OffsetOfNode::Base:
-      node = mkOON_Base(must_traverse(*N.getBase()));
+      node = mkOON_Base (must_traverse (*N.getBase ()));
       break;
     }
 
@@ -428,18 +433,20 @@ OCamlVisitor::TraverseOffsetOfNode (clang::OffsetOfExpr::OffsetOfNode N,
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseOffsetOfExpr (clang::OffsetOfExpr *S)
 {
   TRACE;
 
-  ptr<Tloc> type = must_traverse (S->getTypeSourceInfo()->getTypeLoc());
+  ptr<Tloc> type = must_traverse (S->getTypeSourceInfo ()->getTypeLoc ());
   list<OffsetofNode> components = traverse_list (offsetof_node_range (S), S);
 
-  stack.push(mkOffsetOfExpr(type, components));
+  stack.push (mkOffsetOfExpr (type, components));
 
   return true;
 }
+
 
 UNIMP_STMT (Expr, ArrayTypeTraitExpr)
 UNIMP_STMT (Expr, AsTypeExpr)

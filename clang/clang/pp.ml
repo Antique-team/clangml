@@ -227,10 +227,10 @@ and pp_desg fmt desg =
 
 and pp_expr_ fmt = function
   | CharacterLiteral c -> Format.pp_print_string fmt (Char.escaped c)
-  | IntegerLiteral i -> Format.pp_print_int fmt i
-  | FloatingLiteral f -> Format.pp_print_float fmt f
-  | StringLiteral s -> Format.fprintf fmt "\"%s\"" (String.escaped s)
-  | ImaginaryLiteral sub -> Format.fprintf fmt "%ai" pp_expr sub
+  | IntegerLiteral   i -> Format.pp_print_int    fmt i
+  | FloatingLiteral  f -> Format.pp_print_float  fmt f
+  | StringLiteral    s -> Format.fprintf         fmt "\"%s\"" (String.escaped s)
+  | ImaginaryLiteral l -> Format.fprintf         fmt "%ai" pp_expr l
 
   | UnaryOperator (op, e) ->
       if is_prefix op then
@@ -296,7 +296,7 @@ and pp_expr_ fmt = function
       Format.fprintf fmt "&&%s"
         label
   | OffsetOfExpr (ty, components) ->
-      Format.fprintf fmt "%a (%a)"
+      Format.fprintf fmt "offsetof (%a, %a)"
         pp_tloc ty
         (Formatx.pp_list pp_offsetof_node) components
 
@@ -400,10 +400,10 @@ and pp_expr fmt expr =
   pp_expr_ fmt expr.e
 
 and pp_offsetof_node fmt = function
-  | OON_Array expr      -> pp_expr fmt expr
-  | OON_Field name      -> Format.fprintf fmt "field_name: %s" name
-  | OON_Identifier name -> Format.fprintf fmt "field_id: %s" name
-  | OON_Base spec       -> pp_cxx_base_specifier fmt spec
+  | OON_Array expr      -> Format.fprintf fmt "[%a]" pp_expr expr
+  | OON_Field name      -> Format.fprintf fmt ".%s" name
+  | OON_Identifier name -> Format.fprintf fmt ".%s" name
+  | OON_Base spec       -> Format.fprintf fmt ".%a::" pp_cxx_base_specifier spec
 
 and pp_stmt_ fmt = function
   | NullStmt ->
@@ -550,10 +550,13 @@ and pp_tloc_ fmt = function
       Format.fprintf fmt "%a[%d]"
         pp_tloc ty
         size
-  | VariableArrayTypeLoc (ty, size) ->
+  | VariableArrayTypeLoc (ty, Some size) ->
       Format.fprintf fmt "%a[%a]"
         pp_tloc ty
         pp_expr size
+  | VariableArrayTypeLoc (ty, None) ->
+      Format.fprintf fmt "%a[*]"
+        pp_tloc ty
   | IncompleteArrayTypeLoc ty ->
       Format.fprintf fmt "%a[]"
         pp_tloc ty
@@ -568,7 +571,7 @@ and pp_tloc_ fmt = function
       Format.pp_print_string fmt
         (if name = "" then "<anonymous>" else name)
   | ComplexTypeLoc elt ->
-      Format.fprintf fmt "complex: %a"
+      Format.fprintf fmt "_Complex %a"
         pp_ctyp elt
 
   | DecayedTypeLoc _ -> Format.pp_print_string fmt "<DecayedTypeLoc>"
@@ -634,10 +637,13 @@ and pp_ctyp_ fmt = function
       Format.fprintf fmt "%a[%d]"
         pp_ctyp ty
         size
-  | VariableArrayType (ty, size) ->
+  | VariableArrayType (ty, Some size) ->
       Format.fprintf fmt "%a[%a]"
         pp_ctyp ty
         pp_expr size
+  | VariableArrayType (ty, None) ->
+      Format.fprintf fmt "%a[*]"
+        pp_ctyp ty
   | IncompleteArrayType ty ->
       Format.fprintf fmt "%a[]"
         pp_ctyp ty
@@ -655,7 +661,7 @@ and pp_ctyp_ fmt = function
       Format.fprintf fmt "%a"
         pp_ctyp decayed
   | ComplexType elt ->
-      Format.fprintf fmt "complex: %a"
+      Format.fprintf fmt "_Complex %a"
         pp_ctyp elt
 
   | AtomicType -> Format.pp_print_string fmt "<AtomicType>"
@@ -805,10 +811,9 @@ and pp_decl_ fmt = function
         (Formatx.pp_list pp_decl) params
         pp_decl templated
   | TemplateTypeParmDecl (ty, None) ->
-      Format.fprintf fmt "type: %a"
-        pp_ctyp ty
+      pp_ctyp fmt ty
   | TemplateTypeParmDecl (ty, Some tloc) ->
-      Format.fprintf fmt "type: %a = %a"
+      Format.fprintf fmt "%a = %a"
         pp_ctyp ty
         pp_tloc tloc
 

@@ -489,49 +489,49 @@ type binary_operator = AstBridge.binary_operator =
 
 
 type overloaded_operator_kind = AstBridge.overloaded_operator_kind =
-  | OO_New                  (* "new"      *)
-  | OO_Delete               (* "delete"   *)
-  | OO_Array_New            (* "new[]"    *)
-  | OO_Array_Delete         (* "delete[]" *)
-  | OO_Plus                 (* "+"        *)
-  | OO_Minus                (* "-"        *)
-  | OO_Star                 (* "*"        *)
-  | OO_Slash                (* "/"        *)
-  | OO_Percent              (* "%"        *)
-  | OO_Caret                (* "^"        *)
-  | OO_Amp                  (* "&"        *)
-  | OO_Pipe                 (* "|"        *)
-  | OO_Tilde                (* "~"        *)
-  | OO_Exclaim              (* "!"        *)
-  | OO_Equal                (* "="        *)
-  | OO_Less                 (* "<"        *)
-  | OO_Greater              (* ">"        *)
-  | OO_PlusEqual            (* "+="       *)
-  | OO_MinusEqual           (* "-="       *)
-  | OO_StarEqual            (* "*="       *)
-  | OO_SlashEqual           (* "/="       *)
-  | OO_PercentEqual         (* "%="       *)
-  | OO_CaretEqual           (* "^="       *)
-  | OO_AmpEqual             (* "&="       *)
-  | OO_PipeEqual            (* "|="       *)
-  | OO_LessLess             (* "<<"       *)
-  | OO_GreaterGreater       (* ">>"       *)
-  | OO_LessLessEqual        (* "<<="      *)
-  | OO_GreaterGreaterEqual  (* ">>="      *)
-  | OO_EqualEqual           (* "=="       *)
-  | OO_ExclaimEqual         (* "!="       *)
-  | OO_LessEqual            (* "<="       *)
-  | OO_GreaterEqual         (* ">="       *)
-  | OO_AmpAmp               (* "&&"       *)
-  | OO_PipePipe             (* "||"       *)
-  | OO_PlusPlus             (* "++"       *)
-  | OO_MinusMinus           (* "--"       *)
-  | OO_Comma                (* ","        *)
-  | OO_ArrowStar            (* "->*"      *)
-  | OO_Arrow                (* "->"       *)
-  | OO_Call                 (* "()"       *)
-  | OO_Subscript            (* "[]"       *)
-  | OO_Conditional          (* "?"        *)
+  | OO_New			(* "new"      *)
+  | OO_Delete			(* "delete"   *)
+  | OO_Array_New		(* "new[]"    *)
+  | OO_Array_Delete		(* "delete[]" *)
+  | OO_Plus			(* "+"        *)
+  | OO_Minus			(* "-"        *)
+  | OO_Star			(* "*"        *)
+  | OO_Slash			(* "/"        *)
+  | OO_Percent			(* "%"        *)
+  | OO_Caret			(* "^"        *)
+  | OO_Amp			(* "&"        *)
+  | OO_Pipe			(* "|"        *)
+  | OO_Tilde			(* "~"        *)
+  | OO_Exclaim			(* "!"        *)
+  | OO_Equal			(* "="        *)
+  | OO_Less			(* "<"        *)
+  | OO_Greater			(* ">"        *)
+  | OO_PlusEqual		(* "+="       *)
+  | OO_MinusEqual		(* "-="       *)
+  | OO_StarEqual		(* "*="       *)
+  | OO_SlashEqual		(* "/="       *)
+  | OO_PercentEqual		(* "%="       *)
+  | OO_CaretEqual		(* "^="       *)
+  | OO_AmpEqual			(* "&="       *)
+  | OO_PipeEqual		(* "|="       *)
+  | OO_LessLess			(* "<<"       *)
+  | OO_GreaterGreater		(* ">>"       *)
+  | OO_LessLessEqual		(* "<<="      *)
+  | OO_GreaterGreaterEqual	(* ">>="      *)
+  | OO_EqualEqual		(* "=="       *)
+  | OO_ExclaimEqual		(* "!="       *)
+  | OO_LessEqual		(* "<="       *)
+  | OO_GreaterEqual		(* ">="       *)
+  | OO_AmpAmp			(* "&&"       *)
+  | OO_PipePipe			(* "||"       *)
+  | OO_PlusPlus			(* "++"       *)
+  | OO_MinusMinus		(* "--"       *)
+  | OO_Comma			(* ","        *)
+  | OO_ArrowStar		(* "->*"      *)
+  | OO_Arrow			(* "->"       *)
+  | OO_Call			(* "()"       *)
+  | OO_Subscript		(* "[]"       *)
+  | OO_Conditional		(* "?"        *)
   deriving (Show)
 
 
@@ -619,7 +619,7 @@ and expr_ = AstBridge.expr_ =
   | CharacterLiteral		of char
   | FloatingLiteral		of float
   | StringLiteral		of string
-  | ImaginaryLiteral            of (* sub *)expr
+  | ImaginaryLiteral		of (* sub *)expr
   | BinaryOperator		of binary_operator * (* lhs *)expr * (* rhs *)expr
   | UnaryOperator		of unary_operator * (* operand *)expr
 
@@ -802,14 +802,14 @@ and tloc_ = AstBridge.tloc_ =
   | FunctionNoProtoTypeLoc	of (* result *)tloc
   | FunctionProtoTypeLoc	of (* result *)tloc * (* args *)decl list
   | ConstantArrayTypeLoc	of (* member-type *)tloc * (* size *)int
-  | VariableArrayTypeLoc	of (* member-type *)tloc * (* size *)expr
+  | VariableArrayTypeLoc	of (* member-type *)tloc * (* size *)expr option
   | IncompleteArrayTypeLoc	of (* member-type *)tloc
   | ElaboratedTypeLoc		of (* named-type *)tloc
   | EnumTypeLoc			of (* name *)string
   | RecordTypeLoc		of (* kind *)tag_type_kind * (* name *)string
   | DecayedTypeLoc		of (* original *)tloc
   | TemplateTypeParmTypeLoc	of (* name *)string
-  | ComplexTypeLoc              of (* element *)ctyp
+  | ComplexTypeLoc		of (* element *)ctyp
 
   | AtomicTypeLoc
   | AttributedTypeLoc
@@ -856,14 +856,14 @@ and ctyp_ = AstBridge.ctyp_ =
   | FunctionNoProtoType		of (* result *)ctyp
   | FunctionProtoType		of (* result *)ctyp * (* args *)ctyp list
   | ConstantArrayType		of (* member-type *)ctyp * (* size *)int
-  | VariableArrayType		of (* member-type *)ctyp * (* size *)expr
+  | VariableArrayType		of (* member-type *)ctyp * (* size *)expr option
   | IncompleteArrayType		of (* member-type *)ctyp
   | ElaboratedType		of (* named-type *)ctyp
   | EnumType			of (* name *)string
   | RecordType			of (* kind *)tag_type_kind * (* name *)string
   | DecayedType			of (* decayed *)ctyp * (* original *)ctyp
   | TemplateTypeParmType	of (* name *)string option
-  | ComplexType                 of (* element *)ctyp
+  | ComplexType			of (* element *)ctyp
 
   | AtomicType
   | AttributedType

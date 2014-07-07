@@ -199,7 +199,7 @@ private:
   static clang::StringRef getName (clang::DeclRefExpr const *D)
   {
     clang::IdentifierInfo *info = D->getNameInfo ().getName ().getAsIdentifierInfo ();
-    assert (info);
+    assert (info != nullptr);
     return info->getName ();
   }
 
