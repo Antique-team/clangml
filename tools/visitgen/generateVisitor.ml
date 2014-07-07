@@ -32,7 +32,11 @@ let loc_of_type ocaml_types name =
  ****************************************************************************)
 
 
-let make_match_case prefix kind visit_type_names (_loc, tycon, tycon_args) =
+let make_match_case prefix kind visit_type_names sum_ty =
+  let _loc = sum_ty.stb_loc in
+  let tycon = sum_ty.stb_name in
+  let tycon_args = sum_ty.stb_types in
+
   (* Generic construction function for patterns and expressions. *)
   let construct init mkty reduce =
     List.mapi (fun i -> function
@@ -153,11 +157,12 @@ let make_functions kind type_map =
   let visit_type_names = make_visit_type_names type_map in
 
   List.map (fun (name, rec_ty, sum_ty) ->
-    let rec_loc, rec_name, rec_mems = rec_ty in
-    let sum_loc, sum_name, sum_mems = sum_ty in
+    let rec_loc = rec_ty.rt_loc in
 
     let match_cases =
-      List.map (make_match_case prefix kind visit_type_names) sum_mems
+      List.map
+        (make_match_case prefix kind visit_type_names)
+        sum_ty.st_branches
 
       |> reduce (fun cases case ->
            let _loc = Ast.loc_of_match_case case in
@@ -165,11 +170,11 @@ let make_functions kind type_map =
          )
     in
 
-    let (_, main_member, _) =
+    let { rtm_name = main_member } =
       List.find (function
-        | (_, _, NamedType (_, member)) -> member = name ^ "_"
+        | { rtm_type = NamedType (_, member) } -> member = name ^ "_"
         | _ -> false
-      ) rec_mems
+      ) rec_ty.rt_members
     in
 
     let do_match =
@@ -295,7 +300,7 @@ let codegen kind (visit_types : string list) ocaml_types =
         <:str_item<type    visitor = { $members$; }>>
   in
 
-  (*let functions = make_functions kind type_map in*)
+  let functions = make_functions kind type_map in
   let default = make_default kind visit_types ocaml_types in
 
   (* Put it all together. *)
@@ -305,6 +310,6 @@ let codegen kind (visit_types : string list) ocaml_types =
 
     $tydcl$;;
 
-    (*$functions$;;*)
+    $functions$;;
     let default = { $default$ };;
   >>
