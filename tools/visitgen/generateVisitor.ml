@@ -142,7 +142,7 @@ let make_match_case prefix kind visit_type_names (_loc, tycon, tycon_args) =
 let make_functions kind visit_types =
   let prefix = name_of_kind kind ^ "_" in
 
-  let visit_type_names = visit_type_names visit_types in
+  let visit_type_names = make_visit_type_names visit_types in
 
   List.map (fun (name, rec_ty, sum_ty) ->
     let rec_loc, rec_name, rec_mems = rec_ty in
@@ -264,7 +264,9 @@ let make_default kind visit_types =
 
 
 let codegen kind ocaml_types =
-  let visit_types = visit_types ocaml_types in
+  let visit_types = OcamlTypes.Type_graph.must_visit ocaml_types in
+
+  let visit_types = make_visit_types ocaml_types in
 
   let functions = make_functions kind visit_types in
   let members = make_members kind visit_types in

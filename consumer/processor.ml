@@ -94,36 +94,36 @@ let process clang =
   print_endline @@ "%% processing file " ^ file;
   print_endline "--------------------- MemCAD PP ---------------------";
   (*print_endline (Show.show<Clang.Ast.decl> decl);*)
-  let memcad_ast = memcad_parse file in
+  (*let memcad_ast = memcad_parse file in*)
 
-  let () = Analysis.All.analyse_decl clang decl in
+  (*let () = Analysis.All.analyse_decl clang decl in*)
 
-  print_string "--------------------- Clang CST ---------------------";
-  Format.printf "@[<v2>@,%a@]@."
-    Clang.Pp.pp_decl decl;
+  (*print_string "--------------------- Clang CST ---------------------";*)
+  (*Format.printf "@[<v2>@,%a@]@."*)
+    (*Clang.Pp.pp_decl decl;*)
 
   let decl = Transformation.All.transform_decl clang decl in
-  (*
-  print_string "--------------------- Simple CST --------------------";
-  Format.printf "@[<v2>@,%a@]@."
-    Clang.Pp.pp_decl decl;
-  *)
 
-  print_string "--------------------- Clang AST ---------------------";
-  Format.printf "@[<v2>@,%a@]@."
-    Clang.Ast.Show_decl.format decl;
+  (*print_string "--------------------- Simple CST --------------------";*)
+  (*Format.printf "@[<v2>@,%a@]@."*)
+    (*Clang.Pp.pp_decl decl;*)
 
-  print_endline "----------------- Clang -> MemCAD -------------------";
-  let ast = Transform.c_prog_from_decl clang decl in
-  C_utils.ppi_c_prog "" stdout ast;
-  dump_ast ast;
-  print_endline "-----------------------------------------------------";
+  (*print_string "--------------------- Clang AST ---------------------";*)
+  (*Format.printf "@[<v2>@,%a@]@."*)
+    (*Clang.Ast.Show_decl.format decl;*)
 
-  match memcad_ast with
-  | None -> ()
-  | Some memcad_ast ->
-      if memcad_ast = ast then
-        print_endline "MEMCAD AST = CLANG AST"
+  (*print_endline "----------------- Clang -> MemCAD -------------------";*)
+  (*let ast = Transform.c_prog_from_decl clang decl in*)
+  (*C_utils.ppi_c_prog "" stdout ast;*)
+  (*dump_ast ast;*)
+  (*print_endline "-----------------------------------------------------";*)
+
+  (*match memcad_ast with*)
+  (*| None -> ()*)
+  (*| Some memcad_ast ->*)
+      (*if memcad_ast = ast then*)
+        (*print_endline "MEMCAD AST = CLANG AST"*)
+  ()
 ;;
 
 
