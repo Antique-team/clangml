@@ -287,14 +287,14 @@ type cast_kind = AstBridge.cast_kind =
     (* A conversion which causes a bit pattern of one type
        to be reinterpreted as a bit pattern of another type.  Generally
        the operands must have equivalent size and unrelated types.
- 
+
        The pointer conversion char* -> int* is a bitcast.  A conversion
        from any pointer type to a C pointer type is a bitcast unless
        it's actually BaseToDerived or DerivedToBase.  A conversion to a
        block pointer or ObjC pointer type is a bitcast only if the
        operand has the same type kind; otherwise, it's one of the
        specialized casts below.
- 
+
        Vector coercions are bitcasts. *)
   | CK_LValueBitCast
     (* A conversion which reinterprets the address of
@@ -633,6 +633,7 @@ and expr_ = AstBridge.expr_ =
   | CallExpr			of (* callee *)expr * (* args *)expr list
   | MemberExpr			of (* base *)expr * (* member *)string * (* is_arrow *)bool
   | ConditionalOperator		of (* cond *)expr * (* then *)expr * (* else *)expr
+  | BinaryConditionalOperator	of (* cond *)expr * (* else *)expr
   | DesignatedInitExpr		of desg list * (* init *)expr
   | InitListExpr		of (* inits *)expr list
   | ImplicitValueInitExpr
@@ -640,6 +641,7 @@ and expr_ = AstBridge.expr_ =
   | StmtExpr			of (* body *)stmt
   | AddrLabelExpr		of string
   | OffsetOfExpr		of (* type *)tloc * (* components *)offsetof_node list
+  | OpaqueValueExpr             of (* source *)expr
 
   | SizeOfExpr			of expr
   | SizeOfType			of tloc
@@ -651,7 +653,6 @@ and expr_ = AstBridge.expr_ =
   | ArrayTypeTraitExpr
   | AsTypeExpr
   | AtomicExpr
-  | BinaryConditionalOperator
   | BinaryTypeTraitExpr
   | BlockExpr
   | ChooseExpr
@@ -709,7 +710,6 @@ and expr_ = AstBridge.expr_ =
   | ObjCSelectorExpr
   | ObjCStringLiteral
   | ObjCSubscriptRefExpr
-  | OpaqueValueExpr
   | PackExpansionExpr
   | ParenListExpr
   | PseudoObjectExpr
