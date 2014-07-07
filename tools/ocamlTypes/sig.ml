@@ -28,11 +28,13 @@ type basic_type =
   (* Will want others, eventually *)
   deriving (Show)
 
-type sum_type_branch = loc * (* branch_name *)string * (* types *)basic_type list
-  deriving (Show)
+type sum_type_branch =
+    loc * (* branch_name *)string * (* types *)basic_type list
+      deriving (Show)
 
-type sum_type = loc * (* sum_type_name *)string * (* branches *)sum_type_branch list
-  deriving (Show)
+type sum_type =
+    loc * (* sum_type_name *)string * (* branches *)sum_type_branch list
+      deriving (Show)
 
 type record_member = loc * (* name *)string * (* type *)basic_type
   deriving (Show)
