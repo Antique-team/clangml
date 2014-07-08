@@ -310,15 +310,42 @@ let make_sum_type_function kind visit_types name st =
         $match_cases$
     >>
 
+let is_visitable_field visit_types member =
+  let rec is_visitable = function
+    | NamedType (_loc, name) -> List.mem name visit_types
+    | ListOfType (_loc, basic_type)
+    | OptionType (_loc, basic_type) -> is_visitable basic_type
+    | _ -> false
+  in
+  is_visitable member.rtm_type
+
+let find_visitable_fields visit_types members =
+  List.filter (is_visitable_field visit_types) members
+
 
 let make_record_type_function kind visit_types name rt =
   let _loc = rt.rt_loc in
+  let visitable_fields = find_visitable_fields visit_types rt.rt_members in
+
+  let mkbinding member =
+    let _loc = member.rtm_loc in
+    <:rec_binding<$lid:member.rtm_name$>>
+  in
+
+  let bindings =
+    List.map mkbinding visitable_fields
+    |> reduce (fun members ty ->
+         let _loc = Ast.loc_of_rec_binding ty in
+         <:rec_binding<$members$; $ty$>>
+       )
+  in
 
   let visit_name = "visit_" ^ name in
   match kind with
   | Map ->
       <:str_item<
         let $lid:visit_name$ v state $lid:name$ =
+          let _ = { $lid:name$ with $bindings$ } in
           (state, $lid:name$)
       >>
   | Fold ->
@@ -343,7 +370,7 @@ let make_functions kind visit_types ocaml_types =
            make_record_type_function   kind visit_types name rt
        | Combined_type (rt, st) ->
            make_combined_type_function kind visit_types name rt st
-       | Sum_type st -> 
+       | Sum_type st ->
            make_sum_type_function      kind visit_types name st
     )
     visit_types
