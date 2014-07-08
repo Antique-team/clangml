@@ -1,9 +1,9 @@
+open Util.Prelude
 open Camlp4.PreCast
 open Util
 open Sig
 open Print
 
-let (%) f g x = f (g x)
 
 (* The P4 AST is specified and sort of documented where it is defined.*)
 (* See: https://github.com/def-lkb/ocaml-tyr/blob/8e1296b0802c28b99d16b975310c8abbcd76e9e9/camlp4/Camlp4/Camlp4Ast.partial.ml*)
