@@ -368,14 +368,6 @@ let gen_code_for_record_type ctx (record_type : record_type) =
   [Codegen.Class (class_intf_for_record_type ctx record_type); factory]
 
 
-let name_of_type = function
-  | SumType { st_name = name }
-  | AliasType (_, name, _)
-  | RecordType { rt_name = name } -> name
-  | Version _ -> failwith "version has no name"
-  | RecursiveType _ -> failwith "recursive types have no name"
-
-
 let gen_code_for_ocaml_type ctx = function
   | SumType ty -> gen_code_for_sum_type ctx ty
   | RecordType ty -> gen_code_for_record_type ctx ty

@@ -7,29 +7,79 @@ module S = BatString
 let codegen ocaml_types =
   let _loc = Loc.ghost in
 
-  let visit_types = OcamlTypes.Type_graph.must_visit ocaml_types in
-
-  let ocaml_types =
-    List.filter
-      (fun (name, ty) -> not (List.mem_assoc (name ^ "_") ocaml_types))
-      ocaml_types
+  let visit_types =
+    ocaml_types
+    |> flatten_and_map
+    |> OcamlTypes.Type_graph.must_visit
   in
 
   let ocaml_types =
-    List.map
-      (fun ((name, ty) as name_type) -> 
-         if not (S.ends_with name "_") then
-           name_type
-         else
-           let name = S.rchop name in
+    let rec contains_type name = function
+      | [] -> false
+      | ty :: rest ->
+          (match ty with
+           | SumType    { st_name = ty_name }
+           | RecordType { rt_name = ty_name } ->
+               ty_name = name
+           | RecursiveType (_, types) ->
+               contains_type name types
+           | AliasType _
+           | Version _ ->
+               false
+          ) || contains_type name rest
+    in
+
+    let has_child_type name =
+      contains_type (name ^ "_") ocaml_types
+    in
+
+    let rec remove_combined_types types =
+      List.fold_right
+        (fun ty filtered_types ->
            match ty with
-           | SumType st -> (name, SumType { st with st_name = name })
-           | _ -> assert false;
-      )
-      ocaml_types
+           | SumType    st when has_child_type st.st_name ->
+               filtered_types
+           | RecordType rt when has_child_type rt.rt_name ->
+               filtered_types
+           | RecursiveType (loc, types) ->
+               RecursiveType (loc, remove_combined_types types)
+                 :: filtered_types
+           | ty ->
+               ty :: filtered_types
+        )
+        types
+        []
+    in
+
+    remove_combined_types ocaml_types
   in
 
-  print_endline @@ Show_ocaml_types.show ocaml_types;
+  let ocaml_types =
+    let remove_underscore name =
+      if S.ends_with name "_" then
+        S.rchop name
+      else
+        name
+    in
+
+    let rec rename_type = function
+      | SumType st ->
+          SumType {
+            st with st_name = remove_underscore st.st_name;
+          }
+      | RecordType rt ->
+          RecordType {
+            rt with rt_name = remove_underscore rt.rt_name;
+          }
+      | RecursiveType (loc, types) ->
+          RecursiveType (loc, List.map rename_type types)
+      | ty -> ty
+    in
+
+    List.map rename_type ocaml_types
+  in
+
+  print_endline @@ Show_ocaml_type.show_list ocaml_types;
 
   <:str_item<
     open Ast

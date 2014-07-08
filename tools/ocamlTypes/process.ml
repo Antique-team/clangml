@@ -54,6 +54,15 @@ let flatten_recursive_types =
   )
 
 
+let flatten_and_map =
+  List.map (function
+    | RecordType { rt_name = name }
+    | SumType { st_name = name } as ty ->
+        (name, ty)
+    | _ -> failwith "invalid type returned from flatten_recursive_types"
+  ) % flatten_recursive_types
+
+
 let make_context ocaml_types =
   let (enum_types, class_types) =
     (* Get all types, including the ones in a recursive definition,
@@ -91,3 +100,11 @@ let make_visit_type_names type_map =
   List.map
     (fun (name, _, _) -> name)
     type_map
+
+
+let name_of_type = function
+  | SumType { st_name = name }
+  | AliasType (_, name, _)
+  | RecordType { rt_name = name } -> name
+  | Version _ -> failwith "version has no name"
+  | RecursiveType _ -> failwith "recursive types have no name"

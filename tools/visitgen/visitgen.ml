@@ -7,13 +7,7 @@ open OcamlTypes.Process
 let parse_and_generate dir source =
   let ocaml_types =
     OcamlTypes.Parse.parse_file source
-    |> flatten_recursive_types
-    |> List.map (function
-        | RecordType { rt_name = name }
-        | SumType { st_name = name } as ty ->
-            (name, ty)
-        | _ -> failwith "invalid type returned from flatten_recursive_types"
-      )
+    |> flatten_and_map
   in
 
   let visit_types = OcamlTypes.Type_graph.must_visit ocaml_types in
