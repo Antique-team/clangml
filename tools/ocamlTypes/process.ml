@@ -15,8 +15,8 @@ type context = {
 }
 
 
-let sum_type_is_enum (_, sum_type_name, branches) =
-  List.for_all (fun (_, branch_name, types) ->
+let sum_type_is_enum { st_name = sum_type_name; st_branches = branches } =
+  List.for_all (fun { stb_types = types } ->
     types = []
   ) branches
 
@@ -32,12 +32,12 @@ let type_is_enum = function
 (* Partition by enum/class types. *)
 let partition_type_names =
   List.fold_left (fun (enums, classes) -> function
-    | SumType (_, name, _ as ty) ->
+    | SumType ({ st_name = name } as ty) ->
         if sum_type_is_enum ty then
           (name :: enums, classes)
         else
           (enums, name :: classes)
-    | RecordType (_, name, _) ->
+    | RecordType { rt_name = name } ->
         (enums, name :: classes)
     | AliasType _ ->
         (enums, classes)
@@ -66,7 +66,7 @@ let make_context ocaml_types =
   { enum_types; class_types; }
 
 
-let make_visit_types ocaml_types : type_map list =
+let make_type_map ocaml_types : type_map list =
   let ctx = make_context @@ snd @@ List.split ocaml_types in
 
   List.filter (fun (name, _) ->
@@ -87,7 +87,7 @@ let make_visit_types ocaml_types : type_map list =
     )
 
 
-let make_visit_type_names visit_types =
+let make_visit_type_names type_map =
   List.map
     (fun (name, _, _) -> name)
-    visit_types
+    type_map

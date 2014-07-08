@@ -6,9 +6,6 @@ module Log = Logger.Make(struct let tag = "main" end)
 
 let (%) f g x = f (g x)
 
-let name_of_sum_type (_, name, _) = name
-let name_of_record_type (_, name, _) = name
-
 
 (**
   Turn an underscore_name into a CamelcaseName.
@@ -43,10 +40,11 @@ let cpp_name name =
  * Enum (all tycons are nullary)
  *****************************************************)
 
-let enum_intf_for_constant_sum_type (_, sum_type_name, branches) =
+let enum_intf_for_constant_sum_type { st_name = sum_type_name;
+                                      st_branches = branches } =
   (* Explicitly make the first enum have value 0, the second have value 2, etc.*)
   let enum_elements =
-    List.mapi (fun i (_, branch_name, _) ->
+    List.mapi (fun i { stb_name = branch_name } ->
       (branch_name, Some i)
     ) branches
   in
@@ -190,7 +188,8 @@ let toValue fields =
   }
 
 
-let class_intf_for_sum_type ctx (_, sum_type_name, branches) =
+let class_intf_for_sum_type ctx { st_name = sum_type_name;
+                                  st_branches = branches; } =
   let open Codegen in
 
   let class_name = cpp_name sum_type_name in
@@ -206,7 +205,7 @@ let class_intf_for_sum_type ctx (_, sum_type_name, branches) =
   let derived =
     let explicit = [Explicit] in
 
-    let make_derived tag (_, branch_name, types) =
+    let make_derived tag { stb_name = branch_name; stb_types = types; } =
       let toValue =
         toValue (List.mapi (fun i _ -> IdExpr ("field" ^ string_of_int i)) types)
       in
@@ -270,7 +269,7 @@ let class_intf_for_sum_type ctx (_, sum_type_name, branches) =
 
     let (nullary, parameterised) =
       List.partition
-        (fun (_, _, types) -> types = [])
+        (fun stb -> stb.stb_types = [])
         branches
     in
     (* First, nullary constructors. *)
@@ -286,19 +285,17 @@ let class_intf_for_sum_type ctx (_, sum_type_name, branches) =
  *****************************************************)
 
 let gen_code_for_sum_type ctx (sum_type : sum_type) =
-  if List.mem (name_of_sum_type sum_type) ctx.enum_types then
+  if List.mem sum_type.st_name ctx.enum_types then
     [Codegen.Enum (enum_intf_for_constant_sum_type sum_type)]
   else
-    let (_, sum_type_name, branches) = sum_type in
-
     List.map (fun i -> Codegen.Class i)
       (class_intf_for_sum_type ctx sum_type)
 
-    @ List.map (fun (_, branch_name, types) ->
+    @ List.map (fun { stb_name = branch_name; stb_types = types; } ->
         let open Codegen in
         let ty =
           TyName (branch_name ^
-                  cpp_name sum_type_name)
+                  cpp_name sum_type.st_name)
         in
         let args =
           List.mapi (fun i _ ->
@@ -317,14 +314,15 @@ let gen_code_for_sum_type ctx (sum_type : sum_type) =
             )
           ];
         }
-      ) branches
+      ) sum_type.st_branches
 
 
-let class_intf_for_record_type ctx (_, record_name, fields) =
+let class_intf_for_record_type ctx { rt_name = record_name;
+                                     rt_members = fields; } =
   let open Codegen in
 
   let class_fields =
-    List.map (fun (_, name, ty) ->
+    List.map (fun { rtm_name = name; rtm_type = ty; } ->
       MemberField {
         empty_decl with
         decl_type = translate_type ctx ty;
@@ -334,7 +332,7 @@ let class_intf_for_record_type ctx (_, record_name, fields) =
   in
 
   let toValue =
-    toValue (List.map (fun (_, name, _) -> IdExpr (name)) fields)
+    toValue (List.map (fun rtm -> IdExpr (rtm.rtm_name)) fields)
   in
 
   let class_name = cpp_name record_name in
@@ -351,7 +349,7 @@ let gen_code_for_record_type ctx (record_type : record_type) =
   let open Codegen in
 
   let factory =
-    let class_name = cpp_name (name_of_record_type record_type) in
+    let class_name = cpp_name record_type.rt_name in
     let ty = TyName class_name in
     Function {
       flags  = [Static; Inline];
@@ -371,9 +369,9 @@ let gen_code_for_record_type ctx (record_type : record_type) =
 
 
 let name_of_type = function
-  | SumType (_, name, _)
+  | SumType { st_name = name }
   | AliasType (_, name, _)
-  | RecordType (_, name, _) -> name
+  | RecordType { rt_name = name } -> name
   | Version _ -> failwith "version has no name"
   | RecursiveType _ -> failwith "recursive types have no name"
 

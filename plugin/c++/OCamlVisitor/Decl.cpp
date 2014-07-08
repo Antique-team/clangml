@@ -356,7 +356,21 @@ OCamlVisitor::TraverseClassTemplateDecl (clang::ClassTemplateDecl *D)
 
   return true;
 }
-UNIMP_DECL (FileScopeAsmDecl)
+
+
+bool
+OCamlVisitor::TraverseFileScopeAsmDecl (clang::FileScopeAsmDecl *D)
+{
+  TRACE;
+
+  ptr<Expr> asmString = must_traverse (D->getAsmString ());
+
+  stack.push (mkFileScopeAsmDecl (asmString));
+
+  return true;
+}
+
+
 UNIMP_DECL (FriendDecl)
 UNIMP_DECL (FriendTemplateDecl)
 UNIMP_DECL (FunctionTemplateDecl)

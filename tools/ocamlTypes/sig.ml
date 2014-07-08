@@ -28,19 +28,29 @@ type basic_type =
   (* Will want others, eventually *)
   deriving (Show)
 
-type sum_type_branch =
-    loc * (* branch_name *)string * (* types *)basic_type list
-      deriving (Show)
+type sum_type_branch = {
+  stb_loc : loc;
+  stb_name : string;
+  stb_types : basic_type list;
+} deriving (Show)
 
-type sum_type =
-    loc * (* sum_type_name *)string * (* branches *)sum_type_branch list
-      deriving (Show)
+type sum_type = {
+  st_loc : loc;
+  st_name : string;
+  st_branches : sum_type_branch list;
+} deriving (Show)
 
-type record_member = loc * (* name *)string * (* type *)basic_type
-  deriving (Show)
+type record_type_member = {
+  rtm_loc : loc;
+  rtm_name : string;
+  rtm_type : basic_type;
+} deriving (Show)
 
-type record_type = loc * (* name *)string * (* members *)record_member list
-  deriving (Show)
+type record_type = {
+  rt_loc : loc;
+  rt_name : string;
+  rt_members : record_type_member list;
+} deriving (Show)
 
 type ocaml_type =
   | AliasType of loc * string * basic_type

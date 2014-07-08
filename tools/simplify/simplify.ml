@@ -9,8 +9,8 @@ let parse_and_generate output_file source =
     OcamlTypes.Parse.parse_file source
     |> flatten_recursive_types
     |> List.map (function
-        | RecordType (_, name, _)
-        | SumType (_, name, _) as ty ->
+        | RecordType { rt_name = name }
+        | SumType { st_name = name } as ty ->
             (name, ty)
         | _ -> failwith "invalid type returned from flatten_recursive_types"
       )
