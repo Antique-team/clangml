@@ -8,9 +8,12 @@ open OcamlTypes.Process
 (* Record_type *)
 
 let map_field_decl v state field_decl =
+  (* map *)
   let (state, fd_type) = v.map_tloc v state field_decl.fd_type in
-  let (state, fd_bitw) = map_option v.map_tloc v state field_decl.fd_bitw in
-  let (state, fd_init) = map_option v.map_tloc v state field_decl.fd_init in
+  (* fold *)
+  let state = fold_option v.fold_tloc v state field_decl.fd_bitw in
+  (* iter *)
+  let () = iter_option v.iter_tloc v field_decl.fd_init in
   (state, {
       field_decl with
       fd_type;
