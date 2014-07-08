@@ -257,6 +257,16 @@ type tag_type_kind = AstBridge.tag_type_kind =
   | TTK_Enum		(* The "enum" keyword. *)
   deriving (Show)
 
+(* The kind of a vector type.
+   [clang/AST/Type.h] *)
+type vector_kind = AstBridge.vector_kind =
+  | VK_GenericVector
+  | VK_AltiVecVector
+  | VK_AltiVecPixel
+  | VK_AltiVecBool
+  | VK_NeonVector
+  | VK_NeonPolyVector
+  deriving (Show)
 
 (* The elaboration keyword that precedes a qualified type name or
    introduces an elaborated-type-specifier.
@@ -810,6 +820,10 @@ and tloc_ = AstBridge.tloc_ =
   | DecayedTypeLoc		of (* original *)tloc
   | TemplateTypeParmTypeLoc	of (* name *)string
   | ComplexTypeLoc		of (* element *)ctyp
+  | VectorTypeLoc               of
+      (* element-type *)ctyp *
+      (* numElements *)int *
+      (* vector-kind *)vector_kind
 
   | AtomicTypeLoc
   | AttributedTypeLoc
@@ -833,7 +847,6 @@ and tloc_ = AstBridge.tloc_ =
   | TemplateSpecializationTypeLoc
   | UnaryTransformTypeLoc
   | UnresolvedUsingTypeLoc
-  | VectorTypeLoc
 
 
 and ctyp = AstBridge.ctyp = {
@@ -864,6 +877,10 @@ and ctyp_ = AstBridge.ctyp_ =
   | DecayedType			of (* decayed *)ctyp * (* original *)ctyp
   | TemplateTypeParmType	of (* name *)string option
   | ComplexType			of (* element *)ctyp
+  | VectorType                  of
+      (* element-type *)ctyp *
+      (* numElements *)int *
+      (* vector-kind *)vector_kind
 
   | AtomicType
   | AttributedType
@@ -887,7 +904,6 @@ and ctyp_ = AstBridge.ctyp_ =
   | TemplateSpecializationType
   | UnaryTransformType
   | UnresolvedUsingType
-  | VectorType
 
 
 and decl = AstBridge.decl = {

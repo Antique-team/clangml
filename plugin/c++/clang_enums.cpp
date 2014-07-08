@@ -100,6 +100,26 @@ translate_tag_type_kind (clang::TagTypeKind kind)
   throw std::runtime_error ("invalid tag type kind");
 }
 
+VectorKind
+translate_vector_kind (clang::VectorType::VectorKind kind)
+{
+  switch (kind)
+    {
+    case clang::VectorType::VectorKind::GenericVector:
+      return VK_GenericVector;
+    case clang::VectorType::VectorKind::AltiVecVector:
+      return VK_AltiVecVector;
+    case clang::VectorType::VectorKind::AltiVecPixel:
+      return VK_AltiVecPixel;
+    case clang::VectorType::VectorKind::AltiVecBool:
+      return VK_AltiVecBool;
+    case clang::VectorType::VectorKind::NeonVector:
+      return VK_NeonVector;
+    case clang::VectorType::VectorKind::NeonPolyVector:
+      return VK_NeonPolyVector;
+    }
+  throw std::runtime_error ("invalid tag vector kind");
+}
 
 ElaboratedTypeKeyword
 translate_elaborated_type_keyword (clang::ElaboratedTypeKeyword kw)

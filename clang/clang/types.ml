@@ -58,6 +58,9 @@ let rec tloc_of_ctyp sloc ty =
     | TemplateTypeParmType None ->
         TemplateTypeParmTypeLoc "<anon>"
     | ComplexType elt -> ComplexTypeLoc elt
+    | VectorType (elt_type, num_elts, kind) -> 
+        VectorTypeLoc (elt_type, num_elts, kind)
+
 
     | AtomicType -> AtomicTypeLoc
     | AttributedType -> AttributedTypeLoc
@@ -82,7 +85,6 @@ let rec tloc_of_ctyp sloc ty =
     | TemplateSpecializationType -> TemplateSpecializationTypeLoc
     | UnaryTransformType -> UnaryTransformTypeLoc
     | UnresolvedUsingType -> UnresolvedUsingTypeLoc
-    | VectorType -> VectorTypeLoc
   in
 
   let tl =

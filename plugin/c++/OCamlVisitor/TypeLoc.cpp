@@ -339,6 +339,20 @@ OCamlVisitor::TraverseComplexTypeLoc (clang::ComplexTypeLoc TL)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseVectorTypeLoc (clang::VectorTypeLoc TL)
+{
+  TRACE;
+
+  ptr<Ctyp> elt_type = must_traverse (TL.getTypePtr()->getElementType());
+  unsigned num_elts = TL.getTypePtr()->getNumElements();
+  VectorKind vect_kind =
+    translate_vector_kind (TL.getTypePtr()->getVectorKind());
+
+  stack.push (mkVectorTypeLoc (elt_type, num_elts, vect_kind));
+
+  return true;
+}
 
 bool
 OCamlVisitor::TraverseDecayedTypeLoc (clang::DecayedTypeLoc TL)
@@ -395,6 +409,5 @@ OCamlVisitor::TraverseTemplateTypeParmTypeLoc (clang::TemplateTypeParmTypeLoc TL
 
 UNIMP_TYPE_LOC (UnaryTransform)
 UNIMP_TYPE_LOC (UnresolvedUsing)
-UNIMP_TYPE_LOC (Vector)
 
 // }}}

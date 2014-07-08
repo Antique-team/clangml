@@ -158,6 +158,20 @@ OCamlVisitor::TraverseComplexType (clang::ComplexType *T)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseVectorType (clang::VectorType *T)
+{
+  TRACE;
+
+  ptr<Ctyp> elt_type = must_traverse (T->getElementType());
+  unsigned num_elts = T->getNumElements();
+  VectorKind vect_kind =
+    translate_vector_kind (T->getVectorKind());
+
+  stack.push (mkVectorType (elt_type, num_elts, vect_kind));
+
+  return true;
+}
 
 bool
 OCamlVisitor::TraverseConstantArrayType (clang::ConstantArrayType *T)
@@ -351,9 +365,6 @@ OCamlVisitor::TraverseVariableArrayType (clang::VariableArrayType *T)
 
   return true;
 }
-
-
-UNIMP_TYPE(Vector)
 
 
 // }}}

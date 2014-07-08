@@ -84,6 +84,14 @@ let string_of_tag_type_kind = function
   | TTK_Class -> "class"
   | TTK_Enum -> "enum"
 
+let string_of_vector_kind = function
+  | VK_GenericVector  -> "GenericVector" 
+  | VK_AltiVecVector  -> "AltiVecVector" 
+  | VK_AltiVecPixel   -> "AltiVecPixel"  
+  | VK_AltiVecBool    -> "AltiVecBool"   
+  | VK_NeonVector     -> "NeonVector"    
+  | VK_NeonPolyVector -> "NeonPolyVector"
+
 let string_of_elaborated_type_keyword = function
   | ETK_Struct -> "struct"
   | ETK_Interface -> "__interface"
@@ -579,6 +587,12 @@ and pp_tloc_ fmt = function
   | ComplexTypeLoc elt ->
       Format.fprintf fmt "_Complex %a"
         pp_ctyp elt
+  | VectorTypeLoc (elt_type, num_elts, kind) ->
+      Format.fprintf fmt "vector %a %d %s"
+        pp_ctyp elt_type
+        num_elts
+        (string_of_vector_kind kind)
+
 
   | DecayedTypeLoc _ -> Format.pp_print_string fmt "<DecayedTypeLoc>"
   | AtomicTypeLoc -> Format.pp_print_string fmt "<AtomicTypeLoc>"
@@ -604,7 +618,6 @@ and pp_tloc_ fmt = function
   | TemplateTypeParmTypeLoc _ -> Format.pp_print_string fmt "<TemplateTypeParmTypeLoc>"
   | UnaryTransformTypeLoc -> Format.pp_print_string fmt "<UnaryTransformTypeLoc>"
   | UnresolvedUsingTypeLoc -> Format.pp_print_string fmt "<UnresolvedUsingTypeLoc>"
-  | VectorTypeLoc -> Format.pp_print_string fmt "<VectorTypeLoc>"
 
 and pp_tloc fmt tloc =
   pp_tloc_ fmt tloc.tl
@@ -669,6 +682,12 @@ and pp_ctyp_ fmt = function
   | ComplexType elt ->
       Format.fprintf fmt "_Complex %a"
         pp_ctyp elt
+  | VectorType (elt_type, num_elts, kind) ->
+      Format.fprintf fmt "vector %a %d %s"
+        pp_ctyp elt_type
+        num_elts
+        (string_of_vector_kind kind)
+
 
   | AtomicType -> Format.pp_print_string fmt "<AtomicType>"
   | AttributedType -> Format.pp_print_string fmt "<AttributedType>"
@@ -693,7 +712,7 @@ and pp_ctyp_ fmt = function
   | TemplateTypeParmType _ -> Format.pp_print_string fmt "<TemplateTypeParmType>"
   | UnaryTransformType -> Format.pp_print_string fmt "<UnaryTransformType>"
   | UnresolvedUsingType -> Format.pp_print_string fmt "<UnresolvedUsingType>"
-  | VectorType -> Format.pp_print_string fmt "<VectorType>"
+
 
 and pp_ctyp fmt t =
   Format.fprintf fmt "%a %a%s"
