@@ -111,24 +111,31 @@ let loc_of_type ocaml_types name =
 
 
 let make_update kind visit_type_names mangle ?record _loc expr ty =
-
   let prefix = name_of_kind kind ^ "_" in
 
   (* Map a value, optionally with an extra mapping function
      (e.g. map_list or map_option). The result is the updated value. *)
-  let mkmap name = function
+  let mkmap name fn =
+    let var =
+      let mangled = mangle name in
+      match record with
+      | None ->
+          <:expr<$lid:mangled$>>
+      | Some record ->
+          <:expr<$lid:record$.$lid:mangled$>>
+    in
+
+    match fn with
     | None ->
-        let var = mangle name in
         if kind_has_state kind then
-          <:expr<v.$lid:prefix ^ name$ v state $lid:var$>>
+          <:expr<v.$lid:prefix ^ name$ v state $var$>>
         else
-          <:expr<v.$lid:prefix ^ name$ v $lid:var$>>
+          <:expr<v.$lid:prefix ^ name$ v $var$>>
     | Some fn ->
-        let var = mangle name in
         if kind_has_state kind then
-          <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v state $lid:var$>>
+          <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v state $var$>>
         else
-          <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v $lid:var$>>
+          <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v $var$>>
   in
 
   let update =
@@ -350,7 +357,7 @@ let make_record_type_function kind visit_types name rt =
         let mangle _name =
           member.rtm_name
         in
-        make_update kind visit_types mangle _loc expr member.rtm_type
+        make_update ~record:rt.rt_name kind visit_types mangle _loc expr member.rtm_type
       )
       result
       visitable_fields
