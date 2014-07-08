@@ -100,6 +100,7 @@ translate_tag_type_kind (clang::TagTypeKind kind)
   throw std::runtime_error ("invalid tag type kind");
 }
 
+
 VectorKind
 translate_vector_kind (clang::VectorType::VectorKind kind)
 {
@@ -118,8 +119,9 @@ translate_vector_kind (clang::VectorType::VectorKind kind)
     case clang::VectorType::VectorKind::NeonPolyVector:
       return VK_NeonPolyVector;
     }
-  throw std::runtime_error ("invalid tag vector kind");
+  throw std::runtime_error ("invalid vector kind");
 }
+
 
 ElaboratedTypeKeyword
 translate_elaborated_type_keyword (clang::ElaboratedTypeKeyword kw)

@@ -588,7 +588,7 @@ and pp_tloc_ fmt = function
       Format.fprintf fmt "_Complex %a"
         pp_ctyp elt
   | VectorTypeLoc (elt_type, num_elts, kind) ->
-      Format.fprintf fmt "vector %a %d %s"
+      Format.fprintf fmt "%a __attribute__ ((vector_size (%d))) [%s]"
         pp_ctyp elt_type
         num_elts
         (string_of_vector_kind kind)
@@ -683,7 +683,7 @@ and pp_ctyp_ fmt = function
       Format.fprintf fmt "_Complex %a"
         pp_ctyp elt
   | VectorType (elt_type, num_elts, kind) ->
-      Format.fprintf fmt "vector %a %d %s"
+      Format.fprintf fmt "%a __attribute__ ((vector_size (%d))) [%s]"
         pp_ctyp elt_type
         num_elts
         (string_of_vector_kind kind)
