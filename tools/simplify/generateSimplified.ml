@@ -79,8 +79,4 @@ let codegen ocaml_types =
     List.map rename_type ocaml_types
   in
 
-  print_endline @@ Show_ocaml_type.show_list ocaml_types;
-
-  <:str_item<
-    open Ast
-  >>
+  OcamlTypes.Codegen.codegen ocaml_types
