@@ -110,7 +110,8 @@ let loc_of_type ocaml_types name =
  ****************************************************************************)
 
 
-let make_update kind visit_type_names ?(mangle=(fun x -> x)) _loc expr ty =
+let make_update kind visit_type_names mangle ?record _loc expr ty =
+
   let prefix = name_of_kind kind ^ "_" in
 
   (* Map a value, optionally with an extra mapping function
@@ -210,7 +211,7 @@ let make_match_case kind visit_type_names sum_ty =
            name ^ string_of_int i
          in
 
-         make_update kind visit_type_names ~mangle _loc expr ty
+         make_update kind visit_type_names mangle _loc expr ty
        ) result
 
 
@@ -338,23 +339,35 @@ let make_record_type_function kind visit_types name rt =
        )
   in
 
+  let result = match kind with
+    | Map -> <:expr<(state, { $lid:name$ with $bindings$ })>>
+    | Fold -> <:expr<state>>
+    | Iter -> <:expr<()>>
+  in
+
+  let update =
+    List.fold_left (fun expr member ->
+        let mangle _name =
+          member.rtm_name
+        in
+        make_update kind visit_types mangle _loc expr member.rtm_type
+      )
+      result
+      visitable_fields
+  in
+
   let visit_name = "visit_" ^ name in
   match kind with
-  | Map ->
-      <:str_item<
-        let $lid:visit_name$ v state $lid:name$ =
-          let _ = { $lid:name$ with $bindings$ } in
-          (state, $lid:name$)
-      >>
+  | Map
   | Fold ->
       <:str_item<
         let $lid:visit_name$ v state $lid:name$ =
-          state
+          $update$
       >>
   | Iter ->
       <:str_item<
         let $lid:visit_name$ v $lid:name$ =
-          ()
+          $update$
       >>
 
 
