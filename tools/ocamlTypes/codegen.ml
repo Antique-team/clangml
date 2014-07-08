@@ -6,10 +6,19 @@ module L = BatList
 
 let _loc = Loc.ghost
 
+let ctyp_of_basic_type bt =
+  assert false
+
 
 let ctyp_of_sum_type_branches branches =
   List.map
-    (fun b -> <:ctyp<$uid:b.stb_name$>>)
+    (fun b ->
+       match b.stb_types with
+       | [] -> <:ctyp<$uid:b.stb_name$>>
+       | bt1 :: bts ->
+           let bt = ctyp_of_basic_type bt1 in
+           <:ctyp<$uid:b.stb_name$ of bt >>
+    )
     branches
   |>
   L.reduce
