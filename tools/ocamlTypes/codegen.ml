@@ -24,8 +24,7 @@ let ctyp_of_sum_type_branches branches =
   L.reduce
     (fun acc ty -> <:ctyp< $acc$ | $ty$ >>)
 
-let str_item_of_ocaml_type = function
-  | AliasType (loc, name, ty) -> assert false;
+let rec ctyp_of_ocaml_type = function
   | SumType st ->
    (*
     type language =
@@ -33,20 +32,35 @@ let str_item_of_ocaml_type = function
     | Lang_CXX
    *)
       let branches = ctyp_of_sum_type_branches st.st_branches in
-      <:str_item<type $lid:st.st_name$ = | $branches$ >>
+      <:ctyp<$lid:st.st_name$ = | $branches$ >>
+
   | RecordType rt ->
-      <:str_item<type $lid:rt.rt_name$ = { a : int }>>
+      <:ctyp<$lid:rt.rt_name$ = { a : int }>>
+
   | RecursiveType (loc, types) ->
-      <:str_item<type rec1 = C | D of rec2 and rec2 = E | F of rec1>>
+      let ctyps = List.map ctyp_of_ocaml_type types in
+      BatList.reduce (fun acc ty ->
+          <:ctyp<$acc$ and $ty$>>
+        ) ctyps
+
+  | AliasType (loc, name, ty) ->
+      assert false
   | Version (loc, version) ->
-      <:str_item<let version = $str:version$>>
+      assert false
 
 
 let codegen types =
   print_endline @@ Show_ocaml_type.show_list types;
 
   let items =
-    List.map str_item_of_ocaml_type types
+    types
+    |> List.filter 
+         (function
+           | Version _ -> false
+           | _ -> true
+         )
+    |> List.map ctyp_of_ocaml_type
+    |> List.map (fun ctyp -> <:str_item<type $ctyp$>>)
   in
 
   List.fold_left
