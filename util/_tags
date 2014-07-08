@@ -2,4 +2,4 @@
 <*.cmx>: for-pack(Util)
 
 # camlp4
-<*.ml{,i}>: package(deriving-ocsigen.syntax), syntax(camlp4o)
+<*.ml{,i}>: package(deriving.syntax), syntax(camlp4o)

@@ -376,7 +376,7 @@ let () =
               env "%.o";
               "-linkall";
               "-package"; "unix";
-              "-package"; "deriving-ocsigen";
+              "-package"; "deriving";
               "-linkpkg";
             ]))
           end;

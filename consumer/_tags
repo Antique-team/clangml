@@ -3,17 +3,17 @@
 
 <mainClang.ml{,i}>: package(apron)
 
-#<*.ml{,i}>: package(deriving-ocsigen.syntax), syntax(camlp4o), package(clang)
+#<*.ml{,i}>: package(deriving.syntax), syntax(camlp4o), package(clang)
 #<*.{byte,native}>: package(clang)
-<*.ml{,i}>: package(deriving-ocsigen.syntax), package(unix), syntax(camlp4o)
-<*.{byte,native}>: package(deriving-ocsigen), package(unix), package(ANSITerminal)
+<*.ml{,i}>: package(deriving.syntax), package(unix), syntax(camlp4o)
+<*.{byte,native}>: package(deriving), package(unix), package(ANSITerminal)
 <*.{byte,native}>: package(apron), apron-link(boxMPQ), apron-link(octMPQ), apron-link(polkaMPQ)
 
 <memcad/main/batch.{byte,native}>: package(unix)
 <memcad/main/main.{byte,native}>: package(apron), apron-link(boxMPQ), apron-link(octMPQ), apron-link(polkaMPQ)
-<memcad/main/main.{byte,native}>: package(deriving-ocsigen)
+<memcad/main/main.{byte,native}>: package(deriving)
 
-<memcad/c/*.ml{,i}>: package(deriving-ocsigen.syntax), syntax(camlp4o)
+<memcad/c/*.ml{,i}>: package(deriving.syntax), syntax(camlp4o)
 
 "memcad/c": include
 "memcad/lib": include
