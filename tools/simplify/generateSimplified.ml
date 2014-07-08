@@ -24,8 +24,7 @@ let codegen ocaml_types =
            let name = S.rchop name in
            match ty with
            | SumType st -> (name, SumType { st with st_name = name })
-           | RecordType rt -> (name, RecordType { rt with rt_name = name })
-           | _ -> assert(false);
+           | _ -> assert false;
       )
       ocaml_types
   in
