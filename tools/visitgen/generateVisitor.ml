@@ -107,7 +107,71 @@ let loc_of_type ocaml_types name =
  ****************************************************************************)
 
 
-let make_match_case prefix kind visit_type_names sum_ty =
+let make_update kind visit_type_names sum_ty result =
+  let prefix = name_of_kind kind ^ "_" in
+
+  let _loc = sum_ty.stb_loc in
+  let tycon = sum_ty.stb_name in
+  let tycon_args = sum_ty.stb_types in
+
+  (* Update calls: call visitor on everything that may need to be updated. *)
+  List.mapi (fun i ty -> (i, ty)) tycon_args
+  |> List.rev
+  |> List.fold_left (fun expr (i, ty) ->
+       let mangle name =
+         name ^ string_of_int i
+       in
+
+       (* Map a value, optionally with an extra mapping function
+          (e.g. map_list or map_option). The result is the updated value. *)
+       let mkmap name = function
+         | None ->
+             let var = mangle name in
+             if kind_has_state kind then
+               <:expr<v.$lid:prefix ^ name$ v state $lid:var$>>
+             else
+               <:expr<v.$lid:prefix ^ name$ v $lid:var$>>
+         | Some fn ->
+             let var = mangle name in
+             if kind_has_state kind then
+               <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v state $lid:var$>>
+             else
+               <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v $lid:var$>>
+       in
+
+       let update =
+         match ty with
+         | ListOfType (_, NamedType (_loc, name))
+           when List.mem name visit_type_names ->
+             Some (name, mkmap name (Some "list"))
+         | OptionType (_, NamedType (_loc, name))
+           when List.mem name visit_type_names ->
+             Some (name, mkmap name (Some "option"))
+         | NamedType (_loc, name)
+           when List.mem name visit_type_names ->
+             Some (name, mkmap name None)
+         | _ ->
+             None
+       in
+
+       match update with
+       | None -> expr
+       | Some (name, update) ->
+           let name = mangle name in
+           let patt =
+             match kind with
+             | Map -> <:patt<(state, $lid:name$)>>
+             | Fold -> <:patt<state>>
+             | Iter -> <:patt<()>>
+           in
+           <:expr<
+             let $patt$ = $update$ in
+             $expr$
+           >>
+     ) result
+
+
+let make_match_case kind visit_type_names sum_ty =
   let _loc = sum_ty.stb_loc in
   let tycon = sum_ty.stb_name in
   let tycon_args = sum_ty.stb_types in
@@ -156,63 +220,7 @@ let make_match_case prefix kind visit_type_names sum_ty =
         <:expr<()>>
   in
 
-  (* Update calls: call visitor on everything that may need to be updated. *)
-  let update =
-    List.mapi (fun i ty -> (i, ty)) tycon_args
-    |> List.rev
-    |> List.fold_left (fun expr (i, ty) ->
-         let mangle name =
-           name ^ string_of_int i
-         in
-
-         (* Map a value, optionally with an extra mapping function
-            (e.g. map_list or map_option). The result is the updated value. *)
-         let mkmap name = function
-           | None ->
-               let var = mangle name in
-               if kind_has_state kind then
-                 <:expr<v.$lid:prefix ^ name$ v state $lid:var$>>
-               else
-                 <:expr<v.$lid:prefix ^ name$ v $lid:var$>>
-           | Some fn ->
-               let var = mangle name in
-               if kind_has_state kind then
-                 <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v state $lid:var$>>
-               else
-                 <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v $lid:var$>>
-         in
-
-         let update =
-           match ty with
-           | ListOfType (_, NamedType (_loc, name))
-             when List.mem name visit_type_names ->
-               Some (name, mkmap name (Some "list"))
-           | OptionType (_, NamedType (_loc, name))
-             when List.mem name visit_type_names ->
-               Some (name, mkmap name (Some "option"))
-           | NamedType (_loc, name)
-             when List.mem name visit_type_names ->
-               Some (name, mkmap name None)
-           | _ ->
-               None
-         in
-
-         match update with
-         | None -> expr
-         | Some (name, update) ->
-             let name = mangle name in
-             let patt =
-               match kind with
-               | Map -> <:patt<(state, $lid:name$)>>
-               | Fold -> <:patt<state>>
-               | Iter -> <:patt<()>>
-             in
-             <:expr<
-               let $patt$ = $update$ in
-               $expr$
-             >>
-       ) result
-  in
+  let update = make_update kind visit_type_names sum_ty result in
 
   <:match_case<$pattern$ -> $update$>>
 
@@ -222,13 +230,11 @@ let make_match_case prefix kind visit_type_names sum_ty =
  ****************************************************************************)
 
 let make_combined_type_function kind visit_types name rec_ty sum_ty =
-  let prefix = name_of_kind kind ^ "_" in
-
   let rec_loc = rec_ty.rt_loc in
 
   let match_cases =
     List.map
-      (make_match_case prefix kind visit_types)
+      (make_match_case kind visit_types)
       sum_ty.st_branches
     |> reduce (fun cases case ->
          let _loc = Ast.loc_of_match_case case in
@@ -282,7 +288,7 @@ let make_sum_type_function kind visit_types name st =
 
   let match_cases =
     List.map
-      (make_match_case prefix kind visit_types)
+      (make_match_case kind visit_types)
       st.st_branches
     |> reduce (fun cases case ->
          let _loc = Ast.loc_of_match_case case in
