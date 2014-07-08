@@ -25,6 +25,7 @@ they fail, you can try them, yourself.
 Dependencies
 ------------
 
+- batteries
 - deriving-ocsigen
 - ANSITerminal
 - unix
