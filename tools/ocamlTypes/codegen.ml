@@ -6,9 +6,14 @@ module L = BatList
 
 let _loc = Loc.ghost
 
-let ctyp_of_basic_type bt =
-  assert false
-
+let rec ctyp_of_basic_type = function
+  (* <:ctyp<$bt$>> *)
+  | NamedType (_loc, id)  -> <:ctyp<$lid:id$>>
+  | SourceLocation _loc   -> <:ctyp<int>>
+  | ClangType (_loc, str) -> <:ctyp<int>>
+  | RefType (_loc, bt)    -> <:ctyp<int>>
+  | ListOfType (_loc, bt) -> <:ctyp<int>>
+  | OptionType (_loc, bt) -> <:ctyp<int>>
 
 let ctyp_of_sum_type_branches branches =
   List.map
@@ -17,7 +22,7 @@ let ctyp_of_sum_type_branches branches =
        | [] -> <:ctyp<$uid:b.stb_name$>>
        | bt1 :: bts ->
            let bt = ctyp_of_basic_type bt1 in
-           <:ctyp<$uid:b.stb_name$ of bt >>
+           <:ctyp<$uid:b.stb_name$ of $bt$ >>
     )
     branches
   |>
