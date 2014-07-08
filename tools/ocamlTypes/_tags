@@ -2,4 +2,10 @@
 <*.cmx>: for-pack(OcamlTypes)
 
 # camlp4
-<*.ml{,i}>: package(deriving.syntax), package(camlp4.quotations), syntax(camlp4o)
+<*.ml{,i}>: package(camlp4)
+
+"sig.ml": package(camlp4), package(deriving.syntax), syntax(camlp4o)
+"parse.ml": package(camlp4.quotations), syntax(camlp4o)
+<codegen.ml{,i}>: package(camlp4.quotations), camlp4of
+
+<*.{byte,native}>: package(camlp4.fulllib), package(deriving), package(unix)
