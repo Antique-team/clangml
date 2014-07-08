@@ -218,7 +218,13 @@ let make_match_case kind visit_type_names sum_ty =
            name ^ string_of_int i
          in
 
-         make_update kind visit_type_names mangle _loc expr ty
+         make_update
+           kind
+           visit_type_names
+           mangle
+           _loc
+           expr
+           ty
        ) result
 
 
@@ -293,8 +299,6 @@ let make_combined_type_function kind visit_types name rec_ty sum_ty =
 let make_sum_type_function kind visit_types name st =
   let _loc = st.st_loc in
 
-  let prefix = name_of_kind kind ^ "_" in
-
   let match_cases =
     List.map
       (make_match_case kind visit_types)
@@ -316,21 +320,24 @@ let make_sum_type_function kind visit_types name st =
         $match_cases$
     >>
 
+
 let is_visitable_field visit_types member =
   let rec is_visitable = function
-    | NamedType (_loc, name) -> List.mem name visit_types
-    | ListOfType (_loc, basic_type)
-    | OptionType (_loc, basic_type) -> is_visitable basic_type
+    | NamedType  (_, name) ->
+        List.mem name visit_types
+    | ListOfType (_, basic_type)
+    | OptionType (_, basic_type) ->
+        is_visitable basic_type
     | _ -> false
   in
   is_visitable member.rtm_type
+
 
 let find_visitable_fields visit_types members =
   List.filter (is_visitable_field visit_types) members
 
 
 let make_record_type_function kind visit_types name rt =
-  let _loc = rt.rt_loc in
   let visitable_fields = find_visitable_fields visit_types rt.rt_members in
 
   let mkbinding member =
@@ -346,27 +353,38 @@ let make_record_type_function kind visit_types name rt =
        )
   in
 
-  let result = match kind with
-    | Map -> <:expr<(state, { $lid:name$ with $bindings$ })>>
+  let result =
+    let _loc = rt.rt_loc in
+    match kind with
+    | Map  -> <:expr<(state, { $lid:name$ with $bindings$ })>>
     | Fold -> <:expr<state>>
     | Iter -> <:expr<()>>
   in
 
   let update =
-    List.fold_left (fun expr member ->
-        let mangle _name =
-          member.rtm_name
-        in
-        make_update ~record:rt.rt_name kind visit_types mangle _loc expr member.rtm_type
+    List.fold_left
+      (fun expr member ->
+         let mangle _name =
+           member.rtm_name
+         in
+         make_update
+           kind
+           visit_types
+           mangle
+           ~record:rt.rt_name
+           member.rtm_loc
+           expr
+           member.rtm_type
       )
       result
       visitable_fields
   in
 
+  let _loc = rt.rt_loc in
+
   let visit_name = "visit_" ^ name in
   match kind with
-  | Map
-  | Fold ->
+  | Map | Fold ->
       <:str_item<
         let $lid:visit_name$ v state $lid:name$ =
           $update$
@@ -379,8 +397,6 @@ let make_record_type_function kind visit_types name rt =
 
 
 let make_functions kind visit_types ocaml_types =
-  let prefix = name_of_kind kind ^ "_" in
-
   List.map
     (fun name ->
        match classify_type ocaml_types name with
