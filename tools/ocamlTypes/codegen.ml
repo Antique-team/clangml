@@ -7,12 +7,15 @@ module L = BatList
 let rec ctyp_of_basic_type = function
   (* <:ctyp<$bt$>> *)
   | NamedType  (_loc, id)  -> <:ctyp<$lid:id$>>
-  | SourceLocation _loc    -> <:ctyp<int>>
-  | ClangType  (_loc, str) -> <:ctyp<int>>
-  | RefType    (_loc, bt)  -> <:ctyp<int>>
-  | ListOfType (_loc, bt)  -> <:ctyp<int>>
-  | OptionType (_loc, bt)  -> <:ctyp<int>>
-
+  | SourceLocation _loc    -> <:ctyp<Sloc.t>>
+  | ClangType  (_loc, str) -> assert false;
+  | RefType    (_loc, bt)  -> assert false;
+  | ListOfType (_loc, bt)  ->
+      let ty = ctyp_of_basic_type bt in
+      <:ctyp<$ty$ list>>
+  | OptionType (_loc, bt)  ->
+      let ty = ctyp_of_basic_type bt in
+      <:ctyp<$ty$ option>>
 
 let ctyp_of_sum_type_branches _loc branches =
   List.map
