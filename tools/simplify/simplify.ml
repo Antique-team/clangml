@@ -16,8 +16,8 @@ let parse_and_generate dir srcmod =
   let simplify =
     ToSimple.codegen
       (String.capitalize srcmod)
-      ocaml_types
       filtered_types
+      ocaml_types
   in
 
   let types_file    = dir ^ "/" ^ srcmod ^ "Simple.ml" in

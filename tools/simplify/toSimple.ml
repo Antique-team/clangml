@@ -52,12 +52,48 @@ and simplify_expr_ = function
   | _ -> ...
 *)
 
+
+let make_simplify_sum_type mod_name filtered_types st =
+  <:str_item<
+    let simplify_sum_type = function
+      | $uid:mod_name$.A -> $uid:mod_name ^ "Simple"$.A
+      | $uid:mod_name$.B -> $uid:mod_name ^ "Simple"$.B
+  >>
+
+
+let make_simplify_record_type mod_name filtered_types rt =
+  <:str_item<
+    let simplify_record_type rt =
+      {
+        $uid:mod_name ^ "Simple"$.field1 = $uid:mod_name$.field1;
+        $uid:mod_name ^ "Simple"$.field2 = simplify_sum_type $uid:mod_name$.field2;
+      }
+  >>
+
+
+let rec make_simplify mod_name filtered_types = function
+  | SumType st -> make_simplify_sum_type mod_name filtered_types st
+  | RecordType rt -> make_simplify_record_type mod_name filtered_types rt
+  | RecursiveType (_loc, types) ->
+      (* map *)
+      let funs = List.map (make_simplify mod_name filtered_types) types in
+      (* reduce *)
+      <:str_item<let recursive_simplify () = ()>>
+  | Version _
+  | AliasType _ -> assert false
+
+
 (* mod_name could be "Ast" for example 
    ocaml_types come form ast.ml
    filtered_types come from astSimple.ml
 *)
-let codegen mod_name ocaml_types filtered_types =
-  <:str_item<
-    let simplify = function
-      | _ -> assert false
-  >>
+let codegen mod_name filtered_types ocaml_types =
+  ocaml_types
+  |> List.filter (function
+       | Version _ -> false
+       | _ -> true
+     )
+  |> List.map (make_simplify mod_name filtered_types)
+  |> BatList.reduce (fun funs fn ->
+       <:str_item<$funs$;; $fn$>>
+     )
