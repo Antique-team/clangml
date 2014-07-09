@@ -115,3 +115,25 @@ let find_composite_member rt =
     | { rtm_type = NamedType (_, member) } -> member = rt.rt_name ^ "_"
     | _ -> false
   ) rt.rt_members
+
+
+
+let rec loc_of_basic_type_name = function
+  | NamedType (loc, _)
+  | SourceLocation (loc)
+  | ClangType (loc, _) -> loc
+  | RefType (_, basic_type)
+  | ListOfType (_, basic_type)
+  | OptionType (_, basic_type) ->
+      loc_of_basic_type_name basic_type
+
+
+
+let rec name_of_basic_type = function
+  | ClangType (_, name)
+  | NamedType (_, name) -> name
+  | SourceLocation _ -> assert false
+  | RefType (_, basic_type)
+  | ListOfType (_, basic_type)
+  | OptionType (_, basic_type) ->
+      name_of_basic_type basic_type

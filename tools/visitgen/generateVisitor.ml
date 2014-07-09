@@ -176,19 +176,16 @@ let make_match_case kind visit_type_names sum_ty =
 
   (* Generic construction function for patterns and expressions. *)
   let construct init mkty reduce =
-    List.mapi (fun i -> function
-      | ListOfType (_, NamedType (_loc, name))
-      | OptionType (_, NamedType (_loc, name))
-      | OptionType (_, ListOfType (_, NamedType (_loc, name)))
-      | ClangType (_loc, name)
-      | NamedType (_loc, name) ->
-          _loc, mkty i _loc name
-      | _ ->
-          failwith @@ "unsupported argument type in tycon " ^ tycon
-    ) tycon_args
-    |> List.fold_left (fun tycon (_loc, param) ->
-         reduce _loc tycon param
-       ) init
+    List.mapi
+      (fun i ty ->
+         let _loc = loc_of_basic_type_name ty in
+         let name = name_of_basic_type ty in
+         _loc, mkty i _loc name
+      )
+      tycon_args
+    |> List.fold_left
+         (fun tycon (_loc, param) -> reduce _loc tycon param)
+         init
   in
 
   let update =
