@@ -12,15 +12,6 @@ let _loc = Loc.ghost
 
 
 (*
-let simplify_language = function
-  | Ast.Lang_C -> AstSimple.Lang_C
-  | Ast.Lang_CXX -> AstSimple.Lang_CXX
-
-let simplify_type_specifier_width = function
-  | Ast.TSW_unspecified -> AstSimple.TSW_unspecified
-  | Ast.TSW_short -> AstSimple.TSW_short
-  | Ast.TSW_long -> AstSimple.TSW_long
-  | Ast.TSW_longlong -> AstSimple.TSW_longlong
 
 (* more enums *)
 
@@ -58,12 +49,25 @@ and simplify_expr_ = function
   | _ -> ...
 *)
 
-
+(*
+let simplify_language = function
+  | Ast.Lang_C -> AstSimple.Lang_C
+  | Ast.Lang_CXX -> AstSimple.Lang_CXX
+*)
 let make_simplify_sum_type env filtered_types st =
+  let fun_name = "simplify_" ^ st.st_name in
+  let branches =
+    List.map
+      (fun b ->
+         <:match_case<$uid:env.mod_name$.$uid:b.stb_name$
+         ->
+         $uid:env.simple_name$.$uid:b.stb_name$>>
+      )
+      st.st_branches
+    |> BatList.reduce (fun acc ty -> <:match_case<$acc$ | $ty$>>)
+  in
   <:str_item<
-    let simplify_sum_type = function
-      | $uid:env.mod_name$.A -> $uid:env.simple_name$.A
-      | $uid:env.mod_name$.B -> $uid:env.simple_name$.B
+    let $lid:fun_name$ = function $branches$
   >>
 
 
@@ -89,7 +93,7 @@ let rec make_simplify env filtered_types = function
   | AliasType _ -> assert false
 
 
-(* mod_name could be "Ast" for example 
+(* mod_name could be "Ast" for example
    ocaml_types come form ast.ml
    filtered_types come from astSimple.ml
 *)
