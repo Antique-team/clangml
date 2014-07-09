@@ -108,3 +108,10 @@ let name_of_type = function
   | RecordType { rt_name = name } -> name
   | Version _ -> failwith "version has no name"
   | RecursiveType _ -> failwith "recursive types have no name"
+
+
+let find_composite_member rt =
+  List.find (function
+    | { rtm_type = NamedType (_, member) } -> member = rt.rt_name ^ "_"
+    | _ -> false
+  ) rt.rt_members

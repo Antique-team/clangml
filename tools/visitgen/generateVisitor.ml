@@ -244,8 +244,9 @@ let make_match_case kind visit_type_names sum_ty =
  * Functions
  ****************************************************************************)
 
-let make_combined_type_function kind visit_types name rec_ty sum_ty =
+let make_combined_type_function kind visit_types rec_ty sum_ty =
   let rec_loc = rec_ty.rt_loc in
+  let name = rec_ty.rt_name in
 
   let match_cases =
     List.map
@@ -257,12 +258,7 @@ let make_combined_type_function kind visit_types name rec_ty sum_ty =
        )
   in
 
-  let { rtm_name = main_member } =
-    List.find (function
-      | { rtm_type = NamedType (_, member) } -> member = name ^ "_"
-      | _ -> false
-    ) rec_ty.rt_members
-  in
+  let main_member = (find_composite_member rec_ty).rtm_name in
 
   let do_match =
     <:expr@rec_loc<
@@ -296,8 +292,9 @@ let make_combined_type_function kind visit_types name rec_ty sum_ty =
     >>
 
 
-let make_sum_type_function kind visit_types name st =
+let make_sum_type_function kind visit_types st =
   let _loc = st.st_loc in
+  let name = st.st_name in
 
   let match_cases =
     List.map
@@ -337,8 +334,9 @@ let find_visitable_fields visit_types members =
   List.filter (is_visitable_field visit_types) members
 
 
-let make_record_type_function kind visit_types name rt =
+let make_record_type_function kind visit_types rt =
   let visitable_fields = find_visitable_fields visit_types rt.rt_members in
+  let name = rt.rt_name in
 
   let mkbinding member =
     let _loc = member.rtm_loc in
@@ -401,11 +399,11 @@ let make_functions kind visit_types ocaml_types =
     (fun name ->
        match classify_type ocaml_types name with
        | Record_type rt ->
-           make_record_type_function   kind visit_types name rt
+           make_record_type_function   kind visit_types rt
        | Combined_type (rt, st) ->
-           make_combined_type_function kind visit_types name rt st
+           make_combined_type_function kind visit_types rt st
        | Sum_type st ->
-           make_sum_type_function      kind visit_types name st
+           make_sum_type_function      kind visit_types st
     )
     visit_types
   |> reduce (fun functions fn ->

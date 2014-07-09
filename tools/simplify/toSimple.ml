@@ -1,5 +1,6 @@
 open Camlp4.PreCast
 open OcamlTypes.Sig
+open OcamlTypes.Process
 
 
 type env = {
@@ -9,6 +10,18 @@ type env = {
 
 
 let _loc = Loc.ghost
+
+
+let rec simplify_basic_type = function
+  | NamedType (_loc, name) ->
+      <:expr<$lid:"simplify_" ^ name$>>
+  | SourceLocation (_loc) ->
+      <:expr<Sloc.simplify>>
+  | ListOfType (_loc, ty) ->
+      <:expr<List.map $simplify_basic_type ty$>>
+  | OptionType (_loc, ty) ->
+      <:expr<Option.map $simplify_basic_type ty$>>
+  | ClangType _ | RefType _ -> assert false
 
 
 (*
@@ -60,20 +73,53 @@ and simplify_expr_ = function
 
 
 let make_simplify_sum_type env filtered_types st =
-  <:str_item<
-    let simplify_sum_type = function
+  <:binding<
+    simplify_sum_type = function
       | $uid:env.mod_name$.A -> $uid:env.simple_name$.A
       | $uid:env.mod_name$.B -> $uid:env.simple_name$.B
   >>
 
 
 let make_simplify_record_type env filtered_types rt =
-  <:str_item<
-    let simplify_record_type rt =
-      {
-        $uid:env.simple_name$.field1 = $uid:env.mod_name$.field1;
-        $uid:env.simple_name$.field2 = simplify_sum_type $uid:env.mod_name$.field2;
-      }
+  let body =
+    try
+
+      let main_member = find_composite_member rt in
+      <:expr<
+        $simplify_basic_type main_member.rtm_type$
+          v.$lid:main_member.rtm_name$
+      >>
+
+    with Not_found ->
+
+      let rec_bindings =
+        List.map (fun member ->
+          let _loc = member.rtm_loc in
+
+          let simplify_member =
+            simplify_basic_type member.rtm_type
+          in
+
+          let target =
+            <:ident<$uid:env.simple_name$.$lid:member.rtm_name$>>
+          in
+          let source =
+            <:expr<$simplify_member$ $uid:env.mod_name$.v.$lid:member.rtm_name$>>
+          in
+
+          <:rec_binding<$target$ = $source$>>
+        ) rt.rt_members
+        |> BatList.reduce (fun acc binding ->
+             <:rec_binding<$acc$; $binding$>>
+           )
+      in
+
+      <:expr<{ $rec_bindings$ }>>
+  in
+
+  <:binding<
+    simplify_record_type v =
+      $body$
   >>
 
 
@@ -81,10 +127,13 @@ let rec make_simplify env filtered_types = function
   | SumType st -> make_simplify_sum_type env filtered_types st
   | RecordType rt -> make_simplify_record_type env filtered_types rt
   | RecursiveType (_loc, types) ->
+      types
       (* map *)
-      let funs = List.map (make_simplify env filtered_types) types in
+      |> List.map (make_simplify env filtered_types)
       (* reduce *)
-      <:str_item<let recursive_simplify () = ()>>
+      |> BatList.reduce (fun acc binding ->
+           <:binding<$acc$ and $binding$>>
+         )
   | Version _
   | AliasType _ -> assert false
 
@@ -99,12 +148,21 @@ let codegen mod_name filtered_types ocaml_types =
     simple_name = mod_name ^ "Simple";
   } in
 
-  ocaml_types
-  |> List.filter (function
-       | Version _ -> false
-       | _ -> true
-     )
-  |> List.map (make_simplify env filtered_types)
-  |> BatList.reduce (fun funs fn ->
-       <:str_item<$funs$;; $fn$>>
-     )
+  let code =
+    ocaml_types
+    |> List.filter (function
+         | Version _ -> false
+         | _ -> true
+       )
+    |> List.map (make_simplify env filtered_types)
+    |> List.map (fun binding -> <:str_item<let $binding$>>)
+    |> BatList.reduce (fun funs fn ->
+         <:str_item<$funs$;; $fn$>>
+       )
+  in
+
+  <:str_item<
+    (* For Option.map *)
+    open Util
+    $code$
+  >>
