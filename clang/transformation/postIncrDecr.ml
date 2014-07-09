@@ -18,8 +18,8 @@ let transform_decl clang =
     | _ ->
         MapVisitor.visit_stmt v state stmt
 
-  and map_expr v state expr =
 
+  and map_expr v state expr =
     match expr.e with
       | UnaryOperator ((UO_PostInc | UO_PostDec) as op, operand) ->
           (* a++ becomes

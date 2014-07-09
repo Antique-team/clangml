@@ -1,14 +1,47 @@
 open Ast
 
 
-let make_type_map (types : ctyp Util.DenseIntMap.t) =
-  let map = Hashtbl.create 10 in
+module Ordered_ctyp : Map.OrderedType
+  with type t = AstSimple.ctyp =
+struct
 
-  Util.DenseIntMap.fold (fun key ctyp map ->
-    Hashtbl.add map ctyp.t ctyp;
-    map
-  ) types map
+  type t = AstSimple.ctyp
 
+  let compare = Pervasives.compare
+
+end
+
+
+module TypeMap = Map.Make(Ordered_ctyp)
+
+
+let find_type simple_type map =
+  try
+    TypeMap.find simple_type map
+  with Not_found ->
+    []
+
+
+let make_type_map types =
+  Util.DenseIntMap.fold
+    (fun key ctyp map ->
+       let simplified = AstSimplify.simplify_ctyp ctyp in
+       let existing = find_type simplified map in
+
+       TypeMap.add simplified (ctyp :: existing) map
+    )
+    types
+    TypeMap.empty
+
+
+let find_basic_int_type type_map =
+  match find_type AstSimple.(BuiltinType BT_Int) type_map with
+  | [ty] -> ty
+  | [] ->
+      failwith "No integer builtin type in the program"
+  | _ ->
+      failwith "Multiple (differently qualified) integer types \
+                in the program"
 
 
 let rec tloc_of_ctyp sloc ty =
