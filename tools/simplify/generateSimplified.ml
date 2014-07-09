@@ -7,12 +7,6 @@ module S = BatString
 let codegen ocaml_types =
   let _loc = Loc.ghost in
 
-  let visit_types =
-    ocaml_types
-    |> flatten_and_map
-    |> OcamlTypes.Type_graph.must_visit
-  in
-
   let filtered_types =
     let rec contains_type name = function
       | [] -> false

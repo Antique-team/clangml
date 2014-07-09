@@ -72,8 +72,6 @@ let rec ctyp_of_ocaml_type = function
 
 
 let codegen types =
-  print_endline @@ Show_ocaml_type.show_list types;
-
   let _loc = Loc.ghost in
 
   let items =
