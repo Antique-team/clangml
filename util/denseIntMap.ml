@@ -35,3 +35,10 @@ let fold f arr x =
 let map f arr =
   let mapped = Array.mapi f arr in
   (Array.init (Array.length arr) identity, mapped)
+
+
+let cardinal = Array.length
+let exists f arr =
+  Array.fold_left (fun result elt ->
+    result || f elt
+  ) false arr

@@ -49,7 +49,10 @@ let run_processor (tu : decl) (file : string) (ctx : Api.context) =
         clang_characteristic_kind ctx sloc
 
     | CacheFor Cache_ctyp ->
-        let types = clang_cache_for_ctyp ctx in
+        let types =
+          clang_cache_for_ctyp ctx
+          |> Types.ensure_basic_int_type
+        in
         Invariants.check_type_map types;
         types
   in

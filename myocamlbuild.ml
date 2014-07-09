@@ -376,8 +376,8 @@ let () =
               "-o";
               env "%.o";
               "-linkall";
-              "-package"; "unix";
               "-package"; "deriving";
+              "-package"; "unix";
               "-linkpkg";
             ]))
           end;

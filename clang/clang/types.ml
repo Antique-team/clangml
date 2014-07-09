@@ -1,4 +1,5 @@
 open Ast
+open Util
 
 
 module Ordered_ctyp : Map.OrderedType
@@ -15,6 +16,39 @@ end
 module TypeMap = Map.Make(Ordered_ctyp)
 
 
+(* Ensures that the type array (DenseIntMap) contains the basic type
+   "int", since we need it to synthesise IntegerLiterals. *)
+let ensure_basic_int_type types =
+  let bt_int = BuiltinType BT_Int in
+  if DenseIntMap.exists (fun ctyp -> ctyp.t = bt_int) types then
+    types
+  else
+    let types = (types :> ctyp array) in
+    (* Synthesise an int type. *)
+    let new_types =
+      (* TODO: rewrite this without Obj.magic.
+         => encapsulate operations in DenseIntMap module *)
+      let count = Array.length types in
+      Array.init
+        (count + 1)
+        (fun i ->
+           if i < count then
+             types.(i)
+           else
+             let index : ctyp DenseIntMap.key = Obj.magic count in
+             {
+               t = BuiltinType BT_Int;
+               t_cref = Ref.null;
+               t_qual = [];
+               t_aspace = None;
+               t_self = index;
+               t_canon = index;
+             }
+        )
+    in
+    (Obj.magic new_types : ctyp DenseIntMap.t)
+
+
 let find_type simple_type map =
   try
     TypeMap.find simple_type map
@@ -23,7 +57,7 @@ let find_type simple_type map =
 
 
 let make_type_map types =
-  Util.DenseIntMap.fold
+  DenseIntMap.fold
     (fun key ctyp map ->
        let simplified = AstSimplify.simplify_ctyp ctyp in
        let existing = find_type simplified map in

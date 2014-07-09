@@ -27,3 +27,6 @@ val map : ('a key -> 'a -> 'b) -> 'a t -> 'b key array * 'b t
   (* [map f m] creates a new map of the same cardinality, but changes the order
      of the mappings according to the first return value of [f]. This number
      must be lower than the cardinality of the map. *)
+
+val cardinal : 'a t -> int
+val exists : ('a -> bool) -> 'a t -> bool
