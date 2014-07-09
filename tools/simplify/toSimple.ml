@@ -62,6 +62,59 @@ and simplify_expr_ = function
   | _ -> ...
 *)
 
+let make_match_case env sum_ty =
+  let _loc = sum_ty.stb_loc in
+  let tycon = sum_ty.stb_name in
+  let tycon_args = sum_ty.stb_types in
+
+  (* Generic construction function for patterns and expressions. *)
+  let construct init mkty reduce =
+    List.mapi
+      (fun i ty ->
+         let _loc = loc_of_basic_type_name ty in
+         let name = name_of_basic_type ty in
+         _loc, mkty i _loc name
+      )
+      tycon_args
+    |> List.fold_left
+         (fun tycon (_loc, param) -> reduce _loc tycon param)
+         init
+  in
+
+  let update =
+    (* Reconstruction expression. *)
+    let result =
+      construct <:expr<$uid:env.simple_name$.$uid:tycon$>>
+        (fun i _loc name ->
+           <:expr<$lid:name ^ string_of_int i$>>)
+        (fun _loc tycon param ->
+           Ast.ExApp (_loc, tycon, param))
+    in
+
+    (* Update calls: call visitor on everything that may need to be updated. *)
+    List.mapi (fun i ty -> (i, ty)) tycon_args
+    |> List.rev
+    |> List.fold_left (fun expr (i, ty) ->
+         let name = (name_of_basic_type ty) ^ (string_of_int i) in
+         let _loc = loc_of_basic_type_name ty in
+         let update = simplify_basic_type ty in
+         <:expr<
+           let $lid:name$ = $update$ $lid:name$ in
+           $expr$
+         >>
+       ) result
+
+  (* Matching pattern. *)
+  and pattern =
+    construct <:patt<$uid:env.mod_name$.$uid:tycon$>>
+      (fun i _loc name ->
+         <:patt<$lid:name ^ string_of_int i$>>)
+      (fun _loc tycon param ->
+         Ast.PaApp (_loc, tycon, param))
+  in
+
+  <:match_case<$pattern$ -> $update$>>
+
 (*
 let simplify_language = function
   | Ast.Lang_C -> AstSimple.Lang_C
@@ -71,11 +124,7 @@ let make_simplify_sum_type env filtered_types st =
   let fun_name = "simplify_" ^ st.st_name in
   let branches =
     List.map
-      (fun b ->
-         <:match_case<$uid:env.mod_name$.$uid:b.stb_name$
-         ->
-         $uid:env.simple_name$.$uid:b.stb_name$>>
-      )
+      (make_match_case env)
       st.st_branches
     |> BatList.reduce (fun acc ty -> <:match_case<$acc$ | $ty$>>)
   in
