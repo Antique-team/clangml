@@ -716,11 +716,10 @@ and pp_ctyp_ fmt = function
         pp_ctyp elt_type
         num_elts
         (string_of_vector_kind kind)
-  | AttributedType (attributed_type_kind, tloc, expr) ->
-      Format.fprintf fmt "%a __attribute__ ((%s (%a)))"
-        pp_tloc tloc
+  | AttributedType (attributed_type_kind, modified_type) ->
+      Format.fprintf fmt "%a __attribute__ ((%s))"
+        pp_ctyp modified_type
         (string_of_attributed_type_kind attributed_type_kind)
-        (pp_option pp_expr) expr
 
 
   | AtomicType -> Format.pp_print_string fmt "<AtomicType>"
