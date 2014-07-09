@@ -912,8 +912,7 @@ and ctyp_ = AstBridge.ctyp_ =
                                  * (* numElements *)int
                                  * (* vector-kind *)vector_kind
   | AttributedType              of (* kind *)attributed_type_kind
-                                 * (* modified loc *)tloc
-                                 * (* attr. expr operand *)expr option
+                                 * (* modified type *)ctyp
 
   | AtomicType
   | AutoType

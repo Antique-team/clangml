@@ -142,8 +142,23 @@ OCamlVisitor::Traverse##CLASS##Type (clang::CLASS##Type *T)		\
   return true;								\
 }
 
+bool
+OCamlVisitor::TraverseAttributedType (clang::AttributedType *T)
+{
+  TRACE;
+
+  AttributedTypeKind attr_kind =
+    translate_attributed_type_kind (T->getAttrKind ());
+
+  ptr<Ctyp> modified_type = must_traverse(T->getModifiedType ());
+  
+  stack.push (mkAttributedType (attr_kind, modified_type));
+
+  return true;
+}
+
+
 UNIMP_TYPE(Atomic)
-UNIMP_TYPE(Attributed)
 UNIMP_TYPE(Auto)
 UNIMP_TYPE(BlockPointer)
 
