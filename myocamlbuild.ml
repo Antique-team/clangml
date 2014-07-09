@@ -278,6 +278,7 @@ let () =
         rule "Generate simplified AST without sloc/cref/..."
           ~prods:[
             "clang/clang/astSimple.ml";
+            "clang/clang/astSimplify.ml";
           ]
           ~deps:[
             "tools/simplify/simplify.native";
@@ -286,8 +287,8 @@ let () =
           begin fun env build ->
             Cmd (S[
               A"tools/simplify/simplify.native";
-              A"clang/clang/astSimple.ml";
-              A"clang/clang/astBridge.ml";
+              A"clang/clang";
+              A"ast";
             ])
           end;
 

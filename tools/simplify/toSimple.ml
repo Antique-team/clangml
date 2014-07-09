@@ -53,7 +53,7 @@ and simplify_expr_ = function
 *)
 
 
-let codegen ocaml_types filtered_types =
+let codegen mod_name ocaml_types filtered_types =
   <:str_item<
     let simplify = function
       | _ -> assert false

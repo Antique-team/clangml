@@ -73,10 +73,4 @@ let codegen ocaml_types =
     List.map rename_type filtered_types
   in
 
-  let types = OcamlTypes.Codegen.codegen filtered_types in
-  let transform = ToSimple.codegen ocaml_types filtered_types in
-
-  <:str_item<
-    $types$;;
-    $transform$;;
-  >>
+  (OcamlTypes.Codegen.codegen filtered_types, filtered_types)
