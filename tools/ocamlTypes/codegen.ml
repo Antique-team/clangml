@@ -34,6 +34,14 @@ let ctyp_of_sum_type_branches _loc branches =
     branches
   |> L.reduce (fun acc ty -> <:ctyp<$acc$ | $ty$>>)
 
+let ctyp_of_record_type_members _loc members =
+  List.map
+    (fun m ->
+       let ctyp = ctyp_of_basic_type m.rtm_type in
+       <:ctyp<$uid:m.rtm_name$ : $ctyp$>>
+    )
+    members
+  |> L.reduce (fun acc ty -> <:ctyp<$acc$ ; $ty$>>)
 
 let rec ctyp_of_ocaml_type = function
   | SumType st ->
@@ -48,7 +56,8 @@ let rec ctyp_of_ocaml_type = function
 
   | RecordType rt ->
       let _loc = rt.rt_loc in
-      <:ctyp<$lid:rt.rt_name$ = { a : int }>>
+      let members = ctyp_of_record_type_members _loc rt.rt_members in
+      <:ctyp<$lid:rt.rt_name$ = { $members$ }>>
 
   | RecursiveType (_loc, types) ->
       let ctyps = List.map ctyp_of_ocaml_type types in
