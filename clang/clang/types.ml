@@ -23,7 +23,7 @@ let ensure_basic_int_type types =
   if DenseIntMap.exists (fun ctyp -> ctyp.t = bt_int) types then
     types
   else
-    let types = (types :> ctyp array) in
+    let types = (types : ctyp DenseIntMap.t :> ctyp array) in
     (* Synthesise an int type. *)
     let new_types =
       (* TODO: rewrite this without Obj.magic.
