@@ -355,6 +355,7 @@ OCamlVisitor::TraverseVectorTypeLoc (clang::VectorTypeLoc TL)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseAttributedTypeLoc (clang::AttributedTypeLoc TL)
 {
@@ -364,13 +365,14 @@ OCamlVisitor::TraverseAttributedTypeLoc (clang::AttributedTypeLoc TL)
     translate_attributed_type_kind (TL.getAttrKind ());
   ptr<Tloc> modified_loc = must_traverse (TL.getModifiedLoc ());
   option<Expr> expr;
-  if (TL.hasAttrExprOperand())
+  if (TL.hasAttrExprOperand ())
     expr = must_traverse (TL.getAttrExprOperand ());
 
   stack.push (mkAttributedTypeLoc (attr_kind, modified_loc, expr));
 
   return true;
 }
+
 
 bool
 OCamlVisitor::TraverseDecayedTypeLoc (clang::DecayedTypeLoc TL)

@@ -105,29 +105,29 @@ translate_attributed_type_kind (clang::AttributedType::Kind kind)
 {
   switch (kind)
     {
-      case clang::AttributedType::Kind::attr_address_space: return ATK_address_space;
-      case clang::AttributedType::Kind::attr_regparm: return ATK_regparm;
-      case clang::AttributedType::Kind::attr_vector_size: return ATK_vector_size;
-      case clang::AttributedType::Kind::attr_neon_vector_type: return ATK_neon_vector_type;
-      case clang::AttributedType::Kind::attr_neon_polyvector_type: return ATK_neon_polyvector_type;
-      case clang::AttributedType::Kind::attr_objc_gc: return ATK_objc_gc;
-      case clang::AttributedType::Kind::attr_objc_ownership: return ATK_objc_ownership;
-      case clang::AttributedType::Kind::attr_pcs: return ATK_pcs;
-      case clang::AttributedType::Kind::attr_pcs_vfp: return ATK_pcs_vfp;
-      case clang::AttributedType::Kind::attr_noreturn: return ATK_noreturn;
-      case clang::AttributedType::Kind::attr_cdecl: return ATK_cdecl;
-      case clang::AttributedType::Kind::attr_fastcall: return ATK_fastcall;
-      case clang::AttributedType::Kind::attr_stdcall: return ATK_stdcall;
-      case clang::AttributedType::Kind::attr_thiscall: return ATK_thiscall;
-      case clang::AttributedType::Kind::attr_pascal: return ATK_pascal;
-      case clang::AttributedType::Kind::attr_pnaclcall: return ATK_pnaclcall;
-      case clang::AttributedType::Kind::attr_inteloclbicc: return ATK_inteloclbicc;
-      case clang::AttributedType::Kind::attr_ms_abi: return ATK_ms_abi;
-      case clang::AttributedType::Kind::attr_sysv_abi: return ATK_sysv_abi;
-      case clang::AttributedType::Kind::attr_ptr32: return ATK_ptr32;
-      case clang::AttributedType::Kind::attr_ptr64: return ATK_ptr64;
-      case clang::AttributedType::Kind::attr_sptr: return ATK_sptr;
-      case clang::AttributedType::Kind::attr_uptr: return ATK_uptr;
+    case clang::AttributedType::Kind::attr_address_space:	return ATK_address_space;
+    case clang::AttributedType::Kind::attr_regparm:		return ATK_regparm;
+    case clang::AttributedType::Kind::attr_vector_size:		return ATK_vector_size;
+    case clang::AttributedType::Kind::attr_neon_vector_type:	return ATK_neon_vector_type;
+    case clang::AttributedType::Kind::attr_neon_polyvector_type:return ATK_neon_polyvector_type;
+    case clang::AttributedType::Kind::attr_objc_gc:		return ATK_objc_gc;
+    case clang::AttributedType::Kind::attr_objc_ownership:	return ATK_objc_ownership;
+    case clang::AttributedType::Kind::attr_pcs:			return ATK_pcs;
+    case clang::AttributedType::Kind::attr_pcs_vfp:		return ATK_pcs_vfp;
+    case clang::AttributedType::Kind::attr_noreturn:		return ATK_noreturn;
+    case clang::AttributedType::Kind::attr_cdecl:		return ATK_cdecl;
+    case clang::AttributedType::Kind::attr_fastcall:		return ATK_fastcall;
+    case clang::AttributedType::Kind::attr_stdcall:		return ATK_stdcall;
+    case clang::AttributedType::Kind::attr_thiscall:		return ATK_thiscall;
+    case clang::AttributedType::Kind::attr_pascal:		return ATK_pascal;
+    case clang::AttributedType::Kind::attr_pnaclcall:		return ATK_pnaclcall;
+    case clang::AttributedType::Kind::attr_inteloclbicc:	return ATK_inteloclbicc;
+    case clang::AttributedType::Kind::attr_ms_abi:		return ATK_ms_abi;
+    case clang::AttributedType::Kind::attr_sysv_abi:		return ATK_sysv_abi;
+    case clang::AttributedType::Kind::attr_ptr32:		return ATK_ptr32;
+    case clang::AttributedType::Kind::attr_ptr64:		return ATK_ptr64;
+    case clang::AttributedType::Kind::attr_sptr:		return ATK_sptr;
+    case clang::AttributedType::Kind::attr_uptr:		return ATK_uptr;
     }
     throw std::runtime_error ("invalid attributed type kind");
 }
@@ -138,18 +138,12 @@ translate_vector_kind (clang::VectorType::VectorKind kind)
 {
   switch (kind)
     {
-    case clang::VectorType::VectorKind::GenericVector:
-      return VK_GenericVector;
-    case clang::VectorType::VectorKind::AltiVecVector:
-      return VK_AltiVecVector;
-    case clang::VectorType::VectorKind::AltiVecPixel:
-      return VK_AltiVecPixel;
-    case clang::VectorType::VectorKind::AltiVecBool:
-      return VK_AltiVecBool;
-    case clang::VectorType::VectorKind::NeonVector:
-      return VK_NeonVector;
-    case clang::VectorType::VectorKind::NeonPolyVector:
-      return VK_NeonPolyVector;
+    case clang::VectorType::VectorKind::GenericVector:	return VK_GenericVector;
+    case clang::VectorType::VectorKind::AltiVecVector:	return VK_AltiVecVector;
+    case clang::VectorType::VectorKind::AltiVecPixel:	return VK_AltiVecPixel;
+    case clang::VectorType::VectorKind::AltiVecBool:	return VK_AltiVecBool;
+    case clang::VectorType::VectorKind::NeonVector:	return VK_NeonVector;
+    case clang::VectorType::VectorKind::NeonPolyVector:	return VK_NeonPolyVector;
     }
   throw std::runtime_error ("invalid vector kind");
 }
