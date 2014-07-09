@@ -18,9 +18,9 @@ let rec simplify_basic_type = function
   | SourceLocation (_loc) ->
       <:expr<Sloc.simplify>>
   | ListOfType (_loc, ty) ->
-      <:expr<List.map $simplify_basic_type ty$>>
+      <:expr<simplify_list $simplify_basic_type ty$>>
   | OptionType (_loc, ty) ->
-      <:expr<Option.map $simplify_basic_type ty$>>
+      <:expr<simplify_option $simplify_basic_type ty$>>
   | ClangType _ | RefType _ -> assert false
 
 
@@ -166,7 +166,7 @@ let codegen mod_name filtered_types ocaml_types =
   in
 
   <:str_item<
-    (* For Option.map *)
-    open Util
+    (* For simplify_list/bool/string/option/... *)
+    open Simplify
     $code$
   >>
