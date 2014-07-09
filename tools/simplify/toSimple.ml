@@ -52,7 +52,10 @@ and simplify_expr_ = function
   | _ -> ...
 *)
 
-
+(* mod_name could be "Ast" for example 
+   ocaml_types come form ast.ml
+   filtered_types come from astSimple.ml
+*)
 let codegen mod_name ocaml_types filtered_types =
   <:str_item<
     let simplify = function
