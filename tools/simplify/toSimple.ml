@@ -2,6 +2,12 @@ open Camlp4.PreCast
 open OcamlTypes.Sig
 
 
+type env = {
+  mod_name : string;
+  simple_name : string;
+}
+
+
 let _loc = Loc.ghost
 
 
@@ -53,30 +59,30 @@ and simplify_expr_ = function
 *)
 
 
-let make_simplify_sum_type mod_name filtered_types st =
+let make_simplify_sum_type env filtered_types st =
   <:str_item<
     let simplify_sum_type = function
-      | $uid:mod_name$.A -> $uid:mod_name ^ "Simple"$.A
-      | $uid:mod_name$.B -> $uid:mod_name ^ "Simple"$.B
+      | $uid:env.mod_name$.A -> $uid:env.simple_name$.A
+      | $uid:env.mod_name$.B -> $uid:env.simple_name$.B
   >>
 
 
-let make_simplify_record_type mod_name filtered_types rt =
+let make_simplify_record_type env filtered_types rt =
   <:str_item<
     let simplify_record_type rt =
       {
-        $uid:mod_name ^ "Simple"$.field1 = $uid:mod_name$.field1;
-        $uid:mod_name ^ "Simple"$.field2 = simplify_sum_type $uid:mod_name$.field2;
+        $uid:env.simple_name$.field1 = $uid:env.mod_name$.field1;
+        $uid:env.simple_name$.field2 = simplify_sum_type $uid:env.mod_name$.field2;
       }
   >>
 
 
-let rec make_simplify mod_name filtered_types = function
-  | SumType st -> make_simplify_sum_type mod_name filtered_types st
-  | RecordType rt -> make_simplify_record_type mod_name filtered_types rt
+let rec make_simplify env filtered_types = function
+  | SumType st -> make_simplify_sum_type env filtered_types st
+  | RecordType rt -> make_simplify_record_type env filtered_types rt
   | RecursiveType (_loc, types) ->
       (* map *)
-      let funs = List.map (make_simplify mod_name filtered_types) types in
+      let funs = List.map (make_simplify env filtered_types) types in
       (* reduce *)
       <:str_item<let recursive_simplify () = ()>>
   | Version _
@@ -88,12 +94,17 @@ let rec make_simplify mod_name filtered_types = function
    filtered_types come from astSimple.ml
 *)
 let codegen mod_name filtered_types ocaml_types =
+  let env = {
+    mod_name;
+    simple_name = mod_name ^ "Simple";
+  } in
+
   ocaml_types
   |> List.filter (function
        | Version _ -> false
        | _ -> true
      )
-  |> List.map (make_simplify mod_name filtered_types)
+  |> List.map (make_simplify env filtered_types)
   |> BatList.reduce (fun funs fn ->
        <:str_item<$funs$;; $fn$>>
      )
