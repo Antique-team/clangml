@@ -317,6 +317,7 @@ OCamlVisitor::Traverse##CLASS##TypeLoc (clang::CLASS##TypeLoc TL)	\
 {									\
   TODO;									\
   TRACE;								\
+  Base::Traverse##CLASS##TypeLoc (TL);					\
   stack.push (mk##CLASS##TypeLoc ());					\
   return true;								\
 }

@@ -131,13 +131,15 @@ OCamlVisitor::TraverseFunctionNoProtoType (clang::FunctionNoProtoType *T)
 
 
 
-#define UNIMP_TYPE(CLASS)					\
-bool								\
-OCamlVisitor::Traverse##CLASS##Type (clang::CLASS##Type *type)	\
-{								\
-  TODO;								\
-  Base::Traverse##CLASS##Type (type);				\
-  return true;							\
+#define UNIMP_TYPE(CLASS)						\
+bool									\
+OCamlVisitor::Traverse##CLASS##Type (clang::CLASS##Type *T)		\
+{									\
+  TODO;									\
+  TRACE;								\
+  Base::Traverse##CLASS##Type (T);					\
+  stack.push (mk##CLASS##Type ());					\
+  return true;								\
 }
 
 UNIMP_TYPE(Atomic)
