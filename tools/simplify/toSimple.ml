@@ -9,14 +9,11 @@ type env = {
 }
 
 
-let _loc = Loc.ghost
-
-
 let rec simplify_basic_type = function
   | NamedType (_loc, name) ->
       <:expr<$lid:"simplify_" ^ name$>>
   | SourceLocation (_loc) ->
-      <:expr<Sloc.simplify>>
+      <:expr<Simplify.simplify_sloc>>
   | ListOfType (_loc, ty) ->
       <:expr<simplify_list $simplify_basic_type ty$>>
   | OptionType (_loc, ty) ->
@@ -62,10 +59,9 @@ and simplify_expr_ = function
   | _ -> ...
 *)
 
-let make_match_case env sum_ty =
-  let _loc = sum_ty.stb_loc in
-  let tycon = sum_ty.stb_name in
-  let tycon_args = sum_ty.stb_types in
+let make_match_case env branch =
+  let _loc = branch.stb_loc in
+  let tycon = branch.stb_name in
 
   (* Generic construction function for patterns and expressions. *)
   let construct init mkty reduce =
@@ -75,7 +71,7 @@ let make_match_case env sum_ty =
          let name = name_of_basic_type ty in
          _loc, mkty i _loc name
       )
-      tycon_args
+      branch.stb_types
     |> List.fold_left
          (fun tycon (_loc, param) -> reduce _loc tycon param)
          init
@@ -91,15 +87,14 @@ let make_match_case env sum_ty =
            Ast.ExApp (_loc, tycon, param))
     in
 
-    (* Update calls: call visitor on everything that may need to be updated. *)
-    List.mapi (fun i ty -> (i, ty)) tycon_args
+    (* Simplify calls. *)
+    List.mapi (fun i ty -> (i, ty)) branch.stb_types
     |> List.rev
     |> List.fold_left (fun expr (i, ty) ->
-         let name = (name_of_basic_type ty) ^ (string_of_int i) in
+         let name = name_of_basic_type ty ^ string_of_int i in
          let _loc = loc_of_basic_type_name ty in
-         let update = simplify_basic_type ty in
          <:expr<
-           let $lid:name$ = $update$ $lid:name$ in
+           let $lid:name$ = $simplify_basic_type ty$ $lid:name$ in
            $expr$
          >>
        ) result
@@ -121,6 +116,8 @@ let simplify_language = function
   | Ast.Lang_CXX -> AstSimple.Lang_CXX
 *)
 let make_simplify_sum_type env filtered_types st =
+  let _loc = st.st_loc in
+
   let fun_name = "simplify_" ^ st.st_name in
   let branches =
     List.map
@@ -128,19 +125,22 @@ let make_simplify_sum_type env filtered_types st =
       st.st_branches
     |> BatList.reduce (fun acc ty -> <:match_case<$acc$ | $ty$>>)
   in
+
   <:binding<
     $lid:fun_name$ = function $branches$
   >>
 
 
 let make_simplify_record_type env filtered_types rt =
+  let _loc = rt.rt_loc in
+
   let body =
     try
 
       let main_member = find_composite_member rt in
       <:expr<
         $simplify_basic_type main_member.rtm_type$
-          v.$lid:main_member.rtm_name$
+          v.$uid:env.mod_name$.$lid:main_member.rtm_name$
       >>
 
     with Not_found ->
@@ -157,7 +157,7 @@ let make_simplify_record_type env filtered_types rt =
             <:ident<$uid:env.simple_name$.$lid:member.rtm_name$>>
           in
           let source =
-            <:expr<$simplify_member$ $uid:env.mod_name$.v.$lid:member.rtm_name$>>
+            <:expr<$simplify_member$ v.$uid:env.mod_name$.$lid:member.rtm_name$>>
           in
 
           <:rec_binding<$target$ = $source$>>
@@ -171,7 +171,7 @@ let make_simplify_record_type env filtered_types rt =
   in
 
   <:binding<
-    simplify_record_type v =
+    $lid:"simplify_" ^ rt.rt_name$ v =
       $body$
   >>
 
@@ -196,6 +196,8 @@ let rec make_simplify env filtered_types = function
    filtered_types come from astSimple.ml
 *)
 let codegen mod_name filtered_types ocaml_types =
+  let _loc = Loc.ghost in
+
   let env = {
     mod_name;
     simple_name = mod_name ^ "Simple";
@@ -208,7 +210,7 @@ let codegen mod_name filtered_types ocaml_types =
          | _ -> true
        )
     |> List.map (make_simplify env filtered_types)
-    |> List.map (fun binding -> <:str_item<let $binding$>>)
+    |> List.map (fun binding -> <:str_item<let rec $binding$>>)
     |> BatList.reduce (fun funs fn ->
          <:str_item<$funs$;; $fn$>>
        )

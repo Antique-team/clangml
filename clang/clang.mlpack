@@ -6,6 +6,7 @@ clang/Invariants
 clang/Pp
 clang/Query
 clang/Ref
+clang/Simplify
 clang/Sloc
 clang/Types
 clang/Visitor
@@ -21,3 +22,4 @@ clang/MapVisitor
 
 # generated simplified data structure
 clang/AstSimple
+clang/AstSimplify
