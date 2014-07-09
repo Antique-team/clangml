@@ -4,7 +4,7 @@ version = "0.1"
 requires = "clang.parser,clang.transformation"
 
 package "parser" (
-requires = "clang.util,deriving-ocsigen,unix"
+requires = "clang.util,deriving,unix"
 archive(native) = "clang.cmx"
 archive(byte) = "clang.cmo"
 )

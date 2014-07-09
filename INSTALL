@@ -26,7 +26,7 @@ Dependencies
 ------------
 
 - batteries
-- deriving-ocsigen
+- deriving
 - ANSITerminal
 - unix
 - camlp4.fulllib (Debian package: camlp4-extra)
