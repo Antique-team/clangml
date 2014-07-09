@@ -13,7 +13,7 @@ let codegen ocaml_types =
     |> OcamlTypes.Type_graph.must_visit
   in
 
-  let ocaml_types =
+  let filtered_types =
     let rec contains_type name = function
       | [] -> false
       | ty :: rest ->
@@ -54,7 +54,7 @@ let codegen ocaml_types =
     remove_combined_types ocaml_types
   in
 
-  let ocaml_types =
+  let filtered_types =
     let remove_underscore name =
       if S.ends_with name "_" then
         S.rchop name
@@ -76,7 +76,13 @@ let codegen ocaml_types =
       | ty -> ty
     in
 
-    List.map rename_type ocaml_types
+    List.map rename_type filtered_types
   in
 
-  OcamlTypes.Codegen.codegen ocaml_types
+  let types = OcamlTypes.Codegen.codegen filtered_types in
+  let transform = ToSimple.codegen ocaml_types filtered_types in
+
+  <:str_item<
+    $types$;;
+    $transform$;;
+  >>
