@@ -1,6 +1,8 @@
 open Ast
 open Util
 
+module Log = Logger.Make(struct let tag = "Types" end)
+
 
 module Ordered_ctyp : Map.OrderedType
   with type t = AstSimple.ctyp =
@@ -14,39 +16,6 @@ end
 
 
 module TypeMap = Map.Make(Ordered_ctyp)
-
-
-(* Ensures that the type array (DenseIntMap) contains the basic type
-   "int", since we need it to synthesise IntegerLiterals. *)
-let ensure_basic_int_type types =
-  let bt_int = BuiltinType BT_Int in
-  if DenseIntMap.exists (fun ctyp -> ctyp.t = bt_int) types then
-    types
-  else
-    let types = (types : ctyp DenseIntMap.t :> ctyp array) in
-    (* Synthesise an int type. *)
-    let new_types =
-      (* TODO: rewrite this without Obj.magic.
-         => encapsulate operations in DenseIntMap module *)
-      let count = Array.length types in
-      Array.init
-        (count + 1)
-        (fun i ->
-           if i < count then
-             types.(i)
-           else
-             let index : ctyp DenseIntMap.key = Obj.magic count in
-             {
-               t = BuiltinType BT_Int;
-               t_cref = Ref.null;
-               t_qual = [];
-               t_aspace = None;
-               t_self = index;
-               t_canon = index;
-             }
-        )
-    in
-    (Obj.magic new_types : ctyp DenseIntMap.t)
 
 
 let find_type simple_type map =
@@ -69,13 +38,63 @@ let make_type_map types =
 
 
 let find_basic_int_type type_map =
-  match find_type AstSimple.(BuiltinType BT_Int) type_map with
+  let candidates =
+    find_type AstSimple.(BuiltinType BT_Int) type_map
+    |> List.filter (fun ctyp -> ctyp.t_qual = [] && ctyp.t_aspace = None)
+  in
+
+  match candidates with
   | [ty] -> ty
   | [] ->
       failwith "No integer builtin type in the program"
   | _ ->
-      failwith "Multiple (differently qualified) integer types \
-                in the program"
+      (* XXX: This should never happen. *)
+      failwith "Multiple integer types in the program"
+
+
+(* Ensures that the type array (DenseIntMap) contains the basic type
+   "int", since we need it to synthesise IntegerLiterals. *)
+let ensure_basic_int_type types =
+  let bt_int = BuiltinType BT_Int in
+
+  let is_basic_int_type ctyp =
+    ctyp.t = bt_int &&
+    (* These tests are probably never necessary, since the existence
+       of e.g. an "int const" (currently, in clang) implies the existence
+       of "int". *)
+    ctyp.t_qual = [] &&
+    ctyp.t_aspace = None
+  in
+
+  if DenseIntMap.exists is_basic_int_type types then
+    types
+  else (
+    Log.warn "Synthesising basic unqualified int type";
+    let types = (types : ctyp DenseIntMap.t :> ctyp array) in
+    (* Synthesise an int type. *)
+    let new_types =
+      (* TODO: rewrite this without Obj.magic.
+         => encapsulate operations in DenseIntMap module *)
+      let count = Array.length types in
+      Array.init
+        (count + 1)
+        (fun i ->
+           if i < count then
+             types.(i)
+           else
+             let index : ctyp DenseIntMap.key = Obj.magic count in
+             {
+               t = bt_int;
+               t_cref = Ref.null;
+               t_qual = [];
+               t_aspace = None;
+               t_self = index;
+               t_canon = index;
+             }
+        )
+    in
+    (Obj.magic new_types : ctyp DenseIntMap.t)
+  )
 
 
 let rec tloc_of_ctyp sloc ty =
