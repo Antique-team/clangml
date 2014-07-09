@@ -85,12 +85,37 @@ let string_of_tag_type_kind = function
   | TTK_Enum -> "enum"
 
 let string_of_vector_kind = function
-  | VK_GenericVector  -> "GenericVector" 
-  | VK_AltiVecVector  -> "AltiVecVector" 
-  | VK_AltiVecPixel   -> "AltiVecPixel"  
-  | VK_AltiVecBool    -> "AltiVecBool"   
-  | VK_NeonVector     -> "NeonVector"    
+  | VK_GenericVector  -> "GenericVector"
+  | VK_AltiVecVector  -> "AltiVecVector"
+  | VK_AltiVecPixel   -> "AltiVecPixel"
+  | VK_AltiVecBool    -> "AltiVecBool"
+  | VK_NeonVector     -> "NeonVector"
   | VK_NeonPolyVector -> "NeonPolyVector"
+
+let string_of_attributed_type_kind = function
+  | ATK_address_space        -> "address_space"
+  | ATK_regparm              -> "regparm"
+  | ATK_vector_size          -> "vector_size"
+  | ATK_neon_vector_type     -> "neon_vector_type"
+  | ATK_neon_polyvector_type -> "neon_polyvector_type"
+  | ATK_objc_gc              -> "objc_gc"
+  | ATK_objc_ownership       -> "objc_ownership"
+  | ATK_pcs                  -> "pcs"
+  | ATK_pcs_vfp              -> "pcs_vfp"
+  | ATK_noreturn             -> "noreturn"
+  | ATK_cdecl                -> "cdecl"
+  | ATK_fastcall             -> "fastcall"
+  | ATK_stdcall              -> "stdcall"
+  | ATK_thiscall             -> "thiscall"
+  | ATK_pascal               -> "pascal"
+  | ATK_pnaclcall            -> "pnaclcall"
+  | ATK_inteloclbicc         -> "inteloclbicc"
+  | ATK_ms_abi               -> "ms_abi"
+  | ATK_sysv_abi             -> "sysv_abi"
+  | ATK_ptr32                -> "ptr32"
+  | ATK_ptr64                -> "ptr64"
+  | ATK_sptr                 -> "sptr"
+  | ATK_uptr                 -> "uptr"
 
 let string_of_elaborated_type_keyword = function
   | ETK_Struct -> "struct"
@@ -592,11 +617,15 @@ and pp_tloc_ fmt = function
         pp_ctyp elt_type
         num_elts
         (string_of_vector_kind kind)
+  | AttributedTypeLoc (attributed_type_kind, tloc, expr) ->
+      Format.fprintf fmt "%a __attribute__ ((%s (%a)))"
+        pp_tloc tloc
+        (string_of_attributed_type_kind attributed_type_kind)
+        (pp_option pp_expr) expr
 
 
   | DecayedTypeLoc _ -> Format.pp_print_string fmt "<DecayedTypeLoc>"
   | AtomicTypeLoc -> Format.pp_print_string fmt "<AtomicTypeLoc>"
-  | AttributedTypeLoc -> Format.pp_print_string fmt "<AttributedTypeLoc>"
   | AutoTypeLoc -> Format.pp_print_string fmt "<AutoTypeLoc>"
   | BlockPointerTypeLoc -> Format.pp_print_string fmt "<BlockPointerTypeLoc>"
   | DependentNameTypeLoc -> Format.pp_print_string fmt "<DependentNameTypeLoc>"
@@ -687,10 +716,14 @@ and pp_ctyp_ fmt = function
         pp_ctyp elt_type
         num_elts
         (string_of_vector_kind kind)
+  | AttributedType (attributed_type_kind, tloc, expr) ->
+      Format.fprintf fmt "%a __attribute__ ((%s (%a)))"
+        pp_tloc tloc
+        (string_of_attributed_type_kind attributed_type_kind)
+        (pp_option pp_expr) expr
 
 
   | AtomicType -> Format.pp_print_string fmt "<AtomicType>"
-  | AttributedType -> Format.pp_print_string fmt "<AttributedType>"
   | AutoType -> Format.pp_print_string fmt "<AutoType>"
   | BlockPointerType -> Format.pp_print_string fmt "<BlockPointerType>"
   | DependentNameType -> Format.pp_print_string fmt "<DependentNameType>"

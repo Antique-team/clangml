@@ -322,7 +322,6 @@ OCamlVisitor::Traverse##CLASS##TypeLoc (clang::CLASS##TypeLoc TL)	\
 }
 
 UNIMP_TYPE_LOC (Atomic)
-UNIMP_TYPE_LOC (Attributed)
 UNIMP_TYPE_LOC (Auto)
 UNIMP_TYPE_LOC (BlockPointer)
 
@@ -355,6 +354,22 @@ OCamlVisitor::TraverseVectorTypeLoc (clang::VectorTypeLoc TL)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseAttributedTypeLoc (clang::AttributedTypeLoc TL)
+{
+  TRACE;
+
+  AttributedTypeKind attr_kind =
+    translate_attributed_type_kind (TL.getAttrKind ());
+  ptr<Tloc> modified_loc = must_traverse (TL.getModifiedLoc ());
+  option<Expr> expr;
+  if (TL.hasAttrExprOperand())
+    expr = must_traverse (TL.getAttrExprOperand ());
+
+  stack.push (mkAttributedTypeLoc (attr_kind, modified_loc, expr));
+
+  return true;
+}
 
 bool
 OCamlVisitor::TraverseDecayedTypeLoc (clang::DecayedTypeLoc TL)

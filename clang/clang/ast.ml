@@ -268,6 +268,36 @@ type vector_kind = AstBridge.vector_kind =
   | VK_NeonPolyVector
   deriving (Show)
 
+type attributed_type_kind = AstBridge.attributed_type_kind =
+ (* expression operand *)
+ |     ATK_address_space
+ |     ATK_regparm
+ |     ATK_vector_size
+ |     ATK_neon_vector_type
+ |     ATK_neon_polyvector_type
+ (* enumerated operand (string or keyword) *)
+ |     ATK_objc_gc
+ |     ATK_objc_ownership
+ |     ATK_pcs
+ |     ATK_pcs_vfp
+ (* no operand *)
+ |     ATK_noreturn
+ |     ATK_cdecl
+ |     ATK_fastcall
+ |     ATK_stdcall
+ |     ATK_thiscall
+ |     ATK_pascal
+ |     ATK_pnaclcall
+ |     ATK_inteloclbicc
+ |     ATK_ms_abi
+ |     ATK_sysv_abi
+ |     ATK_ptr32
+ |     ATK_ptr64
+ |     ATK_sptr
+ |     ATK_uptr
+ deriving (Show)
+
+
 (* The elaboration keyword that precedes a qualified type name or
    introduces an elaborated-type-specifier.
    [clang/AST/Type.h] *)
@@ -823,9 +853,11 @@ and tloc_ = AstBridge.tloc_ =
   | VectorTypeLoc		of (* element-type *)ctyp
                                  * (* numElements *)int
                                  * (* vector-kind *)vector_kind
+  | AttributedTypeLoc           of (* kind *)attributed_type_kind
+                                 * (* modified loc *)tloc
+                                 * (* attr. expr operand *)expr option
 
   | AtomicTypeLoc
-  | AttributedTypeLoc
   | AutoTypeLoc
   | BlockPointerTypeLoc
   | DependentNameTypeLoc
@@ -879,9 +911,11 @@ and ctyp_ = AstBridge.ctyp_ =
   | VectorType			of (* element-type *)ctyp
                                  * (* numElements *)int
                                  * (* vector-kind *)vector_kind
+  | AttributedType              of (* kind *)attributed_type_kind
+                                 * (* modified loc *)tloc
+                                 * (* attr. expr operand *)expr option
 
   | AtomicType
-  | AttributedType
   | AutoType
   | BlockPointerType
   | DependentNameType

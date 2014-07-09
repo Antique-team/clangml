@@ -146,10 +146,10 @@ let rec tloc_of_ctyp sloc ty =
     | ComplexType elt -> ComplexTypeLoc elt
     | VectorType (elt_type, num_elts, kind) -> 
         VectorTypeLoc (elt_type, num_elts, kind)
-
+    | AttributedType (attributed_type_kind, tloc, expr) ->
+        AttributedTypeLoc (attributed_type_kind, tloc, expr)
 
     | AtomicType -> AtomicTypeLoc
-    | AttributedType -> AttributedTypeLoc
     | AutoType -> AutoTypeLoc
     | BlockPointerType -> BlockPointerTypeLoc
     | DecltypeType expr -> DecltypeTypeLoc expr
