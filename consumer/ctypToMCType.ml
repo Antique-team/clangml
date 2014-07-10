@@ -73,4 +73,6 @@ let rec c_type_of_ctyp ctyp = match ctyp.t with
 
 
 let map_types types =
-  Util.DenseIntMap.mapk (fun _i ctyp -> c_type_of_ctyp ctyp) types
+  Util.DenseIntMap.mapk
+    (fun _i ctyp -> c_type_of_ctyp ctyp)
+    types
