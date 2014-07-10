@@ -622,6 +622,9 @@ and pp_tloc_ fmt = function
         pp_tloc tloc
         (string_of_attributed_type_kind attributed_type_kind)
         (pp_option pp_expr) expr
+  | ExtVectorTypeLoc elt ->
+      Format.fprintf fmt "__attribute__ (( ext_vector_type() )) %a"
+        pp_ctyp elt
 
 
   | DecayedTypeLoc _ -> Format.pp_print_string fmt "<DecayedTypeLoc>"
@@ -632,7 +635,6 @@ and pp_tloc_ fmt = function
   | DependentSizedArrayTypeLoc -> Format.pp_print_string fmt "<DependentSizedArrayTypeLoc>"
   | DependentSizedExtVectorTypeLoc -> Format.pp_print_string fmt "<DependentSizedExtVectorTypeLoc>"
   | DependentTemplateSpecializationTypeLoc -> Format.pp_print_string fmt "<DependentTemplateSpecializationTypeLoc>"
-  | ExtVectorTypeLoc -> Format.pp_print_string fmt "<ExtVectorTypeLoc>"
   | InjectedClassNameTypeLoc -> Format.pp_print_string fmt "<InjectedClassNameTypeLoc>"
   | LValueReferenceTypeLoc -> Format.pp_print_string fmt "<LValueReferenceTypeLoc>"
   | MemberPointerTypeLoc -> Format.pp_print_string fmt "<MemberPointerTypeLoc>"
@@ -720,6 +722,9 @@ and pp_ctyp_ fmt = function
       Format.fprintf fmt "%a __attribute__ ((%s))"
         pp_ctyp modified_type
         (string_of_attributed_type_kind attributed_type_kind)
+  | ExtVectorType elt ->
+      Format.fprintf fmt "__attribute__ (( ext_vector_type() )) %a"
+        pp_ctyp elt
 
 
   | AtomicType -> Format.pp_print_string fmt "<AtomicType>"
@@ -729,7 +734,6 @@ and pp_ctyp_ fmt = function
   | DependentSizedArrayType -> Format.pp_print_string fmt "<DependentSizedArrayType>"
   | DependentSizedExtVectorType -> Format.pp_print_string fmt "<DependentSizedExtVectorType>"
   | DependentTemplateSpecializationType -> Format.pp_print_string fmt "<DependentTemplateSpecializationType>"
-  | ExtVectorType -> Format.pp_print_string fmt "<ExtVectorType>"
   | InjectedClassNameType -> Format.pp_print_string fmt "<InjectedClassNameType>"
   | LValueReferenceType -> Format.pp_print_string fmt "<LValueReferenceType>"
   | MemberPointerType -> Format.pp_print_string fmt "<MemberPointerType>"

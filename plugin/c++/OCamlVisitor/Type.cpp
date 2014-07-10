@@ -265,7 +265,19 @@ OCamlVisitor::TraverseEnumType (clang::EnumType *T)
 }
 
 
-UNIMP_TYPE(ExtVector)
+bool
+OCamlVisitor::TraverseExtVectorType (clang::ExtVectorType *T)
+{
+  TRACE;
+
+  ptr<Ctyp> element = must_traverse (T->getElementType ());
+
+  stack.push (mkExtVectorType (element));
+
+  return true;
+}
+
+
 bool
 OCamlVisitor::TraverseIncompleteArrayType (clang::IncompleteArrayType *T)
 {

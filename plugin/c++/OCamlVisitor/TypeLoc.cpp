@@ -339,6 +339,18 @@ OCamlVisitor::TraverseComplexTypeLoc (clang::ComplexTypeLoc TL)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseExtVectorTypeLoc (clang::ExtVectorTypeLoc TL)
+{
+  TRACE;
+
+  ptr<Ctyp> element = must_traverse (TL.getTypePtr()->getElementType());
+
+  stack.push (mkExtVectorTypeLoc (element));
+
+  return true;
+}
+
 
 bool
 OCamlVisitor::TraverseVectorTypeLoc (clang::VectorTypeLoc TL)
@@ -402,7 +414,6 @@ UNIMP_TYPE_LOC (DependentName)
 UNIMP_TYPE_LOC (DependentSizedArray)
 UNIMP_TYPE_LOC (DependentSizedExtVector)
 UNIMP_TYPE_LOC (DependentTemplateSpecialization)
-UNIMP_TYPE_LOC (ExtVector)
 UNIMP_TYPE_LOC (InjectedClassName)
 UNIMP_TYPE_LOC (LValueReference)
 UNIMP_TYPE_LOC (MemberPointer)
