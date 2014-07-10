@@ -2,6 +2,7 @@ open C_sig
 open Clang
 open Ast
 open Data_structures
+open Util
 
 module Log = Util.Logger.Make(struct let tag = "transform" end)
 
@@ -104,115 +105,6 @@ let c_uniop_of_unary_operator = function
             Show.format<unary_operator> op
 
 
-let c_type_of_builtin_type = function
-  | BT_Void -> Ctvoid
-  | BT_Char16
-  | BT_Char32
-  | BT_Short
-  | BT_Long
-  | BT_LongLong
-  | BT_Int128
-  | BT_UShort
-  | BT_ULong
-  | BT_ULongLong
-  | BT_UInt128
-  | BT_UInt
-  | BT_Int -> Ctint
-  | BT_Bool
-  | BT_SChar
-  | BT_UChar
-  | BT_Char_S
-  | BT_Char_U -> Ctchar
-  | _ -> Ctint
-
-
-let rec c_type_of_type = function
-  | BuiltinType bt ->
-      c_type_of_builtin_type bt
-
-  | ConstantArrayType (memty, size) ->
-      Ctarray (c_type_of_type memty.t, size)
-
-  | TypedefType name ->
-      assert (name <> "");
-      Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
-
-  | ElaboratedType ty ->
-      c_type_of_type ty.t
-
-  | EnumType name
-  | RecordType (_, name) ->
-      (* TODO: this is wrong. *)
-      (*assert (name <> "");*)
-      if name <> "" then
-        Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
-      else
-        Ctvoid
-
-  | ParenType inner ->
-      c_type_of_type inner.t
-
-  | PointerType { t = FunctionNoProtoType _
-                    | FunctionProtoType _
-                }
-  | FunctionNoProtoType _
-  | FunctionProtoType _ ->
-      (* MemCAD ignores the type of functions (and function pointers). *)
-      Ctvoid
-
-  | PointerType pointee ->
-      Ctptr (Some (c_type_of_type pointee.t))
-
-  | TypeOfExprType _ -> Log.unimp "TypeOfExprType"
-  | TypeOfType _ -> Log.unimp "TypeOfType"
-  | VariableArrayType _ -> Log.unimp "VariableArrayType"
-  | IncompleteArrayType _ -> Log.unimp "IncompleteArrayType"
-  | DecayedType _ -> Log.unimp "IncompleteArrayType"
-
-  | ty -> Log.unimp "%a" Show.format<ctyp_> ty
-
-
-let rec c_type_of_type_loc tl =
-  match tl.tl with
-  | BuiltinTypeLoc bt ->
-      c_type_of_builtin_type bt
-
-  | ConstantArrayTypeLoc (memty, size) ->
-      Ctarray (c_type_of_type_loc memty, size)
-
-  | TypedefTypeLoc name ->
-      assert (name <> "");
-      Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
-
-  | ElaboratedTypeLoc ty ->
-      c_type_of_type_loc ty
-
-  | EnumTypeLoc name
-  | RecordTypeLoc (_, name) ->
-      assert (name <> "");
-      Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
-
-  | PointerTypeLoc pointee ->
-      Ctptr (Some (c_type_of_type_loc pointee))
-
-  | ParenTypeLoc inner ->
-      c_type_of_type_loc inner
-
-  | QualifiedTypeLoc (unqual, qual, aspace) ->
-      c_type_of_type_loc unqual
-
-  | FunctionProtoTypeLoc (_, _) ->
-      Log.unimp "FunctionProtoTypeLoc"
-
-  | TypeOfExprTypeLoc _ -> Log.unimp "TypeOfExprTypeLoc"
-  | TypeOfTypeLoc _ -> Log.unimp "TypeOfTypeLoc"
-  | FunctionNoProtoTypeLoc _ -> Log.unimp "FunctionNoProtoTypeLoc"
-  | VariableArrayTypeLoc _ -> Log.unimp "VariableArrayTypeLoc"
-  | IncompleteArrayTypeLoc _ -> Log.unimp "IncompleteArrayTypeLoc"
-
-  | ty -> Log.unimp "%a" Show.format<tloc_> ty
-
-
 let make_aggregate agg = function
   | TTK_Struct -> Ctstruct agg
   | TTK_Union  -> Ctunion  agg
@@ -229,7 +121,7 @@ let compute_offset is_union off align =
       ((off + align - 1) / align) * align
 
 
-let rec c_agg_fields_of_decls clang is_union (decls : decl list) =
+let rec c_agg_fields_of_decls clang c_types is_union (decls : decl list) =
   let rec loop off fields = function
     | [] -> List.rev fields
 
@@ -258,7 +150,7 @@ let rec c_agg_fields_of_decls clang is_union (decls : decl list) =
           cag_name   = if name1 = "" then None else Some name1;
           cag_align  = align;
           cag_size   = size;
-          cag_fields = c_agg_fields_of_decls clang (kind = TTK_Union) members;
+          cag_fields = c_agg_fields_of_decls clang c_types (kind = TTK_Union) members;
         } in
 
         (* offset for the current field *)
@@ -294,7 +186,7 @@ let rec c_agg_fields_of_decls clang is_union (decls : decl list) =
         let off = compute_offset is_union off align in
 
         let field = {
-          caf_typ  = c_type_of_type_loc ty;
+          caf_typ  = DenseIntMap.find ty.tl_type.t_self c_types;
           caf_off  = off;
           caf_size = size;
           caf_name = name;
@@ -313,18 +205,18 @@ let rec c_agg_fields_of_decls clang is_union (decls : decl list) =
   loop 0 [] decls
 
 
-let c_var_of_parm_decl = function
+let c_var_of_parm_decl c_types = function
   | { d = ParmVarDecl (ty, name) } ->
       {
         cv_name     = name;
         cv_uid      = -1;
-        cv_type     = c_type_of_type_loc ty;
+        cv_type     = DenseIntMap.find ty.tl_type.t_self c_types;
         cv_volatile = Query.is_volatile_tloc ty.tl;
       }
   | _ -> Log.err "only ParmVarDecls allowed in function argument list"
 
 
-let c_decl_of_decl clang { d_sloc; d } =
+let c_decl_of_decl clang c_types { d_sloc; d } =
   let loc_s_line = start_line clang d_sloc in
 
   match d with
@@ -334,7 +226,7 @@ let c_decl_of_decl clang { d_sloc; d } =
       loc_s_line, {
         cv_name     = name;
         cv_uid      = -1;
-        cv_type     = c_type_of_type_loc ty;
+        cv_type     = DenseIntMap.find ty.tl_type.t_self c_types;
         cv_volatile = Query.is_volatile_tloc ty.tl;
       }
 
@@ -358,7 +250,7 @@ let c_decl_of_decl clang { d_sloc; d } =
   | decl -> Log.unimp "%a" Show.format<decl_> decl
 
 
-let rec c_lvalk_of_expr prog decl_env = function
+let rec c_lvalk_of_expr c_types prog decl_env = function
   | DeclRefExpr name ->
       Clvar (lookup_var prog decl_env name)
 
@@ -367,22 +259,22 @@ let rec c_lvalk_of_expr prog decl_env = function
       let base =
         if is_arrow then
           {
-            clk = Clderef (c_expr_of_expr prog decl_env base);
-            clt = c_type_of_type ty.t;
+            clk = Clderef (c_expr_of_expr c_types prog decl_env base);
+            clt = DenseIntMap.find ty.t_self c_types;
           }
         else
-          c_lval_of_expr prog decl_env base
+          c_lval_of_expr c_types prog decl_env base
       in
       Clfield (base, member)
 
   | ArraySubscriptExpr (base, index) ->
       Clindex (
-        c_lval_of_expr prog decl_env base,
-        c_expr_of_expr prog decl_env index
+        c_lval_of_expr c_types prog decl_env base,
+        c_expr_of_expr c_types prog decl_env index
       )
 
   | UnaryOperator (UO_Deref, expr) ->
-      Clderef (c_expr_of_expr prog decl_env expr)
+      Clderef (c_expr_of_expr c_types prog decl_env expr)
 
   | IntegerLiteral _ -> Log.unimp "lvalk IntegerLiteral"
   | CharacterLiteral _ -> Log.unimp "lvalk CharacterLiteral"
@@ -415,37 +307,37 @@ let rec c_lvalk_of_expr prog decl_env = function
   | expr -> Log.unimp "%a" Show.format<expr_> expr
 
 
-and c_lval_of_expr prog decl_env { e = expr; e_type; } =
+and c_lval_of_expr c_types prog decl_env { e = expr; e_type; } =
   {
-    clk = c_lvalk_of_expr prog decl_env expr;
-    clt = c_type_of_type e_type.t;
+    clk = c_lvalk_of_expr c_types prog decl_env expr;
+    clt = DenseIntMap.find e_type.t_self c_types;
   }
 
 
-and c_exprk_of_expr prog decl_env = function
+and c_exprk_of_expr c_types prog decl_env = function
   | IntegerLiteral i ->
       Ceconst (Ccint i)
 
   | BinaryOperator (op, lhs, rhs) ->
       Cebin (
         c_binop_of_binary_operator op,
-        c_expr_of_expr prog decl_env lhs,
-        c_expr_of_expr prog decl_env rhs
+        c_expr_of_expr c_types prog decl_env lhs,
+        c_expr_of_expr c_types prog decl_env rhs
       )
 
   | UnaryOperator (UO_AddrOf, expr) ->
       Ceaddrof (
-        c_lval_of_expr prog decl_env expr
+        c_lval_of_expr c_types prog decl_env expr
       )
 
   | UnaryOperator (op, expr) ->
       Ceuni (
         c_uniop_of_unary_operator op,
-        c_expr_of_expr prog decl_env expr
+        c_expr_of_expr c_types prog decl_env expr
       )
 
   | ParenExpr expr ->
-      c_exprk_of_expr prog decl_env expr.e
+      c_exprk_of_expr c_types prog decl_env expr.e
 
   | CStyleCastExpr _ -> Log.unimp "exprk CStyleCastExpr"
   | ImplicitCastExpr _ -> Log.unimp "exprk ImplicitCastExpr"
@@ -480,7 +372,7 @@ and c_exprk_of_expr prog decl_env = function
   | expr -> Log.unimp "exprk %a" Show.format<expr_> expr
 
 
-and c_expr_of_expr prog decl_env expr =
+and c_expr_of_expr c_types prog decl_env expr =
   match expr.e with
   (* (( void * )0) => null *)
   | CStyleCastExpr (
@@ -490,7 +382,7 @@ and c_expr_of_expr prog decl_env expr =
     ) ->
       {
         cek = Ceconst Ccnull;
-        cet = c_type_of_type expr.e_type.t;
+        cet = DenseIntMap.find expr.e_type.t_self c_types;
       }
 
   | UnaryOperator (UO_Deref, _)
@@ -500,34 +392,34 @@ and c_expr_of_expr prog decl_env expr =
       (*print_endline (Show.show<expr> expr);*)
       (*print_endline (Show.show<ctyp> ty);*)
       {
-        cek = Celval (c_lval_of_expr prog decl_env expr);
-        cet = c_type_of_type expr.e_type.t;
+        cek = Celval (c_lval_of_expr c_types prog decl_env expr);
+        cet = DenseIntMap.find expr.e_type.t_self c_types;
       }
 
   | _ ->
       (*print_endline (Show.show<expr> expr);*)
       {
-        cek = c_exprk_of_expr prog decl_env expr.e;
-        cet = c_type_of_type expr.e_type.t;
+        cek = c_exprk_of_expr c_types prog decl_env expr.e;
+        cet = DenseIntMap.find expr.e_type.t_self c_types;
       }
 
 
-let make_call prog decl_env callee args =
+let make_call c_types prog decl_env callee args =
   {
-    cc_fun = c_expr_of_expr prog decl_env callee;
-    cc_args = List.map (c_expr_of_expr prog decl_env) args;
+    cc_fun = c_expr_of_expr c_types prog decl_env callee;
+    cc_args = List.map (c_expr_of_expr c_types prog decl_env) args;
   }
 
 
-let rec c_stat_of_expr clang prog decl_env expr =
+let rec c_stat_of_expr clang c_types prog decl_env expr =
   match expr.e with
   | BinaryOperator (BO_Assign, lhs, rhs) ->
       (*print_endline (Show.show<expr> rhs);*)
       {
         csl = start_line clang expr.e_sloc;
         csk = Csassign (
-          c_lval_of_expr prog decl_env lhs,
-          c_expr_of_expr prog decl_env rhs
+          c_lval_of_expr c_types prog decl_env lhs,
+          c_expr_of_expr c_types prog decl_env rhs
         );
       }
 
@@ -542,11 +434,11 @@ let rec c_stat_of_expr clang prog decl_env expr =
           | "_memcad", [{ e = StringLiteral str }] ->
               Cs_memcad (Mc_comstring str)
           | "assert", [_] ->
-              Csassert (c_expr_of_expr prog decl_env (List.hd args))
+              Csassert (c_expr_of_expr c_types prog decl_env (List.hd args))
           | "free", [_] ->
-              Csfree (c_lval_of_expr prog decl_env (List.hd args))
+              Csfree (c_lval_of_expr c_types prog decl_env (List.hd args))
           | _ ->
-              Cspcall (make_call prog decl_env callee args)
+              Cspcall (make_call c_types prog decl_env callee args)
       }
 
   | IntegerLiteral _ -> Log.unimp "stats IntegerLiteral"
@@ -584,7 +476,7 @@ let rec c_stat_of_expr clang prog decl_env expr =
 
 (* This function maps N clang statements to M memcad statements.
    M may be considerably more than N. *)
-let rec c_stats_of_stmts clang prog decl_env stmts =
+let rec c_stats_of_stmts clang c_types prog decl_env stmts =
   let rec loop decl_env stats = function
     | [] -> stats
 
@@ -600,7 +492,7 @@ let rec c_stats_of_stmts clang prog decl_env stmts =
                 | None ->
                     None
                 | Some expr ->
-                    Some (c_expr_of_expr prog decl_env expr)
+                    Some (c_expr_of_expr c_types prog decl_env expr)
               );
             } in
             loop decl_env (stat :: stats) tl
@@ -615,8 +507,8 @@ let rec c_stats_of_stmts clang prog decl_env stmts =
                   {
                     csl;
                     csk = Csalloc (
-                      c_lval_of_expr prog decl_env lhs,
-                      c_expr_of_expr prog decl_env arg
+                      c_lval_of_expr c_types prog decl_env lhs,
+                      c_expr_of_expr c_types prog decl_env arg
                     );
                   }
 
@@ -627,20 +519,20 @@ let rec c_stats_of_stmts clang prog decl_env stmts =
                   {
                     csl;
                     csk = Csfcall (
-                      c_lval_of_expr prog decl_env lhs,
-                      make_call prog decl_env callee args
+                      c_lval_of_expr c_types prog decl_env lhs,
+                      make_call c_types prog decl_env callee args
                     );
                   }
 
               | e ->
                   (*print_endline (Show.show<expr> e);*)
-                  c_stat_of_expr clang prog decl_env e
+                  c_stat_of_expr clang c_types prog decl_env e
             in
             loop decl_env (stat :: stats) tl
 
         (* We only accept single declarations. *)
         | DeclStmt [decl] ->
-            let (loc, c_decl) = c_decl_of_decl clang decl in
+            let (loc, c_decl) = c_decl_of_decl clang c_types decl in
             let decl_env = StringMap.add c_decl.cv_name c_decl decl_env in
             let stat = { csl = loc; csk = Csdecl c_decl } in
             loop decl_env (stat :: stats) tl
@@ -651,8 +543,8 @@ let rec c_stats_of_stmts clang prog decl_env stmts =
               {
                 csl;
                 csk = Cswhile (
-                  c_expr_of_expr prog decl_env cond,
-                  c_stats_of_stmts clang prog decl_env stmts,
+                  c_expr_of_expr c_types prog decl_env cond,
+                  c_stats_of_stmts clang c_types prog decl_env stmts,
                   None
                 );
               }
@@ -670,9 +562,9 @@ let rec c_stats_of_stmts clang prog decl_env stmts =
               {
                 csl;
                 csk = Csif (
-                  c_expr_of_expr prog decl_env cond,
-                  c_stats_of_stmts clang prog decl_env then_stmts,
-                  c_stats_of_stmts clang prog decl_env else_stmts
+                  c_expr_of_expr c_types prog decl_env cond,
+                  c_stats_of_stmts clang c_types prog decl_env then_stmts,
+                  c_stats_of_stmts clang c_types prog decl_env else_stmts
                 );
               }
             in
@@ -689,7 +581,7 @@ let rec c_stats_of_stmts clang prog decl_env stmts =
             let stat = {
               csl;
               csk = Csblock
-                (c_stats_of_stmts clang prog decl_env stmts)
+                (c_stats_of_stmts clang c_types prog decl_env stmts)
             } in
             loop decl_env (stat :: stats) tl
 
@@ -710,10 +602,10 @@ let rec c_stats_of_stmts clang prog decl_env stmts =
   List.rev (loop decl_env [] stmts)
 
 
-let make_env = function
+let make_env c_types = function
   | FunctionProtoTypeLoc (_, args) ->
       List.fold_left (fun decl_env decl ->
-        let parm = c_var_of_parm_decl decl in
+        let parm = c_var_of_parm_decl c_types decl in
         StringMap.add parm.cv_name parm decl_env
       ) StringMap.empty args
 
@@ -723,20 +615,20 @@ let make_env = function
   | tl -> failwith (Show.show<tloc_> tl)
 
 
-let c_fun_body_of_stmts clang prog ty body =
+let c_fun_body_of_stmts clang c_types prog ty body =
   let stmts = Query.body_of_stmt body in
-  c_stats_of_stmts clang prog (make_env ty.tl) stmts
+  c_stats_of_stmts clang c_types prog (make_env c_types ty.tl) stmts
 
 
-let rec collect_decls clang prog = function
+let rec collect_decls clang c_types prog = function
   | [] -> prog
 
   | { d = EmptyDecl } :: tl ->
-      collect_decls clang prog tl
+      collect_decls clang c_types prog tl
 
   | { d = FunctionDecl (_, _, None) } :: tl ->
       (* Function declarations (without definition) do nothing. *)
-      collect_decls clang prog tl
+      collect_decls clang c_types prog tl
 
   | { d = FunctionDecl (ty, DN_Identifier name, Some body) } :: tl ->
       let c_fun =
@@ -744,16 +636,16 @@ let rec collect_decls clang prog = function
            so that name lookups within the body work for the
            currently processed function name. *)
         let stub = {
-          cf_type = c_type_of_type_loc (Query.return_type_of_tloc ty.tl);
+          cf_type = DenseIntMap.find (Query.return_type_of_tloc ty.tl).tl_type.t_self c_types;
           cf_uid  = -1;
           cf_name = name;
-          cf_args = List.map c_var_of_parm_decl (Query.args_of_tloc ty.tl);
+          cf_args = List.map (c_var_of_parm_decl c_types) (Query.args_of_tloc ty.tl);
           cf_body = []; (* Filled in later. *)
         } in
         let prog = add_fun name stub prog in
-        { stub with cf_body = c_fun_body_of_stmts clang prog ty body }
+        { stub with cf_body = c_fun_body_of_stmts clang c_types prog ty body }
       in
-      collect_decls clang (add_fun name c_fun prog) tl
+      collect_decls clang c_types (add_fun name c_fun prog) tl
 
   (*
     Clang turns this code:
@@ -784,10 +676,10 @@ let rec collect_decls clang prog = function
           cag_name   = if name1 = "" then None else Some name1;
           cag_align  = align;
           cag_size   = size;
-          cag_fields = c_agg_fields_of_decls clang (kind = TTK_Union) members;
+          cag_fields = c_agg_fields_of_decls clang c_types (kind = TTK_Union) members;
         } kind
       in
-      collect_decls clang (add_type name c_type prog) tl
+      collect_decls clang c_types (add_type name c_type prog) tl
 
   (* Handle "typedef struct foo *Foo;" (where struct foo was not
      yet defined) specially, as well. *)
@@ -808,8 +700,8 @@ let rec collect_decls clang prog = function
       }
     :: tl
     when name1 = name2 ->
-      let c_type = c_type_of_type_loc ty in
-      collect_decls clang (add_type name c_type prog) tl
+      let c_type = DenseIntMap.find ty.tl_type.t_self c_types in
+      collect_decls clang c_types (add_type name c_type prog) tl
 
   (* There may be other typedefs involving a preceding record definition,
      so this case is printed with a better diagnostic than the catch-all
@@ -826,25 +718,25 @@ let rec collect_decls clang prog = function
       Log.unimp "RecordDecl without TypedefDecl not supported by memcad AST"
 
   | { d = TypedefDecl (ty, name) } :: tl ->
-      let c_type = c_type_of_type_loc ty in
-      collect_decls clang (add_type name c_type prog) tl
+      let c_type = DenseIntMap.find ty.tl_type.t_self c_types in
+      collect_decls clang c_types (add_type name c_type prog) tl
 
   | { d = VarDecl (ty, name, init) } as decl :: tl ->
-      let c_var = snd (c_decl_of_decl clang decl) in
-      collect_decls clang (add_var name c_var prog) tl
+      let c_var = snd (c_decl_of_decl clang c_types decl) in
+      collect_decls clang c_types (add_var name c_var prog) tl
 
   | { d = EnumDecl (name, enumerators) } :: tl ->
       (* TODO *)
-      collect_decls clang prog tl
+      collect_decls clang c_types prog tl
 
   | { d = LinkageSpecDecl (decls, lang) } :: tl ->
-      collect_decls clang (collect_decls clang prog decls) tl
+      collect_decls clang c_types (collect_decls clang c_types prog decls) tl
 
   | { d = NamespaceDecl (name, inline, decls) } :: tl ->
       let prog = {
         prog with ns = prog.ns ^ name ^ "::"
       } in
-      collect_decls clang (collect_decls clang prog decls) tl
+      collect_decls clang c_types (collect_decls clang c_types prog decls) tl
 
   | { d = EnumConstantDecl    _ } :: _ -> Log.err "EnumConstantDecl found at file scope"
   | { d = FieldDecl           _ } :: _ -> Log.err "FieldDecl found at file scope"
@@ -865,7 +757,7 @@ let c_prog_from_decl clang = function
         prog = C_utils.empty_unit;
         ns   = "";
       } in
-      (collect_decls clang prog decls).prog
+      (collect_decls clang c_types prog decls).prog
       (*|> C_process.c_prog_fix_types*)
       |> C_process.bind_c_prog
 
