@@ -852,8 +852,10 @@ and tloc_ = AstBridge.tloc_ =
   | DecayedTypeLoc		of (* original *)tloc
   | TemplateTypeParmTypeLoc	of (* name *)string
   | ComplexTypeLoc		of (* element *)ctyp
-  | ExtVectorTypeLoc		of (* element *)ctyp
   | VectorTypeLoc		of (* element-type *)ctyp
+                                 * (* numElements *)int
+                                 * (* vector-kind *)vector_kind
+  | ExtVectorTypeLoc		of (* element-type *)ctyp
                                  * (* numElements *)int
                                  * (* vector-kind *)vector_kind
   | AttributedTypeLoc		of (* kind *)attributed_type_kind
@@ -910,8 +912,10 @@ and ctyp_ = AstBridge.ctyp_ =
   | DecayedType			of (* decayed *)ctyp * (* original *)ctyp
   | TemplateTypeParmType	of (* name *)string option
   | ComplexType			of (* element *)ctyp
-  | ExtVectorType               of (* element *)ctyp
   | VectorType			of (* element-type *)ctyp
+                                 * (* numElements *)int
+                                 * (* vector-kind *)vector_kind
+  | ExtVectorType		of (* element-type *)ctyp
                                  * (* numElements *)int
                                  * (* vector-kind *)vector_kind
   | AttributedType		of (* kind *)attributed_type_kind

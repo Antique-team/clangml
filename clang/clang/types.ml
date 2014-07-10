@@ -145,12 +145,12 @@ let rec tloc_of_ctyp sloc ty =
         TemplateTypeParmTypeLoc "<anon>"
     | ComplexType elt ->
         ComplexTypeLoc elt
-    | VectorType (elt_type, num_elts, kind) -> 
+    | VectorType (elt_type, num_elts, kind) ->
         VectorTypeLoc (elt_type, num_elts, kind)
+    | ExtVectorType (elt_type, num_elts, kind) ->
+        ExtVectorTypeLoc (elt_type, num_elts, kind)
     | AttributedType (attributed_type_kind, ctyp) ->
         AttributedTypeLoc (attributed_type_kind, tloc_of_ctyp sloc ctyp, None)
-    | ExtVectorType elt ->
-        ExtVectorTypeLoc elt
 
 
     | AtomicType -> AtomicTypeLoc

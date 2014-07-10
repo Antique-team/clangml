@@ -612,7 +612,8 @@ and pp_tloc_ fmt = function
   | ComplexTypeLoc elt ->
       Format.fprintf fmt "_Complex %a"
         pp_ctyp elt
-  | VectorTypeLoc (elt_type, num_elts, kind) ->
+  | VectorTypeLoc (elt_type, num_elts, kind)
+  | ExtVectorTypeLoc (elt_type, num_elts, kind) ->
       Format.fprintf fmt "%a __attribute__ ((vector_size (%d))) [%s]"
         pp_ctyp elt_type
         num_elts
@@ -622,9 +623,6 @@ and pp_tloc_ fmt = function
         pp_tloc tloc
         (string_of_attributed_type_kind attributed_type_kind)
         (pp_option pp_expr) expr
-  | ExtVectorTypeLoc elt ->
-      Format.fprintf fmt "__attribute__ (( ext_vector_type() )) %a"
-        pp_ctyp elt
 
 
   | DecayedTypeLoc _ -> Format.pp_print_string fmt "<DecayedTypeLoc>"
@@ -713,7 +711,8 @@ and pp_ctyp_ fmt = function
   | ComplexType elt ->
       Format.fprintf fmt "_Complex %a"
         pp_ctyp elt
-  | VectorType (elt_type, num_elts, kind) ->
+  | VectorType (elt_type, num_elts, kind)
+  | ExtVectorType (elt_type, num_elts, kind) ->
       Format.fprintf fmt "%a __attribute__ ((vector_size (%d))) [%s]"
         pp_ctyp elt_type
         num_elts
@@ -722,9 +721,6 @@ and pp_ctyp_ fmt = function
       Format.fprintf fmt "%a __attribute__ ((%s))"
         pp_ctyp modified_type
         (string_of_attributed_type_kind attributed_type_kind)
-  | ExtVectorType elt ->
-      Format.fprintf fmt "__attribute__ (( ext_vector_type() )) %a"
-        pp_ctyp elt
 
 
   | AtomicType -> Format.pp_print_string fmt "<AtomicType>"
