@@ -26,31 +26,47 @@ let c_type_of_builtin_type = function
   | _ -> Ctint
 
 
-let rec c_type_of_ctyp ctyp = match ctyp.t with
+let rec c_type_of_ctyp clang ctyp = match ctyp.t with
   | BuiltinType bt ->
       c_type_of_builtin_type bt
 
   | ConstantArrayType (memty, size) ->
-      Ctarray (c_type_of_ctyp memty, size)
+      Ctarray (c_type_of_ctyp clang memty, size)
 
   | TypedefType name ->
       assert (name <> "");
-      Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
+      begin
+        try
+          let decl = Api.(request clang @@ DeclOfType ctyp.t_cref) in
+          print_endline @@ Show_decl.show decl;
+          Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
+        with Api.E (Api.E_Failure msg) ->
+          Log.warn "typedef name: %s: %s" name msg;
+          Ctvoid
+      end
+
 
   | ElaboratedType ty ->
-      c_type_of_ctyp ty
+      c_type_of_ctyp clang ty
 
   | EnumType name
   | RecordType (_, name) ->
-      (* TODO: this is wrong. *)
-      (*assert (name <> "");*)
-      if name <> "" then
-        Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
-      else
-        Ctvoid
+      begin
+        try
+          let decl = Api.(request clang @@ DeclOfType ctyp.t_cref) in
+          print_endline @@ Show_decl.show decl;
+          if name <> "" then
+            Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
+          else
+            Ctvoid
+        with Api.E (Api.E_Failure msg) ->
+          Log.warn "tag type name: %s: %s" name msg;
+          Ctvoid
+      end
+
 
   | ParenType inner ->
-      c_type_of_ctyp inner
+      c_type_of_ctyp clang inner
 
   | PointerType { t = FunctionNoProtoType _
                     | FunctionProtoType _
@@ -61,7 +77,7 @@ let rec c_type_of_ctyp ctyp = match ctyp.t with
       Ctvoid
 
   | PointerType pointee ->
-      Ctptr (Some (c_type_of_ctyp pointee))
+      Ctptr (Some (c_type_of_ctyp clang pointee))
 
   | TypeOfExprType _ -> Log.unimp "TypeOfExprType"
   | TypeOfType _ -> Log.unimp "TypeOfType"
@@ -72,7 +88,11 @@ let rec c_type_of_ctyp ctyp = match ctyp.t with
   | ty -> Log.unimp "%a" Show.format<ctyp_> ty
 
 
-let map_types types =
+let map_types clang types =
   Util.DenseIntMap.mapk
-    (fun _i ctyp -> c_type_of_ctyp ctyp)
+    (fun _i ctyp ->
+       print_endline "-------------------------------------------------------------";
+       print_endline @@ Show_ctyp.show ctyp;
+       c_type_of_ctyp clang ctyp
+    )
     types

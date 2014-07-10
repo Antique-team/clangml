@@ -857,7 +857,7 @@ let rec collect_decls clang prog = function
 let c_prog_from_decl clang = function
   | { d = TranslationUnitDecl decls } ->
       let types = Api.(request clang @@ CacheFor Cache_ctyp) in
-      let c_types = CtypToMCType.map_types types in
+      let c_types = CtypToMCType.map_types clang types in
 
       C_utils.max_c_var_id := 0;
 
