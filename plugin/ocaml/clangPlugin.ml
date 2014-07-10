@@ -6,6 +6,7 @@ external clang_is_from_main_file	: Api.context -> Sloc.t -> bool = "clang_is_fro
 external clang_characteristic_kind	: Api.context -> Sloc.t -> Sloc.characteristic_kind = "clang_characteristic_kind"
 external clang_type_sizeof		: Api.context -> ctyp Ref.t -> int64 = "clang_type_sizeof"
 external clang_type_alignof		: Api.context -> ctyp Ref.t -> int = "clang_type_alignof"
+external clang_type_decl		: Api.context -> ctyp Ref.t -> decl = "clang_type_decl"
 
 external clang_cache_for_ctyp		: Api.context -> (ctyp, ctyp) Util.DenseIntMap.t = "clang_cache_for_ctyp"
 
@@ -35,6 +36,14 @@ let run_processor (tu : decl) (file : string) (ctx : Api.context) =
         clang_type_sizeof ctx ty
     | AlignofType ty ->
         clang_type_alignof ctx ty
+
+    | DeclOfType ty ->
+        begin
+          try
+            clang_type_decl ctx ty
+          with Failure msg ->
+            failure @@ E_Failure msg
+        end
 
     | PresumedLoc sloc ->
         if Sloc.is_valid sloc then

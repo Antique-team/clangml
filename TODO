@@ -12,6 +12,14 @@ TODO:
     TODO: TraverseStaticAssertDecl
     TODO: TraverseVectorTypeLoc
 
+- make it possible to read more than one input source file using the same
+  clang process
+- add a way to create new clang AST nodes from ocaml AST nodes
+- think about location tracking in the presence of heavy transformations
+  - we use SourceLocations, so there seems to be nothing we can do
+    to create new ones
+
+DONE:
 - generate simplified AST structure where types_ are types and no
   wrapper-records are used. I.e.
     { e = UnaryOperator (UO_Plus, { e = IntegerLiteral 1; ...}); ... }
@@ -25,14 +33,6 @@ TODO:
   This will lose type qualifiers, which is bad, so we may want lookup to
   return a set of types with different qualifiers (all types present
   in the analysed program).
-- make it possible to read more than one input source file using the same
-  clang process
-- add a way to create new clang AST nodes from ocaml AST nodes
-- think about location tracking in the presence of heavy transformations
-  - we use SourceLocations, so there seems to be nothing we can do
-    to create new ones
-
-DONE:
 - Unit => UnitExpr
 - keep track of which ADTs are enums and which are class hierarchies
 - make sure enum/constant ADTs are passed and stored by value, not by pointer
