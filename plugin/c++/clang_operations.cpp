@@ -79,47 +79,46 @@ clang_type_alignof (value context, value ctyp)
   return Val_int (align);
 }
 
+
+static clang::Decl *
+get_decl (clang::Type const *type)
+{
+  switch (type->getTypeClass ())
+    {
+    case clang::Type::Typedef:
+      return static_cast<clang::TypedefType const *> (type)->getDecl ();
+    case clang::Type::UnresolvedUsing:
+      return static_cast<clang::UnresolvedUsingType const *> (type)->getDecl ();
+    case clang::Type::Record:
+      return static_cast<clang::RecordType const *> (type)->getDecl ();
+    case clang::Type::Enum:
+      return static_cast<clang::EnumType const *> (type)->getDecl ();
+    case clang::Type::InjectedClassName:
+      return static_cast<clang::InjectedClassNameType const *> (type)->getDecl ();
+    case clang::Type::ObjCInterface:
+      return static_cast<clang::ObjCInterfaceType const *> (type)->getDecl ();
+    default:
+      failwith ("this type does not have a decl");
+      return nullptr;
+    }
+}
+
+
 CAMLprim value
 clang_type_decl (value context, value ctyp)
 {
   clang_context &ctx = Context_val (context);
+
   clang_ref<Ctyp> ref (Unsigned_long_val (ctyp));
 
-  clang::Type const *type = ctx.refs.retrieve (ref).getTypePtr();
-  clang::Decl *decl;
+  clang::Type const *type = ctx.refs.retrieve (ref).getTypePtr ();
+  clang::Decl *decl = get_decl (type);
 
-  switch (type->getTypeClass())
-    {
-    case clang::Type::Typedef:
-      decl = static_cast<clang::TypedefType const*> (type)->getDecl();
-      break;
-    case clang::Type::UnresolvedUsing:
-      decl = static_cast<clang::UnresolvedUsingType const*> (type)->getDecl();
-      break;
-    case clang::Type::Record:
-      decl = static_cast<clang::RecordType const*> (type)->getDecl();
-      break;
-    case clang::Type::Enum:
-      decl = static_cast<clang::EnumType const*> (type)->getDecl();
-      break;
-    case clang::Type::InjectedClassName:
-      decl = static_cast<clang::InjectedClassNameType const*> (type)->getDecl();
-      break;
-    case clang::Type::ObjCInterface:
-      decl = static_cast<clang::ObjCInterfaceType const*> (type)->getDecl();
-      break;
-    default:
-      failwith("this type does not have a decl");
-      break;
-    }
+  if (decl->isImplicit ())
+    failwith ("this type has an implicit decl");
 
-  if (decl->isImplicit()) {
-    failwith("this type has an implicit decl");
-  }
-
-  if (decl->getLocStart().isInvalid()) {
-    failwith("the decl for this type has an invalid source location");
-  }
+  if (decl->getLocStart ().isInvalid ())
+    failwith ("the decl for this type has an invalid source location");
 
   ptr<Decl> ocaml_decl = ast_bridge_of<Decl> (decl, ctx);
 

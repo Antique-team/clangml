@@ -53,7 +53,7 @@ let name_of_request : type a. a request -> string = function
   | Filename		  -> "Filename"
   | SizeofType		_ -> "SizeofType"
   | AlignofType		_ -> "AlignofType"
-  | DeclOfType          _ -> "DeclOfType"
+  | DeclOfType		_ -> "DeclOfType"
   | PresumedLoc		_ -> "PresumedLoc"
   | IsFromMainFile	_ -> "IsFromMainFile"
   | FileCharacteristic	_ -> "FileCharacteristic"

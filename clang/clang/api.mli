@@ -42,7 +42,8 @@ type _ request =
      the given type. *)
   | AlignofType : Ast.ctyp Ref.t -> int request
 
-  (* returns the declaration of a typedef type or tag type (tag type = record or enum) *)
+  (* Returns the declaration of a typedef type or tag type
+     (tag type = record or enum). *)
   | DeclOfType : Ast.ctyp Ref.t -> Ast.decl request
       
   (* Returns the "presumed" location of a SourceLocation specifies.
