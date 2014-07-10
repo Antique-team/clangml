@@ -2,6 +2,8 @@ open Clang
 open Ast
 open C_sig
 
+module Log = Util.Logger.Make(struct let tag = "CtypToMCType" end)
+
 let c_type_of_builtin_type = function
   | BT_Void -> Ctvoid
   | BT_Char16
@@ -24,19 +26,19 @@ let c_type_of_builtin_type = function
   | _ -> Ctint
 
 
-let rec c_type_of_ctyp = function
+let rec c_type_of_ctyp ctyp = match ctyp.t with
   | BuiltinType bt ->
       c_type_of_builtin_type bt
 
   | ConstantArrayType (memty, size) ->
-      Ctarray (c_type_of_ctyp memty.t, size)
+      Ctarray (c_type_of_ctyp memty, size)
 
   | TypedefType name ->
       assert (name <> "");
       Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
 
   | ElaboratedType ty ->
-      c_type_of_ctyp ty.t
+      c_type_of_ctyp ty
 
   | EnumType name
   | RecordType (_, name) ->
@@ -48,7 +50,7 @@ let rec c_type_of_ctyp = function
         Ctvoid
 
   | ParenType inner ->
-      c_type_of_ctyp inner.t
+      c_type_of_ctyp inner
 
   | PointerType { t = FunctionNoProtoType _
                     | FunctionProtoType _
@@ -59,7 +61,7 @@ let rec c_type_of_ctyp = function
       Ctvoid
 
   | PointerType pointee ->
-      Ctptr (Some (c_type_of_ctyp pointee.t))
+      Ctptr (Some (c_type_of_ctyp pointee))
 
   | TypeOfExprType _ -> Log.unimp "TypeOfExprType"
   | TypeOfType _ -> Log.unimp "TypeOfType"
@@ -71,4 +73,4 @@ let rec c_type_of_ctyp = function
 
 
 let map_types types =
-  failwith "not implemented yet"
+  Util.DenseIntMap.mapk (fun _i ctyp -> c_type_of_ctyp ctyp) types
