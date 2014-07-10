@@ -3,6 +3,8 @@
 #include "sloc_bridge.h"
 
 #include <clang/AST/ASTContext.h>
+#include <clang/AST/DeclCXX.h>
+#include <clang/AST/DeclObjC.h>
 
 using namespace ast_bridge;
 
@@ -61,6 +63,7 @@ clang_type_sizeof (value context, value ctyp)
 }
 
 
+
 CAMLprim value
 clang_type_alignof (value context, value ctyp)
 {
@@ -75,6 +78,55 @@ clang_type_alignof (value context, value ctyp)
 
   return Val_int (align);
 }
+
+CAMLprim value
+clang_type_decl (value context, value ctyp)
+{
+  clang_context &ctx = Context_val (context);
+  clang_ref<Ctyp> ref (Unsigned_long_val (ctyp));
+
+  clang::Type const *type = ctx.refs.retrieve (ref).getTypePtr();
+  clang::Decl *decl;
+
+  switch (type->getTypeClass())
+    {
+    case clang::Type::Typedef:
+      decl = static_cast<clang::TypedefType const*> (type)->getDecl();
+      break;
+    case clang::Type::UnresolvedUsing:
+      decl = static_cast<clang::UnresolvedUsingType const*> (type)->getDecl();
+      break;
+    case clang::Type::Record:
+      decl = static_cast<clang::RecordType const*> (type)->getDecl();
+      break;
+    case clang::Type::Enum:
+      decl = static_cast<clang::EnumType const*> (type)->getDecl();
+      break;
+    case clang::Type::InjectedClassName:
+      decl = static_cast<clang::InjectedClassNameType const*> (type)->getDecl();
+      break;
+    case clang::Type::ObjCInterface:
+      decl = static_cast<clang::ObjCInterfaceType const*> (type)->getDecl();
+      break;
+    default:
+      failwith("this type does not have a decl");
+      break;
+    }
+
+  if (decl->isImplicit()) {
+    failwith("this type has an implicit decl");
+  }
+
+  if (decl->getLocStart().isInvalid()) {
+    failwith("the decl for this type has an invalid source location");
+  }
+
+  ptr<Decl> ocaml_decl = ast_bridge_of<Decl> (decl, ctx);
+
+  ctx.values.resize (ocaml_decl);
+  return ctx.values.to_value (ocaml_decl);
+}
+
 
 
 CAMLprim value

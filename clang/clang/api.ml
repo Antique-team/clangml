@@ -20,6 +20,7 @@ type _ request =
   | Filename : string request
   | SizeofType : Ast.ctyp Ref.t -> int64 request
   | AlignofType : Ast.ctyp Ref.t -> int request
+  | DeclOfType : Ast.ctyp Ref.t -> Ast.decl request
   | PresumedLoc : Sloc.t -> Sloc.presumed_loc request
   | IsFromMainFile : Sloc.t -> bool request
   | FileCharacteristic : Sloc.t -> Sloc.characteristic_kind request
@@ -29,6 +30,7 @@ type error =
   | E_Unhandled of string
   | E_NullRef
   | E_Version of string
+  | E_Failure of string
 
 type 'a response =
   | Error of error
@@ -41,6 +43,7 @@ let string_of_error = function
   | E_Unhandled msg -> "E_Unhandled (" ^ msg ^ ")"
   | E_NullRef -> "E_NullRef"
   | E_Version ver -> "E_Version (" ^ ver ^ ")"
+  | E_Failure msg -> "E_Failure (" ^ msg ^ ")"
 
 
 let name_of_request : type a. a request -> string = function
@@ -50,6 +53,7 @@ let name_of_request : type a. a request -> string = function
   | Filename		  -> "Filename"
   | SizeofType		_ -> "SizeofType"
   | AlignofType		_ -> "AlignofType"
+  | DeclOfType          _ -> "DeclOfType"
   | PresumedLoc		_ -> "PresumedLoc"
   | IsFromMainFile	_ -> "IsFromMainFile"
   | FileCharacteristic	_ -> "FileCharacteristic"

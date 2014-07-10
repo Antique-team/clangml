@@ -42,6 +42,9 @@ type _ request =
      the given type. *)
   | AlignofType : Ast.ctyp Ref.t -> int request
 
+  (* returns the declaration of a typedef type or tag type (tag type = record or enum) *)
+  | DeclOfType : Ast.ctyp Ref.t -> Ast.decl request
+      
   (* Returns the "presumed" location of a SourceLocation specifies.
 
      A "presumed location" can be modified by [#line] or GNU line marker
@@ -81,6 +84,7 @@ type error =
   | E_Unhandled of string
   | E_NullRef
   | E_Version of string
+  | E_Failure of string
 
 val string_of_error : error -> string
 
