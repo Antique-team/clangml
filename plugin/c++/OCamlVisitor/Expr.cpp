@@ -475,6 +475,22 @@ OCamlVisitor::TraverseOffsetOfExpr (clang::OffsetOfExpr *S)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseExtVectorElementExpr (clang::ExtVectorElementExpr *S)
+{
+  TRACE;
+
+  ptr<Stmt> base = must_traverse (S->getBase ());
+
+  clang::StringRef accessor = S->getAccessor().getName();
+
+  stack.push (mkExtVectorElementExpr (base, accessor));
+
+  return true;
+}
+
+
+
 
 UNIMP_STMT (Expr, ArrayTypeTraitExpr)
 UNIMP_STMT (Expr, AsTypeExpr)
@@ -523,7 +539,6 @@ UNIMP_STMT (Expr, CXXUuidofExpr)
 UNIMP_STMT (Expr, DependentScopeDeclRefExpr)
 UNIMP_STMT (Expr, ExpressionTraitExpr)
 UNIMP_STMT (Expr, ExprWithCleanups)
-UNIMP_STMT (Expr, ExtVectorElementExpr)
 UNIMP_STMT (Expr, FunctionParmPackExpr)
 UNIMP_STMT (Expr, GenericSelectionExpr)
 UNIMP_STMT (Expr, GNUNullExpr)

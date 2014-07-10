@@ -684,6 +684,7 @@ and expr_ = AstBridge.expr_ =
   | AddrLabelExpr		of string
   | OffsetOfExpr		of (* type *)tloc * (* components *)offsetof_node list
   | OpaqueValueExpr		of (* source *)expr
+  | ExtVectorElementExpr        of (* base *)stmt * (* accessor *)string
 
   | SizeOfExpr			of expr
   | SizeOfType			of tloc
@@ -730,7 +731,6 @@ and expr_ = AstBridge.expr_ =
   | DependentScopeDeclRefExpr
   | ExpressionTraitExpr
   | ExprWithCleanups
-  | ExtVectorElementExpr
   | FunctionParmPackExpr
   | GenericSelectionExpr
   | GNUNullExpr

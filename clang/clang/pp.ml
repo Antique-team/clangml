@@ -355,6 +355,10 @@ and pp_expr_ fmt = function
   | VecStepType ty ->
       Format.fprintf fmt "vec_step (%a)"
         pp_tloc ty
+  | ExtVectorElementExpr (base, accessor) ->
+      Format.fprintf fmt "%a %s"
+        pp_stmt base
+        accessor
 
   | CXXNullPtrLiteralExpr ->
       Format.fprintf fmt "nullptr"
@@ -362,6 +366,7 @@ and pp_expr_ fmt = function
   | OpaqueValueExpr expr ->
       Format.fprintf fmt "opaque_value %a"
         pp_expr expr
+
 
   | ConvertVectorExpr -> Format.pp_print_string fmt "<ConvertVectorExpr>"
   | ArrayTypeTraitExpr -> Format.pp_print_string fmt "<ArrayTypeTraitExpr>"
@@ -400,7 +405,6 @@ and pp_expr_ fmt = function
   | DependentScopeDeclRefExpr -> Format.pp_print_string fmt "<DependentScopeDeclRefExpr>"
   | ExpressionTraitExpr -> Format.pp_print_string fmt "<ExpressionTraitExpr>"
   | ExprWithCleanups -> Format.pp_print_string fmt "<ExprWithCleanups>"
-  | ExtVectorElementExpr -> Format.pp_print_string fmt "<ExtVectorElementExpr>"
   | FunctionParmPackExpr -> Format.pp_print_string fmt "<FunctionParmPackExpr>"
   | GenericSelectionExpr -> Format.pp_print_string fmt "<GenericSelectionExpr>"
   | GNUNullExpr -> Format.pp_print_string fmt "<GNUNullExpr>"
