@@ -475,14 +475,14 @@ OCamlVisitor::TraverseOffsetOfExpr (clang::OffsetOfExpr *S)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseExtVectorElementExpr (clang::ExtVectorElementExpr *S)
 {
   TRACE;
 
-  ptr<Stmt> base = must_traverse (S->getBase ());
-
-  clang::StringRef accessor = S->getAccessor().getName();
+  ptr<Expr> base = must_traverse (S->getBase ());
+  clang::StringRef accessor = S->getAccessor ().getName ();
 
   stack.push (mkExtVectorElementExpr (base, accessor));
 

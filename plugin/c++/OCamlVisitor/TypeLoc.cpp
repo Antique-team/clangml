@@ -339,12 +339,20 @@ OCamlVisitor::TraverseComplexTypeLoc (clang::ComplexTypeLoc TL)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseExtVectorTypeLoc (clang::ExtVectorTypeLoc TL)
 {
   TRACE;
 
-  return TraverseVectorTypeLoc(TL);
+  ptr<Ctyp> elt_type = must_traverse (TL.getTypePtr ()->getElementType ());
+  unsigned num_elts = TL.getTypePtr ()->getNumElements ();
+  VectorKind vect_kind =
+    translate_vector_kind (TL.getTypePtr ()->getVectorKind ());
+
+  stack.push (mkExtVectorTypeLoc (elt_type, num_elts, vect_kind));
+
+  return true;
 }
 
 

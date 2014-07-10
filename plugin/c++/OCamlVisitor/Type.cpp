@@ -270,7 +270,14 @@ OCamlVisitor::TraverseExtVectorType (clang::ExtVectorType *T)
 {
   TRACE;
 
-  return TraverseVectorType(T);
+  ptr<Ctyp> elt_type = must_traverse (T->getElementType ());
+  unsigned num_elts = T->getNumElements ();
+  VectorKind vect_kind =
+    translate_vector_kind (T->getVectorKind ());
+
+  stack.push (mkExtVectorType (elt_type, num_elts, vect_kind));
+
+  return true;
 }
 
 

@@ -684,7 +684,7 @@ and expr_ = AstBridge.expr_ =
   | AddrLabelExpr		of string
   | OffsetOfExpr		of (* type *)tloc * (* components *)offsetof_node list
   | OpaqueValueExpr		of (* source *)expr
-  | ExtVectorElementExpr        of (* base *)stmt * (* accessor *)string
+  | ExtVectorElementExpr	of (* base *)expr * (* accessor *)string
 
   | SizeOfExpr			of expr
   | SizeOfType			of tloc

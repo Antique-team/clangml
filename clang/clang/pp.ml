@@ -356,8 +356,8 @@ and pp_expr_ fmt = function
       Format.fprintf fmt "vec_step (%a)"
         pp_tloc ty
   | ExtVectorElementExpr (base, accessor) ->
-      Format.fprintf fmt "%a %s"
-        pp_stmt base
+      Format.fprintf fmt "%a.%s"
+        pp_expr base
         accessor
 
   | CXXNullPtrLiteralExpr ->
@@ -616,7 +616,7 @@ and pp_tloc_ fmt = function
   | ComplexTypeLoc elt ->
       Format.fprintf fmt "_Complex %a"
         pp_ctyp elt
-  | VectorTypeLoc (elt_type, num_elts, kind)
+  | VectorTypeLoc    (elt_type, num_elts, kind)
   | ExtVectorTypeLoc (elt_type, num_elts, kind) ->
       Format.fprintf fmt "%a __attribute__ ((vector_size (%d))) [%s]"
         pp_ctyp elt_type
@@ -715,7 +715,7 @@ and pp_ctyp_ fmt = function
   | ComplexType elt ->
       Format.fprintf fmt "_Complex %a"
         pp_ctyp elt
-  | VectorType (elt_type, num_elts, kind)
+  | VectorType    (elt_type, num_elts, kind)
   | ExtVectorType (elt_type, num_elts, kind) ->
       Format.fprintf fmt "%a __attribute__ ((vector_size (%d))) [%s]"
         pp_ctyp elt_type
