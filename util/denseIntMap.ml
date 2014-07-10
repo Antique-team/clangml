@@ -1,7 +1,7 @@
 open Prelude
 
 
-type 'a key = int
+type 'key key = int
 
 let null_key = -1
 
@@ -16,11 +16,11 @@ module Show_key(S : Deriving_Show.Show) =
   end)
 
 
-type 'a t = 'a array
+type ('key, 'value) t = 'value array
 
 
 let find idx arr =
-  Array.get arr (idx : 'a key :> int)
+  Array.get arr (idx : 'key key :> int)
 
 
 let iter = Array.iteri
@@ -35,6 +35,9 @@ let fold f arr x =
 let map f arr =
   let mapped = Array.mapi f arr in
   (Array.init (Array.length arr) identity, mapped)
+
+
+let mapk = Array.mapi
 
 
 let cardinal = Array.length

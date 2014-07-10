@@ -74,7 +74,7 @@ type _ request =
   (* Return the internal cache for an OCaml type. This is an array containing
      every value of that type returned by the API, including recursively
      reachable values. *)
-  | CacheFor : 'a cache_type -> 'a Util.DenseIntMap.t request
+  | CacheFor : 'a cache_type -> ('a, 'a) Util.DenseIntMap.t request
 
 
 type error =

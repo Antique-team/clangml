@@ -1,9 +1,9 @@
 (* A typed key. The ghost type helps retain type safety and prevents
    direct indexing in the typed map. If direct indexing is required,
    the map itself can be coerced to an array. *)
-type 'a key = private int
+type 'key key = private int
 
-val null_key : 'a key
+val null_key : 'key key
 
 module Show_key :
   functor (S : Deriving_Show.Show) ->
@@ -11,22 +11,27 @@ module Show_key :
       with type a = S.a key
 
 
-type 'a t = private 'a array
+type ('key, 'value) t = private 'value array
 
 
-val find : 'a key -> 'a t -> 'a
+val find : 'key key -> ('key, 'value) t -> 'value
   (* Retrieve a value for a key. *)
-val iter : ('a key -> 'a -> unit) -> 'a t -> unit
+val iter : ('key key -> 'value -> unit) -> ('key, 'value) t -> unit
   (* Iterate over keys and their respective values. *)
-val fold : ('a key -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
+val fold : ('key key -> 'value -> 'a -> 'a) -> ('key, 'value) t -> 'a -> 'a
   (* Fold over the map as in Map.S.fold. *)
-val map : ('a key -> 'a -> 'b) -> 'a t -> 'b key array * 'b t
+val map
+  :  ('key_a key -> 'value_a -> 'value_b)
+  -> ('key_a, 'value_a) t
+  -> 'key_b key array * ('key_b, 'value_b) t
   (* [map f m] creates a new map of the same cardinality and maps the 'a keys to
      'b keys with the same index. The keys are returned as an additional array. *)
+val mapk : ('key key -> 'a -> 'b) -> ('key, 'a) t -> ('key, 'b) t
+
 (*val mapi : ('a key -> 'a -> int * 'b) -> 'a t -> 'b t*) (* TODO *)
   (* [map f m] creates a new map of the same cardinality, but changes the order
      of the mappings according to the first return value of [f]. This number
      must be lower than the cardinality of the map. *)
 
-val cardinal : 'a t -> int
-val exists : ('a -> bool) -> 'a t -> bool
+val cardinal : ('key, 'value) t -> int
+val exists : ('value -> bool) -> ('key, 'value) t -> bool

@@ -220,7 +220,7 @@ let make_aggregate agg = function
 
 
 let compute_offset is_union off align =
-  if true then
+  if false then
     -1
   else
     if is_union then
@@ -863,7 +863,7 @@ let c_prog_from_decl clang = function
         ns   = "";
       } in
       (collect_decls clang prog decls).prog
-      |> C_process.c_prog_fix_types
+      (*|> C_process.c_prog_fix_types*)
       |> C_process.bind_c_prog
 
   | _ -> Log.err "c_prog_from_decl requires a translation unit"

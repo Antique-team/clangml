@@ -23,7 +23,7 @@ type _ request =
   | PresumedLoc : Sloc.t -> Sloc.presumed_loc request
   | IsFromMainFile : Sloc.t -> bool request
   | FileCharacteristic : Sloc.t -> Sloc.characteristic_kind request
-  | CacheFor : 'a cache_type -> 'a Util.DenseIntMap.t request
+  | CacheFor : 'a cache_type -> ('a, 'a) Util.DenseIntMap.t request
 
 type error =
   | E_Unhandled of string

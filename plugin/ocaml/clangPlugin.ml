@@ -7,7 +7,7 @@ external clang_characteristic_kind	: Api.context -> Sloc.t -> Sloc.characteristi
 external clang_type_sizeof		: Api.context -> ctyp Ref.t -> int64 = "clang_type_sizeof"
 external clang_type_alignof		: Api.context -> ctyp Ref.t -> int = "clang_type_alignof"
 
-external clang_cache_for_ctyp		: Api.context -> ctyp Util.DenseIntMap.t = "clang_cache_for_ctyp"
+external clang_cache_for_ctyp		: Api.context -> (ctyp, ctyp) Util.DenseIntMap.t = "clang_cache_for_ctyp"
 
 
 let run_processor (tu : decl) (file : string) (ctx : Api.context) =
