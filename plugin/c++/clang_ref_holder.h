@@ -9,16 +9,30 @@ template<typename T>
 struct concrete_clang_ref_holder
   : heterogenous_container<concrete_clang_ref_holder>::concrete<T>
 {
-  std::vector<typename clang_type<T>::type> values;
+  typedef typename clang_type<T>::type value_type;
+  typedef std::vector<value_type> list_type;
 
-  clang_ref<T> create (typename clang_type<T>::type value)
+  list_type values;
+
+  // O(n), for no good reason. It should probably be O(log n).
+  clang_ref<T> create (value_type value)
   {
+    typename list_type::const_iterator it = values.begin ();
+    typename list_type::const_iterator et = values.end   ();
+    while (it != et)
+      {
+        if (*it == value)
+          return { size_t (it - values.begin ()) };
+        ++it;
+      }
+
     clang_ref<T> ref = { values.size () + 1 };
     values.push_back (value);
     return ref;
   }
 
-  typename clang_type<T>::type retrieve (clang_ref<T> ref)
+  // O(1), will be O(log n) if the above is.
+  value_type retrieve (clang_ref<T> ref)
   {
     return values.at (ref.id - 1);
   }
