@@ -135,10 +135,10 @@ module Make (P: PARAM) : S = struct
   let pp_loglevel fmt = function
     | Dbg -> ()
     | Msg -> ()
-    | Warn -> Format.fprintf fmt "Warning:@ "
-    | Err -> Format.fprintf fmt "Error:@ "
-    | Unimp -> Format.fprintf fmt "Unimplemented:@ "
-    | Bug -> Format.fprintf fmt "Bug:@ "
+    | Warn -> Format.fprintf fmt "[1;33mWarning:[0m@ "
+    | Err -> Format.fprintf fmt "[1;31mError:[0m@ "
+    | Unimp -> Format.fprintf fmt "[1;31mUnimplemented:[0m@ "
+    | Bug -> Format.fprintf fmt "[1;31mBug:[0m@ "
   
   external format_of_string : string -> ('a, 'b, 'c, 'd) format4 = "%identity"
   
