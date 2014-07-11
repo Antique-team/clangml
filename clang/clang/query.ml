@@ -32,3 +32,12 @@ let is_volatile_tloc = function
       List.memq TQ_Volatile qual
 
   | _ -> false
+
+let fields_of_record_decl = function
+  | RecordDecl (_, _, Some members, _) -> members
+  | RecordDecl (_, _, None, _) -> failwith "incomplete record type"
+  | _ -> failwith "decl is not a RecordDecl"
+
+let underlying_type_of_typedef_decl = function
+  | TypedefDecl (ty, _) -> ty
+  | _ -> failwith "decl is not a TypedefDecl"
