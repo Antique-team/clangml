@@ -294,15 +294,19 @@ and resolve_c_type seen c_types : c_type -> c_type = function
   | Ctchar
   | Ctvoid
   | Ctptr None as t -> t
-  | Ctnamed c_named as t ->
-      (if c_named.cnt_type = Ctptr None then
-         let key = TypeMap.find c_named.cnt_name seen in
-         let value = DenseIntMap.find key c_types in
-         c_named.cnt_type <- value
-       else
-         c_named.cnt_type <- resolve_c_type seen c_types c_named.cnt_type
-      );
+  | Ctnamed ({ cnt_type = Ctnamed { cnt_name ; cnt_type = Ctptr None} } as c_named) as t ->
+      let key = TypeMap.find cnt_name seen in
+      let value = DenseIntMap.find key c_types in
+      c_named.cnt_type <- value;
       t
+  | Ctnamed c_named as t ->
+      if c_named.cnt_type = Ctptr None then
+        let key = TypeMap.find c_named.cnt_name seen in
+        let value = DenseIntMap.find key c_types in
+        value
+      else
+        let () = c_named.cnt_type <- resolve_c_type seen c_types c_named.cnt_type in
+        t
   | Ctstruct aggr ->
       Ctstruct (resolve_c_aggregate seen c_types aggr)
   | Ctunion aggr ->
