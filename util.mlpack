@@ -4,3 +4,5 @@ util/Formatx
 util/Logger
 util/Option
 util/Prelude
+util/SparseIntMap
+util/SparseIntSet

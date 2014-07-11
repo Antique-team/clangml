@@ -40,7 +40,9 @@ let run_processor (tu : decl) (file : string) (ctx : Api.context) =
     | DeclOfType ty ->
         begin
           try
-            clang_type_decl ctx ty
+            let decl = clang_type_decl ctx ty in
+            assert (decl.d_cref = (clang_type_decl ctx ty).d_cref);
+            decl
           with Failure msg ->
             failure @@ E_Failure msg
         end

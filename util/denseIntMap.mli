@@ -26,7 +26,10 @@ val map
   -> 'key_b key array * ('key_b, 'value_b) t
   (* [map f m] creates a new map of the same cardinality and maps the 'a keys to
      'b keys with the same index. The keys are returned as an additional array. *)
-val mapk : ('key key -> 'a -> 'b) -> ('key, 'a) t -> ('key, 'b) t
+val mapv : ('key key -> 'a -> 'b) -> ('key, 'a) t -> ('key, 'b) t
+  (* Map values, keep the same keys. *)
+val mapvf : ('key key -> 'a -> 'state -> 'state * 'b) -> ('key, 'a) t -> 'state -> 'state * ('key, 'b) t
+  (* Map values, keep the same keys, also fold over a state. *)
 
 (*val mapi : ('a key -> 'a -> int * 'b) -> 'a t -> 'b t*) (* TODO *)
   (* [map f m] creates a new map of the same cardinality, but changes the order

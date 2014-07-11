@@ -1,8 +1,39 @@
 open Clang
 open Ast
 open C_sig
+open C_show
+open Util
 
-module Log = Util.Logger.Make(struct let tag = "CtypToMCType" end)
+module Log = Logger.Make(struct let tag = "CtypToMCType" end)
+
+
+module TypeSet = SparseIntSet.Make(struct
+
+  type t = ctyp DenseIntMap.key
+
+end)
+
+
+(***********************************************************************
+ * Sizeof/alignof queries
+ ***********************************************************************)
+
+
+let sizeof clang ctyp =
+  let open Api in
+  request clang @@ SizeofType ctyp.t_cref
+  |> Int64.to_int
+
+
+let alignof clang ctyp =
+  let open Api in
+  request clang @@ AlignofType ctyp.t_cref
+
+
+(***********************************************************************
+ * Builtin types
+ ***********************************************************************)
+
 
 let c_type_of_builtin_type = function
   | BT_Void -> Ctvoid
@@ -26,34 +57,182 @@ let c_type_of_builtin_type = function
   | _ -> Ctint
 
 
-let rec c_type_of_ctyp clang ctyp = match ctyp.t with
+
+(***********************************************************************
+ * Aggregates (struct/union)
+ ***********************************************************************)
+
+
+let make_aggregate agg = function
+  | TTK_Struct -> Ctstruct agg
+  | TTK_Union  -> Ctunion  agg
+  | _ -> Log.unimp "Unhandled tag type kind"
+
+
+let compute_offset is_union off align =
+  if false then
+    -1
+  else
+    if is_union then
+      0
+    else
+      ((off + align - 1) / align) * align
+
+
+let rec c_agg_fields_of_decls clang c_types is_union (decls : decl list) =
+  let rec loop off fields = function
+    | [] -> List.rev fields
+
+    | { d = RecordDecl (_, name1, Some members, _) }
+      :: { d = FieldDecl {
+            fd_type = {
+              tl = ElaboratedTypeLoc {
+                tl = RecordTypeLoc (kind, name2);
+                tl_type;
+              }
+            };
+            fd_name = name;
+            fd_bitw = bitwidth;
+            fd_init = init;
+        } } :: tl
+      when name1 = name2 ->
+        if bitwidth <> None then
+          Log.unimp "Bit fields not implemented";
+        if init <> None then
+          Log.unimp "Member initialisers not implemented";
+
+        let size  = sizeof  clang tl_type in
+        let align = alignof clang tl_type in
+
+        let agg = {
+          cag_name   = if name1 = "" then None else Some name1;
+          cag_align  = align;
+          cag_size   = size;
+          cag_fields = c_agg_fields_of_decls clang c_types (kind = TTK_Union) members;
+        } in
+
+        (* offset for the current field *)
+        let off = compute_offset is_union off align in
+
+        let field = {
+          caf_typ  = make_aggregate agg kind;
+          caf_off  = off;
+          caf_size = size;
+          caf_name = name;
+        } in
+
+        (* offset for the next field *)
+        let off = off + size in
+
+        loop off (field :: fields) tl
+
+    | { d = FieldDecl { fd_type = ty;
+                        fd_name = name;
+                        fd_bitw = bitwidth;
+                        fd_init = init;
+                        fd_index;
+                      } } :: tl ->
+        if bitwidth <> None then
+          Log.unimp "Bit fields not implemented";
+        if init <> None then
+          Log.unimp "Member initialisers not implemented";
+
+        let size  = sizeof  clang ty.tl_type in
+        let align = alignof clang ty.tl_type in
+
+        (* offset for the current field *)
+        let off = compute_offset is_union off align in
+
+        let field = {
+          caf_typ  = DenseIntMap.find ty.tl_type.t_self c_types;
+          caf_off  = off;
+          caf_size = size;
+          caf_name = name;
+        } in
+
+        (* offset for the next field *)
+        let off = off + size in
+
+        loop off (field :: fields) tl
+
+    | { d } :: tl ->
+        print_endline (Show.show<decl_> d);
+        Log.err "Only FieldDecls allowed within RecordDecl"
+  in
+
+  loop 0 [] decls
+
+
+(***********************************************************************
+ * Typedef
+ ***********************************************************************)
+
+
+and c_type_of_typedef_decl clang seen decl =
+  print_endline @@ Show_decl.show decl;
+  seen, Ctvoid
+
+
+(***********************************************************************
+ * Main recursive entry point for type translation
+ ***********************************************************************)
+
+
+(* clang type (ctyp) to MemCAD C type (c_type) *)
+and c_type_of_ctyp clang seen ctyp =
+  match ctyp.t with
   | BuiltinType bt ->
-      c_type_of_builtin_type bt
+      seen, c_type_of_builtin_type bt
 
   | ConstantArrayType (memty, size) ->
-      Ctarray (c_type_of_ctyp clang memty, size)
+      let (seen, memty) = c_type_of_ctyp clang seen memty in
+      seen, Ctarray (memty, size)
 
   | TypedefType name ->
       assert (name <> "");
       begin
         try
           let decl = Api.(request clang @@ DeclOfType ctyp.t_cref) in
-          print_endline @@ Show_decl.show decl;
-          Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
+          let (seen, c_type) = c_type_of_typedef_decl clang seen decl in
+          (* assert? seen was not changed *)
+          seen, Ctnamed { cnt_name = name; cnt_type = c_type; }
         with Api.E (Api.E_Failure msg) ->
           Log.warn "typedef name: %s: %s" name msg;
-          Ctvoid
+          seen, Ctptr None
       end
 
 
   | ElaboratedType ty ->
-      c_type_of_ctyp clang ty
+      c_type_of_ctyp clang seen ty
 
-  | EnumType name
-  | RecordType (_, name) ->
-      begin
-        try
+  | EnumType name ->
+      seen, Ctvoid
+
+  | RecordType (kind, name) ->
+      if TypeSet.mem ctyp.t_self seen then
+        seen, Ctnamed {
+          cnt_name = string_of_int (ctyp.t_self :> int);
+          cnt_type = Ctptr None; (* will resolve in second pass *)
+        }
+      else (
+        let seen = TypeSet.add ctyp.t_self seen in
+
+        seen, try
           let decl = Api.(request clang @@ DeclOfType ctyp.t_cref) in
+
+          let size  = sizeof  clang ctyp in
+          let align = alignof clang ctyp in
+
+          let c_type =
+            make_aggregate {
+              cag_name   = if name = "" then None else Some name;
+              cag_align  = align;
+              cag_size   = size;
+              cag_fields = [] (* c_agg_fields_of_decls clang c_types (kind =
+                             TTK_Union) members *);
+            } kind
+          in
+
           print_endline @@ Show_decl.show decl;
           if name <> "" then
             Ctnamed { cnt_name = name; cnt_type = Ctvoid; }
@@ -61,12 +240,12 @@ let rec c_type_of_ctyp clang ctyp = match ctyp.t with
             Ctvoid
         with Api.E (Api.E_Failure msg) ->
           Log.warn "tag type name: %s: %s" name msg;
-          Ctvoid
-      end
+          Ctptr None
+      )
 
 
   | ParenType inner ->
-      c_type_of_ctyp clang inner
+      c_type_of_ctyp clang seen inner
 
   | PointerType { t = FunctionNoProtoType _
                     | FunctionProtoType _
@@ -74,10 +253,11 @@ let rec c_type_of_ctyp clang ctyp = match ctyp.t with
   | FunctionNoProtoType _
   | FunctionProtoType _ ->
       (* MemCAD ignores the type of functions (and function pointers). *)
-      Ctvoid
+      seen, Ctvoid
 
   | PointerType pointee ->
-      Ctptr (Some (c_type_of_ctyp clang pointee))
+      let (seen, pointee) = c_type_of_ctyp clang seen pointee in
+      seen, Ctptr (Some (pointee))
 
   | TypeOfExprType _ -> Log.unimp "TypeOfExprType"
   | TypeOfType _ -> Log.unimp "TypeOfType"
@@ -88,11 +268,27 @@ let rec c_type_of_ctyp clang ctyp = match ctyp.t with
   | ty -> Log.unimp "%a" Show.format<ctyp_> ty
 
 
+(***********************************************************************
+ * Mapping the type map (array) from clang to memcad types
+ ***********************************************************************)
+
+
 let map_types clang types =
-  Util.DenseIntMap.mapk
-    (fun _i ctyp ->
-       print_endline "-------------------------------------------------------------";
-       print_endline @@ Show_ctyp.show ctyp;
-       c_type_of_ctyp clang ctyp
+  let (seen, c_types) =
+    DenseIntMap.mapvf
+      (fun _i ctyp seen ->
+         print_endline "-------------------------------------------------------------";
+         print_endline @@ Show_ctyp.show ctyp;
+         c_type_of_ctyp clang seen ctyp
+      )
+      types
+      TypeSet.empty
+  in
+
+  DenseIntMap.iter
+    (fun _ c_type ->
+      print_endline @@ Show_c_type.show c_type
     )
-    types
+    c_types;
+
+  c_types

@@ -37,7 +37,24 @@ let map f arr =
   (Array.init (Array.length arr) identity, mapped)
 
 
-let mapk = Array.mapi
+let mapv = Array.mapi
+
+
+let mapvf f arr state =
+  let (state, _, mapped) =
+    Array.fold_left
+      (fun (state, i, mapped) elt ->
+         let (state, mapped_elt) = f i elt state in
+         let mapped = mapped_elt :: mapped in
+         (state, i + 1, mapped)
+      )
+      (state, 0, [])
+      arr
+  in
+
+  state, Array.of_list (List.rev mapped)
+
+
 
 
 let cardinal = Array.length
