@@ -105,106 +105,6 @@ let c_uniop_of_unary_operator = function
             Show.format<unary_operator> op
 
 
-let make_aggregate agg = function
-  | TTK_Struct -> Ctstruct agg
-  | TTK_Union  -> Ctunion  agg
-  | _ -> Log.unimp "Unhandled tag type kind"
-
-
-let compute_offset is_union off align =
-  if false then
-    -1
-  else
-    if is_union then
-      0
-    else
-      ((off + align - 1) / align) * align
-
-
-let rec c_agg_fields_of_decls clang c_types is_union (decls : decl list) =
-  let rec loop off fields = function
-    | [] -> List.rev fields
-
-    | { d = RecordDecl (_, name1, Some members, _) }
-      :: { d = FieldDecl {
-            fd_type = {
-              tl = ElaboratedTypeLoc {
-                tl = RecordTypeLoc (kind, name2);
-                tl_type;
-              }
-            };
-            fd_name = name;
-            fd_bitw = bitwidth;
-            fd_init = init;
-        } } :: tl
-      when name1 = name2 ->
-        if bitwidth <> None then
-          Log.unimp "Bit fields not implemented";
-        if init <> None then
-          Log.unimp "Member initialisers not implemented";
-
-        let size  = sizeof  clang tl_type in
-        let align = alignof clang tl_type in
-
-        let agg = {
-          cag_name   = if name1 = "" then None else Some name1;
-          cag_align  = align;
-          cag_size   = size;
-          cag_fields = c_agg_fields_of_decls clang c_types (kind = TTK_Union) members;
-        } in
-
-        (* offset for the current field *)
-        let off = compute_offset is_union off align in
-
-        let field = {
-          caf_typ  = make_aggregate agg kind;
-          caf_off  = off;
-          caf_size = size;
-          caf_name = name;
-        } in
-
-        (* offset for the next field *)
-        let off = off + size in
-
-        loop off (field :: fields) tl
-
-    | { d = FieldDecl { fd_type = ty;
-                        fd_name = name;
-                        fd_bitw = bitwidth;
-                        fd_init = init;
-                        fd_index;
-                      } } :: tl ->
-        if bitwidth <> None then
-          Log.unimp "Bit fields not implemented";
-        if init <> None then
-          Log.unimp "Member initialisers not implemented";
-
-        let size  = sizeof  clang ty.tl_type in
-        let align = alignof clang ty.tl_type in
-
-        (* offset for the current field *)
-        let off = compute_offset is_union off align in
-
-        let field = {
-          caf_typ  = DenseIntMap.find ty.tl_type.t_self c_types;
-          caf_off  = off;
-          caf_size = size;
-          caf_name = name;
-        } in
-
-        (* offset for the next field *)
-        let off = off + size in
-
-        loop off (field :: fields) tl
-
-    | { d } :: tl ->
-        print_endline (Show.show<decl_> d);
-        Log.err "Only FieldDecls allowed within RecordDecl"
-  in
-
-  loop 0 [] decls
-
-
 let c_var_of_parm_decl c_types = function
   | { d = ParmVarDecl (ty, name) } ->
       {
@@ -668,17 +568,7 @@ let rec collect_decls clang c_types prog = function
       }
     :: tl
     when name1 = name2 ->
-      let size  = sizeof  clang tl_type in
-      let align = alignof clang tl_type in
-
-      let c_type =
-        make_aggregate {
-          cag_name   = if name1 = "" then None else Some name1;
-          cag_align  = align;
-          cag_size   = size;
-          cag_fields = c_agg_fields_of_decls clang c_types (kind = TTK_Union) members;
-        } kind
-      in
+      let c_type = DenseIntMap.find tl_type.t_self c_types in
       collect_decls clang c_types (add_type name c_type prog) tl
 
   (* Handle "typedef struct foo *Foo;" (where struct foo was not

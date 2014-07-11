@@ -232,8 +232,8 @@ and c_type_of_ctyp clang seen ctyp =
             c_agg_fields_of_decls clang seen (kind = TTK_Union)
               (Query.fields_of_record_decl decl.d)
           in
-          let c_type =
 
+          let c_type =
             make_aggregate {
               cag_name   = if name = "" then None else Some name;
               cag_align  = align;
@@ -242,7 +242,6 @@ and c_type_of_ctyp clang seen ctyp =
             } kind
           in
 
-          print_endline @@ Show_decl.show decl;
           (seen, c_type)
         with Api.E (Api.E_Failure msg) ->
           Log.warn "tag type name: %s: %s" name msg;
@@ -280,49 +279,41 @@ and c_type_of_ctyp clang seen ctyp =
  ***********************************************************************)
 
 let rec resolve_c_aggregate seen c_types aggr =
-  { aggr with cag_fields =
-                List.map
-                  (fun (cf : c_agg_field) ->
-                     { cf with
-                       caf_typ = resolve_c_type seen c_types cf.caf_typ }
-                  )
-                  aggr.cag_fields
+  { aggr with
+    cag_fields =
+      List.map
+        (fun cf -> { cf with caf_typ = resolve_c_type seen c_types cf.caf_typ })
+        aggr.cag_fields
   }
 
-and resolve_c_type seen c_types : c_type -> c_type = function
+and resolve_c_type seen c_types = function
   | Ctint
   | Ctchar
   | Ctvoid
   | Ctptr None as t -> t
-  | Ctnamed ({ cnt_type = Ctnamed { cnt_name ; cnt_type = Ctptr None} } as c_named) as t ->
+  | Ctnamed ({ cnt_type = Ctnamed { cnt_name; cnt_type = Ctptr None} } as c_named)
+    as t ->
       let key = TypeMap.find cnt_name seen in
-      let value = DenseIntMap.find key c_types in
-      c_named.cnt_type <- value;
+      c_named.cnt_type <- DenseIntMap.find key c_types;
       t
+  | Ctnamed { cnt_name; cnt_type = Ctptr None } ->
+      let key = TypeMap.find cnt_name seen in
+      DenseIntMap.find key c_types
   | Ctnamed c_named as t ->
-      if c_named.cnt_type = Ctptr None then
-        let key = TypeMap.find c_named.cnt_name seen in
-        let value = DenseIntMap.find key c_types in
-        value
-      else
-        let () = c_named.cnt_type <- resolve_c_type seen c_types c_named.cnt_type in
-        t
-  | Ctstruct aggr ->
-      Ctstruct (resolve_c_aggregate seen c_types aggr)
-  | Ctunion aggr ->
-      Ctunion (resolve_c_aggregate seen c_types aggr)
+      c_named.cnt_type <- resolve_c_type seen c_types c_named.cnt_type;
+      t
+  | Ctstruct aggr -> Ctstruct (resolve_c_aggregate seen c_types aggr)
+  | Ctunion  aggr -> Ctunion  (resolve_c_aggregate seen c_types aggr)
   | Ctptr (Some ty) ->
       Ctptr (Some (resolve_c_type seen c_types ty))
   | Ctarray (ty, len) ->
-      Ctarray ((resolve_c_type seen c_types ty), len)
+      Ctarray (resolve_c_type seen c_types ty, len)
 
 
 let map_types clang types =
   let (seen, c_types) =
     DenseIntMap.mapvf
       (fun _i ctyp seen ->
-         print_endline "-----------------------------------------------------";
-         print_endline @@ Show_ctyp.show ctyp;
          c_type_of_ctyp clang seen ctyp
       )
       types
