@@ -216,8 +216,12 @@ and c_type_of_ctyp clang seen ctyp =
       let cnt_name = string_of_int (ctyp.t_self :> int) in
       if TypeMap.mem cnt_name seen then
         seen, Ctnamed {
-          cnt_name;
-          cnt_type = Ctptr None; (* will resolve in second pass *)
+          cnt_name = name;
+          cnt_type =
+            Ctnamed {
+              cnt_name;
+              cnt_type = Ctptr None; (* will resolve in second pass *)
+            };
         }
       else (
         let seen = TypeMap.add cnt_name ctyp.t_self seen in
@@ -279,35 +283,31 @@ and c_type_of_ctyp clang seen ctyp =
  ***********************************************************************)
 
 let rec resolve_c_aggregate seen c_types aggr =
-  { aggr with
-    cag_fields =
-      List.map
-        (fun cf -> { cf with caf_typ = resolve_c_type seen c_types cf.caf_typ })
-        aggr.cag_fields
-  }
+  List.iter
+    (fun cf ->
+       resolve_c_type seen c_types cf.caf_typ
+    )
+    aggr.cag_fields
 
 and resolve_c_type seen c_types = function
   | Ctint
   | Ctchar
   | Ctvoid
-  | Ctptr None as t -> t
-  | Ctnamed ({ cnt_type = Ctnamed { cnt_name; cnt_type = Ctptr None} } as c_named)
-    as t ->
+  | Ctptr None -> ()
+
+  | Ctnamed ({ cnt_type = Ctnamed { cnt_name; cnt_type = Ctptr None; } } as c_named) ->
       let key = TypeMap.find cnt_name seen in
-      c_named.cnt_type <- DenseIntMap.find key c_types;
-      t
-  | Ctnamed { cnt_name; cnt_type = Ctptr None } ->
-      let key = TypeMap.find cnt_name seen in
-      DenseIntMap.find key c_types
-  | Ctnamed c_named as t ->
-      c_named.cnt_type <- resolve_c_type seen c_types c_named.cnt_type;
-      t
-  | Ctstruct aggr -> Ctstruct (resolve_c_aggregate seen c_types aggr)
-  | Ctunion  aggr -> Ctunion  (resolve_c_aggregate seen c_types aggr)
-  | Ctptr (Some ty) ->
-      Ctptr (Some (resolve_c_type seen c_types ty))
-  | Ctarray (ty, len) ->
-      Ctarray (resolve_c_type seen c_types ty, len)
+      c_named.cnt_type <- DenseIntMap.find key c_types
+
+  | Ctnamed c_named ->
+      resolve_c_type seen c_types c_named.cnt_type
+
+  | Ctstruct aggr -> resolve_c_aggregate seen c_types aggr
+  | Ctunion  aggr -> resolve_c_aggregate seen c_types aggr
+
+  | Ctptr (Some ty)
+  | Ctarray (ty, _) ->
+      resolve_c_type seen c_types ty
 
 
 let map_types clang types =
@@ -320,18 +320,20 @@ let map_types clang types =
       TypeMap.empty
   in
 
-  let c_types =
-    DenseIntMap.mapv
-      (fun _ c_type ->
-         resolve_c_type seen c_types c_type
-      )
-      c_types;
-  in
-
   DenseIntMap.iter
     (fun _ c_type ->
-       print_endline @@ Show_c_type.show c_type
+       resolve_c_type seen c_types c_type
     )
     c_types;
+
+  (*
+  DenseIntMap.iter
+    (fun key c_type ->
+       Format.printf "%d: %a\n"
+         (key : ctyp DenseIntMap.key :> int)
+         Show_c_type.format c_type
+    )
+    c_types;
+  *)
 
   c_types
