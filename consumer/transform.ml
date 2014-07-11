@@ -326,7 +326,7 @@ let rec c_stat_of_expr clang c_types prog decl_env expr =
   | CallExpr (callee, args) ->
       {
         csl = start_line clang expr.e_sloc;
-        csk = 
+        csk =
           (* Special handling for known functions. Note that
              malloc is not handled here, since it is only used
              within an assignment expression statement. *)

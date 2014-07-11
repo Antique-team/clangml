@@ -209,8 +209,8 @@ and c_type_of_ctyp clang seen ctyp =
       c_type_of_ctyp clang seen ty
 
   | EnumType name ->
-      (* not implemented yet *)
-      seen, Ctvoid
+      (* not implemented in MemCAD *)
+      Log.unimp "EnumType name: %s" name
 
   | RecordType (kind, name) ->
       let cnt_name = string_of_int (ctyp.t_self :> int) in

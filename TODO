@@ -14,7 +14,7 @@ TODO:
 
 - make it possible to read more than one input source file using the same
   clang process
-- add a way to create new clang AST nodes from ocaml AST nodes
+- add a way to create new clang AST nodes from ocaml AST nodes (VERY HARD)
 - think about location tracking in the presence of heavy transformations
   - we use SourceLocations, so there seems to be nothing we can do
     to create new ones
