@@ -159,7 +159,6 @@ OCamlVisitor::TraverseAttributedType (clang::AttributedType *T)
 }
 
 
-UNIMP_TYPE(Atomic)
 UNIMP_TYPE(Auto)
 UNIMP_TYPE(BlockPointer)
 
@@ -175,6 +174,19 @@ OCamlVisitor::TraverseComplexType (clang::ComplexType *T)
 
   return true;
 }
+
+bool
+OCamlVisitor::TraverseAtomicType (clang::AtomicType *T)
+{
+  TRACE;
+
+  ptr<Ctyp> value = must_traverse (T->getValueType ());
+
+  stack.push (mkAtomicType (value));
+
+  return true;
+}
+
 
 
 bool

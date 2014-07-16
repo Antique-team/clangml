@@ -59,6 +59,17 @@ OCamlVisitor::TraverseBuiltinTypeLoc (clang::BuiltinTypeLoc TL)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseAtomicTypeLoc (clang::AtomicTypeLoc TL)
+{
+  TRACE;
+
+  ptr<Tloc> value = must_traverse (TL.getValueLoc ());
+
+  stack.push (mkAtomicTypeLoc (value));
+
+  return true;
+}
 
 bool
 OCamlVisitor::TraverseTypeOfExprTypeLoc (clang::TypeOfExprTypeLoc TL)
@@ -322,7 +333,6 @@ OCamlVisitor::Traverse##CLASS##TypeLoc (clang::CLASS##TypeLoc TL)	\
   return true;								\
 }
 
-UNIMP_TYPE_LOC (Atomic)
 UNIMP_TYPE_LOC (Auto)
 UNIMP_TYPE_LOC (BlockPointer)
 

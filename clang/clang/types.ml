@@ -151,9 +151,10 @@ let rec tloc_of_ctyp sloc ty =
         ExtVectorTypeLoc (elt_type, num_elts, kind)
     | AttributedType (attributed_type_kind, ctyp) ->
         AttributedTypeLoc (attributed_type_kind, tloc_of_ctyp sloc ctyp, None)
+    | AtomicType ctyp ->
+        AtomicTypeLoc (tloc_of_ctyp sloc ctyp)
 
 
-    | AtomicType -> AtomicTypeLoc
     | AutoType -> AutoTypeLoc
     | BlockPointerType -> BlockPointerTypeLoc
     | DecltypeType expr -> DecltypeTypeLoc expr

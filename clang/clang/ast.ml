@@ -838,7 +838,9 @@ and tloc_ = AstBridge.tloc_ =
   | TypeOfTypeLoc		of (* underlying *)tloc
   | DecltypeTypeLoc		of (* underlying *)expr
   | ParenTypeLoc		of (* inner *)tloc
-  | QualifiedTypeLoc		of (* unqual *)tloc * (* qual *)type_qualifier list * (* aspace *)int option
+  | QualifiedTypeLoc		of (* unqual *)tloc
+                                 * (* qual *)type_qualifier list
+                                 * (* aspace *)int option
   | TypedefTypeLoc		of (* name *)string
   | PointerTypeLoc		of (* pointee *)tloc
   | FunctionNoProtoTypeLoc	of (* result *)tloc
@@ -861,8 +863,8 @@ and tloc_ = AstBridge.tloc_ =
   | AttributedTypeLoc		of (* kind *)attributed_type_kind
                                  * (* modified loc *)tloc
                                  * (* attr. expr operand *)expr option
+  | AtomicTypeLoc               of (* value *)tloc
 
-  | AtomicTypeLoc
   | AutoTypeLoc
   | BlockPointerTypeLoc
   | DependentNameTypeLoc
@@ -920,8 +922,8 @@ and ctyp_ = AstBridge.ctyp_ =
                                  * (* vector-kind *)vector_kind
   | AttributedType		of (* kind *)attributed_type_kind
                                  * (* modified type *)ctyp
+  | AtomicType                  of (* value *)ctyp
 
-  | AtomicType
   | AutoType
   | BlockPointerType
   | DependentNameType

@@ -627,10 +627,12 @@ and pp_tloc_ fmt = function
         pp_tloc tloc
         (string_of_attributed_type_kind attributed_type_kind)
         (pp_option pp_expr) expr
+  | AtomicTypeLoc value ->
+      Format.fprintf fmt "_Atomic %a"
+        pp_tloc value
 
 
   | DecayedTypeLoc _ -> Format.pp_print_string fmt "<DecayedTypeLoc>"
-  | AtomicTypeLoc -> Format.pp_print_string fmt "<AtomicTypeLoc>"
   | AutoTypeLoc -> Format.pp_print_string fmt "<AutoTypeLoc>"
   | BlockPointerTypeLoc -> Format.pp_print_string fmt "<BlockPointerTypeLoc>"
   | DependentNameTypeLoc -> Format.pp_print_string fmt "<DependentNameTypeLoc>"
@@ -725,9 +727,11 @@ and pp_ctyp_ fmt = function
       Format.fprintf fmt "%a __attribute__ ((%s))"
         pp_ctyp modified_type
         (string_of_attributed_type_kind attributed_type_kind)
+  | AtomicType value ->
+      Format.fprintf fmt "_Atomic %a"
+        pp_ctyp value
 
 
-  | AtomicType -> Format.pp_print_string fmt "<AtomicType>"
   | AutoType -> Format.pp_print_string fmt "<AutoType>"
   | BlockPointerType -> Format.pp_print_string fmt "<BlockPointerType>"
   | DependentNameType -> Format.pp_print_string fmt "<DependentNameType>"
