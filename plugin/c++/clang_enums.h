@@ -14,6 +14,7 @@ ast_bridge::VectorKind translate_vector_kind (clang::VectorType::VectorKind kind
 ast_bridge::ElaboratedTypeKeyword translate_elaborated_type_keyword (clang::ElaboratedTypeKeyword kw);
 ast_bridge::BuiltinType translate_builtin_type (clang::BuiltinType::Kind kind);
 ast_bridge::CastKind translate_cast_kind (clang::CastKind kind);
+ast_bridge::AtomicOp translate_atomic_op (clang::AtomicExpr::AtomicOp ao);
 ast_bridge::AccessSpecifier translate_access_specifier (clang::AccessSpecifier spec);
 ast_bridge::OverloadedOperatorKind translate_overloaded_operator_kind (clang::OverloadedOperatorKind kind);
 

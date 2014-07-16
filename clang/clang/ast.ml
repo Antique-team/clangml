@@ -475,6 +475,42 @@ type cast_kind = AstBridge.cast_kind =
   deriving (Show)
 
 
+(* [clang/Basic/Builtins.def] *)
+type atomic_op = AstBridge.atomic_op =
+  | AO__c11_atomic_init
+  | AO__c11_atomic_load
+  | AO__c11_atomic_store
+  | AO__c11_atomic_exchange
+  | AO__c11_atomic_compare_exchange_strong
+  | AO__c11_atomic_compare_exchange_weak
+  | AO__c11_atomic_fetch_add
+  | AO__c11_atomic_fetch_sub
+  | AO__c11_atomic_fetch_and
+  | AO__c11_atomic_fetch_or
+  | AO__c11_atomic_fetch_xor
+  | AO__atomic_load
+  | AO__atomic_load_n
+  | AO__atomic_store
+  | AO__atomic_store_n
+  | AO__atomic_exchange
+  | AO__atomic_exchange_n
+  | AO__atomic_compare_exchange
+  | AO__atomic_compare_exchange_n
+  | AO__atomic_fetch_add
+  | AO__atomic_fetch_sub
+  | AO__atomic_fetch_and
+  | AO__atomic_fetch_or
+  | AO__atomic_fetch_xor
+  | AO__atomic_fetch_nand
+  | AO__atomic_add_fetch
+  | AO__atomic_sub_fetch
+  | AO__atomic_and_fetch
+  | AO__atomic_or_fetch
+  | AO__atomic_xor_fetch
+  | AO__atomic_nand_fetch
+  deriving (Show)
+
+
 (* [clang/AST/OperationKinds.h] *)
 type unary_operator = AstBridge.unary_operator =
   | UO_PostInc	(* i++ *) (* [C99 6.5.2.4] Postfix increment and decrement *)
@@ -685,6 +721,8 @@ and expr_ = AstBridge.expr_ =
   | OffsetOfExpr		of (* type *)tloc * (* components *)offsetof_node list
   | OpaqueValueExpr		of (* source *)expr
   | ExtVectorElementExpr	of (* base *)expr * (* accessor *)string
+  | AtomicExpr                  of (* op *)atomic_op (* sub exprs *)expr list
+  (* | AtomicExpr *)
 
   | SizeOfExpr			of expr
   | SizeOfType			of tloc
@@ -693,9 +731,9 @@ and expr_ = AstBridge.expr_ =
   | VecStepExpr			of expr
   | VecStepType			of tloc
 
+
   | ArrayTypeTraitExpr
   | AsTypeExpr
-  | AtomicExpr
   | BinaryTypeTraitExpr
   | BlockExpr
   | ChooseExpr

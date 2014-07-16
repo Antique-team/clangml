@@ -243,6 +243,48 @@ translate_cast_kind (clang::CastKind kind)
   throw std::runtime_error ("invalid cast kind");
 }
 
+AtomicOp
+translate_atomic_op (clang::AtomicExpr::AtomicOp ao)
+{
+  switch (ao)
+    {
+    // C11 _Atomic operations for <stdatomic.h>.
+    case clang::AtomicExpr::AO__c11_atomic_init:                    return AO__c11_atomic_init;
+    case clang::AtomicExpr::AO__c11_atomic_load:                    return AO__c11_atomic_load;
+    case clang::AtomicExpr::AO__c11_atomic_store:                   return AO__c11_atomic_store;
+    case clang::AtomicExpr::AO__c11_atomic_exchange:                return AO__c11_atomic_exchange;
+    case clang::AtomicExpr::AO__c11_atomic_compare_exchange_strong: return AO__c11_atomic_compare_exchange_strong;
+    case clang::AtomicExpr::AO__c11_atomic_compare_exchange_weak:   return AO__c11_atomic_compare_exchange_weak;
+    case clang::AtomicExpr::AO__c11_atomic_fetch_add:               return AO__c11_atomic_fetch_add;
+    case clang::AtomicExpr::AO__c11_atomic_fetch_sub:               return AO__c11_atomic_fetch_sub;
+    case clang::AtomicExpr::AO__c11_atomic_fetch_and:               return AO__c11_atomic_fetch_and;
+    case clang::AtomicExpr::AO__c11_atomic_fetch_or:                return AO__c11_atomic_fetch_or;
+    case clang::AtomicExpr::AO__c11_atomic_fetch_xor:               return AO__c11_atomic_fetch_xor;
+    // GNU atomic builtins.
+    case clang::AtomicExpr::AO__atomic_load:                        return AO__atomic_load;
+    case clang::AtomicExpr::AO__atomic_load_n:                      return AO__atomic_load_n;
+    case clang::AtomicExpr::AO__atomic_store:                       return AO__atomic_store;
+    case clang::AtomicExpr::AO__atomic_store_n:                     return AO__atomic_store_n;
+    case clang::AtomicExpr::AO__atomic_exchange:                    return AO__atomic_exchange;
+    case clang::AtomicExpr::AO__atomic_exchange_n:                  return AO__atomic_exchange_n;
+    case clang::AtomicExpr::AO__atomic_compare_exchange:            return AO__atomic_compare_exchange;
+    case clang::AtomicExpr::AO__atomic_compare_exchange_n:          return AO__atomic_compare_exchange_n;
+    case clang::AtomicExpr::AO__atomic_fetch_add:                   return AO__atomic_fetch_add;
+    case clang::AtomicExpr::AO__atomic_fetch_sub:                   return AO__atomic_fetch_sub;
+    case clang::AtomicExpr::AO__atomic_fetch_and:                   return AO__atomic_fetch_and;
+    case clang::AtomicExpr::AO__atomic_fetch_or:                    return AO__atomic_fetch_or;
+    case clang::AtomicExpr::AO__atomic_fetch_xor:                   return AO__atomic_fetch_xor;
+    case clang::AtomicExpr::AO__atomic_fetch_nand:                  return AO__atomic_fetch_nand;
+    case clang::AtomicExpr::AO__atomic_add_fetch:                   return AO__atomic_add_fetch;
+    case clang::AtomicExpr::AO__atomic_sub_fetch:                   return AO__atomic_sub_fetch;
+    case clang::AtomicExpr::AO__atomic_and_fetch:                   return AO__atomic_and_fetch;
+    case clang::AtomicExpr::AO__atomic_or_fetch:                    return AO__atomic_or_fetch;
+    case clang::AtomicExpr::AO__atomic_xor_fetch:                   return AO__atomic_xor_fetch;
+    case clang::AtomicExpr::AO__atomic_nand_fetch:                  return AO__atomic_nand_fetch;
+    }
+  throw std::runtime_error ("invalid atomic op");
+}
+
 AccessSpecifier
 translate_access_specifier (clang::AccessSpecifier spec)
 {

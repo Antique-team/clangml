@@ -98,19 +98,19 @@ let process clang =
 
   (*let () = Analysis.All.analyse_decl clang decl in*)
 
-  (*print_string "--------------------- Clang CST ---------------------";*)
-  (*Format.printf "@[<v2>@,%a@]@."*)
-    (*Clang.Pp.pp_decl decl;*)
+  print_string "--------------------- Clang CST ---------------------";
+  Format.printf "@[<v2>@,%a@]@."
+    Clang.Pp.pp_decl decl;
 
   let decl = Transformation.All.transform_decl clang decl in
 
-  (*print_string "--------------------- Simple CST --------------------";*)
-  (*Format.printf "@[<v2>@,%a@]@."*)
-    (*Clang.Pp.pp_decl decl;*)
+  (* print_string "--------------------- Simple CST --------------------"; *)
+  (* Format.printf "@[<v2>@,%a@]@." *)
+  (*   Clang.Pp.pp_decl decl; *)
 
-  (*print_string "--------------------- Clang AST ---------------------";*)
-  (*Format.printf "@[<v2>@,%a@]@."*)
-    (*Clang.Ast.Show_decl.format decl;*)
+  print_string "--------------------- Clang AST ---------------------";
+  Format.printf "@[<v2>@,%a@]@."
+    Clang.Ast.Show_decl.format decl;
 
   (*print_endline "----------------- Clang -> MemCAD -------------------";*)
   (*let ast = Transform.c_prog_from_decl clang decl in*)
