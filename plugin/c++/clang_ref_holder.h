@@ -22,7 +22,7 @@ struct concrete_clang_ref_holder
     while (it != et)
       {
         if (*it == value)
-          return { size_t (it - values.begin ()) };
+          return { size_t (it - values.begin ()) + 1 };
         ++it;
       }
 
