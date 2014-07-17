@@ -722,6 +722,7 @@ and expr_ = AstBridge.expr_ =
   | OpaqueValueExpr		of (* source *)expr
   | ExtVectorElementExpr	of (* base *)expr * (* accessor *)string
   | AtomicExpr                  of (* op *)atomic_op * (* sub exprs *)expr list
+  | ShuffleVectorExpr           of (* sub exprs *)expr list
 
   | SizeOfExpr			of expr
   | SizeOfType			of tloc
@@ -792,7 +793,6 @@ and expr_ = AstBridge.expr_ =
   | PackExpansionExpr
   | ParenListExpr
   | PseudoObjectExpr
-  | ShuffleVectorExpr
   | SizeOfPackExpr
   | SubstNonTypeTemplateParmExpr
   | SubstNonTypeTemplateParmPackExpr

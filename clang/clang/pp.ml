@@ -396,6 +396,9 @@ and pp_expr_ fmt = function
       Format.fprintf fmt "%s (%a)"
         (string_of_atomic_op op)
         (Formatx.pp_list pp_expr) sub_exprs
+  | ShuffleVectorExpr sub_exprs ->
+      Format.fprintf fmt "(%a)"
+        (Formatx.pp_list pp_expr) sub_exprs
 
   | CXXNullPtrLiteralExpr ->
       Format.fprintf fmt "nullptr"
@@ -465,7 +468,6 @@ and pp_expr_ fmt = function
   | PackExpansionExpr -> Format.pp_print_string fmt "<PackExpansionExpr>"
   | ParenListExpr -> Format.pp_print_string fmt "<ParenListExpr>"
   | PseudoObjectExpr -> Format.pp_print_string fmt "<PseudoObjectExpr>"
-  | ShuffleVectorExpr -> Format.pp_print_string fmt "<ShuffleVectorExpr>"
   | SizeOfPackExpr -> Format.pp_print_string fmt "<SizeOfPackExpr>"
   | SubstNonTypeTemplateParmExpr -> Format.pp_print_string fmt "<SubstNonTypeTemplateParmExpr>"
   | SubstNonTypeTemplateParmPackExpr -> Format.pp_print_string fmt "<SubstNonTypeTemplateParmPackExpr>"

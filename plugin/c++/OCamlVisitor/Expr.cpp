@@ -502,6 +502,18 @@ OCamlVisitor::TraverseAtomicExpr (clang::AtomicExpr *S)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseShuffleVectorExpr (clang::ShuffleVectorExpr *S)
+{
+  TRACE;
+
+  list<Expr> subExprs = traverse_list (S->children());
+
+  stack.push (mkShuffleVectorExpr (subExprs));
+
+  return true;
+}
+
 
 
 
@@ -575,7 +587,6 @@ UNIMP_STMT (Expr, ObjCSubscriptRefExpr)
 UNIMP_STMT (Expr, PackExpansionExpr)
 UNIMP_STMT (Expr, ParenListExpr)
 UNIMP_STMT (Expr, PseudoObjectExpr)
-UNIMP_STMT (Expr, ShuffleVectorExpr)
 UNIMP_STMT (Expr, SizeOfPackExpr)
 UNIMP_STMT (Expr, SubstNonTypeTemplateParmExpr)
 UNIMP_STMT (Expr, SubstNonTypeTemplateParmPackExpr)
