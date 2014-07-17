@@ -721,8 +721,7 @@ and expr_ = AstBridge.expr_ =
   | OffsetOfExpr		of (* type *)tloc * (* components *)offsetof_node list
   | OpaqueValueExpr		of (* source *)expr
   | ExtVectorElementExpr	of (* base *)expr * (* accessor *)string
-  | AtomicExpr                  of (* op *)atomic_op (* sub exprs *)expr list
-  (* | AtomicExpr *)
+  | AtomicExpr                  of (* op *)atomic_op * (* sub exprs *)expr list
 
   | SizeOfExpr			of expr
   | SizeOfType			of tloc

@@ -489,12 +489,24 @@ OCamlVisitor::TraverseExtVectorElementExpr (clang::ExtVectorElementExpr *S)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseAtomicExpr (clang::AtomicExpr *S)
+{
+  TRACE;
+
+  AtomicOp op = translate_atomic_op (S->getOp());
+  list<Expr> subExprs = traverse_list (S->children());
+
+  stack.push (mkAtomicExpr (op, subExprs));
+
+  return true;
+}
+
 
 
 
 UNIMP_STMT (Expr, ArrayTypeTraitExpr)
 UNIMP_STMT (Expr, AsTypeExpr)
-UNIMP_STMT (Expr, AtomicExpr)
 UNIMP_STMT (Expr, BinaryTypeTraitExpr)
 UNIMP_STMT (Expr, BlockExpr)
 UNIMP_STMT (Expr, ChooseExpr)
