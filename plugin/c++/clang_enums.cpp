@@ -243,6 +243,7 @@ translate_cast_kind (clang::CastKind kind)
   throw std::runtime_error ("invalid cast kind");
 }
 
+
 AtomicOp
 translate_atomic_op (clang::AtomicExpr::AtomicOp ao)
 {
@@ -284,6 +285,7 @@ translate_atomic_op (clang::AtomicExpr::AtomicOp ao)
     }
   throw std::runtime_error ("invalid atomic op");
 }
+
 
 AccessSpecifier
 translate_access_specifier (clang::AccessSpecifier spec)

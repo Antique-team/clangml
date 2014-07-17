@@ -175,6 +175,7 @@ OCamlVisitor::TraverseComplexType (clang::ComplexType *T)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseAtomicType (clang::AtomicType *T)
 {
@@ -186,7 +187,6 @@ OCamlVisitor::TraverseAtomicType (clang::AtomicType *T)
 
   return true;
 }
-
 
 
 bool

@@ -489,30 +489,33 @@ OCamlVisitor::TraverseExtVectorElementExpr (clang::ExtVectorElementExpr *S)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseAtomicExpr (clang::AtomicExpr *S)
 {
   TRACE;
 
-  AtomicOp op = translate_atomic_op (S->getOp());
-  list<Expr> subExprs = traverse_list (S->children());
+  AtomicOp op = translate_atomic_op (S->getOp ());
+  list<Expr> subExprs = traverse_list (S->children ());
 
   stack.push (mkAtomicExpr (op, subExprs));
 
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseShuffleVectorExpr (clang::ShuffleVectorExpr *S)
 {
   TRACE;
 
-  list<Expr> subExprs = traverse_list (S->children());
+  list<Expr> subExprs = traverse_list (S->children ());
 
   stack.push (mkShuffleVectorExpr (subExprs));
 
   return true;
 }
+
 
 bool
 OCamlVisitor::TraverseBinaryTypeTraitExpr (clang::BinaryTypeTraitExpr *S)

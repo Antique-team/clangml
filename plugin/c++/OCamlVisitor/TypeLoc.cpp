@@ -59,6 +59,7 @@ OCamlVisitor::TraverseBuiltinTypeLoc (clang::BuiltinTypeLoc TL)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseAtomicTypeLoc (clang::AtomicTypeLoc TL)
 {
@@ -70,6 +71,7 @@ OCamlVisitor::TraverseAtomicTypeLoc (clang::AtomicTypeLoc TL)
 
   return true;
 }
+
 
 bool
 OCamlVisitor::TraverseTypeOfExprTypeLoc (clang::TypeOfExprTypeLoc TL)

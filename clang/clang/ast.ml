@@ -744,12 +744,12 @@ and expr_ = AstBridge.expr_ =
   | OpaqueValueExpr		of (* source *)expr
   | ExtVectorElementExpr	of (* base *)expr
                                  * (* accessor *)string
-  | AtomicExpr                  of (* op *)atomic_op
+  | AtomicExpr			of (* op *)atomic_op
                                  * (* sub exprs *)expr list
-  | ShuffleVectorExpr           of (* sub exprs *)expr list
-  | BinaryTypeTraitExpr         of (* trait *)binary_type_trait
-                                * (* lhs *)ctyp
-                                * (* rhs *)ctyp
+  | ShuffleVectorExpr		of (* sub exprs *)expr list
+  | BinaryTypeTraitExpr		of (* trait *)binary_type_trait
+                                 * (* lhs *)ctyp
+                                 * (* rhs *)ctyp
   | SizeOfExpr			of expr
   | SizeOfType			of tloc
   | AlignOfExpr			of expr
@@ -925,7 +925,7 @@ and tloc_ = AstBridge.tloc_ =
   | AttributedTypeLoc		of (* kind *)attributed_type_kind
                                  * (* modified loc *)tloc
                                  * (* attr. expr operand *)expr option
-  | AtomicTypeLoc               of (* value *)tloc
+  | AtomicTypeLoc		of (* value *)tloc
 
   | AutoTypeLoc
   | BlockPointerTypeLoc
@@ -984,7 +984,7 @@ and ctyp_ = AstBridge.ctyp_ =
                                  * (* vector-kind *)vector_kind
   | AttributedType		of (* kind *)attributed_type_kind
                                  * (* modified type *)ctyp
-  | AtomicType                  of (* value *)ctyp
+  | AtomicType			of (* value *)ctyp
 
   | AutoType
   | BlockPointerType
