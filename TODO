@@ -12,6 +12,11 @@ TODO:
     TODO: TraverseStaticAssertDecl
     TODO: TraverseVectorTypeLoc
 
+- improve error messages from bridgen, for example the error for
+  this line in the expr_ type definition in ast.ml
+  "| AtomicExpr of (* op *)atomic_op (* sub exprs *)expr list"
+  was pretty hard to understand; the correct line is
+  "| AtomicExpr of (* op *)atomic_op * (* sub exprs *)expr list"
 - make it possible to read more than one input source file using the same
   clang process
 - add a way to create new clang AST nodes from ocaml AST nodes (VERY HARD)
