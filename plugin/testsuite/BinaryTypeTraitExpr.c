@@ -1,5 +1,4 @@
 
-void f() {
-#define P(n,args) p(#n #args, __builtin_##n args)
-  P(types_compatible_p, (int, float));
+int f() {
+  return (__builtin_types_compatible_p(int,float));
 }
