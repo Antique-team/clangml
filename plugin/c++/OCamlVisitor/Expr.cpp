@@ -514,12 +514,25 @@ OCamlVisitor::TraverseShuffleVectorExpr (clang::ShuffleVectorExpr *S)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseBinaryTypeTraitExpr (clang::BinaryTypeTraitExpr *S)
+{
+  TRACE;
+
+  BinaryTypeTrait trait = translate_binary_type_trait (S->getTrait ());
+  ptr<Ctyp> lhs = must_traverse (S->getLhsType ());
+  ptr<Ctyp> rhs = must_traverse (S->getRhsType ());
+
+  stack.push (mkBinaryTypeTraitExpr (trait, lhs, rhs));
+
+  return true;
+}
+
 
 
 
 UNIMP_STMT (Expr, ArrayTypeTraitExpr)
 UNIMP_STMT (Expr, AsTypeExpr)
-UNIMP_STMT (Expr, BinaryTypeTraitExpr)
 UNIMP_STMT (Expr, BlockExpr)
 UNIMP_STMT (Expr, ChooseExpr)
 UNIMP_STMT (Expr, ConvertVectorExpr)

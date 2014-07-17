@@ -256,6 +256,13 @@ let string_of_binary_op = function
   | BO_OrAssign			-> "|="
   | BO_XorAssign		-> "^*"
 
+let string_of_binary_type_trait = function
+  | BTT_IsBaseOf              -> "IsBaseOf"             
+  | BTT_IsConvertible         -> "IsConvertible"        
+  | BTT_IsConvertibleTo       -> "IsConvertibleTo"      
+  | BTT_IsSame                -> "IsSame"               
+  | BTT_TypeCompatible        -> "TypeCompatible"       
+  | BTT_IsTriviallyAssignable -> "IsTriviallyAssignable"
 
 let is_prefix_op = function
   | UO_PostInc
@@ -399,6 +406,13 @@ and pp_expr_ fmt = function
   | ShuffleVectorExpr sub_exprs ->
       Format.fprintf fmt "(%a)"
         (Formatx.pp_list pp_expr) sub_exprs
+  | BinaryTypeTraitExpr (trait, lhs, rhs) ->
+      Format.fprintf fmt "%s (%a, %a)"
+        (string_of_binary_type_trait trait)
+        pp_ctyp lhs
+        pp_ctyp rhs
+
+
 
   | CXXNullPtrLiteralExpr ->
       Format.fprintf fmt "nullptr"
@@ -411,7 +425,6 @@ and pp_expr_ fmt = function
   | ConvertVectorExpr -> Format.pp_print_string fmt "<ConvertVectorExpr>"
   | ArrayTypeTraitExpr -> Format.pp_print_string fmt "<ArrayTypeTraitExpr>"
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
-  | BinaryTypeTraitExpr -> Format.pp_print_string fmt "<BinaryTypeTraitExpr>"
   | BlockExpr -> Format.pp_print_string fmt "<BlockExpr>"
   | ChooseExpr -> Format.pp_print_string fmt "<ChooseExpr>"
   | CompoundAssignOperator -> Format.pp_print_string fmt "<CompoundAssignOperator>"

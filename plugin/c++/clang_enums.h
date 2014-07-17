@@ -17,5 +17,6 @@ ast_bridge::CastKind translate_cast_kind (clang::CastKind kind);
 ast_bridge::AtomicOp translate_atomic_op (clang::AtomicExpr::AtomicOp ao);
 ast_bridge::AccessSpecifier translate_access_specifier (clang::AccessSpecifier spec);
 ast_bridge::OverloadedOperatorKind translate_overloaded_operator_kind (clang::OverloadedOperatorKind kind);
+ast_bridge::BinaryTypeTrait translate_binary_type_trait (clang::BinaryTypeTrait btt);
 
 #endif /* CLANG_ENUMS_H */

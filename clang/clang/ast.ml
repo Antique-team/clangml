@@ -528,6 +528,15 @@ type unary_operator = AstBridge.unary_operator =
   | UO_Extension(* __extension__ marker. *)
   deriving (Show)
 
+(* [llvm-3.4/include/clang/Basic/TypeTraits.h] *)
+type binary_type_trait = AstBridge.binary_type_trait =
+  | BTT_IsBaseOf
+  | BTT_IsConvertible
+  | BTT_IsConvertibleTo
+  | BTT_IsSame
+  | BTT_TypeCompatible
+  | BTT_IsTriviallyAssignable
+  deriving (Show)
 
 (* [clang/AST/OperationKinds.h] *)
 type binary_operator = AstBridge.binary_operator =
@@ -698,32 +707,49 @@ and expr_ = AstBridge.expr_ =
   | FloatingLiteral		of float
   | StringLiteral		of string
   | ImaginaryLiteral		of (* sub *)expr
-  | BinaryOperator		of binary_operator * (* lhs *)expr * (* rhs *)expr
-  | UnaryOperator		of unary_operator * (* operand *)expr
-
+  | BinaryOperator		of binary_operator
+                                 * (* lhs *)expr
+                                 * (* rhs *)expr
+  | UnaryOperator		of unary_operator
+                                 * (* operand *)expr
   | DeclRefExpr			of (* name *)string
   | PredefinedExpr		of (* kind *)predefined_expr
   | ImplicitCastExpr		of cast_kind * expr
   | CStyleCastExpr		of cast_kind * tloc * expr
-  | CompoundLiteralExpr		of tloc * (* init *)expr
+  | CompoundLiteralExpr		of tloc
+                                 * (* init *)expr
   | ParenExpr			of expr
-  | VAArgExpr			of (* sub *)expr * (* type *)tloc
-  | CallExpr			of (* callee *)expr * (* args *)expr list
-  | MemberExpr			of (* base *)expr * (* member *)string * (* is_arrow *)bool
-  | ConditionalOperator		of (* cond *)expr * (* then *)expr * (* else *)expr
-  | BinaryConditionalOperator	of (* cond *)expr * (* else *)expr
-  | DesignatedInitExpr		of desg list * (* init *)expr
+  | VAArgExpr			of (* sub *)expr
+                                 * (* type *)tloc
+  | CallExpr			of (* callee *)expr
+                                 * (* args *)expr list
+  | MemberExpr			of (* base *)expr
+                                 * (* member *)string
+                                 * (* is_arrow *)bool
+  | ConditionalOperator		of (* cond *)expr
+                                 * (* then *)expr
+                                 * (* else *)expr
+  | BinaryConditionalOperator	of (* cond *)expr
+                                 * (* else *)expr
+  | DesignatedInitExpr		of desg list
+                                 * (* init *)expr
   | InitListExpr		of (* inits *)expr list
   | ImplicitValueInitExpr
-  | ArraySubscriptExpr		of (* base *)expr * (* index *)expr
+  | ArraySubscriptExpr		of (* base *)expr
+                                 * (* index *)expr
   | StmtExpr			of (* body *)stmt
   | AddrLabelExpr		of string
-  | OffsetOfExpr		of (* type *)tloc * (* components *)offsetof_node list
+  | OffsetOfExpr		of (* type *)tloc
+                                 * (* components *)offsetof_node list
   | OpaqueValueExpr		of (* source *)expr
-  | ExtVectorElementExpr	of (* base *)expr * (* accessor *)string
-  | AtomicExpr                  of (* op *)atomic_op * (* sub exprs *)expr list
+  | ExtVectorElementExpr	of (* base *)expr
+                                 * (* accessor *)string
+  | AtomicExpr                  of (* op *)atomic_op
+                                 * (* sub exprs *)expr list
   | ShuffleVectorExpr           of (* sub exprs *)expr list
-
+  | BinaryTypeTraitExpr         of (* trait *)binary_type_trait
+                                * (* lhs *)ctyp
+                                * (* rhs *)ctyp
   | SizeOfExpr			of expr
   | SizeOfType			of tloc
   | AlignOfExpr			of expr
@@ -734,7 +760,6 @@ and expr_ = AstBridge.expr_ =
 
   | ArrayTypeTraitExpr
   | AsTypeExpr
-  | BinaryTypeTraitExpr
   | BlockExpr
   | ChooseExpr
   | CompoundAssignOperator
