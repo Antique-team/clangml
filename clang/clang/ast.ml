@@ -764,11 +764,13 @@ and expr_ = AstBridge.expr_ =
   | VecStepType			of tloc
   | ConvertVectorExpr           of (* src *)expr
                                  * (* type *)ctyp
+  | ChooseExpr                  of (* cond *)expr
+                                 * (* lhs *)expr
+                                 * (* rhs *)expr
 
   | ArrayTypeTraitExpr
   | AsTypeExpr
   | BlockExpr
-  | ChooseExpr
   | CompoundAssignOperator
   | CUDAKernelCallExpr
   | CXXBindTemporaryExpr

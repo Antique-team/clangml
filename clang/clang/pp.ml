@@ -419,6 +419,11 @@ and pp_expr_ fmt = function
       Format.fprintf fmt "convert_vector(%a, %a)"
         pp_expr src
         pp_ctyp ty
+  | ChooseExpr (cond, lhs, rhs) ->
+      Format.fprintf fmt "choose_expr(%a, %a, %a)"
+        pp_expr cond
+        pp_expr lhs
+        pp_expr rhs
 
 
   | CXXNullPtrLiteralExpr ->
@@ -432,7 +437,6 @@ and pp_expr_ fmt = function
   | ArrayTypeTraitExpr -> Format.pp_print_string fmt "<ArrayTypeTraitExpr>"
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
   | BlockExpr -> Format.pp_print_string fmt "<BlockExpr>"
-  | ChooseExpr -> Format.pp_print_string fmt "<ChooseExpr>"
   | CompoundAssignOperator -> Format.pp_print_string fmt "<CompoundAssignOperator>"
   | CUDAKernelCallExpr -> Format.pp_print_string fmt "<CUDAKernelCallExpr>"
   | CXXBindTemporaryExpr -> Format.pp_print_string fmt "<CXXBindTemporaryExpr>"

@@ -541,11 +541,24 @@ OCamlVisitor::TraverseConvertVectorExpr (clang::ConvertVectorExpr *S)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseChooseExpr (clang::ChooseExpr *S)
+{
+  TRACE;
+
+  ptr<Expr> cond = must_traverse (S->getCond ());
+  ptr<Expr> lhs  = must_traverse (S->getLHS ());
+  ptr<Expr> rhs  = must_traverse (S->getRHS ());
+
+  stack.push (mkChooseExpr (cond, lhs, rhs));
+
+  return true;
+}
+
 
 UNIMP_STMT (Expr, ArrayTypeTraitExpr)
 UNIMP_STMT (Expr, AsTypeExpr)
 UNIMP_STMT (Expr, BlockExpr)
-UNIMP_STMT (Expr, ChooseExpr)
 UNIMP_STMT (Expr, CUDAKernelCallExpr)
 UNIMP_STMT (Expr, CXXBindTemporaryExpr)
 UNIMP_STMT (Expr, CXXBoolLiteralExpr)
