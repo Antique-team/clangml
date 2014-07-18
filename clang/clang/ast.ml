@@ -844,18 +844,29 @@ and stmt_ = AstBridge.stmt_ =
   | NullStmt
   | BreakStmt
   | ContinueStmt
-  | LabelStmt			of (* label *)string * stmt
-  | CaseStmt			of (* range_begin *)expr * (* range_end *)expr option * (* stmt *)stmt
+  | LabelStmt			of (* label *)string
+                                 * stmt
+  | CaseStmt			of (* range_begin *)expr
+                                 * (* range_end *)expr option
+                                 * (* stmt *)stmt
   | DefaultStmt			of (* stmt *)stmt
   | GotoStmt			of (* label *)string
   | ExprStmt			of (* expr *)expr
   | CompoundStmt		of (* body *)stmt list
   | ReturnStmt			of (* expr *)expr option
-  | IfStmt			of (* cond *)expr * (* then *)stmt * (* else *)stmt option
-  | ForStmt			of (* init *)stmt option * (* cond *)expr option * (* incr *)expr option * (* body *)stmt
-  | WhileStmt			of (* cond *)expr * (* body *)stmt
-  | DoStmt			of (* body *)stmt * (* cond *)expr
-  | SwitchStmt			of (* value *)expr * (* body *)stmt
+  | IfStmt			of (* cond *)expr
+                                 * (* then *)stmt
+                                 * (* else *)stmt option
+  | ForStmt			of (* init *)stmt option
+                                 * (* cond *)expr option
+                                 * (* incr *)expr option
+                                 * (* body *)stmt
+  | WhileStmt			of (* cond *)expr
+                                 * (* body *)stmt
+  | DoStmt			of (* body *)stmt
+                                 * (* cond *)expr
+  | SwitchStmt			of (* value *)expr
+                                 * (* body *)stmt
   | DeclStmt			of (* decls *)decl list
   | GCCAsmStmt			of (* asm string *)expr
                                  * (* asm outputs *)asm_arg list
@@ -906,13 +917,17 @@ and tloc_ = AstBridge.tloc_ =
   | TypedefTypeLoc		of (* name *)string
   | PointerTypeLoc		of (* pointee *)tloc
   | FunctionNoProtoTypeLoc	of (* result *)tloc
-  | FunctionProtoTypeLoc	of (* result *)tloc * (* args *)decl list
-  | ConstantArrayTypeLoc	of (* member-type *)tloc * (* size *)int
-  | VariableArrayTypeLoc	of (* member-type *)tloc * (* size *)expr option
+  | FunctionProtoTypeLoc	of (* result *)tloc
+                                 * (* args *)decl list
+  | ConstantArrayTypeLoc	of (* member-type *)tloc
+                                 * (* size *)int
+  | VariableArrayTypeLoc	of (* member-type *)tloc
+                                 * (* size *)expr option
   | IncompleteArrayTypeLoc	of (* member-type *)tloc
   | ElaboratedTypeLoc		of (* named-type *)tloc
   | EnumTypeLoc			of (* name *)string
-  | RecordTypeLoc		of (* kind *)tag_type_kind * (* name *)string
+  | RecordTypeLoc		of (* kind *)tag_type_kind
+                                 * (* name *)string
   | DecayedTypeLoc		of (* original *)tloc
   | TemplateTypeParmTypeLoc	of (* name *)string
   | ComplexTypeLoc		of (* element *)ctyp
@@ -966,14 +981,19 @@ and ctyp_ = AstBridge.ctyp_ =
   | TypedefType			of (* name *)string
   | PointerType			of (* pointee *)ctyp
   | FunctionNoProtoType		of (* result *)ctyp
-  | FunctionProtoType		of (* result *)ctyp * (* args *)ctyp list
-  | ConstantArrayType		of (* member-type *)ctyp * (* size *)int
-  | VariableArrayType		of (* member-type *)ctyp * (* size *)expr option
+  | FunctionProtoType		of (* result *)ctyp
+                                 * (* args *)ctyp list
+  | ConstantArrayType		of (* member-type *)ctyp
+                                 * (* size *)int
+  | VariableArrayType		of (* member-type *)ctyp
+                                 * (* size *)expr option
   | IncompleteArrayType		of (* member-type *)ctyp
   | ElaboratedType		of (* named-type *)ctyp
   | EnumType			of (* name *)string
-  | RecordType			of (* kind *)tag_type_kind * (* name *)string
-  | DecayedType			of (* decayed *)ctyp * (* original *)ctyp
+  | RecordType			of (* kind *)tag_type_kind
+                                 * (* name *)string
+  | DecayedType			of (* decayed *)ctyp
+                                 * (* original *)ctyp
   | TemplateTypeParmType	of (* name *)string option
   | ComplexType			of (* element *)ctyp
   | VectorType			of (* element-type *)ctyp
@@ -1016,18 +1036,34 @@ and decl = AstBridge.decl = {
 and decl_ = AstBridge.decl_ =
   | EmptyDecl
   | TranslationUnitDecl		of (* decls *)decl list
-  | LinkageSpecDecl		of (* decls *)decl list * language
-  | FunctionDecl		of (* type *)tloc * (* name *)declaration_name * (* body *)stmt option
-  | TypedefDecl			of (* type *)tloc * (* name *)string
-  | VarDecl			of (* type *)tloc * (* name *)string * (* init *)expr option
-  | ParmVarDecl			of (* type *)tloc * (* name *)string
-  | RecordDecl			of tag_type_kind * (* name *)string * (* members *)decl list option * (* bases *)cxx_base_specifier list
+  | LinkageSpecDecl		of (* decls *)decl list
+                                 * language
+  | FunctionDecl		of (* type *)tloc
+                                 * (* name *)declaration_name
+                                 * (* body *)stmt option
+  | TypedefDecl			of (* type *)tloc
+                                 * (* name *)string
+  | VarDecl			of (* type *)tloc
+                                 * (* name *)string
+                                 * (* init *)expr option
+  | ParmVarDecl			of (* type *)tloc
+                                 * (* name *)string
+  | RecordDecl			of tag_type_kind
+                                 * (* name *)string
+                                 * (* members *)decl list option
+                                 * (* bases *)cxx_base_specifier list
   | FieldDecl			of field_decl
-  | EnumDecl			of (* name *)string * (* enumerators *)decl list
-  | EnumConstantDecl		of (* name *)string * (* value *)expr option
-  | NamespaceDecl		of (* name *)string * (* is_inline *)bool * (* decls *)decl list
-  | ClassTemplateDecl		of (* templated *)decl * (* params *)decl list
-  | TemplateTypeParmDecl	of (* type *)ctyp * (* default *)tloc option
+  | EnumDecl			of (* name *)string
+                                 * (* enumerators *)decl list
+  | EnumConstantDecl		of (* name *)string
+                                 * (* value *)expr option
+  | NamespaceDecl		of (* name *)string
+                                 * (* is_inline *)bool
+                                 * (* decls *)decl list
+  | ClassTemplateDecl		of (* templated *)decl
+                                 * (* params *)decl list
+  | TemplateTypeParmDecl	of (* type *)ctyp
+                                 * (* default *)tloc option
   | UsingDecl			of (* name *)declaration_name
   | AccessSpecDecl		of access_specifier
   | FileScopeAsmDecl		of (* insns *)expr
