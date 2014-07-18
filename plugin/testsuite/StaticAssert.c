@@ -1,1 +1,1 @@
-_Static_assert(sizeof(float) == sizeof(double), "False!");
+_Static_assert(sizeof(float) != sizeof(double), "True");
