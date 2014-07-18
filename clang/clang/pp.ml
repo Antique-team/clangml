@@ -960,6 +960,8 @@ and pp_decl_ fmt = function
       Format.fprintf fmt "static_assert(%a, \"%s\")"
         pp_expr expr
         msg
+  | LabelDecl name ->
+      Format.fprintf fmt "label %s" name
 
 
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"
@@ -969,7 +971,6 @@ and pp_decl_ fmt = function
   | FunctionTemplateDecl -> Format.pp_print_string fmt "<FunctionTemplateDecl>"
   | ImportDecl -> Format.pp_print_string fmt "<ImportDecl>"
   | IndirectFieldDecl -> Format.pp_print_string fmt "<IndirectFieldDecl>"
-  | LabelDecl -> Format.pp_print_string fmt "<LabelDecl>"
   | MSPropertyDecl -> Format.pp_print_string fmt "<MSPropertyDecl>"
   | NamespaceAliasDecl -> Format.pp_print_string fmt "<NamespaceAliasDecl>"
   | NonTypeTemplateParmDecl -> Format.pp_print_string fmt "<NonTypeTemplateParmDecl>"

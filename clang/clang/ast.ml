@@ -1081,6 +1081,7 @@ and decl_ = AstBridge.decl_ =
   | CapturedDecl                of (* body *)stmt option
   | StaticAssertDecl            of (* assert *)expr
                                  * (* message *)string
+  | LabelDecl                   of (* name *)string
 
   | BlockDecl
   | ClassScopeFunctionSpecializationDecl
@@ -1089,7 +1090,6 @@ and decl_ = AstBridge.decl_ =
   | FunctionTemplateDecl
   | ImportDecl
   | IndirectFieldDecl
-  | LabelDecl
   | MSPropertyDecl
   | NamespaceAliasDecl
   | NonTypeTemplateParmDecl

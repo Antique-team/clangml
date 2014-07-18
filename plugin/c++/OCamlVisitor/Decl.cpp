@@ -386,12 +386,24 @@ OCamlVisitor::TraverseFileScopeAsmDecl (clang::FileScopeAsmDecl *D)
 }
 
 
+bool
+OCamlVisitor::TraverseLabelDecl (clang::LabelDecl *D)
+{
+  TRACE;
+
+  clang::StringRef name = D->getName ();
+
+  stack.push (mkLabelDecl (name));
+
+  return true;
+}
+
+
 UNIMP_DECL (FriendDecl)
 UNIMP_DECL (FriendTemplateDecl)
 UNIMP_DECL (FunctionTemplateDecl)
 UNIMP_DECL (ImportDecl)
 UNIMP_DECL (IndirectFieldDecl)
-UNIMP_DECL (LabelDecl)
 
 
 bool
