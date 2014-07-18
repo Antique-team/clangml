@@ -321,12 +321,23 @@ translate_binary_type_trait (clang::BinaryTypeTrait trait)
 {
   switch (trait)
     {
-    case clang::BTT_IsBaseOf:              return BTT_IsBaseOf;             
-    case clang::BTT_IsConvertible:         return BTT_IsConvertible;        
-    case clang::BTT_IsConvertibleTo:       return BTT_IsConvertibleTo;      
-    case clang::BTT_IsSame:                return BTT_IsSame;               
-    case clang::BTT_TypeCompatible:        return BTT_TypeCompatible;       
+    case clang::BTT_IsBaseOf:              return BTT_IsBaseOf;
+    case clang::BTT_IsConvertible:         return BTT_IsConvertible;
+    case clang::BTT_IsConvertibleTo:       return BTT_IsConvertibleTo;
+    case clang::BTT_IsSame:                return BTT_IsSame;
+    case clang::BTT_TypeCompatible:        return BTT_TypeCompatible;
     case clang::BTT_IsTriviallyAssignable: return BTT_IsTriviallyAssignable;
     }
   throw std::runtime_error ("invalid binary type trait");
+}
+
+CapturedRegionKind
+translate_captured_region_kind (clang::CapturedRegionKind kind)
+{
+  switch (kind)
+    {
+    case clang::CR_Default: return CR_Default;
+    case clang::CR_OpenMP:  return CR_OpenMP;
+    }
+  throw std::runtime_error ("invalid captured region kind");
 }

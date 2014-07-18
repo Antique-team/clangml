@@ -257,12 +257,16 @@ let string_of_binary_op = function
   | BO_XorAssign		-> "^*"
 
 let string_of_binary_type_trait = function
-  | BTT_IsBaseOf              -> "IsBaseOf"             
-  | BTT_IsConvertible         -> "IsConvertible"        
-  | BTT_IsConvertibleTo       -> "IsConvertibleTo"      
-  | BTT_IsSame                -> "IsSame"               
-  | BTT_TypeCompatible        -> "TypeCompatible"       
+  | BTT_IsBaseOf              -> "IsBaseOf"
+  | BTT_IsConvertible         -> "IsConvertible"
+  | BTT_IsConvertibleTo       -> "IsConvertibleTo"
+  | BTT_IsSame                -> "IsSame"
+  | BTT_TypeCompatible        -> "TypeCompatible"
   | BTT_IsTriviallyAssignable -> "IsTriviallyAssignable"
+
+let string_of_captured_region_kind = function
+  | CR_Default -> "Default"
+  | CR_OpenMP  -> "OpenMP"
 
 let is_prefix_op = function
   | UO_PostInc
@@ -575,10 +579,16 @@ and pp_stmt_ fmt = function
   | IndirectGotoStmt expr ->
       Format.fprintf fmt "goto *%a"
         pp_expr expr
+  | CapturedStmt (kind, stmt, decl, captures) ->
+      Format.fprintf fmt "captured_stmt %s %a %a (%a)"
+        (string_of_captured_region_kind kind)
+        pp_stmt stmt
+        pp_decl decl
+        (Formatx.pp_list pp_stmt) captures
+
 
   | OMPParallelDirective -> Format.pp_print_string fmt "<OMPParallelDirective>"
   | AttributedStmt -> Format.pp_print_string fmt "<AttributedStmt>"
-  | CapturedStmt -> Format.pp_print_string fmt "<CapturedStmt>"
   | CXXCatchStmt -> Format.pp_print_string fmt "<CXXCatchStmt>"
   | CXXForRangeStmt -> Format.pp_print_string fmt "<CXXForRangeStmt>"
   | CXXTryStmt -> Format.pp_print_string fmt "<CXXTryStmt>"
@@ -935,13 +945,11 @@ and pp_decl_ fmt = function
   | FileScopeAsmDecl insns ->
       Format.fprintf fmt "asm (%a)"
         pp_expr insns
-  | CapturedDecl (Some body, params) ->
-      Format.fprintf fmt "captured %a (%a)"
+  | CapturedDecl (Some body) ->
+      Format.fprintf fmt "captured_decl %a"
         pp_stmt body
-        (Formatx.pp_list pp_decl) params
-  | CapturedDecl (None, params) ->
-      Format.fprintf fmt "captured (%a)"
-        (Formatx.pp_list pp_decl) params
+  | CapturedDecl (None) ->
+      Format.fprintf fmt "captured_decl"
 
 
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"

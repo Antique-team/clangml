@@ -298,9 +298,24 @@ OCamlVisitor::TraverseIndirectGotoStmt (clang::IndirectGotoStmt *S)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseCapturedStmt (clang::CapturedStmt *S)
+{
+  TRACE;
+
+  CapturedRegionKind kind =
+    translate_captured_region_kind(S->getCapturedRegionKind ());
+  ptr<Stmt> stmt = must_traverse (S->getCapturedStmt ());
+  ptr<Decl> decl = must_traverse (S->getCapturedDecl ());
+  list<Stmt> captures = traverse_list (S->children());
+
+  stack.push (mkCapturedStmt (kind, stmt, decl, captures));
+
+  return true;
+}
+
 
 UNIMP_STMT (Stmt, AttributedStmt)
-UNIMP_STMT (Stmt, CapturedStmt)
 UNIMP_STMT (Stmt, CXXCatchStmt)
 UNIMP_STMT (Stmt, CXXForRangeStmt)
 UNIMP_STMT (Stmt, CXXTryStmt)

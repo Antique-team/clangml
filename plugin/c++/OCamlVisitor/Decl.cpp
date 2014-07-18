@@ -321,11 +321,12 @@ OCamlVisitor::TraverseCapturedDecl (clang::CapturedDecl *D)
   TRACE;
 
   option<Stmt> body = maybe_traverse (D->getBody ());
-  list<Decl> params;
-  for (unsigned int i = 0; i < D->getNumParams (); ++i)
-    params.push_back (must_traverse (D->getParam (i)));
+  // FBR: should we bother about the implicit param decls?
+  // list<Decl> params;
+  // for (unsigned int i = 0; i < D->getNumParams (); ++i)
+  //   params.push_back (must_traverse (D->getParam (i)));
 
-  stack.push (mkCapturedDecl (body, params));
+  stack.push (mkCapturedDecl (body));
 
   return true;
 }

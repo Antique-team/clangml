@@ -677,6 +677,12 @@ type builtin_type = AstBridge.builtin_type =
   deriving (Show)
 
 
+type captured_region_kind = AstBridge.captured_region_kind =
+  | CR_Default
+  | CR_OpenMP
+  deriving (Show)
+
+
 type sloc = AstBridge.sloc = {
   loc_s : Sloc.t;
   loc_e : Sloc.t;
@@ -873,9 +879,12 @@ and stmt_ = AstBridge.stmt_ =
                                  * (* asm inputs *)asm_arg list
                                  * (* clobbers *)string list
   | IndirectGotoStmt		of (* target *)expr
+  | CapturedStmt                of captured_region_kind
+                                 * stmt
+                                 * decl
+                                 * (* captures *)stmt list
 
   | AttributedStmt
-  | CapturedStmt
   | CXXCatchStmt
   | CXXForRangeStmt
   | CXXTryStmt
@@ -1068,7 +1077,7 @@ and decl_ = AstBridge.decl_ =
   | AccessSpecDecl		of access_specifier
   | FileScopeAsmDecl		of (* insns *)expr
   | CapturedDecl                of (* body *)stmt option
-                                 * (* params *)decl list
+
 
   | BlockDecl
   | ClassScopeFunctionSpecializationDecl
