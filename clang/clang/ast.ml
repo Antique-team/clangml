@@ -1067,9 +1067,10 @@ and decl_ = AstBridge.decl_ =
   | UsingDecl			of (* name *)declaration_name
   | AccessSpecDecl		of access_specifier
   | FileScopeAsmDecl		of (* insns *)expr
+  | CapturedDecl                of (* body *)stmt option
+                                 * (* params *)decl list
 
   | BlockDecl
-  | CapturedDecl
   | ClassScopeFunctionSpecializationDecl
   | FriendDecl
   | FriendTemplateDecl

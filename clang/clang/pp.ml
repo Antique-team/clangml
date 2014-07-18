@@ -935,9 +935,16 @@ and pp_decl_ fmt = function
   | FileScopeAsmDecl insns ->
       Format.fprintf fmt "asm (%a)"
         pp_expr insns
+  | CapturedDecl (Some body, params) ->
+      Format.fprintf fmt "captured %a (%a)"
+        pp_stmt body
+        (Formatx.pp_list pp_decl) params
+  | CapturedDecl (None, params) ->
+      Format.fprintf fmt "captured (%a)"
+        (Formatx.pp_list pp_decl) params
+
 
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"
-  | CapturedDecl -> Format.pp_print_string fmt "<CapturedDecl>"
   | ClassScopeFunctionSpecializationDecl -> Format.pp_print_string fmt "<ClassScopeFunctionSpecializationDecl>"
   | FriendDecl -> Format.pp_print_string fmt "<FriendDecl>"
   | FriendTemplateDecl -> Format.pp_print_string fmt "<FriendTemplateDecl>"

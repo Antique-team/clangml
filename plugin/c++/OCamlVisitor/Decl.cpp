@@ -315,6 +315,21 @@ OCamlVisitor::TraverseTranslationUnitDecl (clang::TranslationUnitDecl *D)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseCapturedDecl (clang::CapturedDecl *D)
+{
+  TRACE;
+
+  option<Stmt> body = maybe_traverse (D->getBody ());
+  list<Decl> params;
+  for (unsigned int i = 0; i < D->getNumParams (); ++i)
+    params.push_back (must_traverse (D->getParam (i)));
+
+  stack.push (mkCapturedDecl (body, params));
+
+  return true;
+}
+
 #define UNIMP_DECL(CLASS)					\
   bool OCamlVisitor::Traverse##CLASS (clang::CLASS *D)		\
   {								\
@@ -340,7 +355,6 @@ OCamlVisitor::TraverseAccessSpecDecl (clang::AccessSpecDecl *D)
 
 
 UNIMP_DECL (BlockDecl)
-UNIMP_DECL (CapturedDecl)
 UNIMP_DECL (ClassScopeFunctionSpecializationDecl)
 
 
