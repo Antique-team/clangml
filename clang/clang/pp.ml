@@ -956,6 +956,10 @@ and pp_decl_ fmt = function
         pp_stmt body
   | CapturedDecl (None) ->
       Format.fprintf fmt "captured_decl"
+  | StaticAssertDecl (expr, msg) ->
+      Format.fprintf fmt "static_assert(%a, \"%s\")"
+        pp_expr expr
+        msg
 
 
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"
@@ -979,7 +983,6 @@ and pp_decl_ fmt = function
   | ObjCPropertyImplDecl -> Format.pp_print_string fmt "<ObjCPropertyImplDecl>"
   | ObjCProtocolDecl -> Format.pp_print_string fmt "<ObjCProtocolDecl>"
   | OMPThreadPrivateDecl -> Format.pp_print_string fmt "<OMPThreadPrivateDecl>"
-  | StaticAssertDecl -> Format.pp_print_string fmt "<StaticAssertDecl>"
   | TemplateTemplateParmDecl -> Format.pp_print_string fmt "<TemplateTemplateParmDecl>"
   | TypeAliasDecl -> Format.pp_print_string fmt "<TypeAliasDecl>"
   | TypeAliasTemplateDecl -> Format.pp_print_string fmt "<TypeAliasTemplateDecl>"

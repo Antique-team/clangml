@@ -1079,7 +1079,8 @@ and decl_ = AstBridge.decl_ =
   | AccessSpecDecl		of access_specifier
   | FileScopeAsmDecl		of (* insns *)expr
   | CapturedDecl                of (* body *)stmt option
-
+  | StaticAssertDecl            of (* assert *)expr
+                                 * (* message *)string
 
   | BlockDecl
   | ClassScopeFunctionSpecializationDecl
@@ -1102,7 +1103,6 @@ and decl_ = AstBridge.decl_ =
   | ObjCPropertyImplDecl
   | ObjCProtocolDecl
   | OMPThreadPrivateDecl
-  | StaticAssertDecl
   | TemplateTemplateParmDecl
   | TypeAliasDecl
   | TypeAliasTemplateDecl

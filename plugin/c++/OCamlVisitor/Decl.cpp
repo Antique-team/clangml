@@ -434,6 +434,19 @@ OCamlVisitor::TraverseNamespaceDecl (clang::NamespaceDecl *D)
 
   return true;
 }
+
+bool
+OCamlVisitor::TraverseStaticAssertDecl (clang::StaticAssertDecl *D)
+{
+  TRACE;
+
+  ptr<Expr> assertion = must_traverse (D->getAssertExpr ());
+  clang::StringRef msg = D->getMessage ()->getString();
+
+  stack.push (mkStaticAssertDecl (assertion, msg));
+
+  return true;
+}
 UNIMP_DECL (NonTypeTemplateParmDecl)
 UNIMP_DECL (ObjCCategoryDecl)
 UNIMP_DECL (ObjCCategoryImplDecl)
@@ -445,7 +458,6 @@ UNIMP_DECL (ObjCPropertyDecl)
 UNIMP_DECL (ObjCPropertyImplDecl)
 UNIMP_DECL (ObjCProtocolDecl)
 UNIMP_DECL (OMPThreadPrivateDecl)
-UNIMP_DECL (StaticAssertDecl)
 UNIMP_DECL (TemplateTemplateParmDecl)
 
 
