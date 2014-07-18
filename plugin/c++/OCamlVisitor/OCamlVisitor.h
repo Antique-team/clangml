@@ -225,7 +225,12 @@ private:
     clang::SourceLocation start = deref (p).getLocStart ();
     clang::SourceLocation end   = deref (p).getLocEnd   ();
 
-    assert (start.isValid () == end.isValid ());
+    // FBR: may be too strict so commented out
+    //assert (start.isValid () == end.isValid ());
+    if (start.isValid() != end.isValid()) {
+      fprintf(stderr, "WARNING: %s: %d: start.isValid() != end.isValid()\n",
+              __FILE__, __LINE__);
+    }
 
     if (start.isInvalid ())
       return empty_sloc;
