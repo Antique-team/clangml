@@ -415,7 +415,10 @@ and pp_expr_ fmt = function
         (string_of_binary_type_trait trait)
         pp_ctyp lhs
         pp_ctyp rhs
-
+  | ConvertVectorExpr (src, ty) ->
+      Format.fprintf fmt "convert_vector(%a, %a)"
+        pp_expr src
+        pp_ctyp ty
 
 
   | CXXNullPtrLiteralExpr ->
@@ -426,7 +429,6 @@ and pp_expr_ fmt = function
         pp_expr expr
 
 
-  | ConvertVectorExpr -> Format.pp_print_string fmt "<ConvertVectorExpr>"
   | ArrayTypeTraitExpr -> Format.pp_print_string fmt "<ArrayTypeTraitExpr>"
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
   | BlockExpr -> Format.pp_print_string fmt "<BlockExpr>"

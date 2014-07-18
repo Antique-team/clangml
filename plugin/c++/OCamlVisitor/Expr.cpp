@@ -528,14 +528,24 @@ OCamlVisitor::TraverseBinaryTypeTraitExpr (clang::BinaryTypeTraitExpr *S)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseConvertVectorExpr (clang::ConvertVectorExpr *S)
+{
+  TRACE;
 
+  ptr<Expr> src  = must_traverse (S->getSrcExpr ());
+  ptr<Ctyp> type = must_traverse (S->getTypeSourceInfo ()->getType());
+
+  stack.push (mkConvertVectorExpr (src, type));
+
+  return true;
+}
 
 
 UNIMP_STMT (Expr, ArrayTypeTraitExpr)
 UNIMP_STMT (Expr, AsTypeExpr)
 UNIMP_STMT (Expr, BlockExpr)
 UNIMP_STMT (Expr, ChooseExpr)
-UNIMP_STMT (Expr, ConvertVectorExpr)
 UNIMP_STMT (Expr, CUDAKernelCallExpr)
 UNIMP_STMT (Expr, CXXBindTemporaryExpr)
 UNIMP_STMT (Expr, CXXBoolLiteralExpr)

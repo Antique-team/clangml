@@ -754,22 +754,22 @@ and expr_ = AstBridge.expr_ =
                                  * (* sub exprs *)expr list
   | ShuffleVectorExpr           of (* sub exprs *)expr list
   | BinaryTypeTraitExpr         of (* trait *)binary_type_trait
-                                * (* lhs *)ctyp
-                                * (* rhs *)ctyp
+                                 * (* lhs *)ctyp
+                                 * (* rhs *)ctyp
   | SizeOfExpr			of expr
   | SizeOfType			of tloc
   | AlignOfExpr			of expr
   | AlignOfType			of tloc
   | VecStepExpr			of expr
   | VecStepType			of tloc
-
+  | ConvertVectorExpr           of (* src *)expr
+                                 * (* type *)ctyp
 
   | ArrayTypeTraitExpr
   | AsTypeExpr
   | BlockExpr
   | ChooseExpr
   | CompoundAssignOperator
-  | ConvertVectorExpr
   | CUDAKernelCallExpr
   | CXXBindTemporaryExpr
   | CXXBoolLiteralExpr
