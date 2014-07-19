@@ -315,6 +315,22 @@ OCamlVisitor::TraverseTranslationUnitDecl (clang::TranslationUnitDecl *D)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseCapturedDecl (clang::CapturedDecl *D)
+{
+  TRACE;
+
+  option<Stmt> body = maybe_traverse (D->getBody ());
+  // FBR: should we bother about the implicit param decls?
+  // list<Decl> params;
+  // for (unsigned int i = 0; i < D->getNumParams (); ++i)
+  //   params.push_back (must_traverse (D->getParam (i)));
+
+  stack.push (mkCapturedDecl (body));
+
+  return true;
+}
+
 #define UNIMP_DECL(CLASS)					\
   bool OCamlVisitor::Traverse##CLASS (clang::CLASS *D)		\
   {								\
@@ -340,7 +356,6 @@ OCamlVisitor::TraverseAccessSpecDecl (clang::AccessSpecDecl *D)
 
 
 UNIMP_DECL (BlockDecl)
-UNIMP_DECL (CapturedDecl)
 UNIMP_DECL (ClassScopeFunctionSpecializationDecl)
 
 
@@ -371,12 +386,24 @@ OCamlVisitor::TraverseFileScopeAsmDecl (clang::FileScopeAsmDecl *D)
 }
 
 
+bool
+OCamlVisitor::TraverseLabelDecl (clang::LabelDecl *D)
+{
+  TRACE;
+
+  clang::StringRef name = D->getName ();
+
+  stack.push (mkLabelDecl (name));
+
+  return true;
+}
+
+
 UNIMP_DECL (FriendDecl)
 UNIMP_DECL (FriendTemplateDecl)
 UNIMP_DECL (FunctionTemplateDecl)
 UNIMP_DECL (ImportDecl)
 UNIMP_DECL (IndirectFieldDecl)
-UNIMP_DECL (LabelDecl)
 
 
 bool
@@ -419,6 +446,19 @@ OCamlVisitor::TraverseNamespaceDecl (clang::NamespaceDecl *D)
 
   return true;
 }
+
+bool
+OCamlVisitor::TraverseStaticAssertDecl (clang::StaticAssertDecl *D)
+{
+  TRACE;
+
+  ptr<Expr> assertion = must_traverse (D->getAssertExpr ());
+  clang::StringRef msg = D->getMessage ()->getString();
+
+  stack.push (mkStaticAssertDecl (assertion, msg));
+
+  return true;
+}
 UNIMP_DECL (NonTypeTemplateParmDecl)
 UNIMP_DECL (ObjCCategoryDecl)
 UNIMP_DECL (ObjCCategoryImplDecl)
@@ -430,7 +470,6 @@ UNIMP_DECL (ObjCPropertyDecl)
 UNIMP_DECL (ObjCPropertyImplDecl)
 UNIMP_DECL (ObjCProtocolDecl)
 UNIMP_DECL (OMPThreadPrivateDecl)
-UNIMP_DECL (StaticAssertDecl)
 UNIMP_DECL (TemplateTemplateParmDecl)
 
 

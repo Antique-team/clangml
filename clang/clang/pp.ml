@@ -264,6 +264,10 @@ let string_of_binary_type_trait = function
   | BTT_TypeCompatible		-> "TypeCompatible"
   | BTT_IsTriviallyAssignable	-> "IsTriviallyAssignable"
 
+let string_of_captured_region_kind = function
+  | CR_Default -> "Default"
+  | CR_OpenMP  -> "OpenMP"
+
 let is_prefix_op = function
   | UO_PostInc
   | UO_PostDec -> false
@@ -411,7 +415,15 @@ and pp_expr_ fmt = function
         (string_of_binary_type_trait trait)
         pp_ctyp lhs
         pp_ctyp rhs
-
+  | ConvertVectorExpr (src, ty) ->
+      Format.fprintf fmt "convert_vector(%a, %a)"
+        pp_expr src
+        pp_ctyp ty
+  | ChooseExpr (cond, lhs, rhs) ->
+      Format.fprintf fmt "choose_expr(%a, %a, %a)"
+        pp_expr cond
+        pp_expr lhs
+        pp_expr rhs
 
 
   | CXXNullPtrLiteralExpr ->
@@ -422,11 +434,9 @@ and pp_expr_ fmt = function
         pp_expr expr
 
 
-  | ConvertVectorExpr -> Format.pp_print_string fmt "<ConvertVectorExpr>"
   | ArrayTypeTraitExpr -> Format.pp_print_string fmt "<ArrayTypeTraitExpr>"
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
   | BlockExpr -> Format.pp_print_string fmt "<BlockExpr>"
-  | ChooseExpr -> Format.pp_print_string fmt "<ChooseExpr>"
   | CompoundAssignOperator -> Format.pp_print_string fmt "<CompoundAssignOperator>"
   | CUDAKernelCallExpr -> Format.pp_print_string fmt "<CUDAKernelCallExpr>"
   | CXXBindTemporaryExpr -> Format.pp_print_string fmt "<CXXBindTemporaryExpr>"
@@ -575,10 +585,16 @@ and pp_stmt_ fmt = function
   | IndirectGotoStmt expr ->
       Format.fprintf fmt "goto *%a"
         pp_expr expr
+  | CapturedStmt (kind, stmt, decl, captures) ->
+      Format.fprintf fmt "captured_stmt %s %a %a (%a)"
+        (string_of_captured_region_kind kind)
+        pp_stmt stmt
+        pp_decl decl
+        (Formatx.pp_list pp_stmt) captures
+
 
   | OMPParallelDirective -> Format.pp_print_string fmt "<OMPParallelDirective>"
   | AttributedStmt -> Format.pp_print_string fmt "<AttributedStmt>"
-  | CapturedStmt -> Format.pp_print_string fmt "<CapturedStmt>"
   | CXXCatchStmt -> Format.pp_print_string fmt "<CXXCatchStmt>"
   | CXXForRangeStmt -> Format.pp_print_string fmt "<CXXForRangeStmt>"
   | CXXTryStmt -> Format.pp_print_string fmt "<CXXTryStmt>"
@@ -935,16 +951,26 @@ and pp_decl_ fmt = function
   | FileScopeAsmDecl insns ->
       Format.fprintf fmt "asm (%a)"
         pp_expr insns
+  | CapturedDecl (Some body) ->
+      Format.fprintf fmt "captured_decl %a"
+        pp_stmt body
+  | CapturedDecl (None) ->
+      Format.fprintf fmt "captured_decl"
+  | StaticAssertDecl (expr, msg) ->
+      Format.fprintf fmt "static_assert(%a, \"%s\")"
+        pp_expr expr
+        msg
+  | LabelDecl name ->
+      Format.fprintf fmt "label %s" name
+
 
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"
-  | CapturedDecl -> Format.pp_print_string fmt "<CapturedDecl>"
   | ClassScopeFunctionSpecializationDecl -> Format.pp_print_string fmt "<ClassScopeFunctionSpecializationDecl>"
   | FriendDecl -> Format.pp_print_string fmt "<FriendDecl>"
   | FriendTemplateDecl -> Format.pp_print_string fmt "<FriendTemplateDecl>"
   | FunctionTemplateDecl -> Format.pp_print_string fmt "<FunctionTemplateDecl>"
   | ImportDecl -> Format.pp_print_string fmt "<ImportDecl>"
   | IndirectFieldDecl -> Format.pp_print_string fmt "<IndirectFieldDecl>"
-  | LabelDecl -> Format.pp_print_string fmt "<LabelDecl>"
   | MSPropertyDecl -> Format.pp_print_string fmt "<MSPropertyDecl>"
   | NamespaceAliasDecl -> Format.pp_print_string fmt "<NamespaceAliasDecl>"
   | NonTypeTemplateParmDecl -> Format.pp_print_string fmt "<NonTypeTemplateParmDecl>"
@@ -958,7 +984,6 @@ and pp_decl_ fmt = function
   | ObjCPropertyImplDecl -> Format.pp_print_string fmt "<ObjCPropertyImplDecl>"
   | ObjCProtocolDecl -> Format.pp_print_string fmt "<ObjCProtocolDecl>"
   | OMPThreadPrivateDecl -> Format.pp_print_string fmt "<OMPThreadPrivateDecl>"
-  | StaticAssertDecl -> Format.pp_print_string fmt "<StaticAssertDecl>"
   | TemplateTemplateParmDecl -> Format.pp_print_string fmt "<TemplateTemplateParmDecl>"
   | TypeAliasDecl -> Format.pp_print_string fmt "<TypeAliasDecl>"
   | TypeAliasTemplateDecl -> Format.pp_print_string fmt "<TypeAliasTemplateDecl>"
