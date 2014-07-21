@@ -538,6 +538,58 @@ type binary_type_trait = AstBridge.binary_type_trait =
   | BTT_IsTriviallyAssignable
   deriving (Show)
 
+(* [llvm-3.4/include/clang/Basic/TypeTraits.h] *)
+type unary_type_trait = AstBridge.unary_type_trait =
+  | UTT_HasNothrowAssign
+  | UTT_HasNothrowMoveAssign
+  | UTT_HasNothrowCopy
+  | UTT_HasNothrowConstructor
+  | UTT_HasTrivialAssign
+  | UTT_HasTrivialMoveAssign
+  | UTT_HasTrivialCopy
+  | UTT_HasTrivialDefaultConstructor
+  | UTT_HasTrivialMoveConstructor
+  | UTT_HasTrivialDestructor
+  | UTT_HasVirtualDestructor
+  | UTT_IsAbstract
+  | UTT_IsArithmetic
+  | UTT_IsArray
+  | UTT_IsClass
+  | UTT_IsCompleteType
+  | UTT_IsCompound
+  | UTT_IsConst
+  | UTT_IsEmpty
+  | UTT_IsEnum
+  | UTT_IsFinal
+  | UTT_IsFloatingPoint
+  | UTT_IsFunction
+  | UTT_IsFundamental
+  | UTT_IsIntegral
+  | UTT_IsInterfaceClass
+  | UTT_IsLiteral
+  | UTT_IsLvalueReference
+  | UTT_IsMemberFunctionPointer
+  | UTT_IsMemberObjectPointer
+  | UTT_IsMemberPointer
+  | UTT_IsObject
+  | UTT_IsPOD
+  | UTT_IsPointer
+  | UTT_IsPolymorphic
+  | UTT_IsReference
+  | UTT_IsRvalueReference
+  | UTT_IsScalar
+  | UTT_IsSealed
+  | UTT_IsSigned
+  | UTT_IsStandardLayout
+  | UTT_IsTrivial
+  | UTT_IsTriviallyCopyable
+  | UTT_IsUnion
+  | UTT_IsUnsigned
+  | UTT_IsVoid
+  | UTT_IsVolatile
+  deriving (Show)
+
+
 (* [clang/AST/OperationKinds.h] *)
 type binary_operator = AstBridge.binary_operator =
   | BO_PtrMemD	(* [C++ 5.5] Pointer-to-member operators. *)
@@ -756,6 +808,8 @@ and expr_ = AstBridge.expr_ =
   | BinaryTypeTraitExpr		of (* trait *)binary_type_trait
                                  * (* lhs *)ctyp
                                  * (* rhs *)ctyp
+  | UnaryTypeTraitExpr		of (* trait *)unary_type_trait
+                                 * (* queried type *)ctyp
   | SizeOfExpr			of expr
   | SizeOfType			of tloc
   | AlignOfExpr			of expr
@@ -768,7 +822,8 @@ and expr_ = AstBridge.expr_ =
                                  * (* lhs *)expr
                                  * (* rhs *)expr
 
-  | ArrayTypeTraitExpr
+  | ArrayTypeTraitExpr (* example: __array_rank and __array_extent *)
+
   | AsTypeExpr
   | BlockExpr
   | CompoundAssignOperator
@@ -830,7 +885,6 @@ and expr_ = AstBridge.expr_ =
   | SubstNonTypeTemplateParmExpr
   | SubstNonTypeTemplateParmPackExpr
   | TypeTraitExpr
-  | UnaryTypeTraitExpr
   | UnresolvedLookupExpr
   | UnresolvedMemberExpr
   | UserDefinedLiteral

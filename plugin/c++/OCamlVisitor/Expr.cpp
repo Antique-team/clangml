@@ -531,6 +531,21 @@ OCamlVisitor::TraverseBinaryTypeTraitExpr (clang::BinaryTypeTraitExpr *S)
   return true;
 }
 
+
+bool
+OCamlVisitor::TraverseUnaryTypeTraitExpr (clang::UnaryTypeTraitExpr *S)
+{
+  TRACE;
+
+  UnaryTypeTrait trait = translate_unary_type_trait (S->getTrait ());
+  ptr<Ctyp> queried = must_traverse (S->getQueriedType ());
+
+  stack.push (mkUnaryTypeTraitExpr (trait, queried));
+
+  return true;
+}
+
+
 bool
 OCamlVisitor::TraverseConvertVectorExpr (clang::ConvertVectorExpr *S)
 {
@@ -630,7 +645,6 @@ UNIMP_STMT (Expr, SizeOfPackExpr)
 UNIMP_STMT (Expr, SubstNonTypeTemplateParmExpr)
 UNIMP_STMT (Expr, SubstNonTypeTemplateParmPackExpr)
 UNIMP_STMT (Expr, TypeTraitExpr)
-UNIMP_STMT (Expr, UnaryTypeTraitExpr)
 UNIMP_STMT (Expr, UnresolvedLookupExpr)
 UNIMP_STMT (Expr, UnresolvedMemberExpr)
 UNIMP_STMT (Expr, UserDefinedLiteral)

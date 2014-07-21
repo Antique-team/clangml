@@ -333,6 +333,64 @@ translate_binary_type_trait (clang::BinaryTypeTrait trait)
   throw std::runtime_error ("invalid binary type trait");
 }
 
+
+UnaryTypeTrait
+translate_unary_type_trait (clang::UnaryTypeTrait trait)
+{
+  switch (trait)
+    {
+    case clang::UTT_HasNothrowAssign             : return UTT_HasNothrowAssign;
+    case clang::UTT_HasNothrowMoveAssign         : return UTT_HasNothrowMoveAssign;
+    case clang::UTT_HasNothrowCopy               : return UTT_HasNothrowCopy;
+    case clang::UTT_HasNothrowConstructor        : return UTT_HasNothrowConstructor;
+    case clang::UTT_HasTrivialAssign             : return UTT_HasTrivialAssign;
+    case clang::UTT_HasTrivialMoveAssign         : return UTT_HasTrivialMoveAssign;
+    case clang::UTT_HasTrivialCopy               : return UTT_HasTrivialCopy;
+    case clang::UTT_HasTrivialDefaultConstructor : return UTT_HasTrivialDefaultConstructor;
+    case clang::UTT_HasTrivialMoveConstructor    : return UTT_HasTrivialMoveConstructor;
+    case clang::UTT_HasTrivialDestructor         : return UTT_HasTrivialDestructor;
+    case clang::UTT_HasVirtualDestructor         : return UTT_HasVirtualDestructor;
+    case clang::UTT_IsAbstract                   : return UTT_IsAbstract;
+    case clang::UTT_IsArithmetic                 : return UTT_IsArithmetic;
+    case clang::UTT_IsArray                      : return UTT_IsArray;
+    case clang::UTT_IsClass                      : return UTT_IsClass;
+    case clang::UTT_IsCompleteType               : return UTT_IsCompleteType;
+    case clang::UTT_IsCompound                   : return UTT_IsCompound;
+    case clang::UTT_IsConst                      : return UTT_IsConst;
+    case clang::UTT_IsEmpty                      : return UTT_IsEmpty;
+    case clang::UTT_IsEnum                       : return UTT_IsEnum;
+    case clang::UTT_IsFinal                      : return UTT_IsFinal;
+    case clang::UTT_IsFloatingPoint              : return UTT_IsFloatingPoint;
+    case clang::UTT_IsFunction                   : return UTT_IsFunction;
+    case clang::UTT_IsFundamental                : return UTT_IsFundamental;
+    case clang::UTT_IsIntegral                   : return UTT_IsIntegral;
+    case clang::UTT_IsInterfaceClass             : return UTT_IsInterfaceClass;
+    case clang::UTT_IsLiteral                    : return UTT_IsLiteral;
+    case clang::UTT_IsLvalueReference            : return UTT_IsLvalueReference;
+    case clang::UTT_IsMemberFunctionPointer      : return UTT_IsMemberFunctionPointer;
+    case clang::UTT_IsMemberObjectPointer        : return UTT_IsMemberObjectPointer;
+    case clang::UTT_IsMemberPointer              : return UTT_IsMemberPointer;
+    case clang::UTT_IsObject                     : return UTT_IsObject;
+    case clang::UTT_IsPOD                        : return UTT_IsPOD;
+    case clang::UTT_IsPointer                    : return UTT_IsPointer;
+    case clang::UTT_IsPolymorphic                : return UTT_IsPolymorphic;
+    case clang::UTT_IsReference                  : return UTT_IsReference;
+    case clang::UTT_IsRvalueReference            : return UTT_IsRvalueReference;
+    case clang::UTT_IsScalar                     : return UTT_IsScalar;
+    case clang::UTT_IsSealed                     : return UTT_IsSealed;
+    case clang::UTT_IsSigned                     : return UTT_IsSigned;
+    case clang::UTT_IsStandardLayout             : return UTT_IsStandardLayout;
+    case clang::UTT_IsTrivial                    : return UTT_IsTrivial;
+    case clang::UTT_IsTriviallyCopyable          : return UTT_IsTriviallyCopyable;
+    case clang::UTT_IsUnion                      : return UTT_IsUnion;
+    case clang::UTT_IsUnsigned                   : return UTT_IsUnsigned;
+    case clang::UTT_IsVoid                       : return UTT_IsVoid;
+    case clang::UTT_IsVolatile                   : return UTT_IsVolatile;
+    }
+  throw std::runtime_error ("invalid unary type trait");
+}
+
+
 CapturedRegionKind
 translate_captured_region_kind (clang::CapturedRegionKind kind)
 {

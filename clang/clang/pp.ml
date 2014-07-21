@@ -264,6 +264,55 @@ let string_of_binary_type_trait = function
   | BTT_TypeCompatible		-> "TypeCompatible"
   | BTT_IsTriviallyAssignable	-> "IsTriviallyAssignable"
 
+let string_of_unary_type_trait = function
+  | UTT_HasNothrowAssign              -> "HasNothrowAssign"
+  | UTT_HasNothrowMoveAssign          -> "HasNothrowMoveAssign"
+  | UTT_HasNothrowCopy                -> "HasNothrowCopy"
+  | UTT_HasNothrowConstructor         -> "HasNothrowConstructor"
+  | UTT_HasTrivialAssign              -> "HasTrivialAssign"
+  | UTT_HasTrivialMoveAssign          -> "HasTrivialMoveAssign"
+  | UTT_HasTrivialCopy                -> "HasTrivialCopy"
+  | UTT_HasTrivialDefaultConstructor  -> "HasTrivialDefaultConstructor"
+  | UTT_HasTrivialMoveConstructor     -> "HasTrivialMoveConstructor"
+  | UTT_HasTrivialDestructor          -> "HasTrivialDestructor"
+  | UTT_HasVirtualDestructor          -> "HasVirtualDestructor"
+  | UTT_IsAbstract                    -> "IsAbstract"
+  | UTT_IsArithmetic                  -> "IsArithmetic"
+  | UTT_IsArray                       -> "IsArray"
+  | UTT_IsClass                       -> "IsClass"
+  | UTT_IsCompleteType                -> "IsCompleteType"
+  | UTT_IsCompound                    -> "IsCompound"
+  | UTT_IsConst                       -> "IsConst"
+  | UTT_IsEmpty                       -> "IsEmpty"
+  | UTT_IsEnum                        -> "IsEnum"
+  | UTT_IsFinal                       -> "IsFinal"
+  | UTT_IsFloatingPoint               -> "IsFloatingPoint"
+  | UTT_IsFunction                    -> "IsFunction"
+  | UTT_IsFundamental                 -> "IsFundamental"
+  | UTT_IsIntegral                    -> "IsIntegral"
+  | UTT_IsInterfaceClass              -> "IsInterfaceClass"
+  | UTT_IsLiteral                     -> "IsLiteral"
+  | UTT_IsLvalueReference             -> "IsLvalueReference"
+  | UTT_IsMemberFunctionPointer       -> "IsMemberFunctionPointer"
+  | UTT_IsMemberObjectPointer         -> "IsMemberObjectPointer"
+  | UTT_IsMemberPointer               -> "IsMemberPointer"
+  | UTT_IsObject                      -> "IsObject"
+  | UTT_IsPOD                         -> "IsPOD"
+  | UTT_IsPointer                     -> "IsPointer"
+  | UTT_IsPolymorphic                 -> "IsPolymorphic"
+  | UTT_IsReference                   -> "IsReference"
+  | UTT_IsRvalueReference             -> "IsRvalueReference"
+  | UTT_IsScalar                      -> "IsScalar"
+  | UTT_IsSealed                      -> "IsSealed"
+  | UTT_IsSigned                      -> "IsSigned"
+  | UTT_IsStandardLayout              -> "IsStandardLayout"
+  | UTT_IsTrivial                     -> "IsTrivial"
+  | UTT_IsTriviallyCopyable           -> "IsTriviallyCopyable"
+  | UTT_IsUnion                       -> "IsUnion"
+  | UTT_IsUnsigned                    -> "IsUnsigned"
+  | UTT_IsVoid                        -> "IsVoid"
+  | UTT_IsVolatile                    -> "IsVolatile"
+
 let string_of_captured_region_kind = function
   | CR_Default -> "Default"
   | CR_OpenMP  -> "OpenMP"
@@ -415,6 +464,10 @@ and pp_expr_ fmt = function
         (string_of_binary_type_trait trait)
         pp_ctyp lhs
         pp_ctyp rhs
+  | UnaryTypeTraitExpr (trait, queried) ->
+      Format.fprintf fmt "%s (%a)"
+        (string_of_unary_type_trait trait)
+        pp_ctyp queried
   | ConvertVectorExpr (src, ty) ->
       Format.fprintf fmt "convert_vector(%a, %a)"
         pp_expr src
@@ -495,7 +548,6 @@ and pp_expr_ fmt = function
   | SubstNonTypeTemplateParmExpr -> Format.pp_print_string fmt "<SubstNonTypeTemplateParmExpr>"
   | SubstNonTypeTemplateParmPackExpr -> Format.pp_print_string fmt "<SubstNonTypeTemplateParmPackExpr>"
   | TypeTraitExpr -> Format.pp_print_string fmt "<TypeTraitExpr>"
-  | UnaryTypeTraitExpr -> Format.pp_print_string fmt "<UnaryTypeTraitExpr>"
   | UnresolvedLookupExpr -> Format.pp_print_string fmt "<UnresolvedLookupExpr>"
   | UnresolvedMemberExpr -> Format.pp_print_string fmt "<UnresolvedMemberExpr>"
   | UserDefinedLiteral -> Format.pp_print_string fmt "<UserDefinedLiteral>"
