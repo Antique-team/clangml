@@ -601,6 +601,18 @@ OCamlVisitor::TraverseCXXNullPtrLiteralExpr (clang::CXXNullPtrLiteralExpr *S)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseGNUNullExpr (clang::GNUNullExpr *S)
+{
+  TRACE;
+
+  ptr<Ctyp> type = must_traverse (S->getType ());
+
+  stack.push (mkGNUNullExpr (type));
+
+  return true;
+}
+
 
 UNIMP_STMT (Expr, CXXOperatorCallExpr)
 UNIMP_STMT (Expr, CXXPseudoDestructorExpr)
@@ -619,7 +631,6 @@ UNIMP_STMT (Expr, ExpressionTraitExpr)
 UNIMP_STMT (Expr, ExprWithCleanups)
 UNIMP_STMT (Expr, FunctionParmPackExpr)
 UNIMP_STMT (Expr, GenericSelectionExpr)
-UNIMP_STMT (Expr, GNUNullExpr)
 UNIMP_STMT (Expr, LambdaExpr)
 UNIMP_STMT (Expr, MaterializeTemporaryExpr)
 UNIMP_STMT (Expr, MSPropertyRefExpr)

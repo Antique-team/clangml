@@ -821,6 +821,7 @@ and expr_ = AstBridge.expr_ =
   | ChooseExpr                  of (* cond *)expr
                                  * (* lhs *)expr
                                  * (* rhs *)expr
+  | GNUNullExpr                 of ctyp
 
   | ArrayTypeTraitExpr (* example: __array_rank and __array_extent *)
 
@@ -859,7 +860,6 @@ and expr_ = AstBridge.expr_ =
   | ExprWithCleanups
   | FunctionParmPackExpr
   | GenericSelectionExpr
-  | GNUNullExpr
   | LambdaExpr
   | MaterializeTemporaryExpr
   | MSPropertyRefExpr

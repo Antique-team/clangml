@@ -477,6 +477,9 @@ and pp_expr_ fmt = function
         pp_expr cond
         pp_expr lhs
         pp_expr rhs
+  | GNUNullExpr ty ->
+      Format.fprintf fmt "gnu_null (%a)"
+        pp_ctyp ty
 
 
   | CXXNullPtrLiteralExpr ->
@@ -522,7 +525,6 @@ and pp_expr_ fmt = function
   | ExprWithCleanups -> Format.pp_print_string fmt "<ExprWithCleanups>"
   | FunctionParmPackExpr -> Format.pp_print_string fmt "<FunctionParmPackExpr>"
   | GenericSelectionExpr -> Format.pp_print_string fmt "<GenericSelectionExpr>"
-  | GNUNullExpr -> Format.pp_print_string fmt "<GNUNullExpr>"
   | LambdaExpr -> Format.pp_print_string fmt "<LambdaExpr>"
   | MaterializeTemporaryExpr -> Format.pp_print_string fmt "<MaterializeTemporaryExpr>"
   | MSPropertyRefExpr -> Format.pp_print_string fmt "<MSPropertyRefExpr>"
