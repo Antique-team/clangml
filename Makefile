@@ -53,6 +53,12 @@ reinstall:
 	@$(MAKE) install
 
 
+CPP_FILES := $(shell find */ -type f -wholename "*.cpp" \
+	                       -or -wholename "*.h")
+
+cpp_etags: $(CPP_FILES)
+	etags -o cpp_etags $(CPP_FILES)
+
 ####################################################################
 ## Testing
 ####################################################################
