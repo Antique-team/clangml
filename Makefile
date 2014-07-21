@@ -53,11 +53,23 @@ reinstall:
 	@$(MAKE) install
 
 
+# tags for C++ files
+# FBR: should remove _build from find's search path
 CPP_FILES := $(shell find */ -type f -wholename "*.cpp" \
-	                       -or -wholename "*.h")
+                                 -or -wholename "*.h")
 
 cpp_etags: $(CPP_FILES)
 	etags -o cpp_etags $(CPP_FILES)
+
+# tags for OCaml files
+# FBR: should remove _build from find's search path
+# FBR: should make otags parse files using the deriving syntax extension correctly
+ML_FILES := $(shell find */ -type f -wholename "*.ml" \
+                                -or -wholename "*.mli")
+
+ml_etags: $(ML_FILES)
+	otags -o ml_etags $(ML_FILES)
+
 
 ####################################################################
 ## Testing
