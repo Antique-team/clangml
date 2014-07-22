@@ -70,7 +70,7 @@ ML_FILES := $(shell find */ -type f -not -wholename "_build/*" \
                 -and -not -wholename "tools/visitgen/generateVisitor.ml" )
 
 
-DERIVING_ROOT := ~/.opam/4.01.0/lib/deriving
+DERIVING_ROOT := $(shell ocamlfind -query deriving)
 
 ml_etags: $(ML_FILES)
 	otags -pa $(DERIVING_ROOT)/pa_deriving_common.cma \
