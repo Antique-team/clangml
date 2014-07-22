@@ -54,9 +54,9 @@ reinstall:
 
 
 # tags for C++ files
-# FBR: should remove _build from find's search path
-CPP_FILES := $(shell find */ -type f -wholename "*.cpp" \
-                                 -or -wholename "*.h")
+CPP_FILES := $(shell find */ -type f -not -wholename "_build/*" \
+                                     -and \( -wholename "*.cpp" \
+                                           -or -wholename "*.h" \) )
 
 cpp_etags: $(CPP_FILES)
 	etags -o cpp_etags $(CPP_FILES)
