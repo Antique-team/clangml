@@ -67,8 +67,11 @@ cpp_etags: $(CPP_FILES)
 ML_FILES := $(shell find */ -type f -wholename "*.ml" \
                                 -or -wholename "*.mli")
 
+DERIVING_ROOT := ~/.opam/4.01.0/lib/deriving
+
 ml_etags: $(ML_FILES)
-	otags -o ml_etags $(ML_FILES)
+	otags -pa $(DERIVING_ROOT)/pa_deriving_common.cma -pa $(DERIVING_ROOT)/pa_deriving_std.cma \
+              -pa $(DERIVING_ROOT)/pa_deriving_classes.cma -o ml_etags $(ML_FILES)
 
 
 ####################################################################
