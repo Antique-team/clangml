@@ -589,6 +589,11 @@ type unary_type_trait = AstBridge.unary_type_trait =
   | UTT_IsVolatile
   deriving (Show)
 
+(* [clang/Basic/TypeTraits.h] *)
+type array_type_trait = AstBridge.array_type_trait =
+  | ATT_ArrayRank
+  | ATT_ArrayExtent
+  deriving (Show)
 
 (* [clang/AST/OperationKinds.h] *)
 type binary_operator = AstBridge.binary_operator =
@@ -822,8 +827,10 @@ and expr_ = AstBridge.expr_ =
                                  * (* lhs *)expr
                                  * (* rhs *)expr
   | GNUNullExpr                 of ctyp
+  | ArrayTypeTraitExpr          of (* trait *)array_type_trait
+                                 * (* queried *)ctyp
+                                 * (* dimension *)expr option
 
-  | ArrayTypeTraitExpr (* example: __array_rank and __array_extent *)
 
   | AsTypeExpr
   | BlockExpr

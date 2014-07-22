@@ -313,6 +313,10 @@ let string_of_unary_type_trait = function
   | UTT_IsVoid                        -> "IsVoid"
   | UTT_IsVolatile                    -> "IsVolatile"
 
+let string_of_array_type_trait = function
+  | ATT_ArrayRank   -> "ArrayRank"
+  | ATT_ArrayExtent -> "ArrayExtent"
+
 let string_of_captured_region_kind = function
   | CR_Default -> "Default"
   | CR_OpenMP  -> "OpenMP"
@@ -480,7 +484,15 @@ and pp_expr_ fmt = function
   | GNUNullExpr ty ->
       Format.fprintf fmt "gnu_null (%a)"
         pp_ctyp ty
-
+  | ArrayTypeTraitExpr (trait, queried, Some dimension) ->
+      Format.fprintf fmt "%s (%a, %a)"
+        (string_of_array_type_trait trait)
+        pp_ctyp queried
+        pp_expr dimension
+  | ArrayTypeTraitExpr (trait, queried, None) ->
+      Format.fprintf fmt "%s (%a)"
+        (string_of_array_type_trait trait)
+        pp_ctyp queried
 
   | CXXNullPtrLiteralExpr ->
       Format.fprintf fmt "nullptr"
@@ -490,7 +502,6 @@ and pp_expr_ fmt = function
         pp_expr expr
 
 
-  | ArrayTypeTraitExpr -> Format.pp_print_string fmt "<ArrayTypeTraitExpr>"
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
   | BlockExpr -> Format.pp_print_string fmt "<BlockExpr>"
   | CompoundAssignOperator -> Format.pp_print_string fmt "<CompoundAssignOperator>"

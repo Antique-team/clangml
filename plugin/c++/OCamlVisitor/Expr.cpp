@@ -545,6 +545,19 @@ OCamlVisitor::TraverseUnaryTypeTraitExpr (clang::UnaryTypeTraitExpr *S)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseArrayTypeTraitExpr (clang::ArrayTypeTraitExpr *S)
+{
+  TRACE;
+
+  ArrayTypeTrait trait = translate_array_type_trait (S->getTrait ());
+  ptr<Ctyp> queried = must_traverse (S->getQueriedType ());
+  option<Expr> dimension = maybe_traverse (S->getDimensionExpression ());
+
+  stack.push (mkArrayTypeTraitExpr (trait, queried, dimension));
+
+  return true;
+}
 
 bool
 OCamlVisitor::TraverseConvertVectorExpr (clang::ConvertVectorExpr *S)
@@ -574,7 +587,6 @@ OCamlVisitor::TraverseChooseExpr (clang::ChooseExpr *S)
 }
 
 
-UNIMP_STMT (Expr, ArrayTypeTraitExpr)
 UNIMP_STMT (Expr, AsTypeExpr)
 UNIMP_STMT (Expr, BlockExpr)
 UNIMP_STMT (Expr, CUDAKernelCallExpr)

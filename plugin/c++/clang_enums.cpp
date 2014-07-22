@@ -390,6 +390,17 @@ translate_unary_type_trait (clang::UnaryTypeTrait trait)
   throw std::runtime_error ("invalid unary type trait");
 }
 
+ArrayTypeTrait
+translate_array_type_trait (clang::ArrayTypeTrait trait)
+{
+  switch (trait)
+    {
+    case clang::ATT_ArrayRank  : return ATT_ArrayRank;
+    case clang::ATT_ArrayExtent: return ATT_ArrayExtent;
+    }
+  throw std::runtime_error ("invalid array type trait");
+}
+
 
 CapturedRegionKind
 translate_captured_region_kind (clang::CapturedRegionKind kind)
