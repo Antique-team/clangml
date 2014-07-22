@@ -55,23 +55,28 @@ reinstall:
 
 # tags for C++ files
 CPP_FILES := $(shell find */ -type f -not -wholename "_build/*" \
-                                     -and \( -wholename "*.cpp" \
-                                           -or -wholename "*.h" \) )
+			-and \( -wholename "*.cpp" -or -wholename "*.h" \) )
 
 cpp_etags: $(CPP_FILES)
 	etags -o cpp_etags $(CPP_FILES)
 
 # tags for OCaml files
-# FBR: should remove _build from find's search path
-# FBR: should make otags parse files using the deriving syntax extension correctly
-ML_FILES := $(shell find */ -type f -wholename "*.ml" \
-                                -or -wholename "*.mli")
+ML_FILES := $(shell find */ -type f -not -wholename "_build/*" \
+                -and \( -wholename "*.ml" -or -wholename "*.mli" \) \
+		-and -not -wholename "consumer/memcad/*" \
+                -and -not -wholename "tools/simplify/toSimple.ml" \
+                -and -not -wholename "tools/ocamlTypes/codegen.ml" \
+                -and -not -wholename "tools/ocamlTypes/parse.ml" \
+                -and -not -wholename "tools/visitgen/generateVisitor.ml" )
+
 
 DERIVING_ROOT := ~/.opam/4.01.0/lib/deriving
 
 ml_etags: $(ML_FILES)
-	otags -pa $(DERIVING_ROOT)/pa_deriving_common.cma -pa $(DERIVING_ROOT)/pa_deriving_std.cma \
-              -pa $(DERIVING_ROOT)/pa_deriving_classes.cma -o ml_etags $(ML_FILES)
+	otags -pa $(DERIVING_ROOT)/pa_deriving_common.cma \
+              -pa $(DERIVING_ROOT)/pa_deriving_std.cma \
+              -pa $(DERIVING_ROOT)/pa_deriving_classes.cma \
+              -o ml_etags $(ML_FILES)
 
 
 ####################################################################
