@@ -4,13 +4,8 @@
 ##
 #############################################################################
 
-main.native			MemCAD analyser with original ocamlyacc-based
-				parser. Called by batch.native on "make prtp".
-mainClang.native		MemCAD analyser with Clang-based parser.
-				Called by "batch.native -analyzer mainClang.native"
-processor.native		Test program for transformation from Clang AST
-				to MemCAD AST.
-batch.native			Regression testing batch program.
+processor.native		Test program to print out the Clang CST
+                                of a given source file
 
 clangaml.dylib			Clang plugin with OCaml linked in.
 				Communicates with mainClang and processor via
@@ -137,22 +132,6 @@ clang/transformation/splitInitialisers.ml
 clang/transformation/switchToIf.ml
 				Transform "switch" statements to a cascade of
                                 "if/else" statements.
-
-
-#############################################################################
-##
-## MemCAD
-##
-#############################################################################
-
-
-consumer/memcad/		MemCAD source tree (from git)
-consumer/mainClang.ml		MemCAD main file (from git) modified to use
-				Clang as its parser.
-consumer/processor.ml		Test program for the Clang parser and
-				transformation to MemCAD AST.
-consumer/transform.ml		Transform Clang AST to MemCAD AST. Must be run
-				after Clang.Transform.All.
 
 
 #############################################################################

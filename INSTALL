@@ -30,7 +30,6 @@ Dependencies
 - ANSITerminal
 - unix
 - camlp4.fulllib (Debian package: camlp4-extra)
-- apron (for MemCAD)
 
 
 Using OPAM
