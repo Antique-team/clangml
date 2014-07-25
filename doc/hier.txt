@@ -7,7 +7,7 @@
 processor.native		Test program to print out the Clang CST
                                 of a given source file
 
-clangaml.dylib			Clang plugin with OCaml linked in.
+clangml.dylib			Clang plugin with OCaml linked in.
 				Communicates with mainClang and processor via
                                 pipes, and with clang via C++ native calls.
 

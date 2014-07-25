@@ -293,7 +293,7 @@ let () =
           end;
 
 
-        rule "Generate file containing the search path for clangaml.dylib"
+        rule "Generate file containing the search path for clangml.dylib"
           ~prod:"clang/clang/config.ml"
           begin fun env build ->
             Cmd (S[
@@ -383,13 +383,13 @@ let () =
           end;
 
         rule "Clang plugin"
-          ~prod:"clangaml.dylib"
+          ~prod:"clangml.dylib"
           ~deps:objects
           begin fun env build ->
             Cmd (S(atomise ([
               "clang++";
               "-o";
-              "clangaml.dylib" ;
+              "clangml.dylib" ;
             ] @ objects) @ ldflags))
           end;
 

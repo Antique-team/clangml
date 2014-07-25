@@ -3,7 +3,7 @@
 #set -e
 
 # EDIT THIS TO FIT YOUR SETUP
-export CLANGML_PATH=/users/absint3/berenger/local_disk/src/clangaml/_build
+export CLANGML_PATH=/users/absint3/berenger/local_disk/src/clangml/_build
 
 # unless we are linking
 if [[ $@ != *\ -l* ]] ; then

@@ -4,7 +4,7 @@ export LD_LIBRARY_PATH := $(APRON_INST)
 MAIN = mainClang
 
 TARGETS =					\
-	clangaml.dylib				\
+	clangml.dylib				\
 	consumer/processor.native
 
 ALL_FILES := $(shell find */ -type f -not -wholename "_build/*" \
@@ -29,8 +29,8 @@ wc:
 
 
 install: $(MAIN).native
-	ocamlfind install clang META		\
-		_build/clangaml.dylib		\
+	ocamlfind install clangml META		\
+		_build/clangml.dylib		\
 		_build/clang/*.cm[iox]		\
 		_build/clang/*.o		\
 		_build/clang/clang/*.mli	\
@@ -39,7 +39,7 @@ install: $(MAIN).native
 		_build/util.o
 
 uninstall:
-	ocamlfind remove clang
+	ocamlfind remove clangml
 
 reinstall:
 	@$(MAKE) uninstall

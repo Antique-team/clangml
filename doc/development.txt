@@ -1,7 +1,7 @@
 
 - adding a new AST node
 
-  - populate a test.c file in clangaml root with the new feature to support
+  - populate a test.c file in clangml root with the new feature to support
   - make check # should crash
   - edit plugin/c++/OCamlVisitor/Stmt.cpp and clang/clang/ast.ml and
     clang/clang/pp.ml

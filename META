@@ -1,4 +1,4 @@
-# META file for clang library
+# META file for clangml library
 description = "Clang parser interface"
 version = "0.1"
 requires = "clang.parser,clang.transformation"

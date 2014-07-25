@@ -148,11 +148,11 @@ let parse args continue =
         with Unix.Unix_error _ ->
           false
       ) [
-        "clangaml.dylib";
-        "_build/clangaml.dylib";
-        "../../_build/clangaml.dylib";
-        clangml_path ^ "/clangaml.dylib";
-        Config.destdir ^ "/clang/clangaml.dylib";
+        "clangml.dylib";
+        "_build/clangml.dylib";
+        "../../_build/clangml.dylib";
+        clangml_path ^ "/clangml.dylib";
+        Config.destdir ^ "/clang/clangml.dylib";
       ]
 
     with Not_found ->
