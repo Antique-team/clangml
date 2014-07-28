@@ -426,6 +426,32 @@ OCamlVisitor::TraverseDecltypeTypeLoc (clang::DecltypeTypeLoc TL)
 
   return true;
 }
+
+bool
+OCamlVisitor::TraverseObjCObjectPointerTypeLoc (clang::ObjCObjectPointerTypeLoc TL)
+{
+  TRACE;
+
+  ptr<Tloc> pointee = must_traverse (TL.getPointeeLoc ());
+
+  stack.push (mkObjCObjectPointerTypeLoc (pointee));
+
+  return true;
+}
+
+bool
+OCamlVisitor::TraverseObjCObjectTypeLoc (clang::ObjCObjectTypeLoc TL)
+{
+  TRACE;
+
+  ptr<Tloc> base = must_traverse (TL.getBaseLoc ());
+
+  stack.push (mkObjCObjectTypeLoc (base));
+
+  return true;
+}
+
+
 UNIMP_TYPE_LOC (DependentName)
 UNIMP_TYPE_LOC (DependentSizedArray)
 UNIMP_TYPE_LOC (DependentSizedExtVector)
@@ -434,8 +460,6 @@ UNIMP_TYPE_LOC (InjectedClassName)
 UNIMP_TYPE_LOC (LValueReference)
 UNIMP_TYPE_LOC (MemberPointer)
 UNIMP_TYPE_LOC (ObjCInterface)
-UNIMP_TYPE_LOC (ObjCObject)
-UNIMP_TYPE_LOC (ObjCObjectPointer)
 UNIMP_TYPE_LOC (PackExpansion)
 UNIMP_TYPE_LOC (RValueReference)
 UNIMP_TYPE_LOC (SubstTemplateTypeParm)

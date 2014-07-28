@@ -305,13 +305,35 @@ OCamlVisitor::TraverseIncompleteArrayType (clang::IncompleteArrayType *T)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseObjCObjectPointerType (clang::ObjCObjectPointerType *T)
+{
+  TRACE;
+
+  ptr<Ctyp> pointee = must_traverse (T->getPointeeType ());
+
+  stack.push (mkObjCObjectPointerType (pointee));
+
+  return true;
+}
+
+bool
+OCamlVisitor::TraverseObjCObjectType (clang::ObjCObjectType *T)
+{
+  TRACE;
+
+  ptr<Ctyp> base = must_traverse (T->getBaseType ());
+
+  stack.push (mkObjCObjectType (base));
+
+  return true;
+}
+
 
 UNIMP_TYPE(InjectedClassName)
 UNIMP_TYPE(LValueReference)
 UNIMP_TYPE(MemberPointer)
 UNIMP_TYPE(ObjCInterface)
-UNIMP_TYPE(ObjCObjectPointer)
-UNIMP_TYPE(ObjCObject)
 UNIMP_TYPE(PackExpansion)
 bool
 OCamlVisitor::TraverseParenType (clang::ParenType *T)
