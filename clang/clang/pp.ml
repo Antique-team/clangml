@@ -763,7 +763,10 @@ and pp_tloc_ fmt = function
       Format.fprintf fmt "_Atomic %a"
         pp_tloc value
   | ObjCObjectPointerTypeLoc ty ->
-      Format.fprintf fmt "%a ptr"
+      Format.fprintf fmt "%a objc_obj_ptr"
+        pp_tloc ty
+  | ObjCObjectTypeLoc ty ->
+      Format.fprintf fmt "%a objc_obj"
         pp_tloc ty
 
 
@@ -778,7 +781,6 @@ and pp_tloc_ fmt = function
   | LValueReferenceTypeLoc -> Format.pp_print_string fmt "<LValueReferenceTypeLoc>"
   | MemberPointerTypeLoc -> Format.pp_print_string fmt "<MemberPointerTypeLoc>"
   | ObjCInterfaceTypeLoc -> Format.pp_print_string fmt "<ObjCInterfaceTypeLoc>"
-  | ObjCObjectTypeLoc -> Format.pp_print_string fmt "<ObjCObjectTypeLoc>"
   | PackExpansionTypeLoc -> Format.pp_print_string fmt "<PackExpansionTypeLoc>"
   | RValueReferenceTypeLoc -> Format.pp_print_string fmt "<RValueReferenceTypeLoc>"
   | SubstTemplateTypeParmTypeLoc -> Format.pp_print_string fmt "<SubstTemplateTypeParmTypeLoc>"
@@ -865,8 +867,11 @@ and pp_ctyp_ fmt = function
       Format.fprintf fmt "_Atomic %a"
         pp_ctyp value
   | ObjCObjectPointerType pointee ->
-      Format.fprintf fmt "%a ptr"
+      Format.fprintf fmt "%a objc_obj_ptr"
         pp_ctyp pointee
+  | ObjCObjectType base ->
+      Format.fprintf fmt "%a objc_obj"
+        pp_ctyp base
 
 
   | AutoType -> Format.pp_print_string fmt "<AutoType>"
@@ -879,7 +884,6 @@ and pp_ctyp_ fmt = function
   | LValueReferenceType -> Format.pp_print_string fmt "<LValueReferenceType>"
   | MemberPointerType -> Format.pp_print_string fmt "<MemberPointerType>"
   | ObjCInterfaceType -> Format.pp_print_string fmt "<ObjCInterfaceType>"
-  | ObjCObjectType -> Format.pp_print_string fmt "<ObjCObjectType>"
   | PackExpansionType -> Format.pp_print_string fmt "<PackExpansionType>"
   | RValueReferenceType -> Format.pp_print_string fmt "<RValueReferenceType>"
   | SubstTemplateTypeParmPackType -> Format.pp_print_string fmt "<SubstTemplateTypeParmPackType>"

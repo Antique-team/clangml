@@ -155,6 +155,8 @@ let rec tloc_of_ctyp sloc ty =
         AtomicTypeLoc (tloc_of_ctyp sloc ctyp)
     | ObjCObjectPointerType pointee ->
         ObjCObjectPointerTypeLoc (tloc_of_ctyp sloc pointee)
+    | ObjCObjectType base ->
+        ObjCObjectTypeLoc (tloc_of_ctyp sloc base)
 
 
 
@@ -169,7 +171,6 @@ let rec tloc_of_ctyp sloc ty =
     | LValueReferenceType -> LValueReferenceTypeLoc
     | MemberPointerType -> MemberPointerTypeLoc
     | ObjCInterfaceType -> ObjCInterfaceTypeLoc
-    | ObjCObjectType -> ObjCObjectTypeLoc
     | PackExpansionType -> PackExpansionTypeLoc
     | RValueReferenceType -> RValueReferenceTypeLoc
     | SubstTemplateTypeParmPackType -> SubstTemplateTypeParmPackTypeLoc
