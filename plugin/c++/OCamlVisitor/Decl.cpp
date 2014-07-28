@@ -459,12 +459,25 @@ OCamlVisitor::TraverseStaticAssertDecl (clang::StaticAssertDecl *D)
 
   return true;
 }
+
+bool
+OCamlVisitor::TraverseObjCInterfaceDecl (clang::ObjCInterfaceDecl *D)
+{
+  TRACE;
+
+  clang::StringRef name = D->getName ();
+
+  stack.push (mkObjCInterfaceDecl (name));
+
+  return true;
+}
+
+
 UNIMP_DECL (NonTypeTemplateParmDecl)
 UNIMP_DECL (ObjCCategoryDecl)
 UNIMP_DECL (ObjCCategoryImplDecl)
 UNIMP_DECL (ObjCCompatibleAliasDecl)
 UNIMP_DECL (ObjCImplementationDecl)
-UNIMP_DECL (ObjCInterfaceDecl)
 UNIMP_DECL (ObjCMethodDecl)
 UNIMP_DECL (ObjCPropertyDecl)
 UNIMP_DECL (ObjCPropertyImplDecl)

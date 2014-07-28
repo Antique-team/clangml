@@ -1143,6 +1143,7 @@ and decl_ = AstBridge.decl_ =
   | StaticAssertDecl            of (* assert *)expr
                                  * (* message *)string
   | LabelDecl                   of (* name *)string
+  | ObjCInterfaceDecl           of (* name *)string
 
   | BlockDecl
   | ClassScopeFunctionSpecializationDecl
@@ -1158,7 +1159,6 @@ and decl_ = AstBridge.decl_ =
   | ObjCCategoryImplDecl
   | ObjCCompatibleAliasDecl
   | ObjCImplementationDecl
-  | ObjCInterfaceDecl
   | ObjCMethodDecl
   | ObjCPropertyDecl
   | ObjCPropertyImplDecl
