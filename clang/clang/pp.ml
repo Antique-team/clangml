@@ -1035,6 +1035,8 @@ and pp_decl_ fmt = function
         msg
   | LabelDecl name ->
       Format.fprintf fmt "label %s" name
+  | ObjCInterfaceDecl name ->
+      Format.fprintf fmt "objc_interface %s" name
 
 
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"
@@ -1051,7 +1053,6 @@ and pp_decl_ fmt = function
   | ObjCCategoryImplDecl -> Format.pp_print_string fmt "<ObjCCategoryImplDecl>"
   | ObjCCompatibleAliasDecl -> Format.pp_print_string fmt "<ObjCCompatibleAliasDecl>"
   | ObjCImplementationDecl -> Format.pp_print_string fmt "<ObjCImplementationDecl>"
-  | ObjCInterfaceDecl -> Format.pp_print_string fmt "<ObjCInterfaceDecl>"
   | ObjCMethodDecl -> Format.pp_print_string fmt "<ObjCMethodDecl>"
   | ObjCPropertyDecl -> Format.pp_print_string fmt "<ObjCPropertyDecl>"
   | ObjCPropertyImplDecl -> Format.pp_print_string fmt "<ObjCPropertyImplDecl>"
