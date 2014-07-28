@@ -689,7 +689,7 @@ and pp_tloc_ fmt = function
       Format.fprintf fmt "%a %a%s"
         pp_tloc unqual
         Formatx.(pp_list ~sep:(pp_sep "") pp_print_string)
-          (List.map string_of_qualifier quals)
+        (List.map string_of_qualifier quals)
         (match addr_space with
          | None -> ""
          | Some aspace -> " addr_space_" ^ string_of_int aspace)
@@ -762,6 +762,9 @@ and pp_tloc_ fmt = function
   | AtomicTypeLoc value ->
       Format.fprintf fmt "_Atomic %a"
         pp_tloc value
+  | ObjCObjectPointerTypeLoc ty ->
+      Format.fprintf fmt "%a ptr"
+        pp_tloc ty
 
 
   | DecayedTypeLoc _ -> Format.pp_print_string fmt "<DecayedTypeLoc>"
@@ -776,7 +779,6 @@ and pp_tloc_ fmt = function
   | MemberPointerTypeLoc -> Format.pp_print_string fmt "<MemberPointerTypeLoc>"
   | ObjCInterfaceTypeLoc -> Format.pp_print_string fmt "<ObjCInterfaceTypeLoc>"
   | ObjCObjectTypeLoc -> Format.pp_print_string fmt "<ObjCObjectTypeLoc>"
-  | ObjCObjectPointerTypeLoc -> Format.pp_print_string fmt "<ObjCObjectPointerTypeLoc>"
   | PackExpansionTypeLoc -> Format.pp_print_string fmt "<PackExpansionTypeLoc>"
   | RValueReferenceTypeLoc -> Format.pp_print_string fmt "<RValueReferenceTypeLoc>"
   | SubstTemplateTypeParmTypeLoc -> Format.pp_print_string fmt "<SubstTemplateTypeParmTypeLoc>"
@@ -862,6 +864,9 @@ and pp_ctyp_ fmt = function
   | AtomicType value ->
       Format.fprintf fmt "_Atomic %a"
         pp_ctyp value
+  | ObjCObjectPointerType pointee ->
+      Format.fprintf fmt "%a ptr"
+        pp_ctyp pointee
 
 
   | AutoType -> Format.pp_print_string fmt "<AutoType>"
@@ -874,7 +879,6 @@ and pp_ctyp_ fmt = function
   | LValueReferenceType -> Format.pp_print_string fmt "<LValueReferenceType>"
   | MemberPointerType -> Format.pp_print_string fmt "<MemberPointerType>"
   | ObjCInterfaceType -> Format.pp_print_string fmt "<ObjCInterfaceType>"
-  | ObjCObjectPointerType -> Format.pp_print_string fmt "<ObjCObjectPointerType>"
   | ObjCObjectType -> Format.pp_print_string fmt "<ObjCObjectType>"
   | PackExpansionType -> Format.pp_print_string fmt "<PackExpansionType>"
   | RValueReferenceType -> Format.pp_print_string fmt "<RValueReferenceType>"
@@ -890,7 +894,7 @@ and pp_ctyp fmt t =
   Format.fprintf fmt "%a %a%s"
     pp_ctyp_ t.t
     Formatx.(pp_list ~sep:(pp_sep "") pp_print_string)
-      (List.map string_of_qualifier t.t_qual)
+    (List.map string_of_qualifier t.t_qual)
     (match t.t_aspace with
      | None -> ""
      | Some aspace -> " addr_space_" ^ string_of_int aspace)
