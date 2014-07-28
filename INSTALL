@@ -21,9 +21,14 @@ Installation procedure
 The following two options are both attempted by the build system, but in case
 they fail, you can try them, yourself.
 
+External Dependencies
+---------------------
 
-Dependencies
-------------
+- libboost-dev (on Debian / Ubuntu)
+- clang-3.4 (on Debian / Ubuntu)
+
+OCaml Dependencies
+------------------
 
 - batteries
 - deriving
