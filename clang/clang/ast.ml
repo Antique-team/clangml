@@ -1155,6 +1155,7 @@ and decl_ = AstBridge.decl_ =
                                  * (* ivars *)decl list
   | ObjCIvarDecl                of access_control
                                  * field_decl
+  | ObjCProtocolDecl            of (* name *)string
 
 
   | BlockDecl
@@ -1174,7 +1175,6 @@ and decl_ = AstBridge.decl_ =
   | ObjCMethodDecl
   | ObjCPropertyDecl
   | ObjCPropertyImplDecl
-  | ObjCProtocolDecl
   | OMPThreadPrivateDecl
   | TemplateTemplateParmDecl
   | TypeAliasDecl
