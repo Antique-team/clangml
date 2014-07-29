@@ -7,6 +7,7 @@
 #include "delayed_exit.h"
 #include "trace.h"
 
+#include <clang/AST/DeclObjC.h>
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/Basic/SourceManager.h>
 
@@ -225,7 +226,7 @@ private:
     clang::SourceLocation start = deref (p).getLocStart ();
     clang::SourceLocation end   = deref (p).getLocEnd   ();
 
-    // FBR: may be too strict so commented out
+    // FBR: maybe too strict so commented out
     //assert (start.isValid () == end.isValid ());
     if (start.isValid() != end.isValid()) {
       fprintf(stderr, "WARNING: %s: %d: start.isValid() != end.isValid()\n",
@@ -258,6 +259,23 @@ private:
 
 
   // }}}
+
+  ptr<FieldDecl>
+  createFieldDecl (clang::FieldDecl *D)
+  {
+    ptr<FieldDecl> field = mkFieldDecl ();
+      
+    field->fd_type = getTypeLoc (D);
+    field->fd_name = D->getName ();
+    if (D->isBitField ())
+      field->fd_bitw = must_traverse (D->getBitWidth ());
+    if (D->hasInClassInitializer ())
+      field->fd_init = must_traverse (D->getInClassInitializer ());
+    field->fd_index = D->getFieldIndex ();
+    field->fd_mutable = D->isMutable ();
+
+    return field;
+  }
 
 public:
   OCamlVisitor (clang_context &ctx);

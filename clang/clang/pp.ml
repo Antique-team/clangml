@@ -321,6 +321,13 @@ let string_of_captured_region_kind = function
   | CR_Default -> "Default"
   | CR_OpenMP  -> "OpenMP"
 
+let string_of_objc_access_control = function
+  | AC_None      -> "none"
+  | AC_Private   -> "private"
+  | AC_Protected -> "protected"
+  | AC_Public    -> "public"
+  | AC_Package   -> "package"
+
 let is_prefix_op = function
   | UO_PostInc
   | UO_PostDec -> false
@@ -966,25 +973,8 @@ and pp_decl_ fmt = function
         (if name = "" then "<anonymous>" else name)
         pp_bases bases
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_decl) members
-  | FieldDecl { fd_type = ty;
-                fd_name = name;
-                fd_bitw = bitwidth;
-                fd_init = None;
-                fd_mutable = is_mutable;
-              } ->
-      Format.fprintf fmt "%s%a;@,"
-        (if is_mutable then "mutable " else "")
-        pp_named_arg (name, ty)
-  | FieldDecl { fd_type = ty;
-                fd_name = name;
-                fd_bitw = bitwidth;
-                fd_init = Some init;
-                fd_mutable = is_mutable;
-              } ->
-      Format.fprintf fmt "%s%a = %a;@,"
-        (if is_mutable then "mutable " else "")
-        pp_named_arg (name, ty)
-        pp_expr init
+  | FieldDecl fd ->
+      pp_field_decl fmt fd
   | EnumDecl (name, enumerators) ->
       Format.fprintf fmt "enum %s { %a };@,"
         name
@@ -1035,9 +1025,14 @@ and pp_decl_ fmt = function
         msg
   | LabelDecl name ->
       Format.fprintf fmt "label %s" name
-  | ObjCInterfaceDecl name ->
-      Format.fprintf fmt "objc_interface %s" name
-
+  | ObjCInterfaceDecl (name, ivars) ->
+      Format.fprintf fmt "@@interface %s { %a }@@end"
+        name
+        (Formatx.pp_list ~sep:(Formatx.pp_sep " ") pp_decl) ivars
+  | ObjCIvarDecl (access_control, field_decl) ->
+      Format.fprintf fmt "%s %a"
+        (string_of_objc_access_control access_control)
+        pp_field_decl field_decl
 
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"
   | ClassScopeFunctionSpecializationDecl -> Format.pp_print_string fmt "<ClassScopeFunctionSpecializationDecl>"
@@ -1069,7 +1064,6 @@ and pp_decl_ fmt = function
   | ClassTemplateSpecializationDecl -> Format.pp_print_string fmt "<ClassTemplateSpecializationDecl>"
   | ClassTemplatePartialSpecializationDecl -> Format.pp_print_string fmt "<ClassTemplatePartialSpecializationDecl>"
   | ObjCAtDefsFieldDecl -> Format.pp_print_string fmt "<ObjCAtDefsFieldDecl>"
-  | ObjCIvarDecl -> Format.pp_print_string fmt "<ObjCIvarDecl>"
   | CXXConstructorDecl -> Format.pp_print_string fmt "<CXXConstructorDecl>"
   | CXXConversionDecl -> Format.pp_print_string fmt "<CXXConversionDecl>"
   | CXXDestructorDecl -> Format.pp_print_string fmt "<CXXDestructorDecl>"
@@ -1088,3 +1082,17 @@ and pp_named_arg fmt = function
       Format.fprintf fmt "%s : %a"
         name
         pp_tloc ty
+
+and pp_field_decl fmt { fd_type = ty;
+                        fd_name = name;
+                        fd_bitw = bitwidth;
+                        fd_init = should_init;
+                        fd_mutable = is_mutable } =
+  match should_init with
+  | None -> Format.fprintf fmt "%s%a;@,"
+              (if is_mutable then "mutable " else "")
+              pp_named_arg (name, ty)
+  | Some init -> Format.fprintf fmt "%s%a = %a;@,"
+                   (if is_mutable then "mutable " else "")
+                   pp_named_arg (name, ty)
+                   pp_expr init

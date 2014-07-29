@@ -740,6 +740,14 @@ type captured_region_kind = AstBridge.captured_region_kind =
   deriving (Show)
 
 
+type access_control = AstBridge.access_control =
+  | AC_None
+  | AC_Private
+  | AC_Protected
+  | AC_Public
+  | AC_Package
+  deriving (Show)
+
 type sloc = AstBridge.sloc = {
   loc_s : Sloc.t;
   loc_e : Sloc.t;
@@ -1144,6 +1152,10 @@ and decl_ = AstBridge.decl_ =
                                  * (* message *)string
   | LabelDecl                   of (* name *)string
   | ObjCInterfaceDecl           of (* name *)string
+                                 * (* ivars *)decl list
+  | ObjCIvarDecl                of access_control
+                                 * field_decl
+
 
   | BlockDecl
   | ClassScopeFunctionSpecializationDecl
@@ -1175,7 +1187,6 @@ and decl_ = AstBridge.decl_ =
   | ClassTemplateSpecializationDecl
   | ClassTemplatePartialSpecializationDecl
   | ObjCAtDefsFieldDecl
-  | ObjCIvarDecl
   | CXXConstructorDecl
   | CXXConversionDecl
   | CXXDestructorDecl

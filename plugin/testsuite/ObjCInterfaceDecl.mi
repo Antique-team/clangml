@@ -1,2 +1,5 @@
-@interface Root
+@interface I {
+  void* ptr1;
+  void* ptr2;
+}
 @end

@@ -2,6 +2,7 @@
 #define CLANG_ENUMS_H
 
 #include <clang/AST/Expr.h>
+#include <clang/AST/DeclObjC.h>
 
 #include "ast_bridge.h"
 
@@ -21,5 +22,6 @@ ast_bridge::BinaryTypeTrait translate_binary_type_trait (clang::BinaryTypeTrait 
 ast_bridge::UnaryTypeTrait translate_unary_type_trait (clang::UnaryTypeTrait trait);
 ast_bridge::ArrayTypeTrait translate_array_type_trait (clang::ArrayTypeTrait trait);
 ast_bridge::CapturedRegionKind translate_captured_region_kind (clang::CapturedRegionKind kind);
+ast_bridge::AccessControl translate_access_control (clang::ObjCIvarDecl::AccessControl ac);
 
 #endif /* CLANG_ENUMS_H */
