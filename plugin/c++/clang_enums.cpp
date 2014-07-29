@@ -412,3 +412,18 @@ translate_captured_region_kind (clang::CapturedRegionKind kind)
     }
   throw std::runtime_error ("invalid captured region kind");
 }
+
+
+AccessControl
+translate_access_control (clang::ObjCIvarDecl::AccessControl ac)
+{
+  switch (ac)
+    {
+    case clang::ObjCIvarDecl::None      : return AC_None;
+    case clang::ObjCIvarDecl::Private   : return AC_Private;
+    case clang::ObjCIvarDecl::Protected : return AC_Protected;
+    case clang::ObjCIvarDecl::Public    : return AC_Public;
+    case clang::ObjCIvarDecl::Package   : return AC_Package;
+    }
+  throw std::runtime_error ("invalid access control");
+}

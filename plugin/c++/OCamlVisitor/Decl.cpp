@@ -224,16 +224,7 @@ OCamlVisitor::TraverseFieldDecl (clang::FieldDecl *D)
 {
   TRACE;
 
-  ptr<FieldDecl> field = mkFieldDecl ();
-
-  field->fd_type = getTypeLoc (D);
-  field->fd_name = D->getName ();
-  if (D->isBitField ())
-    field->fd_bitw = must_traverse (D->getBitWidth ());
-  if (D->hasInClassInitializer ())
-    field->fd_init = must_traverse (D->getInClassInitializer ());
-  field->fd_index = D->getFieldIndex ();
-  field->fd_mutable = D->isMutable ();
+  ptr<FieldDecl> field = createFieldDecl (D);
 
   stack.push (mkFieldDecl (field));
 
@@ -461,13 +452,33 @@ OCamlVisitor::TraverseStaticAssertDecl (clang::StaticAssertDecl *D)
 }
 
 bool
+OCamlVisitor::TraverseObjCIvarDecl (clang::ObjCIvarDecl *D)
+{
+  TRACE;
+
+  AccessControl ac = translate_access_control (D->getAccessControl ());
+  ptr<FieldDecl> field_decl = createFieldDecl (D);
+
+  stack.push (mkObjCIvarDecl (ac, field_decl));
+
+  return true;
+}
+
+bool
 OCamlVisitor::TraverseObjCInterfaceDecl (clang::ObjCInterfaceDecl *D)
 {
   TRACE;
 
   clang::StringRef name = D->getName ();
+  list<Decl> ivars;
+  for (clang::ObjCIvarDecl* iter = D->all_declared_ivar_begin ();
+       iter;
+       iter = iter->getNextIvar ())
+    {
+      ivars.push_back (must_traverse (iter));
+    }
 
-  stack.push (mkObjCInterfaceDecl (name));
+  stack.push (mkObjCInterfaceDecl (name, ivars));
 
   return true;
 }
@@ -522,7 +533,6 @@ UNIMP_DECL (VarTemplateDecl)
 UNIMP_DECL (ClassTemplateSpecializationDecl)
 UNIMP_DECL (ClassTemplatePartialSpecializationDecl)
 UNIMP_DECL (ObjCAtDefsFieldDecl)
-UNIMP_DECL (ObjCIvarDecl)
 UNIMP_DECL (ImplicitParamDecl)
 UNIMP_DECL (VarTemplateSpecializationDecl)
 UNIMP_DECL (VarTemplatePartialSpecializationDecl)

@@ -25,6 +25,7 @@ External Dependencies
 ---------------------
 
 - libboost-dev (on Debian / Ubuntu)
+- libtinfo-dev (on Debian / Ubuntu)
 - clang-3.4 (on Debian / Ubuntu)
 
 OCaml Dependencies
@@ -34,7 +35,7 @@ OCaml Dependencies
 - deriving
 - ANSITerminal
 - unix
-- camlp4.fulllib (Debian package: camlp4-extra)
+- camlp4.fulllib (OPAM package: camlp4; Debian package: camlp4-extra)
 
 
 Using OPAM
