@@ -1163,6 +1163,7 @@ and decl_ = AstBridge.decl_ =
                                  * (* name *)string
                                  * (* params *)decl list
   | ObjCImplementationDecl      of (* name *)string
+                                 * (* ivars *)decl list
 
 
   | BlockDecl

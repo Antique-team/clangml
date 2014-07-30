@@ -470,6 +470,7 @@ OCamlVisitor::TraverseObjCInterfaceDecl (clang::ObjCInterfaceDecl *D)
   TRACE;
 
   clang::StringRef name = D->getName ();
+
   list<Decl> ivars;
   for (clang::ObjCIvarDecl* it = D->all_declared_ivar_begin ();
        it;
@@ -551,7 +552,15 @@ OCamlVisitor::TraverseObjCImplementationDecl (clang::ObjCImplementationDecl *D)
 
   clang::StringRef name = D->getName();
 
-  stack.push (mkObjCImplementationDecl (name));
+  list<Decl> ivars;
+  for (clang::ObjCImplementationDecl::ivar_iterator it = D->ivar_begin ();
+       it != D->ivar_end ();
+       ++it)
+    {
+      ivars.push_back (must_traverse (*it));
+    }
+
+  stack.push (mkObjCImplementationDecl (name, ivars));
 
   return true;
 }
