@@ -1,2 +1,10 @@
-@protocol P
+@protocol P1
+@end
+
+@protocol P2
+@end
+
+@protocol P0 <P1, P2>
+- (int)getInt1;
+- (int)getInt2;
 @end
