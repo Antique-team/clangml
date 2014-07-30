@@ -1,6 +1,8 @@
 #include "backtrace.h"
 
+#define PACKAGE 1 // workaround to avoid config.h problem on Gentoo Linux
 #include <bfd.h>
+
 #include <cxxabi.h>
 #include <dlfcn.h>
 #include <execinfo.h>

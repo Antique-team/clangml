@@ -26,7 +26,7 @@ External Dependencies
 
 - libboost-dev (on Debian / Ubuntu)
 - libtinfo-dev (on Debian / Ubuntu)
-- clang-3.4 (on Debian / Ubuntu)
+- clang-3.4.1 (on Debian / Ubuntu)
 
 OCaml Dependencies
 ------------------
