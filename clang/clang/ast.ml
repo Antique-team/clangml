@@ -1153,6 +1153,7 @@ and decl_ = AstBridge.decl_ =
   | LabelDecl                   of (* name *)string
   | ObjCInterfaceDecl           of (* name *)string
                                  * (* ivars *)decl list
+                                 * (* methods *)decl list
   | ObjCIvarDecl                of access_control
                                  * field_decl
   | ObjCProtocolDecl            of (* name *)string
