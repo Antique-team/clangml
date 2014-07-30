@@ -956,6 +956,8 @@ and stmt_ = AstBridge.stmt_ =
                                  * (* captures *)stmt list
   | ObjCAtFinallyStmt           of (* body *)stmt
   | ObjCAtTryStmt               of (* body *)stmt
+  | ObjCAtCatchStmt             of (* param *)decl
+                                 * (* body *)stmt
 
 
   | AttributedStmt
@@ -964,7 +966,6 @@ and stmt_ = AstBridge.stmt_ =
   | CXXTryStmt
   | MSAsmStmt
   | MSDependentExistsStmt
-  | ObjCAtCatchStmt
   | ObjCAtSynchronizedStmt
   | ObjCAtThrowStmt
   | ObjCAutoreleasePoolStmt
