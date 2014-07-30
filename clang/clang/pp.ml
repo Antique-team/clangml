@@ -1026,7 +1026,7 @@ and pp_decl_ fmt = function
   | LabelDecl name ->
       Format.fprintf fmt "label %s" name
   | ObjCInterfaceDecl (name, ivars, methods) ->
-      Format.fprintf fmt "@@interface %s { %a }{ %a }@@end"
+      Format.fprintf fmt "@@interface %s { %a }{ %a } @@end"
         name
         (Formatx.pp_list ~sep:(Formatx.pp_sep "; ") pp_decl) ivars
         (Formatx.pp_list ~sep:(Formatx.pp_sep "; ") pp_decl) methods
@@ -1035,7 +1035,7 @@ and pp_decl_ fmt = function
         (string_of_objc_access_control access_control)
         pp_field_decl field_decl
   | ObjCProtocolDecl (name, referenced_protocols, methods) ->
-      Format.fprintf fmt "@@protocol %s <%a> { %a }@@end"
+      Format.fprintf fmt "@@protocol %s <%a> { %a } @@end"
         name
         (Formatx.pp_list Format.pp_print_string) referenced_protocols
         (Formatx.pp_list ~sep:(Formatx.pp_sep "; ") pp_decl) methods
@@ -1044,7 +1044,9 @@ and pp_decl_ fmt = function
         pp_ctyp result_type
         name
         (Formatx.pp_list pp_decl) params
-
+  | ObjCImplementationDecl name ->
+      Format.fprintf fmt "@@implementation %s {} @@end"
+        name
 
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"
   | ClassScopeFunctionSpecializationDecl -> Format.pp_print_string fmt "<ClassScopeFunctionSpecializationDecl>"
@@ -1059,7 +1061,6 @@ and pp_decl_ fmt = function
   | ObjCCategoryDecl -> Format.pp_print_string fmt "<ObjCCategoryDecl>"
   | ObjCCategoryImplDecl -> Format.pp_print_string fmt "<ObjCCategoryImplDecl>"
   | ObjCCompatibleAliasDecl -> Format.pp_print_string fmt "<ObjCCompatibleAliasDecl>"
-  | ObjCImplementationDecl -> Format.pp_print_string fmt "<ObjCImplementationDecl>"
   | ObjCPropertyDecl -> Format.pp_print_string fmt "<ObjCPropertyDecl>"
   | ObjCPropertyImplDecl -> Format.pp_print_string fmt "<ObjCPropertyImplDecl>"
   | OMPThreadPrivateDecl -> Format.pp_print_string fmt "<OMPThreadPrivateDecl>"

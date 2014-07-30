@@ -1162,6 +1162,7 @@ and decl_ = AstBridge.decl_ =
   | ObjCMethodDecl              of (* result *)ctyp
                                  * (* name *)string
                                  * (* params *)decl list
+  | ObjCImplementationDecl      of (* name *)string
 
 
   | BlockDecl
@@ -1177,7 +1178,6 @@ and decl_ = AstBridge.decl_ =
   | ObjCCategoryDecl
   | ObjCCategoryImplDecl
   | ObjCCompatibleAliasDecl
-  | ObjCImplementationDecl
   | ObjCPropertyDecl
   | ObjCPropertyImplDecl
   | OMPThreadPrivateDecl
