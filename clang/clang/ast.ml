@@ -1157,7 +1157,8 @@ and decl_ = AstBridge.decl_ =
                                  * field_decl
   | ObjCProtocolDecl            of (* name *)string
                                  * (* referenced protocols *)string list
-                                   (* FBR TODO: list of methods *)
+                                 * (* methods *)decl list
+  | ObjCMethodDecl              of (* name *)string
 
 
   | BlockDecl
@@ -1174,7 +1175,6 @@ and decl_ = AstBridge.decl_ =
   | ObjCCategoryImplDecl
   | ObjCCompatibleAliasDecl
   | ObjCImplementationDecl
-  | ObjCMethodDecl
   | ObjCPropertyDecl
   | ObjCPropertyImplDecl
   | OMPThreadPrivateDecl

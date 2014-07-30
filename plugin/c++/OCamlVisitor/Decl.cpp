@@ -490,16 +490,38 @@ OCamlVisitor::TraverseObjCProtocolDecl (clang::ObjCProtocolDecl *D)
   TRACE;
 
   clang::StringRef name = D->getName ();
-  std::vector<clang::StringRef> referenced_protocols;
 
-  clang::ObjCProtocolDecl::protocol_iterator it = D->protocol_begin ();
-  for (unsigned i = 0; i < D->protocol_size () ; ++i)
+  std::vector<clang::StringRef> referenced_protocols;
+  
+  for (clang::ObjCProtocolDecl::protocol_iterator it = D->protocol_begin ();
+       it != D->protocol_end ();
+       ++it)
     {
-      clang::StringRef protocol_name = it[i]->getName ();
+      clang::StringRef protocol_name = (*it)->getName ();
       referenced_protocols.push_back (protocol_name);
     }
 
-  stack.push (mkObjCProtocolDecl (name, referenced_protocols));
+  list<Decl> methods;
+  for (clang::ObjCContainerDecl::method_iterator it = D->meth_begin();
+       it != D->meth_end();
+       ++it)
+    {
+      methods.push_back (must_traverse (*it));
+    }
+
+  stack.push (mkObjCProtocolDecl (name, referenced_protocols, methods));
+
+  return true;
+}
+
+bool
+OCamlVisitor::TraverseObjCMethodDecl (clang::ObjCMethodDecl *D)
+{
+  TRACE;
+
+  clang::StringRef name = D->getSelector().getNameForSlot(0);
+
+  stack.push (mkObjCMethodDecl (name));
 
   return true;
 }
@@ -510,7 +532,6 @@ UNIMP_DECL (ObjCCategoryDecl)
 UNIMP_DECL (ObjCCategoryImplDecl)
 UNIMP_DECL (ObjCCompatibleAliasDecl)
 UNIMP_DECL (ObjCImplementationDecl)
-UNIMP_DECL (ObjCMethodDecl)
 UNIMP_DECL (ObjCPropertyDecl)
 UNIMP_DECL (ObjCPropertyImplDecl)
 UNIMP_DECL (OMPThreadPrivateDecl)

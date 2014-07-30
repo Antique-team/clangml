@@ -1033,10 +1033,14 @@ and pp_decl_ fmt = function
       Format.fprintf fmt "%s %a"
         (string_of_objc_access_control access_control)
         pp_field_decl field_decl
-  | ObjCProtocolDecl (name, referenced_protocols) ->
-      Format.fprintf fmt "@@protocol %s <%a> { }@@end"
+  | ObjCProtocolDecl (name, referenced_protocols, methods) ->
+      Format.fprintf fmt "@@protocol %s <%a> { %a }@@end"
         name
         (Formatx.pp_list Format.pp_print_string) referenced_protocols
+        (Formatx.pp_list pp_decl) methods
+  | ObjCMethodDecl name ->
+      Format.fprintf fmt "%s"
+        name
 
 
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"
@@ -1053,7 +1057,6 @@ and pp_decl_ fmt = function
   | ObjCCategoryImplDecl -> Format.pp_print_string fmt "<ObjCCategoryImplDecl>"
   | ObjCCompatibleAliasDecl -> Format.pp_print_string fmt "<ObjCCompatibleAliasDecl>"
   | ObjCImplementationDecl -> Format.pp_print_string fmt "<ObjCImplementationDecl>"
-  | ObjCMethodDecl -> Format.pp_print_string fmt "<ObjCMethodDecl>"
   | ObjCPropertyDecl -> Format.pp_print_string fmt "<ObjCPropertyDecl>"
   | ObjCPropertyImplDecl -> Format.pp_print_string fmt "<ObjCPropertyImplDecl>"
   | OMPThreadPrivateDecl -> Format.pp_print_string fmt "<OMPThreadPrivateDecl>"
