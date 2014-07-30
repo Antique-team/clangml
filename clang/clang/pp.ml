@@ -664,7 +664,10 @@ and pp_stmt_ fmt = function
         pp_decl decl
         (Formatx.pp_list pp_stmt) captures
   | ObjCAtFinallyStmt body ->
-      Format.fprintf fmt "@@finally { %a }"
+      Format.fprintf fmt "@@finally %a"
+        pp_stmt body
+  | ObjCAtTryStmt body ->
+      Format.fprintf fmt "@@try %a"
         pp_stmt body
 
 
@@ -678,7 +681,6 @@ and pp_stmt_ fmt = function
   | ObjCAtCatchStmt -> Format.pp_print_string fmt "<ObjCAtCatchStmt>"
   | ObjCAtSynchronizedStmt -> Format.pp_print_string fmt "<ObjCAtSynchronizedStmt>"
   | ObjCAtThrowStmt -> Format.pp_print_string fmt "<ObjCAtThrowStmt>"
-  | ObjCAtTryStmt -> Format.pp_print_string fmt "<ObjCAtTryStmt>"
   | ObjCAutoreleasePoolStmt -> Format.pp_print_string fmt "<ObjCAutoreleasePoolStmt>"
   | ObjCForCollectionStmt -> Format.pp_print_string fmt "<ObjCForCollectionStmt>"
   | SEHExceptStmt -> Format.pp_print_string fmt "<SEHExceptStmt>"
