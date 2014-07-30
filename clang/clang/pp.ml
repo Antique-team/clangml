@@ -1038,8 +1038,9 @@ and pp_decl_ fmt = function
         name
         (Formatx.pp_list Format.pp_print_string) referenced_protocols
         (Formatx.pp_list pp_decl) methods
-  | ObjCMethodDecl name ->
-      Format.fprintf fmt "%s"
+  | ObjCMethodDecl (result_type, name) ->
+      Format.fprintf fmt "%a%s"
+        pp_ctyp result_type
         name
 
 

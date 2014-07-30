@@ -1158,7 +1158,8 @@ and decl_ = AstBridge.decl_ =
   | ObjCProtocolDecl            of (* name *)string
                                  * (* referenced protocols *)string list
                                  * (* methods *)decl list
-  | ObjCMethodDecl              of (* name *)string
+  | ObjCMethodDecl              of (* result *)ctyp
+                                 * (* name *)string
 
 
   | BlockDecl
