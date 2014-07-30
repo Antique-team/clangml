@@ -663,6 +663,9 @@ and pp_stmt_ fmt = function
         pp_stmt stmt
         pp_decl decl
         (Formatx.pp_list pp_stmt) captures
+  | ObjCAtFinallyStmt body ->
+      Format.fprintf fmt "@@finally { %a }"
+        pp_stmt body
 
 
   | OMPParallelDirective -> Format.pp_print_string fmt "<OMPParallelDirective>"
@@ -673,7 +676,6 @@ and pp_stmt_ fmt = function
   | MSAsmStmt -> Format.pp_print_string fmt "<MSAsmStmt>"
   | MSDependentExistsStmt -> Format.pp_print_string fmt "<MSDependentExistsStmt>"
   | ObjCAtCatchStmt -> Format.pp_print_string fmt "<ObjCAtCatchStmt>"
-  | ObjCAtFinallyStmt -> Format.pp_print_string fmt "<ObjCAtFinallyStmt>"
   | ObjCAtSynchronizedStmt -> Format.pp_print_string fmt "<ObjCAtSynchronizedStmt>"
   | ObjCAtThrowStmt -> Format.pp_print_string fmt "<ObjCAtThrowStmt>"
   | ObjCAtTryStmt -> Format.pp_print_string fmt "<ObjCAtTryStmt>"
