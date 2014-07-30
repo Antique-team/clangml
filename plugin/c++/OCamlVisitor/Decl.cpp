@@ -560,7 +560,15 @@ OCamlVisitor::TraverseObjCImplementationDecl (clang::ObjCImplementationDecl *D)
       ivars.push_back (must_traverse (*it));
     }
 
-  stack.push (mkObjCImplementationDecl (name, ivars));
+  list<Expr> initializers;
+  for (clang::ObjCImplementationDecl::init_iterator it = D->init_begin ();
+       it != D->init_end ();
+       ++it)
+    {
+      initializers.push_back (must_traverse ((*it)->getInit ()));
+    }
+
+  stack.push (mkObjCImplementationDecl (name, ivars, initializers));
 
   return true;
 }

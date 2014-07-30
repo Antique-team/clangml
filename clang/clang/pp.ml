@@ -1044,10 +1044,11 @@ and pp_decl_ fmt = function
         pp_ctyp result_type
         name
         (Formatx.pp_list pp_decl) params
-  | ObjCImplementationDecl (name, ivars) ->
-      Format.fprintf fmt "@@implementation %s { %a } {} @@end"
+  | ObjCImplementationDecl (name, ivars, initializers) ->
+      Format.fprintf fmt "@@implementation %s { %a } { %a } @@end"
         name
         (Formatx.pp_list ~sep:(Formatx.pp_sep "; ") pp_decl) ivars
+        (Formatx.pp_list pp_expr) initializers
 
 
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"
