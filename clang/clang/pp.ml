@@ -1033,9 +1033,10 @@ and pp_decl_ fmt = function
       Format.fprintf fmt "%s %a"
         (string_of_objc_access_control access_control)
         pp_field_decl field_decl
-  | ObjCProtocolDecl name ->
-      Format.fprintf fmt "@@protocol %s { }@@end"
+  | ObjCProtocolDecl (name, referenced_protocols) ->
+      Format.fprintf fmt "@@protocol %s <%a> { }@@end"
         name
+        (Formatx.pp_list Format.pp_print_string) referenced_protocols
 
 
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"

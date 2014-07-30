@@ -1156,6 +1156,8 @@ and decl_ = AstBridge.decl_ =
   | ObjCIvarDecl                of access_control
                                  * field_decl
   | ObjCProtocolDecl            of (* name *)string
+                                 * (* referenced protocols *)string list
+                                   (* FBR TODO: list of methods *)
 
 
   | BlockDecl

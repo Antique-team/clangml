@@ -490,8 +490,16 @@ OCamlVisitor::TraverseObjCProtocolDecl (clang::ObjCProtocolDecl *D)
   TRACE;
 
   clang::StringRef name = D->getName ();
+  std::vector<clang::StringRef> referenced_protocols;
 
-  stack.push (mkObjCProtocolDecl (name));
+  clang::ObjCProtocolDecl::protocol_iterator it = D->protocol_begin ();
+  for (unsigned i = 0; i < D->protocol_size () ; ++i)
+    {
+      clang::StringRef protocol_name = it[i]->getName ();
+      referenced_protocols.push_back (protocol_name);
+    }
+
+  stack.push (mkObjCProtocolDecl (name, referenced_protocols));
 
   return true;
 }
