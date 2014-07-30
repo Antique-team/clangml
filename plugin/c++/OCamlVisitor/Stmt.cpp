@@ -331,9 +331,17 @@ OCamlVisitor::TraverseObjCAtTryStmt (clang::ObjCAtTryStmt *S)
 {
   TRACE;
 
-  ptr<Stmt> body = must_traverse (S->getTryBody ());
+  ptr<Stmt> try_body = must_traverse (S->getTryBody ());
 
-  stack.push (mkObjCAtTryStmt (body));
+  list<Stmt> catch_stmts;
+  for (unsigned i = 0; i < S->getNumCatchStmts (); ++i)
+    {
+      catch_stmts.push_back(must_traverse (S->getCatchStmt (i)));
+    }
+
+  option<Stmt> finally_body = maybe_traverse (S->getFinallyStmt ());
+
+  stack.push (mkObjCAtTryStmt (try_body, catch_stmts, finally_body));
 
   return true;
 }

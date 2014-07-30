@@ -954,10 +954,12 @@ and stmt_ = AstBridge.stmt_ =
                                  * stmt
                                  * decl
                                  * (* captures *)stmt list
-  | ObjCAtFinallyStmt           of (* body *)stmt
-  | ObjCAtTryStmt               of (* body *)stmt
   | ObjCAtCatchStmt             of (* param *)decl
                                  * (* body *)stmt
+  | ObjCAtFinallyStmt           of (* body *)stmt
+  | ObjCAtTryStmt               of (* try body *)stmt
+                                 * (* catch stmts *)stmt list
+                                 * (* finally body *)stmt option
 
 
   | AttributedStmt

@@ -663,16 +663,22 @@ and pp_stmt_ fmt = function
         pp_stmt stmt
         pp_decl decl
         (Formatx.pp_list pp_stmt) captures
-  | ObjCAtFinallyStmt body ->
-      Format.fprintf fmt "@@finally %a"
-        pp_stmt body
-  | ObjCAtTryStmt body ->
-      Format.fprintf fmt "@@try %a"
-        pp_stmt body
   | ObjCAtCatchStmt (param, body) ->
       Format.fprintf fmt "@@catch (%a) %a"
         pp_decl param
         pp_stmt body
+  | ObjCAtFinallyStmt body ->
+      Format.fprintf fmt "@@finally %a"
+        pp_stmt body
+  | ObjCAtTryStmt (try_body, catch_stmts, Some finally_body) ->
+      Format.fprintf fmt "@@try %a %a %a"
+        pp_stmt try_body
+        (Formatx.pp_list pp_stmt) catch_stmts
+        pp_stmt finally_body
+  | ObjCAtTryStmt (try_body, catch_stmts, None) ->
+      Format.fprintf fmt "@@try %a %a"
+        pp_stmt try_body
+        (Formatx.pp_list pp_stmt) catch_stmts
       
 
   | OMPParallelDirective -> Format.pp_print_string fmt "<OMPParallelDirective>"
