@@ -1160,6 +1160,7 @@ and decl_ = AstBridge.decl_ =
                                  * (* methods *)decl list
   | ObjCMethodDecl              of (* result *)ctyp
                                  * (* name *)string
+                                 * (* params *)decl list
 
 
   | BlockDecl

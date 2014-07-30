@@ -1038,10 +1038,11 @@ and pp_decl_ fmt = function
         name
         (Formatx.pp_list Format.pp_print_string) referenced_protocols
         (Formatx.pp_list pp_decl) methods
-  | ObjCMethodDecl (result_type, name) ->
-      Format.fprintf fmt "%a%s"
+  | ObjCMethodDecl (result_type, name, params) ->
+      Format.fprintf fmt "%a%s (%a)"
         pp_ctyp result_type
         name
+        (Formatx.pp_list pp_decl) params
 
 
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"

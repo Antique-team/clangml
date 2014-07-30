@@ -523,7 +523,15 @@ OCamlVisitor::TraverseObjCMethodDecl (clang::ObjCMethodDecl *D)
 
   clang::StringRef name = D->getSelector().getNameForSlot(0);
 
-  stack.push (mkObjCMethodDecl (result_type, name));
+  list<Decl> params;
+  for (clang::ObjCMethodDecl::param_iterator it = D->param_begin();
+       it != D->param_end();
+       ++it)
+    {
+      params.push_back (must_traverse (*it));
+    }
+
+  stack.push (mkObjCMethodDecl (result_type, name, params));
 
   return true;
 }
