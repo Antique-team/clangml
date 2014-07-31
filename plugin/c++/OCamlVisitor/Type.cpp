@@ -329,11 +329,22 @@ OCamlVisitor::TraverseObjCObjectType (clang::ObjCObjectType *T)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseObjCInterfaceType (clang::ObjCInterfaceType *T)
+{
+  TRACE;
+
+  clang::StringRef name = T->getDecl ()->getName ();
+
+  stack.push (mkObjCInterfaceType (name));
+
+  return true;
+}
+
 
 UNIMP_TYPE(InjectedClassName)
 UNIMP_TYPE(LValueReference)
 UNIMP_TYPE(MemberPointer)
-UNIMP_TYPE(ObjCInterface)
 UNIMP_TYPE(PackExpansion)
 bool
 OCamlVisitor::TraverseParenType (clang::ParenType *T)

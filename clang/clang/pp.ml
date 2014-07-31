@@ -679,7 +679,7 @@ and pp_stmt_ fmt = function
       Format.fprintf fmt "@@try %a %a"
         pp_stmt try_body
         (Formatx.pp_list pp_stmt) catch_stmts
-      
+
 
   | OMPParallelDirective -> Format.pp_print_string fmt "<OMPParallelDirective>"
   | AttributedStmt -> Format.pp_print_string fmt "<AttributedStmt>"
@@ -783,11 +783,14 @@ and pp_tloc_ fmt = function
       Format.fprintf fmt "_Atomic %a"
         pp_tloc value
   | ObjCObjectPointerTypeLoc ty ->
-      Format.fprintf fmt "%a objc_obj_ptr"
+      Format.fprintf fmt "%a*"
         pp_tloc ty
   | ObjCObjectTypeLoc ty ->
-      Format.fprintf fmt "%a objc_obj"
+      Format.fprintf fmt "%a"
         pp_tloc ty
+  | ObjCInterfaceTypeLoc name ->
+      Format.fprintf fmt "%s"
+        name
 
 
   | DecayedTypeLoc _ -> Format.pp_print_string fmt "<DecayedTypeLoc>"
@@ -800,7 +803,6 @@ and pp_tloc_ fmt = function
   | InjectedClassNameTypeLoc -> Format.pp_print_string fmt "<InjectedClassNameTypeLoc>"
   | LValueReferenceTypeLoc -> Format.pp_print_string fmt "<LValueReferenceTypeLoc>"
   | MemberPointerTypeLoc -> Format.pp_print_string fmt "<MemberPointerTypeLoc>"
-  | ObjCInterfaceTypeLoc -> Format.pp_print_string fmt "<ObjCInterfaceTypeLoc>"
   | PackExpansionTypeLoc -> Format.pp_print_string fmt "<PackExpansionTypeLoc>"
   | RValueReferenceTypeLoc -> Format.pp_print_string fmt "<RValueReferenceTypeLoc>"
   | SubstTemplateTypeParmTypeLoc -> Format.pp_print_string fmt "<SubstTemplateTypeParmTypeLoc>"
@@ -887,11 +889,14 @@ and pp_ctyp_ fmt = function
       Format.fprintf fmt "_Atomic %a"
         pp_ctyp value
   | ObjCObjectPointerType pointee ->
-      Format.fprintf fmt "%a objc_obj_ptr"
+      Format.fprintf fmt "%a*"
         pp_ctyp pointee
   | ObjCObjectType base ->
-      Format.fprintf fmt "%a objc_obj"
+      Format.fprintf fmt "%a"
         pp_ctyp base
+  | ObjCInterfaceType name ->
+      Format.fprintf fmt "%s"
+        name
 
 
   | AutoType -> Format.pp_print_string fmt "<AutoType>"
@@ -903,7 +908,6 @@ and pp_ctyp_ fmt = function
   | InjectedClassNameType -> Format.pp_print_string fmt "<InjectedClassNameType>"
   | LValueReferenceType -> Format.pp_print_string fmt "<LValueReferenceType>"
   | MemberPointerType -> Format.pp_print_string fmt "<MemberPointerType>"
-  | ObjCInterfaceType -> Format.pp_print_string fmt "<ObjCInterfaceType>"
   | PackExpansionType -> Format.pp_print_string fmt "<PackExpansionType>"
   | RValueReferenceType -> Format.pp_print_string fmt "<RValueReferenceType>"
   | SubstTemplateTypeParmPackType -> Format.pp_print_string fmt "<SubstTemplateTypeParmPackType>"

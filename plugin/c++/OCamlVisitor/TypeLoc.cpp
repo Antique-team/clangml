@@ -451,6 +451,18 @@ OCamlVisitor::TraverseObjCObjectTypeLoc (clang::ObjCObjectTypeLoc TL)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseObjCInterfaceTypeLoc (clang::ObjCInterfaceTypeLoc TL)
+{
+  TRACE;
+
+  clang::StringRef name = TL.getIFaceDecl ()->getName ();
+
+  stack.push (mkObjCInterfaceTypeLoc (name));
+
+  return true;
+}
+
 
 UNIMP_TYPE_LOC (DependentName)
 UNIMP_TYPE_LOC (DependentSizedArray)
@@ -459,7 +471,6 @@ UNIMP_TYPE_LOC (DependentTemplateSpecialization)
 UNIMP_TYPE_LOC (InjectedClassName)
 UNIMP_TYPE_LOC (LValueReference)
 UNIMP_TYPE_LOC (MemberPointer)
-UNIMP_TYPE_LOC (ObjCInterface)
 UNIMP_TYPE_LOC (PackExpansion)
 UNIMP_TYPE_LOC (RValueReference)
 UNIMP_TYPE_LOC (SubstTemplateTypeParm)

@@ -1027,6 +1027,7 @@ and tloc_ = AstBridge.tloc_ =
   | AtomicTypeLoc		of (* value *)tloc
   | ObjCObjectPointerTypeLoc    of (* pointee *)tloc
   | ObjCObjectTypeLoc           of (* base *)tloc
+  | ObjCInterfaceTypeLoc        of (* name *)string
 
   | AutoTypeLoc
   | BlockPointerTypeLoc
@@ -1037,7 +1038,6 @@ and tloc_ = AstBridge.tloc_ =
   | InjectedClassNameTypeLoc
   | LValueReferenceTypeLoc
   | MemberPointerTypeLoc
-  | ObjCInterfaceTypeLoc
   | PackExpansionTypeLoc
   | RValueReferenceTypeLoc
   | SubstTemplateTypeParmTypeLoc
@@ -1091,6 +1091,7 @@ and ctyp_ = AstBridge.ctyp_ =
   | AtomicType			of (* value *)ctyp
   | ObjCObjectPointerType       of (* pointee *)ctyp
   | ObjCObjectType              of (* base *)ctyp
+  | ObjCInterfaceType           of (* name *)string
 
   | AutoType
   | BlockPointerType
@@ -1101,7 +1102,6 @@ and ctyp_ = AstBridge.ctyp_ =
   | InjectedClassNameType
   | LValueReferenceType
   | MemberPointerType
-  | ObjCInterfaceType
   | PackExpansionType
   | RValueReferenceType
   | SubstTemplateTypeParmPackType
