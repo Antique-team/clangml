@@ -369,12 +369,18 @@ and pp_desg fmt desg =
 
 
 and pp_expr_ fmt = function
-  | CharacterLiteral c -> Format.pp_print_string fmt (Char.escaped c)
-  | IntegerLiteral   i -> Format.pp_print_int    fmt i
-  | FloatingLiteral  f -> Format.pp_print_float  fmt f
-  | StringLiteral    s -> Format.fprintf         fmt "\"%s\"" (String.escaped s)
-  | ImaginaryLiteral l -> Format.fprintf         fmt "%ai" pp_expr l
-
+  | CharacterLiteral c ->
+      Format.pp_print_string fmt (Char.escaped c)
+  | IntegerLiteral i ->
+      Format.pp_print_int fmt i
+  | FloatingLiteral f ->
+      Format.pp_print_float fmt f
+  | StringLiteral s ->
+      Format.fprintf fmt "\"%s\""
+        (String.escaped s)
+  | ImaginaryLiteral l ->
+      Format.fprintf fmt "%ai"
+        pp_expr l
   | UnaryOperator (op, e) ->
       if is_prefix_op op then
         Format.fprintf fmt "(%s %a)" (string_of_unary_op op) pp_expr e
@@ -385,7 +391,6 @@ and pp_expr_ fmt = function
         pp_expr e1
         (string_of_binary_op op)
         pp_expr e2
-
   | DeclRefExpr name ->
       Format.pp_print_string fmt name
   | PredefinedExpr kind ->
@@ -446,7 +451,6 @@ and pp_expr_ fmt = function
       Format.fprintf fmt "offsetof (%a, %a)"
         pp_tloc ty
         (Formatx.pp_list pp_offsetof_node) components
-
   | SizeOfExpr expr ->
       Format.fprintf fmt "sizeof %a"
         pp_expr expr
@@ -506,19 +510,19 @@ and pp_expr_ fmt = function
       Format.fprintf fmt "%s (%a)"
         (string_of_array_type_trait trait)
         pp_ctyp queried
-
   | CXXNullPtrLiteralExpr ->
       Format.fprintf fmt "nullptr"
-
   | OpaqueValueExpr expr ->
       Format.fprintf fmt "opaque_value %a"
         pp_expr expr
   | ObjCStringLiteral s ->
       Format.fprintf fmt "@@\"%s\""
         (String.escaped s)
-  | ObjCMessageExpr kind ->
-      Format.fprintf fmt "[ %s ]"
+  | ObjCMessageExpr (kind, args) ->
+      Format.fprintf fmt "[ %s (%a) ]"
         (string_of_receiver_kind kind)
+        (Formatx.pp_list pp_expr) args
+
 
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
   | BlockExpr -> Format.pp_print_string fmt "<BlockExpr>"
