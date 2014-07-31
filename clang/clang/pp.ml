@@ -1038,9 +1038,10 @@ and pp_decl_ fmt = function
         msg
   | LabelDecl name ->
       Format.fprintf fmt "label %s" name
-  | ObjCInterfaceDecl (name, ivars, methods) ->
-      Format.fprintf fmt "@@interface %s { %a }{ %a } @@end"
+  | ObjCInterfaceDecl (name, referenced_protocols, ivars, methods) ->
+      Format.fprintf fmt "@@interface %s <%a> { %a }{ %a } @@end"
         name
+        (Formatx.pp_list Format.pp_print_string) referenced_protocols
         (Formatx.pp_list ~sep:(Formatx.pp_sep "; ") pp_decl) ivars
         (Formatx.pp_list ~sep:(Formatx.pp_sep "; ") pp_decl) methods
   | ObjCIvarDecl (access_control, field_decl) ->

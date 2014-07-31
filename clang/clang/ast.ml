@@ -1156,6 +1156,7 @@ and decl_ = AstBridge.decl_ =
                                  * (* message *)string
   | LabelDecl                   of (* name *)string
   | ObjCInterfaceDecl           of (* name *)string
+                                 * (* referenced protocols *)string list
                                  * (* ivars *)decl list
                                  * (* methods *)decl list
   | ObjCIvarDecl                of access_control

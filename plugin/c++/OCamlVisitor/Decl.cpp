@@ -471,6 +471,15 @@ OCamlVisitor::TraverseObjCInterfaceDecl (clang::ObjCInterfaceDecl *D)
 
   clang::StringRef name = D->getName ();
 
+  std::vector<clang::StringRef> referenced_protocols;
+  for (clang::ObjCProtocolDecl::protocol_iterator it = D->protocol_begin ();
+       it != D->protocol_end ();
+       ++it)
+    {
+      clang::StringRef protocol_name = (*it)->getName ();
+      referenced_protocols.push_back (protocol_name);
+    }
+
   list<Decl> ivars;
   for (clang::ObjCIvarDecl* it = D->all_declared_ivar_begin ();
        it;
@@ -487,7 +496,7 @@ OCamlVisitor::TraverseObjCInterfaceDecl (clang::ObjCInterfaceDecl *D)
       methods.push_back (must_traverse (*it));
     }
 
-  stack.push (mkObjCInterfaceDecl (name, ivars, methods));
+  stack.push (mkObjCInterfaceDecl (name, referenced_protocols, ivars, methods));
 
   return true;
 }
