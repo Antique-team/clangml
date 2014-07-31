@@ -630,6 +630,18 @@ OCamlVisitor::TraverseGNUNullExpr (clang::GNUNullExpr *S)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseObjCMessageExpr (clang::ObjCMessageExpr *S)
+{
+  TRACE;
+
+  ReceiverKind kind = translate_receiver_kind (S->getReceiverKind ());
+
+  stack.push (mkObjCMessageExpr (kind));
+
+  return true;
+}
+
 
 UNIMP_STMT (Expr, CXXOperatorCallExpr)
 UNIMP_STMT (Expr, CXXPseudoDestructorExpr)
@@ -660,7 +672,6 @@ UNIMP_STMT (Expr, ObjCEncodeExpr)
 UNIMP_STMT (Expr, ObjCIndirectCopyRestoreExpr)
 UNIMP_STMT (Expr, ObjCIsaExpr)
 UNIMP_STMT (Expr, ObjCIvarRefExpr)
-UNIMP_STMT (Expr, ObjCMessageExpr)
 UNIMP_STMT (Expr, ObjCPropertyRefExpr)
 UNIMP_STMT (Expr, ObjCProtocolExpr)
 UNIMP_STMT (Expr, ObjCSelectorExpr)

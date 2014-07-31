@@ -328,6 +328,12 @@ let string_of_objc_access_control = function
   | AC_Public    -> "public"
   | AC_Package   -> "package"
 
+let string_of_receiver_kind = function
+  | RK_Class         -> "class"
+  | RK_Instance      -> "instance"
+  | RK_SuperClass    -> "superClass"
+  | RK_SuperInstance -> "superInstance"
+
 let is_prefix_op = function
   | UO_PostInc
   | UO_PostDec -> false
@@ -510,7 +516,9 @@ and pp_expr_ fmt = function
   | ObjCStringLiteral s ->
       Format.fprintf fmt "@@\"%s\""
         (String.escaped s)
-      
+  | ObjCMessageExpr kind ->
+      Format.fprintf fmt "[ %s ]"
+        (string_of_receiver_kind kind)
 
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
   | BlockExpr -> Format.pp_print_string fmt "<BlockExpr>"
@@ -558,7 +566,6 @@ and pp_expr_ fmt = function
   | ObjCIndirectCopyRestoreExpr -> Format.pp_print_string fmt "<ObjCIndirectCopyRestoreExpr>"
   | ObjCIsaExpr -> Format.pp_print_string fmt "<ObjCIsaExpr>"
   | ObjCIvarRefExpr -> Format.pp_print_string fmt "<ObjCIvarRefExpr>"
-  | ObjCMessageExpr -> Format.pp_print_string fmt "<ObjCMessageExpr>"
   | ObjCPropertyRefExpr -> Format.pp_print_string fmt "<ObjCPropertyRefExpr>"
   | ObjCProtocolExpr -> Format.pp_print_string fmt "<ObjCProtocolExpr>"
   | ObjCSelectorExpr -> Format.pp_print_string fmt "<ObjCSelectorExpr>"

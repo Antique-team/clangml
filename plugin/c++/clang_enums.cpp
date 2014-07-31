@@ -427,3 +427,16 @@ translate_access_control (clang::ObjCIvarDecl::AccessControl ac)
     }
   throw std::runtime_error ("invalid access control");
 }
+
+ReceiverKind
+translate_receiver_kind (clang::ObjCMessageExpr::ReceiverKind kind)
+{
+  switch (kind)
+    {
+    case clang::ObjCMessageExpr::Class:         return RK_Class;        
+    case clang::ObjCMessageExpr::Instance:      return RK_Instance;     
+    case clang::ObjCMessageExpr::SuperClass:    return RK_SuperClass;   
+    case clang::ObjCMessageExpr::SuperInstance: return RK_SuperInstance;
+    }
+  throw std::runtime_error ("invalid objc receiver kind");
+}

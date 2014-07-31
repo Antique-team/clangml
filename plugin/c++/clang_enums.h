@@ -3,6 +3,7 @@
 
 #include <clang/AST/Expr.h>
 #include <clang/AST/DeclObjC.h>
+#include <clang/AST/ExprObjC.h>
 
 #include "ast_bridge.h"
 
@@ -23,5 +24,6 @@ ast_bridge::UnaryTypeTrait translate_unary_type_trait (clang::UnaryTypeTrait tra
 ast_bridge::ArrayTypeTrait translate_array_type_trait (clang::ArrayTypeTrait trait);
 ast_bridge::CapturedRegionKind translate_captured_region_kind (clang::CapturedRegionKind kind);
 ast_bridge::AccessControl translate_access_control (clang::ObjCIvarDecl::AccessControl ac);
+ast_bridge::ReceiverKind translate_receiver_kind (clang::ObjCMessageExpr::ReceiverKind kind);
 
 #endif /* CLANG_ENUMS_H */

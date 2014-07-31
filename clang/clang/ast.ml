@@ -748,6 +748,13 @@ type access_control = AstBridge.access_control =
   | AC_Package
   deriving (Show)
 
+type receiver_kind = AstBridge.receiver_kind =
+  | RK_Class
+  | RK_Instance
+  | RK_SuperClass
+  | RK_SuperInstance
+  deriving (Show)
+
 type sloc = AstBridge.sloc = {
   loc_s : Sloc.t;
   loc_e : Sloc.t;
@@ -839,7 +846,7 @@ and expr_ = AstBridge.expr_ =
                                  * (* queried *)ctyp
                                  * (* dimension *)expr option
   | ObjCStringLiteral           of string
-
+  | ObjCMessageExpr             of receiver_kind
 
   | AsTypeExpr
   | BlockExpr
@@ -888,7 +895,6 @@ and expr_ = AstBridge.expr_ =
   | ObjCIndirectCopyRestoreExpr
   | ObjCIsaExpr
   | ObjCIvarRefExpr
-  | ObjCMessageExpr
   | ObjCPropertyRefExpr
   | ObjCProtocolExpr
   | ObjCSelectorExpr
