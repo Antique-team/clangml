@@ -681,6 +681,9 @@ and pp_stmt_ fmt = function
       Format.fprintf fmt "@@try %a %a"
         pp_stmt try_body
         (Formatx.pp_list pp_stmt) catch_stmts
+  | ObjCAtThrowStmt expr ->
+      Format.fprintf fmt "@@throw %a;"
+        pp_expr expr
 
 
   | OMPParallelDirective -> Format.pp_print_string fmt "<OMPParallelDirective>"
@@ -691,7 +694,6 @@ and pp_stmt_ fmt = function
   | MSAsmStmt -> Format.pp_print_string fmt "<MSAsmStmt>"
   | MSDependentExistsStmt -> Format.pp_print_string fmt "<MSDependentExistsStmt>"
   | ObjCAtSynchronizedStmt -> Format.pp_print_string fmt "<ObjCAtSynchronizedStmt>"
-  | ObjCAtThrowStmt -> Format.pp_print_string fmt "<ObjCAtThrowStmt>"
   | ObjCAutoreleasePoolStmt -> Format.pp_print_string fmt "<ObjCAutoreleasePoolStmt>"
   | ObjCForCollectionStmt -> Format.pp_print_string fmt "<ObjCForCollectionStmt>"
   | SEHExceptStmt -> Format.pp_print_string fmt "<SEHExceptStmt>"

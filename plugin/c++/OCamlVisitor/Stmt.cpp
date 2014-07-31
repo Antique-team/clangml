@@ -359,6 +359,18 @@ OCamlVisitor::TraverseObjCAtCatchStmt (clang::ObjCAtCatchStmt *S)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseObjCAtThrowStmt (clang::ObjCAtThrowStmt *S)
+{
+  TRACE;
+
+  ptr<Expr> throw_expr = must_traverse (S->getThrowExpr ());
+
+  stack.push (mkObjCAtThrowStmt (throw_expr));
+
+  return true;
+}
+
 
 UNIMP_STMT (Stmt, AttributedStmt)
 UNIMP_STMT (Stmt, CXXCatchStmt)
@@ -367,7 +379,6 @@ UNIMP_STMT (Stmt, CXXTryStmt)
 UNIMP_STMT (Stmt, MSAsmStmt)
 UNIMP_STMT (Stmt, MSDependentExistsStmt)
 UNIMP_STMT (Stmt, ObjCAtSynchronizedStmt)
-UNIMP_STMT (Stmt, ObjCAtThrowStmt)
 UNIMP_STMT (Stmt, ObjCAutoreleasePoolStmt)
 UNIMP_STMT (Stmt, ObjCForCollectionStmt)
 UNIMP_STMT (Stmt, OMPParallelDirective)
