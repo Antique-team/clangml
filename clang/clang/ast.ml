@@ -847,6 +847,7 @@ and expr_ = AstBridge.expr_ =
                                  * (* dimension *)expr option
   | ObjCStringLiteral           of string
   | ObjCMessageExpr             of receiver_kind
+                                 * (* selector *)string
                                  * (* args *)expr list
 
 

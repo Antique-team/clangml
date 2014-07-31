@@ -637,12 +637,14 @@ OCamlVisitor::TraverseObjCMessageExpr (clang::ObjCMessageExpr *S)
 
   ReceiverKind kind = translate_receiver_kind (S->getReceiverKind ());
 
+  clang::StringRef selector = S->getSelector ().getNameForSlot (0);
+
   list<Expr> args;
   for (unsigned i = 0 ; i < S->getNumArgs () ; ++i) {
     args.push_back (must_traverse (S->getArg (i)));
   }
 
-  stack.push (mkObjCMessageExpr (kind, args));
+  stack.push (mkObjCMessageExpr (kind, selector, args));
 
   return true;
 }

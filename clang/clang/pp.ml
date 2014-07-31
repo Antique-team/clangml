@@ -518,9 +518,10 @@ and pp_expr_ fmt = function
   | ObjCStringLiteral s ->
       Format.fprintf fmt "@@\"%s\""
         (String.escaped s)
-  | ObjCMessageExpr (kind, args) ->
-      Format.fprintf fmt "[ %s (%a) ]"
+  | ObjCMessageExpr (kind, selector, args) ->
+      Format.fprintf fmt "[ %s.%s (%a) ]"
         (string_of_receiver_kind kind)
+        selector
         (Formatx.pp_list pp_expr) args
 
 
