@@ -838,6 +838,7 @@ and expr_ = AstBridge.expr_ =
   | ArrayTypeTraitExpr          of (* trait *)array_type_trait
                                  * (* queried *)ctyp
                                  * (* dimension *)expr option
+  | ObjCStringLiteral           of string
 
 
   | AsTypeExpr
@@ -891,7 +892,6 @@ and expr_ = AstBridge.expr_ =
   | ObjCPropertyRefExpr
   | ObjCProtocolExpr
   | ObjCSelectorExpr
-  | ObjCStringLiteral
   | ObjCSubscriptRefExpr
   | PackExpansionExpr
   | ParenListExpr

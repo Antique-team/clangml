@@ -507,7 +507,10 @@ and pp_expr_ fmt = function
   | OpaqueValueExpr expr ->
       Format.fprintf fmt "opaque_value %a"
         pp_expr expr
-
+  | ObjCStringLiteral s ->
+      Format.fprintf fmt "@@\"%s\""
+        (String.escaped s)
+      
 
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
   | BlockExpr -> Format.pp_print_string fmt "<BlockExpr>"
@@ -559,7 +562,6 @@ and pp_expr_ fmt = function
   | ObjCPropertyRefExpr -> Format.pp_print_string fmt "<ObjCPropertyRefExpr>"
   | ObjCProtocolExpr -> Format.pp_print_string fmt "<ObjCProtocolExpr>"
   | ObjCSelectorExpr -> Format.pp_print_string fmt "<ObjCSelectorExpr>"
-  | ObjCStringLiteral -> Format.pp_print_string fmt "<ObjCStringLiteral>"
   | ObjCSubscriptRefExpr -> Format.pp_print_string fmt "<ObjCSubscriptRefExpr>"
   | PackExpansionExpr -> Format.pp_print_string fmt "<PackExpansionExpr>"
   | ParenListExpr -> Format.pp_print_string fmt "<ParenListExpr>"

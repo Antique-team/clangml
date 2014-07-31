@@ -130,6 +130,11 @@ OCamlVisitor::TraverseStringLiteral (clang::StringLiteral *S)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseObjCStringLiteral (clang::ObjCStringLiteral *S)
+{
+  return TraverseStringLiteral (S->getString ());
+}
 
 bool
 OCamlVisitor::TraverseImaginaryLiteral (clang::ImaginaryLiteral *S)
@@ -659,7 +664,6 @@ UNIMP_STMT (Expr, ObjCMessageExpr)
 UNIMP_STMT (Expr, ObjCPropertyRefExpr)
 UNIMP_STMT (Expr, ObjCProtocolExpr)
 UNIMP_STMT (Expr, ObjCSelectorExpr)
-UNIMP_STMT (Expr, ObjCStringLiteral)
 UNIMP_STMT (Expr, ObjCSubscriptRefExpr)
 UNIMP_STMT (Expr, PackExpansionExpr)
 UNIMP_STMT (Expr, ParenListExpr)
