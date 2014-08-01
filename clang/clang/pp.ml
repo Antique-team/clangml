@@ -1095,6 +1095,13 @@ and pp_decl_ fmt = function
   | ObjCCategoryImplDecl name ->
       Format.fprintf fmt "(%s)"
         name
+  | ObjCCategoryDecl
+      (class_interface_name, name, referenced_protocols, methods) ->
+      Format.fprintf fmt "@@interface %s(%s) <%a> { %a } @@end"
+        class_interface_name
+        name
+        (Formatx.pp_list Format.pp_print_string) referenced_protocols
+        (Formatx.pp_list ~sep:(Formatx.pp_sep "; ") pp_decl) methods
 
 
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"
@@ -1107,7 +1114,6 @@ and pp_decl_ fmt = function
   | MSPropertyDecl -> Format.pp_print_string fmt "<MSPropertyDecl>"
   | NamespaceAliasDecl -> Format.pp_print_string fmt "<NamespaceAliasDecl>"
   | NonTypeTemplateParmDecl -> Format.pp_print_string fmt "<NonTypeTemplateParmDecl>"
-  | ObjCCategoryDecl -> Format.pp_print_string fmt "<ObjCCategoryDecl>"
   | ObjCCompatibleAliasDecl -> Format.pp_print_string fmt "<ObjCCompatibleAliasDecl>"
   | ObjCPropertyDecl -> Format.pp_print_string fmt "<ObjCPropertyDecl>"
   | ObjCPropertyImplDecl -> Format.pp_print_string fmt "<ObjCPropertyImplDecl>"

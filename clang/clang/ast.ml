@@ -1184,6 +1184,10 @@ and decl_ = AstBridge.decl_ =
                                  * (* ivars *)decl list
                                  * (* initializers *)expr list
   | ObjCCategoryImplDecl        of (* name *)string
+  | ObjCCategoryDecl            of (* class interface name *)string
+                                 * (* name *)string
+                                 * (* referenced protocols *)string list
+                                 * (* methods *)decl list
 
 
   | BlockDecl
@@ -1196,7 +1200,6 @@ and decl_ = AstBridge.decl_ =
   | MSPropertyDecl
   | NamespaceAliasDecl
   | NonTypeTemplateParmDecl
-  | ObjCCategoryDecl
   | ObjCCompatibleAliasDecl
   | ObjCPropertyDecl
   | ObjCPropertyImplDecl

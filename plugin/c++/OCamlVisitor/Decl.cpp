@@ -522,6 +522,39 @@ OCamlVisitor::TraverseObjCInterfaceDecl (clang::ObjCInterfaceDecl *D)
 
 
 bool
+OCamlVisitor::TraverseObjCCategoryDecl (clang::ObjCCategoryDecl *D)
+{
+  TRACE;
+
+  clang::StringRef class_interface_name = D->getClassInterface() ->getName ();
+
+  clang::StringRef name = D->getName ();
+
+  std::vector<clang::StringRef> referenced_protocols;
+  for (clang::ObjCProtocolDecl::protocol_iterator it = D->protocol_begin ();
+       it != D->protocol_end ();
+       ++it)
+    {
+      clang::StringRef protocol_name = (*it)->getName ();
+      referenced_protocols.push_back (protocol_name);
+    }
+
+  list<Decl> methods;
+  for (clang::ObjCContainerDecl::method_iterator it = D->meth_begin();
+       it != D->meth_end();
+       ++it)
+    {
+      methods.push_back (must_traverse (*it));
+    }
+
+  stack.push (mkObjCCategoryDecl
+              (class_interface_name, name, referenced_protocols, methods));
+
+  return true;
+}
+
+
+bool
 OCamlVisitor::TraverseObjCProtocolDecl (clang::ObjCProtocolDecl *D)
 {
   TRACE;
@@ -617,7 +650,6 @@ OCamlVisitor::TraverseObjCCategoryImplDecl
 
 
 UNIMP_DECL (NonTypeTemplateParmDecl)
-UNIMP_DECL (ObjCCategoryDecl)
 UNIMP_DECL (ObjCCompatibleAliasDecl)
 UNIMP_DECL (ObjCPropertyDecl)
 UNIMP_DECL (ObjCPropertyImplDecl)
