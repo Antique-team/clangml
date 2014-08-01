@@ -530,6 +530,9 @@ and pp_expr_ fmt = function
             selector
             (Formatx.pp_list pp_expr) args
       )
+  | ObjCEncodeExpr ctyp ->
+      Format.fprintf fmt "@@encode(%a)"
+        pp_ctyp ctyp
 
 
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
@@ -574,7 +577,6 @@ and pp_expr_ fmt = function
   | ObjCBoxedExpr -> Format.pp_print_string fmt "<ObjCBoxedExpr>"
   | ObjCBridgedCastExpr -> Format.pp_print_string fmt "<ObjCBridgedCastExpr>"
   | ObjCDictionaryLiteral -> Format.pp_print_string fmt "<ObjCDictionaryLiteral>"
-  | ObjCEncodeExpr -> Format.pp_print_string fmt "<ObjCEncodeExpr>"
   | ObjCIndirectCopyRestoreExpr -> Format.pp_print_string fmt "<ObjCIndirectCopyRestoreExpr>"
   | ObjCIsaExpr -> Format.pp_print_string fmt "<ObjCIsaExpr>"
   | ObjCIvarRefExpr -> Format.pp_print_string fmt "<ObjCIvarRefExpr>"

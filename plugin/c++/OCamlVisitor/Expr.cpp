@@ -669,6 +669,19 @@ OCamlVisitor::TraverseObjCMessageExpr (clang::ObjCMessageExpr *S)
 }
 
 
+bool
+OCamlVisitor::TraverseObjCEncodeExpr (clang::ObjCEncodeExpr *S)
+{
+  TRACE;
+
+  ptr<Ctyp> encoded_type = must_traverse (S->getEncodedType ());
+
+  stack.push (mkObjCEncodeExpr (encoded_type));
+
+  return true;
+}
+
+
 UNIMP_STMT (Expr, CXXOperatorCallExpr)
 UNIMP_STMT (Expr, CXXPseudoDestructorExpr)
 UNIMP_STMT (Expr, CXXReinterpretCastExpr)
@@ -694,7 +707,6 @@ UNIMP_STMT (Expr, ObjCBoolLiteralExpr)
 UNIMP_STMT (Expr, ObjCBoxedExpr)
 UNIMP_STMT (Expr, ObjCBridgedCastExpr)
 UNIMP_STMT (Expr, ObjCDictionaryLiteral)
-UNIMP_STMT (Expr, ObjCEncodeExpr)
 UNIMP_STMT (Expr, ObjCIndirectCopyRestoreExpr)
 UNIMP_STMT (Expr, ObjCIsaExpr)
 UNIMP_STMT (Expr, ObjCIvarRefExpr)

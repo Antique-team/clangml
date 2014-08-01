@@ -853,6 +853,7 @@ and expr_ = AstBridge.expr_ =
                                    (* (\* class receiver *\)ctyp option *)
                                  * string
                                  * (* args *)expr list
+  | ObjCEncodeExpr              of (* encoded type *)ctyp
 
 
   | AsTypeExpr
@@ -898,7 +899,6 @@ and expr_ = AstBridge.expr_ =
   | ObjCBoxedExpr
   | ObjCBridgedCastExpr
   | ObjCDictionaryLiteral
-  | ObjCEncodeExpr
   | ObjCIndirectCopyRestoreExpr
   | ObjCIsaExpr
   | ObjCIvarRefExpr
