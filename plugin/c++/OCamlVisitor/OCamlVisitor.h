@@ -260,23 +260,6 @@ private:
 
   // }}}
 
-  ptr<FieldDecl>
-  createFieldDecl (clang::FieldDecl *D)
-  {
-    ptr<FieldDecl> field = mkFieldDecl ();
-      
-    field->fd_type = getTypeLoc (D);
-    field->fd_name = D->getName ();
-    if (D->isBitField ())
-      field->fd_bitw = must_traverse (D->getBitWidth ());
-    if (D->hasInClassInitializer ())
-      field->fd_init = must_traverse (D->getInClassInitializer ());
-    field->fd_index = D->getFieldIndex ();
-    field->fd_mutable = D->isMutable ();
-
-    return field;
-  }
-
 public:
   OCamlVisitor (clang_context &ctx);
 
@@ -341,6 +324,8 @@ public:
    */
 
   ptr<DeclarationName> translate_declaration_name (clang::DeclarationName const &name);
+
+  ptr<FieldDecl> createFieldDecl (clang::FieldDecl *D);
 
   bool TraverseDecl (clang::Decl *D);
 

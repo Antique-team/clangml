@@ -37,6 +37,25 @@ OCamlVisitor::translate_declaration_name (clang::DeclarationName const &name)
 }
 
 
+ptr<FieldDecl>
+OCamlVisitor::createFieldDecl (clang::FieldDecl *D)
+{
+  ptr<FieldDecl> field = mkFieldDecl ();
+  
+  field->fd_type = getTypeLoc (D);
+  field->fd_name = D->getName ();
+  if (D->isBitField ())
+    field->fd_bitw = must_traverse (D->getBitWidth ());
+  if (D->hasInClassInitializer ())
+    field->fd_init = must_traverse (D->getInClassInitializer ());
+  field->fd_index = D->getFieldIndex ();
+  field->fd_mutable = D->isMutable ();
+  
+  return field;
+}
+
+
+
 /****************************************************
  * {{{1 Declarations
  */
