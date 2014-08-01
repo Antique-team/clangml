@@ -1183,6 +1183,7 @@ and decl_ = AstBridge.decl_ =
   | ObjCImplementationDecl      of (* name *)string
                                  * (* ivars *)decl list
                                  * (* initializers *)expr list
+  | ObjCCategoryImplDecl        of (* name *)string
 
 
   | BlockDecl
@@ -1196,7 +1197,6 @@ and decl_ = AstBridge.decl_ =
   | NamespaceAliasDecl
   | NonTypeTemplateParmDecl
   | ObjCCategoryDecl
-  | ObjCCategoryImplDecl
   | ObjCCompatibleAliasDecl
   | ObjCPropertyDecl
   | ObjCPropertyImplDecl

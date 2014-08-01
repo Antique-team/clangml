@@ -602,9 +602,22 @@ OCamlVisitor::TraverseObjCImplementationDecl (clang::ObjCImplementationDecl *D)
 }
 
 
+bool
+OCamlVisitor::TraverseObjCCategoryImplDecl
+(clang::ObjCCategoryImplDecl *D)
+{
+  TRACE;
+
+  clang::StringRef name = D->getName ();
+
+  stack.push (mkObjCCategoryImplDecl (name));
+
+  return true;
+}
+
+
 UNIMP_DECL (NonTypeTemplateParmDecl)
 UNIMP_DECL (ObjCCategoryDecl)
-UNIMP_DECL (ObjCCategoryImplDecl)
 UNIMP_DECL (ObjCCompatibleAliasDecl)
 UNIMP_DECL (ObjCPropertyDecl)
 UNIMP_DECL (ObjCPropertyImplDecl)

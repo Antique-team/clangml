@@ -1092,6 +1092,9 @@ and pp_decl_ fmt = function
         name
         (Formatx.pp_list ~sep:(Formatx.pp_sep "; ") pp_decl) ivars
         (Formatx.pp_list pp_expr) initializers
+  | ObjCCategoryImplDecl name ->
+      Format.fprintf fmt "(%s)"
+        name
 
 
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"
@@ -1105,7 +1108,6 @@ and pp_decl_ fmt = function
   | NamespaceAliasDecl -> Format.pp_print_string fmt "<NamespaceAliasDecl>"
   | NonTypeTemplateParmDecl -> Format.pp_print_string fmt "<NonTypeTemplateParmDecl>"
   | ObjCCategoryDecl -> Format.pp_print_string fmt "<ObjCCategoryDecl>"
-  | ObjCCategoryImplDecl -> Format.pp_print_string fmt "<ObjCCategoryImplDecl>"
   | ObjCCompatibleAliasDecl -> Format.pp_print_string fmt "<ObjCCompatibleAliasDecl>"
   | ObjCPropertyDecl -> Format.pp_print_string fmt "<ObjCPropertyDecl>"
   | ObjCPropertyImplDecl -> Format.pp_print_string fmt "<ObjCPropertyImplDecl>"
