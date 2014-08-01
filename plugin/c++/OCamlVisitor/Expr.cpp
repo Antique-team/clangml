@@ -635,7 +635,23 @@ OCamlVisitor::TraverseObjCMessageExpr (clang::ObjCMessageExpr *S)
 {
   TRACE;
 
-  ReceiverKind kind = translate_receiver_kind (S->getReceiverKind ());
+  // FIXME: this AST node is very probably incomplete
+
+  // ReceiverKind kind = translate_receiver_kind (S->getReceiverKind ());
+
+  //option<Ctyp> class_receiver = maybe_traverse (S->getClassReceiver ());
+  option<Expr> instance_receiver = maybe_traverse (S->getInstanceReceiver ());
+
+  // switch (kind) {
+  // case clang::ObjCMessageExpr::Class:
+  // case clang::ObjCMessageExpr::SuperClass:
+  //   class_receiver = maybe_traverse (S->getClassReceiver ());
+  //   break;
+  // case clang::ObjCMessageExpr::Instance:
+  // case clang::ObjCMessageExpr::SuperInstance:
+  //   instance_receiver = maybe_traverse (S->getInstanceReceiver ());
+  //   break;
+  // }
 
   clang::StringRef selector = S->getSelector ().getNameForSlot (0);
 
@@ -644,7 +660,10 @@ OCamlVisitor::TraverseObjCMessageExpr (clang::ObjCMessageExpr *S)
     args.push_back (must_traverse (S->getArg (i)));
   }
 
-  stack.push (mkObjCMessageExpr (kind, selector, args));
+  // stack.push (mkObjCMessageExpr
+  //             (instance_receiver, class_receiver, selector, args));
+
+  stack.push (mkObjCMessageExpr (instance_receiver, selector, args));
 
   return true;
 }

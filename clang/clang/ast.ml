@@ -846,8 +846,12 @@ and expr_ = AstBridge.expr_ =
                                  * (* queried *)ctyp
                                  * (* dimension *)expr option
   | ObjCStringLiteral           of string
-  | ObjCMessageExpr             of receiver_kind
-                                 * (* selector *)string
+  | ObjCMessageExpr             of (* instance receiver *)expr option
+  (* FIXME: 'ctyp option' are not allowed in this file
+             Cf. https://github.com/Antique-team/clangml/issues/43
+  *)
+                                   (* (\* class receiver *\)ctyp option *)
+                                 * string
                                  * (* args *)expr list
 
 
