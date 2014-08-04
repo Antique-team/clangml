@@ -522,17 +522,23 @@ and pp_expr_ fmt = function
                      maybe_class_receiver,
                      selector,
                      args) ->
-      (* TODO: maybe_class_receiver *)
-      (match maybe_instance_receiver with
-      | Some instance_receiver ->
+      (match maybe_instance_receiver, maybe_class_receiver with
+      | Some instance_receiver, None ->
           Format.fprintf fmt "[ %a %s (%a) ]"
             pp_expr instance_receiver
             selector
             (Formatx.pp_list pp_expr) args
-      | None ->
-          Format.fprintf fmt "[ FIXME %s (%a) ]"
+      | None, Some class_receiver ->
+          Format.fprintf fmt "[ %a %s (%a) ]"
+            pp_ctyp class_receiver
             selector
             (Formatx.pp_list pp_expr) args
+      | None, None ->
+        failwith "pp.ml: ObjCMessageExpr is neither an instance receiver \
+          nor a class receiver"
+      | Some instance_receiver, Some class_receiver ->
+        failwith "pp.ml: ObjCMessageExpr is both an instance receiver \
+          and a class receiver"
       )
   | ObjCEncodeExpr ctyp ->
       Format.fprintf fmt "@@encode(%a)"
