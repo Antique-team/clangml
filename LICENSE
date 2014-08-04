@@ -1,1 +1,2 @@
-Some part should become CeCILL C, some part should become BSD.
+Files under clang/clang/, util/ and plugin/ are under BSD.
+All the rest is under CeCILL-C.
