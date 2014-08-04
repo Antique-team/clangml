@@ -8,11 +8,6 @@ FILES[] +=
   test.cc
 
 _build: $(FILES)
-  make check
-  #make prtp
-
-.PHONY: build
-build: $(FILES)
   make
 
 .DEFAULT: _build

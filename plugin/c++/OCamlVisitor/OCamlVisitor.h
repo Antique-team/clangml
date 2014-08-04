@@ -140,6 +140,17 @@ private:
                  clang::OffsetOfExpr *S);
   void traverse (clang::CXXBaseSpecifier const &B);
 
+  template<typename T>
+  bool is_null (T p)
+  {
+    return p == nullptr;
+  }
+
+  bool is_null (clang::QualType T)
+  {
+    return T.isNull ();
+  }
+
 
   // May take a pointer or an object.
   // This function and maybe_traverse both pop and return the
@@ -161,7 +172,7 @@ private:
   template<typename T>
   dynamic_stack::element maybe_traverse (T p)
   {
-    if (!p)
+    if (is_null (p))
       return dynamic_stack::element { };
     return must_traverse (p);
   }

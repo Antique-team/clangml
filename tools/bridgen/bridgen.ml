@@ -277,44 +277,59 @@ let class_intf_for_sum_type ctx { st_name = sum_type_name;
     @ (* Then, tycons with arguments. *)
     List.mapi make_derived parameterised
   in
-  base :: derived
+  (base, derived)
 
 
 (*****************************************************
  * Main
  *****************************************************)
 
+(* Returns (enums+bases, records, deriveds).
+   This function only returns enums+bases and deriveds. *)
 let gen_code_for_sum_type ctx (sum_type : sum_type) =
   if List.mem sum_type.st_name ctx.enum_types then
-    [Codegen.Enum (enum_intf_for_constant_sum_type sum_type)]
+    ([Codegen.Enum (enum_intf_for_constant_sum_type sum_type)], [], [])
   else
-    List.map (fun i -> Codegen.Class i)
-      (class_intf_for_sum_type ctx sum_type)
+    (* Types. *)
+    let base, deriveds =
+      class_intf_for_sum_type ctx sum_type
+    in
 
-    @ List.map (fun { stb_name = branch_name; stb_types = types; } ->
-        let open Codegen in
-        let ty =
-          TyName (branch_name ^
-                  cpp_name sum_type.st_name)
-        in
-        let args =
-          List.mapi (fun i _ ->
-            IdExpr ("arg" ^ string_of_int i)
-          ) types
-        in
-        Function {
-          flags  = [Static; Inline];
-          retty  = TyTemplate ("ptr", ty);
-          name   = "mk" ^ branch_name;
-          params = constructor_params ctx types;
-          this_flags = [];
-          body   = CompoundStmt [
-            Return (
-              New (ty, args)
-            )
-          ];
-        }
-      ) sum_type.st_branches
+    let mkclass i = Codegen.Class i in
+
+    let base = mkclass base in
+    let deriveds =
+      List.map mkclass deriveds
+
+      (* mk* object creation functions. *)
+      @ List.map (fun { stb_name = branch_name; stb_types = types; } ->
+          let open Codegen in
+          let ty =
+            TyName (branch_name ^
+                    cpp_name sum_type.st_name)
+          in
+          let args =
+            List.mapi (fun i _ ->
+              IdExpr ("arg" ^ string_of_int i)
+            ) types
+          in
+          Function {
+            flags  = [Static; Inline];
+            retty  = TyTemplate ("ptr", ty);
+            name   = "mk" ^ branch_name;
+            params = constructor_params ctx types;
+            this_flags = [];
+            body   = CompoundStmt [
+              Return (
+                New (ty, args)
+              )
+            ];
+          }
+        ) sum_type.st_branches
+
+    in
+
+    ([base], [], deriveds)
 
 
 let class_intf_for_record_type ctx { rt_name = record_name;
@@ -345,6 +360,8 @@ let class_intf_for_record_type ctx { rt_name = record_name;
   }
 
 
+(* Returns (enums+bases, records, deriveds).
+   This one only adds records. *)
 let gen_code_for_record_type ctx (record_type : record_type) =
   let open Codegen in
 
@@ -365,13 +382,13 @@ let gen_code_for_record_type ctx (record_type : record_type) =
     }
   in
 
-  [Codegen.Class (class_intf_for_record_type ctx record_type); factory]
+  ([], [Codegen.Class (class_intf_for_record_type ctx record_type); factory], [])
 
 
 let gen_code_for_ocaml_type ctx = function
   | SumType ty -> gen_code_for_sum_type ctx ty
   | RecordType ty -> gen_code_for_record_type ctx ty
-  | AliasType _ -> []
+  | AliasType _ -> ([], [], [])
   | Version _ -> Log.err "version in recursive type"
   | RecursiveType _ -> Log.err "recursive type in recursive type"
 
@@ -387,15 +404,22 @@ let gen_code_for_rec_type ctx = function
       ) (List.filter (not % type_is_enum) rec_types)
       @
       (
-        List.map (gen_code_for_ocaml_type ctx) rec_types
-        |> List.flatten
+        List.rev_map (gen_code_for_ocaml_type ctx) rec_types
+        |> List.fold_left
+             (fun (bases, records, deriveds) (b, r, d) ->
+               (b @ bases, r @ records, d @ deriveds)
+             )
+             ([], [], [])
+        |> (fun (bases, records, deriveds) ->
+              bases @ records @ deriveds)
       )
   | Version (_, version) ->
       let open Codegen in
       let ty = TyConst (TyPointer (TyConst TyChar)) in
       [Variable (ty, "version", StrLit version)]
   | ty ->
-      gen_code_for_ocaml_type ctx ty
+      let (bases, records, deriveds) = gen_code_for_ocaml_type ctx ty in
+      bases @ records @ deriveds
 
 
 let code_gen dir basename (ocaml_types : ocaml_type list) =
