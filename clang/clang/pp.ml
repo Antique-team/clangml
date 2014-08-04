@@ -543,6 +543,22 @@ and pp_expr_ fmt = function
   | ObjCEncodeExpr ctyp ->
       Format.fprintf fmt "@@encode(%a)"
         pp_ctyp ctyp
+  | ObjCIvarRefExpr (expr, decl, is_arrow, is_free_ivar) ->
+    let name_of_field_decl_decl = function
+      | ObjCIvarDecl (_access_control, fd) -> fd.fd_name
+      | _ -> assert(false)
+    in
+    let maybe_arrow = if is_arrow then "->" else "." in
+    let field_name = name_of_field_decl_decl decl.d in
+    if is_free_ivar then
+      Format.fprintf fmt "self%s%s"
+        maybe_arrow
+        field_name
+    else
+      Format.fprintf fmt "%a%s%s"
+        pp_expr expr
+        maybe_arrow
+        field_name
 
 
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
@@ -589,7 +605,6 @@ and pp_expr_ fmt = function
   | ObjCDictionaryLiteral -> Format.pp_print_string fmt "<ObjCDictionaryLiteral>"
   | ObjCIndirectCopyRestoreExpr -> Format.pp_print_string fmt "<ObjCIndirectCopyRestoreExpr>"
   | ObjCIsaExpr -> Format.pp_print_string fmt "<ObjCIsaExpr>"
-  | ObjCIvarRefExpr -> Format.pp_print_string fmt "<ObjCIvarRefExpr>"
   | ObjCPropertyRefExpr -> Format.pp_print_string fmt "<ObjCPropertyRefExpr>"
   | ObjCProtocolExpr -> Format.pp_print_string fmt "<ObjCProtocolExpr>"
   | ObjCSelectorExpr -> Format.pp_print_string fmt "<ObjCSelectorExpr>"

@@ -665,6 +665,25 @@ OCamlVisitor::TraverseObjCEncodeExpr (clang::ObjCEncodeExpr *S)
 }
 
 
+bool
+OCamlVisitor::TraverseObjCIvarRefExpr (clang::ObjCIvarRefExpr *S)
+{
+  TRACE;
+
+  ptr<Expr> base = must_traverse (S->getBase ());
+
+  ptr<Decl> decl = must_traverse (S->getDecl ());
+
+  bool isArrow = S->isArrow ();
+
+  bool isFreeIvar = S->isFreeIvar ();
+
+  stack.push (mkObjCIvarRefExpr (base, decl, isArrow, isFreeIvar));
+
+  return true;
+}
+
+
 UNIMP_STMT (Expr, CXXOperatorCallExpr)
 UNIMP_STMT (Expr, CXXPseudoDestructorExpr)
 UNIMP_STMT (Expr, CXXReinterpretCastExpr)
@@ -692,7 +711,6 @@ UNIMP_STMT (Expr, ObjCBridgedCastExpr)
 UNIMP_STMT (Expr, ObjCDictionaryLiteral)
 UNIMP_STMT (Expr, ObjCIndirectCopyRestoreExpr)
 UNIMP_STMT (Expr, ObjCIsaExpr)
-UNIMP_STMT (Expr, ObjCIvarRefExpr)
 UNIMP_STMT (Expr, ObjCPropertyRefExpr)
 UNIMP_STMT (Expr, ObjCProtocolExpr)
 UNIMP_STMT (Expr, ObjCSelectorExpr)

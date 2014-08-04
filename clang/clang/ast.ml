@@ -851,6 +851,10 @@ and expr_ = AstBridge.expr_ =
                                  * (* selector *)string
                                  * (* args *)expr list
   | ObjCEncodeExpr              of (* encoded type *)ctyp
+  | ObjCIvarRefExpr             of (* base *)expr
+                                 * (* decl *)decl
+                                 * (* is_arrow *)bool
+                                 * (* is_free_ivar *)bool
 
 
   | AsTypeExpr
@@ -898,7 +902,6 @@ and expr_ = AstBridge.expr_ =
   | ObjCDictionaryLiteral
   | ObjCIndirectCopyRestoreExpr
   | ObjCIsaExpr
-  | ObjCIvarRefExpr
   | ObjCPropertyRefExpr
   | ObjCProtocolExpr
   | ObjCSelectorExpr
