@@ -1,16 +1,16 @@
 # META file for clangml library
 description = "Clang parser interface"
 version = "0.1"
-requires = "clang.parser"
+requires = "deriving,clangml.parser"
 
 package "parser" (
-requires = "clang.util,deriving,unix"
+requires = "clangml.util,deriving,unix"
 archive(native) = "clang.cmx"
 archive(byte) = "clang.cmo"
 )
 
 package "analysis" (
-requires = "clang.util,clang.parser,ANSITerminal"
+requires = "clangml.util,clangml.parser,ANSITerminal"
 archive(native) = "analysis.cmx"
 archive(byte) = "analysis.cmo"
 )
