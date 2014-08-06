@@ -28,7 +28,7 @@ OCamlVisitor::TraverseTypeLoc (clang::TypeLoc TL)
   else if (marker > 1)
     {
       ptr<Tloc> mostRecent = stack.pop ();
-      printf ("WARNING: %s drops all but most recent (out of %lu) TypeLoc\n",
+      printf ("WARNING: %s drops all but most recent (out of %zu) TypeLoc\n",
               __func__, marker);
       // Keep the last one
       while (--marker) stack.pop ();
