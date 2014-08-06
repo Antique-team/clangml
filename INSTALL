@@ -28,6 +28,13 @@ External Dependencies
 - libtinfo-dev (on Debian / Ubuntu)
 - clang-3.4.1 (on Debian / Ubuntu)
 
+In case you don't have a llvm-config-3.4 command on your machine,
+but you have llvm-3.4 installed, create a soft link in your path
+to llvm-config-3.4 (e.g.
+ln -s `which llvm-config` ~/bin/llvm-config-3.4
+).
+
+
 OCaml Dependencies
 ------------------
 
