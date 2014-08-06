@@ -1186,3 +1186,18 @@ and pp_field_decl fmt { fd_type = ty;
                    (if is_mutable then "mutable " else "")
                    pp_named_arg (name, ty)
                    pp_expr init
+
+(* functions so that users of clangml don't need to depend on deriving 
+   and it's syntax extension *)
+
+let string_of_ctyp = Show.show<ctyp>
+let string_of_expr = Show.show<expr>
+let string_of_stmt = Show.show<stmt>
+let string_of_decl = Show.show<decl>
+let string_of_tloc = Show.show<tloc>
+
+let string_of_ctyp_ = Show.show<ctyp_>
+let string_of_expr_ = Show.show<expr_>
+let string_of_stmt_ = Show.show<stmt_>
+let string_of_decl_ = Show.show<decl_>
+let string_of_tloc_ = Show.show<tloc_>
