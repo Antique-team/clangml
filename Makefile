@@ -70,6 +70,9 @@ ml_etags: $(ML_FILES)
               -pa $(DERIVING_ROOT)/pa_deriving_classes.cma \
               -o ml_etags $(ML_FILES)
 
+doxygen_doc: Doxyfile
+	doxygen
+
 
 ####################################################################
 ## Testing
