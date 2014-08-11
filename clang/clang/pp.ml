@@ -786,7 +786,7 @@ and pp_tloc_ fmt = function
       Format.fprintf fmt "(%a)"
         pp_tloc ty
   | PointerTypeLoc ty ->
-      Format.fprintf fmt "%a ptr"
+      Format.fprintf fmt "(%a) ptr"
         pp_tloc ty
   | FunctionNoProtoTypeLoc ty ->
       Format.fprintf fmt "? -> %a"
@@ -837,7 +837,7 @@ and pp_tloc_ fmt = function
       Format.fprintf fmt "_Atomic %a"
         pp_tloc value
   | ObjCObjectPointerTypeLoc ty ->
-      Format.fprintf fmt "%a*"
+      Format.fprintf fmt "(%a) objc_ptr"
         pp_tloc ty
   | ObjCObjectTypeLoc ty ->
       Format.fprintf fmt "%a"
@@ -890,7 +890,7 @@ and pp_ctyp_ fmt = function
       Format.fprintf fmt "(%a)"
         pp_ctyp ty
   | PointerType ty ->
-      Format.fprintf fmt "%a ptr"
+      Format.fprintf fmt "(%a) ptr"
         pp_ctyp ty
   | FunctionNoProtoType ty ->
       Format.fprintf fmt "? -> %a"
