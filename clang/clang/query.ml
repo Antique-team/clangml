@@ -35,7 +35,11 @@ let is_volatile_tloc = function
 
 let fields_of_record_decl = function
   | RecordDecl (_, _, Some members, _) -> members
-  | RecordDecl (_, _, None, _) -> failwith "incomplete record type"
+  | RecordDecl (ttk, name, None, _) ->
+    failwith
+      (Printf.sprintf "incomplete record type ttk: %s name: %s"
+         (Pp.string_of_tag_type_kind ttk)
+         name)
   | _ -> failwith "decl is not a RecordDecl"
 
 let underlying_type_of_typedef_decl = function
