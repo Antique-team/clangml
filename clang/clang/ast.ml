@@ -858,6 +858,7 @@ and expr_ = AstBridge.expr_ =
   | ObjCBoolLiteralExpr         of (* value *)bool
   | CXXBoolLiteralExpr          of (* value *)bool
   | ObjCArrayLiteral            of (* elements *)expr list
+  | ObjCBoxedExpr               of (* sub expr *)expr
 
   | AsTypeExpr
   | BlockExpr
@@ -896,7 +897,6 @@ and expr_ = AstBridge.expr_ =
   | LambdaExpr
   | MaterializeTemporaryExpr
   | MSPropertyRefExpr
-  | ObjCBoxedExpr
   | ObjCBridgedCastExpr
   | ObjCDictionaryLiteral
   | ObjCIndirectCopyRestoreExpr

@@ -692,7 +692,6 @@ OCamlVisitor::TraverseObjCEncodeExpr (clang::ObjCEncodeExpr *S)
   return true;
 }
 
-
 bool
 OCamlVisitor::TraverseObjCIvarRefExpr (clang::ObjCIvarRefExpr *S)
 {
@@ -707,6 +706,18 @@ OCamlVisitor::TraverseObjCIvarRefExpr (clang::ObjCIvarRefExpr *S)
   bool isFreeIvar = S->isFreeIvar ();
 
   stack.push (mkObjCIvarRefExpr (base, decl, isArrow, isFreeIvar));
+
+  return true;
+}
+
+bool
+OCamlVisitor::TraverseObjCBoxedExpr (clang::ObjCBoxedExpr *S)
+{
+  TRACE;
+
+  ptr<Expr> sub_expr = must_traverse (S->getSubExpr ());
+
+  stack.push (mkObjCBoxedExpr (sub_expr));
 
   return true;
 }
@@ -732,7 +743,6 @@ UNIMP_STMT (Expr, GenericSelectionExpr)
 UNIMP_STMT (Expr, LambdaExpr)
 UNIMP_STMT (Expr, MaterializeTemporaryExpr)
 UNIMP_STMT (Expr, MSPropertyRefExpr)
-UNIMP_STMT (Expr, ObjCBoxedExpr)
 UNIMP_STMT (Expr, ObjCBridgedCastExpr)
 UNIMP_STMT (Expr, ObjCDictionaryLiteral)
 UNIMP_STMT (Expr, ObjCIndirectCopyRestoreExpr)

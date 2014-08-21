@@ -569,6 +569,8 @@ and pp_expr_ fmt = function
   | ObjCArrayLiteral elements ->
     Format.fprintf fmt "@@[ %a ]"
       (Formatx.pp_list pp_expr) elements
+  | ObjCBoxedExpr sub ->
+      Format.fprintf fmt "@@{ %a }" pp_expr sub 
 
 
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
@@ -607,7 +609,6 @@ and pp_expr_ fmt = function
   | LambdaExpr -> Format.pp_print_string fmt "<LambdaExpr>"
   | MaterializeTemporaryExpr -> Format.pp_print_string fmt "<MaterializeTemporaryExpr>"
   | MSPropertyRefExpr -> Format.pp_print_string fmt "<MSPropertyRefExpr>"
-  | ObjCBoxedExpr -> Format.pp_print_string fmt "<ObjCBoxedExpr>"
   | ObjCBridgedCastExpr -> Format.pp_print_string fmt "<ObjCBridgedCastExpr>"
   | ObjCDictionaryLiteral -> Format.pp_print_string fmt "<ObjCDictionaryLiteral>"
   | ObjCIndirectCopyRestoreExpr -> Format.pp_print_string fmt "<ObjCIndirectCopyRestoreExpr>"
