@@ -856,6 +856,7 @@ and expr_ = AstBridge.expr_ =
                                  * (* is_arrow *)bool
                                  * (* is_free_ivar *)bool
   | ObjCBoolLiteralExpr         of (* value *)bool
+  | CXXBoolLiteralExpr          of (* value *)bool
 
 
   | AsTypeExpr
@@ -863,7 +864,6 @@ and expr_ = AstBridge.expr_ =
   | CompoundAssignOperator
   | CUDAKernelCallExpr
   | CXXBindTemporaryExpr
-  | CXXBoolLiteralExpr
   | CXXConstCastExpr
   | CXXConstructExpr
   | CXXDefaultArgExpr

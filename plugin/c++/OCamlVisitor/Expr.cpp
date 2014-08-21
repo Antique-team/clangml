@@ -145,6 +145,14 @@ OCamlVisitor::TraverseObjCBoolLiteralExpr (clang::ObjCBoolLiteralExpr *S)
 }
 
 bool
+OCamlVisitor::TraverseCXXBoolLiteralExpr (clang::CXXBoolLiteralExpr *S)
+{
+  stack.push (mkCXXBoolLiteralExpr (S->getValue ()));
+
+  return true;
+}
+
+bool
 OCamlVisitor::TraverseImaginaryLiteral (clang::ImaginaryLiteral *S)
 {
   TRACE;
@@ -604,7 +612,6 @@ UNIMP_STMT (Expr, AsTypeExpr)
 UNIMP_STMT (Expr, BlockExpr)
 UNIMP_STMT (Expr, CUDAKernelCallExpr)
 UNIMP_STMT (Expr, CXXBindTemporaryExpr)
-UNIMP_STMT (Expr, CXXBoolLiteralExpr)
 UNIMP_STMT (Expr, CXXConstCastExpr)
 UNIMP_STMT (Expr, CXXConstructExpr)
 UNIMP_STMT (Expr, CXXDefaultArgExpr)

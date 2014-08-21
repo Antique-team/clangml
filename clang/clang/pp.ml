@@ -523,6 +523,8 @@ and pp_expr_ fmt = function
         (match b with
          | true -> "YES"
          | false -> "NO")
+  | CXXBoolLiteralExpr b ->
+      Format.fprintf fmt "%s" (string_of_bool b)
   | ObjCMessageExpr (maybe_instance_receiver,
                      maybe_class_receiver,
                      selector,
@@ -571,7 +573,6 @@ and pp_expr_ fmt = function
   | CompoundAssignOperator -> Format.pp_print_string fmt "<CompoundAssignOperator>"
   | CUDAKernelCallExpr -> Format.pp_print_string fmt "<CUDAKernelCallExpr>"
   | CXXBindTemporaryExpr -> Format.pp_print_string fmt "<CXXBindTemporaryExpr>"
-  | CXXBoolLiteralExpr -> Format.pp_print_string fmt "<CXXBoolLiteralExpr>"
   | CXXConstCastExpr -> Format.pp_print_string fmt "<CXXConstCastExpr>"
   | CXXConstructExpr -> Format.pp_print_string fmt "<CXXConstructExpr>"
   | CXXDefaultArgExpr -> Format.pp_print_string fmt "<CXXDefaultArgExpr>"
