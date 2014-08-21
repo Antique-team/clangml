@@ -855,6 +855,7 @@ and expr_ = AstBridge.expr_ =
                                  * (* decl *)decl
                                  * (* is_arrow *)bool
                                  * (* is_free_ivar *)bool
+  | ObjCBoolLiteralExpr         of (* value *)bool
 
 
   | AsTypeExpr
@@ -896,7 +897,6 @@ and expr_ = AstBridge.expr_ =
   | MaterializeTemporaryExpr
   | MSPropertyRefExpr
   | ObjCArrayLiteral
-  | ObjCBoolLiteralExpr
   | ObjCBoxedExpr
   | ObjCBridgedCastExpr
   | ObjCDictionaryLiteral

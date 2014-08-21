@@ -518,6 +518,11 @@ and pp_expr_ fmt = function
   | ObjCStringLiteral s ->
       Format.fprintf fmt "@@\"%s\""
         (String.escaped s)
+  | ObjCBoolLiteralExpr b ->
+      Format.fprintf fmt "@@%s"
+        (match b with
+         | true -> "YES"
+         | false -> "NO")
   | ObjCMessageExpr (maybe_instance_receiver,
                      maybe_class_receiver,
                      selector,
@@ -599,7 +604,6 @@ and pp_expr_ fmt = function
   | MaterializeTemporaryExpr -> Format.pp_print_string fmt "<MaterializeTemporaryExpr>"
   | MSPropertyRefExpr -> Format.pp_print_string fmt "<MSPropertyRefExpr>"
   | ObjCArrayLiteral -> Format.pp_print_string fmt "<ObjCArrayLiteral>"
-  | ObjCBoolLiteralExpr -> Format.pp_print_string fmt "<ObjCBoolLiteralExpr>"
   | ObjCBoxedExpr -> Format.pp_print_string fmt "<ObjCBoxedExpr>"
   | ObjCBridgedCastExpr -> Format.pp_print_string fmt "<ObjCBridgedCastExpr>"
   | ObjCDictionaryLiteral -> Format.pp_print_string fmt "<ObjCDictionaryLiteral>"

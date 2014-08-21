@@ -137,6 +137,14 @@ OCamlVisitor::TraverseObjCStringLiteral (clang::ObjCStringLiteral *S)
 }
 
 bool
+OCamlVisitor::TraverseObjCBoolLiteralExpr (clang::ObjCBoolLiteralExpr *S)
+{
+  stack.push (mkObjCBoolLiteralExpr (S->getValue ()));
+
+  return true;
+}
+
+bool
 OCamlVisitor::TraverseImaginaryLiteral (clang::ImaginaryLiteral *S)
 {
   TRACE;
@@ -705,7 +713,6 @@ UNIMP_STMT (Expr, LambdaExpr)
 UNIMP_STMT (Expr, MaterializeTemporaryExpr)
 UNIMP_STMT (Expr, MSPropertyRefExpr)
 UNIMP_STMT (Expr, ObjCArrayLiteral)
-UNIMP_STMT (Expr, ObjCBoolLiteralExpr)
 UNIMP_STMT (Expr, ObjCBoxedExpr)
 UNIMP_STMT (Expr, ObjCBridgedCastExpr)
 UNIMP_STMT (Expr, ObjCDictionaryLiteral)
