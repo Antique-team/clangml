@@ -666,6 +666,19 @@ OCamlVisitor::TraverseObjCMessageExpr (clang::ObjCMessageExpr *S)
   return true;
 }
 
+bool
+OCamlVisitor::TraverseObjCArrayLiteral (clang::ObjCArrayLiteral *S)
+{
+  TRACE;
+
+  list<Expr> elements;
+  for (unsigned i = 0; i < S->getNumElements (); ++i)
+    elements.push_back (must_traverse (S->getElement (i)));
+
+  stack.push (mkObjCArrayLiteral (elements));
+
+  return true;
+}
 
 bool
 OCamlVisitor::TraverseObjCEncodeExpr (clang::ObjCEncodeExpr *S)
@@ -719,7 +732,6 @@ UNIMP_STMT (Expr, GenericSelectionExpr)
 UNIMP_STMT (Expr, LambdaExpr)
 UNIMP_STMT (Expr, MaterializeTemporaryExpr)
 UNIMP_STMT (Expr, MSPropertyRefExpr)
-UNIMP_STMT (Expr, ObjCArrayLiteral)
 UNIMP_STMT (Expr, ObjCBoxedExpr)
 UNIMP_STMT (Expr, ObjCBridgedCastExpr)
 UNIMP_STMT (Expr, ObjCDictionaryLiteral)

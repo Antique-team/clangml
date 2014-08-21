@@ -566,6 +566,9 @@ and pp_expr_ fmt = function
         pp_expr expr
         maybe_arrow
         field_name
+  | ObjCArrayLiteral elements ->
+    Format.fprintf fmt "@@[ %a ]"
+      (Formatx.pp_list pp_expr) elements
 
 
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
@@ -604,7 +607,6 @@ and pp_expr_ fmt = function
   | LambdaExpr -> Format.pp_print_string fmt "<LambdaExpr>"
   | MaterializeTemporaryExpr -> Format.pp_print_string fmt "<MaterializeTemporaryExpr>"
   | MSPropertyRefExpr -> Format.pp_print_string fmt "<MSPropertyRefExpr>"
-  | ObjCArrayLiteral -> Format.pp_print_string fmt "<ObjCArrayLiteral>"
   | ObjCBoxedExpr -> Format.pp_print_string fmt "<ObjCBoxedExpr>"
   | ObjCBridgedCastExpr -> Format.pp_print_string fmt "<ObjCBridgedCastExpr>"
   | ObjCDictionaryLiteral -> Format.pp_print_string fmt "<ObjCDictionaryLiteral>"
