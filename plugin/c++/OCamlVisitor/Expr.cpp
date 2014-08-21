@@ -681,6 +681,24 @@ OCamlVisitor::TraverseObjCArrayLiteral (clang::ObjCArrayLiteral *S)
 }
 
 bool
+OCamlVisitor::TraverseObjCDictionaryLiteral (clang::ObjCDictionaryLiteral *S)
+{
+  TRACE;
+
+  list<Expr> keys;
+  list<Expr> values;
+  
+  for (unsigned i = 0; i < S->getNumElements (); ++i) {
+    keys.push_back   (must_traverse (S->getKeyValueElement (i).Key));
+    values.push_back (must_traverse (S->getKeyValueElement (i).Value));
+  }
+
+  stack.push (mkObjCDictionaryLiteral (keys, values));
+
+  return true;
+}
+
+bool
 OCamlVisitor::TraverseObjCEncodeExpr (clang::ObjCEncodeExpr *S)
 {
   TRACE;
@@ -744,7 +762,6 @@ UNIMP_STMT (Expr, LambdaExpr)
 UNIMP_STMT (Expr, MaterializeTemporaryExpr)
 UNIMP_STMT (Expr, MSPropertyRefExpr)
 UNIMP_STMT (Expr, ObjCBridgedCastExpr)
-UNIMP_STMT (Expr, ObjCDictionaryLiteral)
 UNIMP_STMT (Expr, ObjCIndirectCopyRestoreExpr)
 UNIMP_STMT (Expr, ObjCIsaExpr)
 UNIMP_STMT (Expr, ObjCPropertyRefExpr)

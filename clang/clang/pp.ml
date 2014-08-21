@@ -571,6 +571,10 @@ and pp_expr_ fmt = function
       (Formatx.pp_list pp_expr) elements
   | ObjCBoxedExpr sub ->
       Format.fprintf fmt "@@{ %a }" pp_expr sub 
+  | ObjCDictionaryLiteral (keys, values) ->
+      Format.fprintf fmt "{ keys: (%a) values: (%a) }"
+        (Formatx.pp_list pp_expr) keys
+        (Formatx.pp_list pp_expr) values
 
 
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
@@ -610,7 +614,6 @@ and pp_expr_ fmt = function
   | MaterializeTemporaryExpr -> Format.pp_print_string fmt "<MaterializeTemporaryExpr>"
   | MSPropertyRefExpr -> Format.pp_print_string fmt "<MSPropertyRefExpr>"
   | ObjCBridgedCastExpr -> Format.pp_print_string fmt "<ObjCBridgedCastExpr>"
-  | ObjCDictionaryLiteral -> Format.pp_print_string fmt "<ObjCDictionaryLiteral>"
   | ObjCIndirectCopyRestoreExpr -> Format.pp_print_string fmt "<ObjCIndirectCopyRestoreExpr>"
   | ObjCIsaExpr -> Format.pp_print_string fmt "<ObjCIsaExpr>"
   | ObjCPropertyRefExpr -> Format.pp_print_string fmt "<ObjCPropertyRefExpr>"
