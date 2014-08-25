@@ -745,7 +745,11 @@ and pp_stmt_ fmt = function
       Format.fprintf fmt "@@synchronized (%a) { %a }"
         pp_expr expr
         (Formatx.pp_list pp_stmt) stmts
-
+  | ObjCForCollectionStmt (element_stmt, collection_expr, body_stmt) ->
+      Format.fprintf fmt "objc_for_collection ((%a) in %a) %a"
+        pp_stmt element_stmt
+        pp_expr collection_expr
+        pp_stmt body_stmt
 
 
   | OMPParallelDirective -> Format.pp_print_string fmt "<OMPParallelDirective>"
@@ -756,7 +760,6 @@ and pp_stmt_ fmt = function
   | MSAsmStmt -> Format.pp_print_string fmt "<MSAsmStmt>"
   | MSDependentExistsStmt -> Format.pp_print_string fmt "<MSDependentExistsStmt>"
   | ObjCAutoreleasePoolStmt -> Format.pp_print_string fmt "<ObjCAutoreleasePoolStmt>"
-  | ObjCForCollectionStmt -> Format.pp_print_string fmt "<ObjCForCollectionStmt>"
   | SEHExceptStmt -> Format.pp_print_string fmt "<SEHExceptStmt>"
   | SEHFinallyStmt -> Format.pp_print_string fmt "<SEHFinallyStmt>"
   | SEHTryStmt -> Format.pp_print_string fmt "<SEHTryStmt>"

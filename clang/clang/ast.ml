@@ -979,6 +979,9 @@ and stmt_ = AstBridge.stmt_ =
   | ObjCAtThrowStmt             of (* throw *)expr
   | ObjCAtSynchronizedStmt      of (* expr *)expr (* lock *)
                                  * (* body *)stmt list (* critical section *)
+  | ObjCForCollectionStmt       of (* element *)stmt
+                                 * (* collection *)expr
+                                 * (* body *)stmt
 
 
   | AttributedStmt
@@ -988,7 +991,6 @@ and stmt_ = AstBridge.stmt_ =
   | MSAsmStmt
   | MSDependentExistsStmt
   | ObjCAutoreleasePoolStmt
-  | ObjCForCollectionStmt
   | OMPParallelDirective
   | SEHExceptStmt
   | SEHFinallyStmt
