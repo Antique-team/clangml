@@ -25,7 +25,8 @@ type basic_type =
   | ListOfType of loc * basic_type
   (* Optional basic_type *)
   | OptionType of loc * basic_type
-  (* Will want others, eventually *)
+  (* Tuple of basic_type *)
+  | TupleType of loc * basic_type list
   deriving (Show)
 
 type sum_type_branch = {

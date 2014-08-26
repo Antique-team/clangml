@@ -16,6 +16,14 @@ let rec ctyp_of_basic_type = function
   | OptionType (_loc, bt)  ->
       let ty = ctyp_of_basic_type bt in
       <:ctyp<$ty$ option>>
+  | TupleType  (_loc, bts) ->
+      let tys =
+        List.rev_map ctyp_of_basic_type bts
+        |> BatList.reduce
+             (fun members ty ->
+                Ast.TySta (_loc, members, ty))
+      in
+      Ast.TyTup (_loc, tys)
 
 let ctyp_of_sum_type_branches _loc branches =
   List.map

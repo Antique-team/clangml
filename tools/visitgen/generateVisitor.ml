@@ -115,7 +115,7 @@ let make_update kind visit_type_names mangle ?record _loc expr ty =
 
   (* Map a value, optionally with an extra mapping function
      (e.g. map_list or map_option). The result is the updated value. *)
-  let mkmap name fn =
+  let mkmap name =
     let var =
       let mangled = mangle name in
       match record with
@@ -125,32 +125,51 @@ let make_update kind visit_type_names mangle ?record _loc expr ty =
           <:expr<$lid:record$.$lid:mangled$>>
     in
 
-    match fn with
-    | None ->
-        if kind_has_state kind then
-          <:expr<v.$lid:prefix ^ name$ v state $var$>>
-        else
-          <:expr<v.$lid:prefix ^ name$ v $var$>>
-    | Some fn ->
-        if kind_has_state kind then
-          <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v state $var$>>
-        else
-          <:expr<$lid:prefix ^ fn$ v.$lid:prefix ^ name$ v $var$>>
+    var, <:expr<v.$lid:prefix ^ name$>>
   in
 
   let update =
-    match ty with
-    | ListOfType (_, NamedType (_loc, name))
-      when List.mem name visit_type_names ->
-        Some (name, mkmap name (Some "list"))
-    | OptionType (_, NamedType (_loc, name))
-      when List.mem name visit_type_names ->
-        Some (name, mkmap name (Some "option"))
-    | NamedType (_loc, name)
-      when List.mem name visit_type_names ->
-        Some (name, mkmap name None)
-    | _ ->
-        None
+    let rec mkupdate = function
+      | ListOfType (_, ty) ->
+          let (name, var, update) = mkupdate ty in
+          (name, var, <:expr<$lid:prefix ^ "list"$ $update$>>)
+      | OptionType (_, ty) ->
+          let (name, var, update) = mkupdate ty in
+          (name, var, <:expr<$lid:prefix ^ "option"$ $update$>>)
+      | TupleType (_, [ty1; ty2]) ->
+          let (_, var1, update1) = mkupdate ty1 in
+          let (_, var2, update2) = mkupdate ty2 in
+          ("tuple",
+           <:expr<$lid:mangle "tuple"$>>,
+           <:expr<$lid:prefix ^ "tuple2"$ $update1$ $update2$>>)
+      | TupleType (_, [ty1; ty2; ty3]) ->
+          let (_, var1, update1) = mkupdate ty1 in
+          let (_, var2, update2) = mkupdate ty2 in
+          let (_, var3, update3) = mkupdate ty3 in
+          ("tuple",
+           <:expr<$lid:mangle "tuple"$>>,
+           <:expr<$lid:prefix ^ "tuple3"$ $update1$ $update2$ $update3$>>)
+      | TupleType (_, tys) ->
+          Log.unimp "tuples with more than 3 elements"
+      | NamedType (_loc, name)
+        when List.mem name visit_type_names ->
+          let (var, update) = mkmap name in
+          (name, var, update)
+      | _ ->
+          raise Not_found
+    in
+
+    try
+      let (name, var, update) = mkupdate ty in
+      let update =
+        if kind_has_state kind then
+          <:expr<$update$ v state $var$>>
+        else
+          <:expr<$update$ v $var$>>
+      in
+      Some (name, update)
+    with Not_found ->
+      None
   in
 
   match update with
@@ -159,7 +178,7 @@ let make_update kind visit_type_names mangle ?record _loc expr ty =
       let name = mangle name in
       let patt =
         match kind with
-        | Map -> <:patt<(state, $lid:name$)>>
+        | Map  -> <:patt<(state, $lid:name$)>>
         | Fold -> <:patt<state>>
         | Iter -> <:patt<()>>
       in

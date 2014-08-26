@@ -46,7 +46,7 @@ type cpp_type =
   | TyConst of cpp_type
   | TyPointer of cpp_type
   | TyReference of cpp_type
-  | TyTemplate of string * cpp_type
+  | TyTemplate of string * cpp_type list
   deriving (Show)
 
 
@@ -146,7 +146,11 @@ let rec string_of_cpp_type = function
   | TyConst ty -> string_of_cpp_type ty ^ " const"
   | TyPointer ty -> string_of_cpp_type ty ^ "*"
   | TyReference ty -> string_of_cpp_type ty ^ "&"
-  | TyTemplate (template, ty) -> template ^ "<" ^ string_of_cpp_type ty ^ ">"
+  | TyTemplate (template, tys) ->
+      template
+      ^ "<"
+      ^ String.concat ", " (List.map string_of_cpp_type tys)
+      ^ ">"
   | ty ->
       Log.unimp "type: %a"
         Show.format<cpp_type> ty

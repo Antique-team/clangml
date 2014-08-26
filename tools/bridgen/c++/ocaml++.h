@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <climits>
+#include <tuple>
 #include <vector>
 
 #include <boost/intrusive_ptr.hpp>
@@ -409,6 +410,22 @@ value_of_adt (value_of_context &ctx, OCamlADT const *self, Args const &...v)
 
   CAMLreturn (result);
 }
+
+
+template<typename... Types>
+value
+value_of (value_of_context &ctx, std::tuple<Types...> const &v)
+{
+  CAMLparam0 ();
+  CAMLlocal1 (result);
+
+  result = caml_alloc (sizeof... (Types), 0);
+
+  //store_fields (ctx, result, 0, v...);
+
+  CAMLreturn (result);
+}
+
 
 template<typename OCamlADT>
 value

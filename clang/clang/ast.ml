@@ -859,10 +859,7 @@ and expr_ = AstBridge.expr_ =
   | CXXBoolLiteralExpr          of (* value *)bool
   | ObjCArrayLiteral            of (* elements *)expr list
   | ObjCBoxedExpr               of (* sub expr *)expr
-  | ObjCDictionaryLiteral       (* FBR: this is hackish, the natural
-                                        way would be a list of exp pairs *)
-                                of (* keys *)expr list
-                                 * (* values *)expr list
+  | ObjCDictionaryLiteral       of (* map *)(expr * expr) list
 
 
   | AsTypeExpr

@@ -26,6 +26,9 @@ let rec ast_type_to_type (ctyp: Ast.ctyp) =
       let list_of_type = ast_type_to_type ty in
       OptionType (loc, list_of_type)
 
+  | Ast.TyTup (loc, tys) ->
+      TupleType (loc, type_list_of_TySta [] tys)
+
   | <:ctyp@loc<Util.DenseIntMap.key $ty$>> ->
       let ref_type = ast_type_to_type ty in
       RefType (loc, ref_type)
@@ -39,6 +42,13 @@ let rec ast_type_to_type (ctyp: Ast.ctyp) =
   | ty ->
       Print.print_ctyp ty;
       Log.unimp "ast_type_to_type"
+
+
+and type_list_of_TySta accu = function
+  | <:ctyp@loc<$ty1$ * $ty2$>> ->
+      ast_type_to_type ty1 :: (type_list_of_TySta accu ty2)
+  | ty ->
+      ast_type_to_type ty :: accu
 
 
 (* Flatten tree of Ast.TyOrs of types to list of types *)

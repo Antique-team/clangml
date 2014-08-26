@@ -130,11 +130,13 @@ OCamlVisitor::TraverseStringLiteral (clang::StringLiteral *S)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseObjCStringLiteral (clang::ObjCStringLiteral *S)
 {
   return TraverseStringLiteral (S->getString ());
 }
+
 
 bool
 OCamlVisitor::TraverseObjCBoolLiteralExpr (clang::ObjCBoolLiteralExpr *S)
@@ -144,6 +146,7 @@ OCamlVisitor::TraverseObjCBoolLiteralExpr (clang::ObjCBoolLiteralExpr *S)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseCXXBoolLiteralExpr (clang::CXXBoolLiteralExpr *S)
 {
@@ -151,6 +154,7 @@ OCamlVisitor::TraverseCXXBoolLiteralExpr (clang::CXXBoolLiteralExpr *S)
 
   return true;
 }
+
 
 bool
 OCamlVisitor::TraverseImaginaryLiteral (clang::ImaginaryLiteral *S)
@@ -566,6 +570,7 @@ OCamlVisitor::TraverseUnaryTypeTraitExpr (clang::UnaryTypeTraitExpr *S)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseArrayTypeTraitExpr (clang::ArrayTypeTraitExpr *S)
 {
@@ -580,6 +585,7 @@ OCamlVisitor::TraverseArrayTypeTraitExpr (clang::ArrayTypeTraitExpr *S)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseConvertVectorExpr (clang::ConvertVectorExpr *S)
 {
@@ -592,6 +598,7 @@ OCamlVisitor::TraverseConvertVectorExpr (clang::ConvertVectorExpr *S)
 
   return true;
 }
+
 
 bool
 OCamlVisitor::TraverseChooseExpr (clang::ChooseExpr *S)
@@ -623,6 +630,8 @@ UNIMP_STMT (Expr, CXXFunctionalCastExpr)
 UNIMP_STMT (Expr, CXXMemberCallExpr)
 UNIMP_STMT (Expr, CXXNewExpr)
 UNIMP_STMT (Expr, CXXNoexceptExpr)
+
+
 bool
 OCamlVisitor::TraverseCXXNullPtrLiteralExpr (clang::CXXNullPtrLiteralExpr *S)
 {
@@ -632,6 +641,7 @@ OCamlVisitor::TraverseCXXNullPtrLiteralExpr (clang::CXXNullPtrLiteralExpr *S)
 
   return true;
 }
+
 
 bool
 OCamlVisitor::TraverseGNUNullExpr (clang::GNUNullExpr *S)
@@ -644,6 +654,7 @@ OCamlVisitor::TraverseGNUNullExpr (clang::GNUNullExpr *S)
 
   return true;
 }
+
 
 bool
 OCamlVisitor::TraverseObjCMessageExpr (clang::ObjCMessageExpr *S)
@@ -666,6 +677,7 @@ OCamlVisitor::TraverseObjCMessageExpr (clang::ObjCMessageExpr *S)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseObjCArrayLiteral (clang::ObjCArrayLiteral *S)
 {
@@ -680,23 +692,26 @@ OCamlVisitor::TraverseObjCArrayLiteral (clang::ObjCArrayLiteral *S)
   return true;
 }
 
+
 bool
 OCamlVisitor::TraverseObjCDictionaryLiteral (clang::ObjCDictionaryLiteral *S)
 {
   TRACE;
 
-  list<Expr> keys;
-  list<Expr> values;
+  std::vector<std::tuple<ptr<Expr>, ptr<Expr>>> map;
   
-  for (unsigned i = 0; i < S->getNumElements (); ++i) {
-    keys.push_back   (must_traverse (S->getKeyValueElement (i).Key));
-    values.push_back (must_traverse (S->getKeyValueElement (i).Value));
-  }
+  for (unsigned i = 0; i < S->getNumElements (); ++i)
+    {
+      ptr<Expr> key   = must_traverse (S->getKeyValueElement (i).Key  );
+      ptr<Expr> value = must_traverse (S->getKeyValueElement (i).Value);
+      map.emplace_back (key, value);
+    }
 
-  stack.push (mkObjCDictionaryLiteral (keys, values));
+  stack.push (mkObjCDictionaryLiteral (map));
 
   return true;
 }
+
 
 bool
 OCamlVisitor::TraverseObjCEncodeExpr (clang::ObjCEncodeExpr *S)
@@ -709,6 +724,7 @@ OCamlVisitor::TraverseObjCEncodeExpr (clang::ObjCEncodeExpr *S)
 
   return true;
 }
+
 
 bool
 OCamlVisitor::TraverseObjCIvarRefExpr (clang::ObjCIvarRefExpr *S)
@@ -727,6 +743,7 @@ OCamlVisitor::TraverseObjCIvarRefExpr (clang::ObjCIvarRefExpr *S)
 
   return true;
 }
+
 
 bool
 OCamlVisitor::TraverseObjCBoxedExpr (clang::ObjCBoxedExpr *S)

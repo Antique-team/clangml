@@ -102,7 +102,7 @@ let rec translate_type ctx = let open Codegen in function
         ty
       else if List.mem name ctx.class_types then
         (* Automatic memory management in C++ bridge. *)
-        TyTemplate ("ptr", ty)
+        TyTemplate ("ptr", [ty])
       else (
         Log.warn "Name '%s' is not an ADT in the same file"
           name;
@@ -111,14 +111,14 @@ let rec translate_type ctx = let open Codegen in function
       )
   | RefType (_, ty) ->
       (* Plain pointers to Clang AST nodes. *)
-      TyTemplate ("recursive_ptr", translate_type ctx ty)
+      TyTemplate ("recursive_ptr", [translate_type ctx ty])
   | ClangType (_, name) ->
       (* Plain pointers to Clang AST nodes. *)
-      TyTemplate ("clang_ref", TyName (cpp_name name))
+      TyTemplate ("clang_ref", [TyName (cpp_name name)])
   | SourceLocation (_) ->
       TyName "clang::SourceLocation"
   | ListOfType (_, ty) ->
-      TyTemplate ("std::vector", translate_type ctx ty)
+      TyTemplate ("std::vector", [translate_type ctx ty])
   | OptionType (_, (NamedType (_, name) as ty)) ->
       let ty =
         if is_basic_type name then
@@ -126,9 +126,11 @@ let rec translate_type ctx = let open Codegen in function
         else
           TyName (cpp_name name)
       in
-      TyTemplate ("option", ty)
+      TyTemplate ("option", [ty])
   | OptionType (_, ty) ->
-      TyTemplate ("option", translate_type ctx ty)
+      TyTemplate ("option", [translate_type ctx ty])
+  | TupleType (_, tys) ->
+      TyTemplate ("std::tuple", List.map (translate_type ctx) tys)
 
 
 (* Constructor arguments. *)
@@ -315,7 +317,7 @@ let gen_code_for_sum_type ctx (sum_type : sum_type) =
           in
           Function {
             flags  = [Static; Inline];
-            retty  = TyTemplate ("ptr", ty);
+            retty  = TyTemplate ("ptr", [ty]);
             name   = "mk" ^ branch_name;
             params = constructor_params ctx types;
             this_flags = [];
@@ -370,7 +372,7 @@ let gen_code_for_record_type ctx (record_type : record_type) =
     let ty = TyName class_name in
     Function {
       flags  = [Static; Inline];
-      retty  = TyTemplate ("ptr", ty);
+      retty  = TyTemplate ("ptr", [ty]);
       name   = "mk" ^ class_name;
       params = [];
       this_flags = [];

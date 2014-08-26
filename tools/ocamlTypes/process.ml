@@ -119,6 +119,7 @@ let find_composite_member rt =
 
 
 let rec loc_of_basic_type_name = function
+  | TupleType (loc, _)
   | NamedType (loc, _)
   | SourceLocation (loc)
   | ClangType (loc, _) -> loc
@@ -137,3 +138,5 @@ let rec name_of_basic_type = function
   | ListOfType (_, basic_type)
   | OptionType (_, basic_type) ->
       name_of_basic_type basic_type
+  | TupleType (_, tys) ->
+      "tuple"

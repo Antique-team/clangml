@@ -340,6 +340,11 @@ let is_prefix_op = function
   | _ -> true
 
 
+let pp_pair pp1 pp2 fmt (v1, v2) =
+  Format.fprintf fmt "%a : %a"
+    pp1 v1
+    pp2 v2
+
 let pp_option f fmt = function
   | None -> Format.pp_print_string fmt "<null>"
   | Some x -> f fmt x
@@ -551,30 +556,29 @@ and pp_expr_ fmt = function
       Format.fprintf fmt "@@encode(%a)"
         pp_ctyp ctyp
   | ObjCIvarRefExpr (expr, decl, is_arrow, is_free_ivar) ->
-    let name_of_field_decl_decl = function
-      | ObjCIvarDecl (_access_control, fd) -> fd.fd_name
-      | _ -> assert(false)
-    in
-    let maybe_arrow = if is_arrow then "->" else "." in
-    let field_name = name_of_field_decl_decl decl.d in
-    if is_free_ivar then
-      Format.fprintf fmt "self%s%s"
-        maybe_arrow
-        field_name
-    else
-      Format.fprintf fmt "%a%s%s"
-        pp_expr expr
-        maybe_arrow
-        field_name
+      let name_of_field_decl_decl = function
+        | ObjCIvarDecl (_access_control, fd) -> fd.fd_name
+        | _ -> assert(false)
+      in
+      let maybe_arrow = if is_arrow then "->" else "." in
+      let field_name = name_of_field_decl_decl decl.d in
+      if is_free_ivar then
+        Format.fprintf fmt "self%s%s"
+          maybe_arrow
+          field_name
+      else
+        Format.fprintf fmt "%a%s%s"
+          pp_expr expr
+          maybe_arrow
+          field_name
   | ObjCArrayLiteral elements ->
-    Format.fprintf fmt "@@[ %a ]"
-      (Formatx.pp_list pp_expr) elements
+      Format.fprintf fmt "@@[ %a ]"
+        (Formatx.pp_list pp_expr) elements
   | ObjCBoxedExpr sub ->
       Format.fprintf fmt "@@{ %a }" pp_expr sub 
-  | ObjCDictionaryLiteral (keys, values) ->
-      Format.fprintf fmt "{ keys: (%a) values: (%a) }"
-        (Formatx.pp_list pp_expr) keys
-        (Formatx.pp_list pp_expr) values
+  | ObjCDictionaryLiteral map ->
+      Format.fprintf fmt "{ %a }"
+        (Formatx.pp_list (pp_pair pp_expr pp_expr)) map
 
 
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
