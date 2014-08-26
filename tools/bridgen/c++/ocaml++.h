@@ -172,7 +172,10 @@ struct option<T, true>
 
   using ptr<T>::operator ->;
 
-  value to_value (value_of_context &ctx) const { return (*this)->to_value (ctx); }
+  value to_value (value_of_context &ctx) const
+  {
+    return (*this)->to_value (ctx);
+  }
 };
 
 // Implementation for all other option types.
@@ -272,7 +275,8 @@ value_of (value_of_context &ctx, std::vector<T> const &v)
 
 // Non-null pointer.
 template<typename T>
-typename std::enable_if<std::is_base_of<OCamlADTBase, T>::value, value>::type // TODO: enable_if_t when C++14 arrives
+typename std::enable_if<std::is_base_of<OCamlADTBase, T>::value, value>::type
+// TODO: enable_if_t when C++14 arrives
 value_of (value_of_context &ctx, ptr<T> ob)
 {
   assert (ob);
@@ -310,10 +314,14 @@ value_of (value_of_context &ctx, recursive_ptr<T> ob)
 }
 
 
-static inline value value_of (value_of_context &ctx, int    v) { return Val_int (v); }
-static inline value value_of (value_of_context &ctx, size_t v) { return Val_int (v); }
-static inline value value_of (value_of_context &ctx, double v) { return caml_copy_double (v); }
-static inline value value_of (value_of_context &ctx, int64  v) { return caml_copy_int64 (v); }
+static inline value value_of (value_of_context &ctx, int    v)
+{ return Val_int (v); }
+static inline value value_of (value_of_context &ctx, size_t v)
+{ return Val_int (v); }
+static inline value value_of (value_of_context &ctx, double v)
+{ return caml_copy_double (v); }
+static inline value value_of (value_of_context &ctx, int64  v)
+{ return caml_copy_int64 (v); }
 
 static inline value
 value_of (value_of_context &ctx, llvm::StringRef const &v)
@@ -389,7 +397,8 @@ store_fields (value_of_context &ctx, value result, int field)
 }
 
 template<typename Arg0, typename... Args>
-void store_fields (value_of_context &ctx, value &result, int field, Arg0 const &arg0, Args const &...args)
+void store_fields (value_of_context &ctx, value &result, int field,
+                   Arg0 const &arg0, Args const &...args)
 {
   Store_field (result, field, value_of (ctx, arg0));
   store_fields (ctx, result, field + 1, args...);
@@ -412,16 +421,18 @@ value_of_adt (value_of_context &ctx, OCamlADT const *self, Args const &...v)
 }
 
 
-template<typename... Types>
+// support pairs
+template<typename T, typename U>
 value
-value_of (value_of_context &ctx, std::tuple<Types...> const &v)
+value_of (value_of_context &ctx, std::tuple<T, U> const &v)
 {
   CAMLparam0 ();
   CAMLlocal1 (result);
 
-  result = caml_alloc (sizeof... (Types), 0);
+  result = caml_alloc_tuple (2);
 
-  //store_fields (ctx, result, 0, v...);
+  Store_field (result, 0, value_of (ctx, std::get<0>(v)));
+  Store_field (result, 1, value_of (ctx, std::get<1>(v)));
 
   CAMLreturn (result);
 }
