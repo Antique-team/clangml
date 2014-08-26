@@ -12,6 +12,10 @@ let rec is_visitable_basic_type visited name types = function
   | ListOfType (_, ty)
   | OptionType (_, ty) ->
       is_visitable_basic_type visited name types ty
+  | TupleType (_, tys) ->
+    List.exists
+      (is_visitable_basic_type visited name types)
+      tys
   | NamedType (_, curr_name) ->
       if name = curr_name then
         true
