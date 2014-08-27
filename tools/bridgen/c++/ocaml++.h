@@ -421,28 +421,71 @@ value_of_adt (value_of_context &ctx, OCamlADT const *self, Args const &...v)
 }
 
 
-// support pairs
-template<typename T, typename U>
-value
-value_of (value_of_context &ctx, std::tuple<T, U> const &v)
-{
-  CAMLparam0 ();
-  CAMLlocal1 (result);
-
-  result = caml_alloc_tuple (2);
-
-  Store_field (result, 0, value_of (ctx, std::get<0>(v)));
-  Store_field (result, 1, value_of (ctx, std::get<1>(v)));
-
-  CAMLreturn (result);
-}
-
-
 template<typename OCamlADT>
 value
 value_of_adt (value_of_context &ctx, OCamlADT const *self)
 {
   return Val_int (self->tag ());
+}
+
+
+/********************************************************
+ * Tuple support.
+ */
+
+template<size_t...>
+struct seq
+{
+};
+
+template<size_t N, size_t... S>
+struct make_seq
+  : make_seq<N - 1, N - 1, S...>
+{
+};
+
+template<size_t... S>
+struct make_seq<0, S...>
+{
+  typedef seq<S...> type;
+};
+
+
+template<size_t Index>
+void
+store_fields (value &result, value_of_context &ctx)
+{
+  assert (Index == caml_array_length (result));
+}
+
+template<size_t Index, typename T, typename... Types>
+void
+store_fields (value &result, value_of_context &ctx, T const &head, Types const &...tail)
+{
+  Store_field (result, Index, value_of (ctx, head));
+  store_fields<Index + 1> (result, ctx, tail...);
+}
+
+
+template<size_t... Indices, typename... Types>
+void
+store_fields (seq<Indices...>, value &result, value_of_context &ctx, std::tuple<Types...> const &v)
+{
+  store_fields<0> (result, ctx, std::get<Indices> (v)...);
+}
+
+
+template<typename... Types>
+value
+value_of (value_of_context &ctx, std::tuple<Types...> const &v)
+{
+  CAMLparam0 ();
+  CAMLlocal1 (result);
+
+  result = caml_alloc_tuple (sizeof... (Types));
+  store_fields (typename make_seq<sizeof... (Types)>::type (), result, ctx, v);
+
+  CAMLreturn (result);
 }
 
 
