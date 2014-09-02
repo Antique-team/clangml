@@ -579,6 +579,17 @@ and pp_expr_ fmt = function
   | ObjCDictionaryLiteral map ->
       Format.fprintf fmt "{ %a }"
         (Formatx.pp_list (pp_pair pp_expr pp_expr)) map
+  | PseudoObjectExpr (syntactic_expr, semantic_exprs, Some result_expr_option)
+    ->
+      Format.fprintf fmt "pseudo_obj_expr (%a, %a, %a)"
+        pp_expr syntactic_expr
+        (Formatx.pp_list pp_expr) semantic_exprs
+        pp_expr result_expr_option
+  | PseudoObjectExpr (syntactic_expr, semantic_exprs, None)
+    ->
+      Format.fprintf fmt "pseudo_obj_expr (%a, %a)"
+        pp_expr syntactic_expr
+        (Formatx.pp_list pp_expr) semantic_exprs
 
 
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
@@ -626,7 +637,6 @@ and pp_expr_ fmt = function
   | ObjCSubscriptRefExpr -> Format.pp_print_string fmt "<ObjCSubscriptRefExpr>"
   | PackExpansionExpr -> Format.pp_print_string fmt "<PackExpansionExpr>"
   | ParenListExpr -> Format.pp_print_string fmt "<ParenListExpr>"
-  | PseudoObjectExpr -> Format.pp_print_string fmt "<PseudoObjectExpr>"
   | SizeOfPackExpr -> Format.pp_print_string fmt "<SizeOfPackExpr>"
   | SubstNonTypeTemplateParmExpr -> Format.pp_print_string fmt "<SubstNonTypeTemplateParmExpr>"
   | SubstNonTypeTemplateParmPackExpr -> Format.pp_print_string fmt "<SubstNonTypeTemplateParmPackExpr>"

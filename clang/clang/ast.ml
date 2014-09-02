@@ -860,6 +860,9 @@ and expr_ = AstBridge.expr_ =
   | ObjCArrayLiteral            of (* elements *)expr list
   | ObjCBoxedExpr               of (* sub expr *)expr
   | ObjCDictionaryLiteral       of (* map *)(expr * expr) list
+  | PseudoObjectExpr            of (* syntactic *)expr
+                                 * (* semantic exprs *) expr list
+                                 * (* result *) expr option
 
 
   | AsTypeExpr
@@ -908,7 +911,6 @@ and expr_ = AstBridge.expr_ =
   | ObjCSubscriptRefExpr
   | PackExpansionExpr
   | ParenListExpr
-  | PseudoObjectExpr
   | SizeOfPackExpr
   | SubstNonTypeTemplateParmExpr
   | SubstNonTypeTemplateParmPackExpr

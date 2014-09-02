@@ -758,6 +758,25 @@ OCamlVisitor::TraverseObjCBoxedExpr (clang::ObjCBoxedExpr *S)
 }
 
 
+bool
+OCamlVisitor::TraversePseudoObjectExpr (clang::PseudoObjectExpr *S)
+{
+  TRACE;
+
+  ptr<Expr> syntactic = must_traverse (S->getSyntacticForm ());
+  list<Expr> semantic;
+  option<Expr> result = maybe_traverse (S->getResultExpr ());
+
+  for (unsigned i = 0; i < S->getNumSemanticExprs (); ++i) {
+    semantic.push_back (must_traverse (S->getSemanticExpr (i)));
+  }
+
+  stack.push (mkPseudoObjectExpr (syntactic, semantic, result));
+
+  return true;
+}
+
+
 UNIMP_STMT (Expr, CXXOperatorCallExpr)
 UNIMP_STMT (Expr, CXXPseudoDestructorExpr)
 UNIMP_STMT (Expr, CXXReinterpretCastExpr)
@@ -787,7 +806,6 @@ UNIMP_STMT (Expr, ObjCSelectorExpr)
 UNIMP_STMT (Expr, ObjCSubscriptRefExpr)
 UNIMP_STMT (Expr, PackExpansionExpr)
 UNIMP_STMT (Expr, ParenListExpr)
-UNIMP_STMT (Expr, PseudoObjectExpr)
 UNIMP_STMT (Expr, SizeOfPackExpr)
 UNIMP_STMT (Expr, SubstNonTypeTemplateParmExpr)
 UNIMP_STMT (Expr, SubstNonTypeTemplateParmPackExpr)
