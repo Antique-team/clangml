@@ -772,6 +772,19 @@ OCamlVisitor::TraverseObjCPropertyRefExpr (clang::ObjCPropertyRefExpr *S)
 
 
 bool
+OCamlVisitor::TraverseObjCIsaExpr (clang::ObjCIsaExpr *S)
+{
+  TRACE;
+
+  ptr<Expr> base = must_traverse (S->getBase ());
+
+  stack.push (mkObjCIsaExpr (base));
+
+  return true;
+}
+
+
+bool
 OCamlVisitor::TraversePseudoObjectExpr (clang::PseudoObjectExpr *S)
 {
   TRACE;
@@ -812,7 +825,6 @@ UNIMP_STMT (Expr, MaterializeTemporaryExpr)
 UNIMP_STMT (Expr, MSPropertyRefExpr)
 UNIMP_STMT (Expr, ObjCBridgedCastExpr)
 UNIMP_STMT (Expr, ObjCIndirectCopyRestoreExpr)
-UNIMP_STMT (Expr, ObjCIsaExpr)
 UNIMP_STMT (Expr, ObjCProtocolExpr)
 UNIMP_STMT (Expr, ObjCSelectorExpr)
 UNIMP_STMT (Expr, ObjCSubscriptRefExpr)

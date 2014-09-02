@@ -593,6 +593,9 @@ and pp_expr_ fmt = function
   | ObjCPropertyRefExpr base_expr ->
       Format.fprintf fmt "objc_prop_ref (%a)"
         pp_expr base_expr
+  | ObjCIsaExpr base_expr ->
+      Format.fprintf fmt "objc_isa (%a)"
+        pp_expr base_expr
 
 
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
@@ -633,7 +636,6 @@ and pp_expr_ fmt = function
   | MSPropertyRefExpr -> Format.pp_print_string fmt "<MSPropertyRefExpr>"
   | ObjCBridgedCastExpr -> Format.pp_print_string fmt "<ObjCBridgedCastExpr>"
   | ObjCIndirectCopyRestoreExpr -> Format.pp_print_string fmt "<ObjCIndirectCopyRestoreExpr>"
-  | ObjCIsaExpr -> Format.pp_print_string fmt "<ObjCIsaExpr>"
   | ObjCProtocolExpr -> Format.pp_print_string fmt "<ObjCProtocolExpr>"
   | ObjCSelectorExpr -> Format.pp_print_string fmt "<ObjCSelectorExpr>"
   | ObjCSubscriptRefExpr -> Format.pp_print_string fmt "<ObjCSubscriptRefExpr>"

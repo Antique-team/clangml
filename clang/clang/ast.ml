@@ -864,6 +864,7 @@ and expr_ = AstBridge.expr_ =
                                  * (* semantic exprs *) expr list
                                  * (* result *) expr option
   | ObjCPropertyRefExpr         of (* base *)expr
+  | ObjCIsaExpr                 of (* base *)expr
 
 
   | AsTypeExpr
@@ -905,7 +906,6 @@ and expr_ = AstBridge.expr_ =
   | MSPropertyRefExpr
   | ObjCBridgedCastExpr
   | ObjCIndirectCopyRestoreExpr
-  | ObjCIsaExpr
   | ObjCProtocolExpr
   | ObjCSelectorExpr
   | ObjCSubscriptRefExpr
