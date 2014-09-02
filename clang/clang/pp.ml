@@ -596,6 +596,8 @@ and pp_expr_ fmt = function
   | ObjCIsaExpr base_expr ->
       Format.fprintf fmt "objc_isa (%a)"
         pp_expr base_expr
+  | ObjCSelectorExpr selector ->
+      Format.fprintf fmt "objc_selector (%s)" selector
 
 
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
@@ -637,7 +639,6 @@ and pp_expr_ fmt = function
   | ObjCBridgedCastExpr -> Format.pp_print_string fmt "<ObjCBridgedCastExpr>"
   | ObjCIndirectCopyRestoreExpr -> Format.pp_print_string fmt "<ObjCIndirectCopyRestoreExpr>"
   | ObjCProtocolExpr -> Format.pp_print_string fmt "<ObjCProtocolExpr>"
-  | ObjCSelectorExpr -> Format.pp_print_string fmt "<ObjCSelectorExpr>"
   | ObjCSubscriptRefExpr -> Format.pp_print_string fmt "<ObjCSubscriptRefExpr>"
   | PackExpansionExpr -> Format.pp_print_string fmt "<PackExpansionExpr>"
   | ParenListExpr -> Format.pp_print_string fmt "<ParenListExpr>"

@@ -803,6 +803,19 @@ OCamlVisitor::TraversePseudoObjectExpr (clang::PseudoObjectExpr *S)
 }
 
 
+bool
+OCamlVisitor::TraverseObjCSelectorExpr (clang::ObjCSelectorExpr *S)
+{
+  TRACE;
+
+  clang::StringRef selector = S->getSelector ().getNameForSlot (0);
+
+  stack.push (mkObjCSelectorExpr (selector));
+
+  return true;
+}
+
+
 UNIMP_STMT (Expr, CXXOperatorCallExpr)
 UNIMP_STMT (Expr, CXXPseudoDestructorExpr)
 UNIMP_STMT (Expr, CXXReinterpretCastExpr)
@@ -826,7 +839,6 @@ UNIMP_STMT (Expr, MSPropertyRefExpr)
 UNIMP_STMT (Expr, ObjCBridgedCastExpr)
 UNIMP_STMT (Expr, ObjCIndirectCopyRestoreExpr)
 UNIMP_STMT (Expr, ObjCProtocolExpr)
-UNIMP_STMT (Expr, ObjCSelectorExpr)
 UNIMP_STMT (Expr, ObjCSubscriptRefExpr)
 UNIMP_STMT (Expr, PackExpansionExpr)
 UNIMP_STMT (Expr, ParenListExpr)
