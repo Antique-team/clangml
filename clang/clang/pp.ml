@@ -590,6 +590,9 @@ and pp_expr_ fmt = function
       Format.fprintf fmt "pseudo_obj_expr (%a, %a)"
         pp_expr syntactic_expr
         (Formatx.pp_list pp_expr) semantic_exprs
+  | ObjCPropertyRefExpr base_expr ->
+      Format.fprintf fmt "objc_prop_ref (%a)"
+        pp_expr base_expr
 
 
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
@@ -631,7 +634,6 @@ and pp_expr_ fmt = function
   | ObjCBridgedCastExpr -> Format.pp_print_string fmt "<ObjCBridgedCastExpr>"
   | ObjCIndirectCopyRestoreExpr -> Format.pp_print_string fmt "<ObjCIndirectCopyRestoreExpr>"
   | ObjCIsaExpr -> Format.pp_print_string fmt "<ObjCIsaExpr>"
-  | ObjCPropertyRefExpr -> Format.pp_print_string fmt "<ObjCPropertyRefExpr>"
   | ObjCProtocolExpr -> Format.pp_print_string fmt "<ObjCProtocolExpr>"
   | ObjCSelectorExpr -> Format.pp_print_string fmt "<ObjCSelectorExpr>"
   | ObjCSubscriptRefExpr -> Format.pp_print_string fmt "<ObjCSubscriptRefExpr>"
