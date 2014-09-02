@@ -598,6 +598,8 @@ and pp_expr_ fmt = function
         pp_expr base_expr
   | ObjCSelectorExpr selector ->
       Format.fprintf fmt "objc_selector (%s)" selector
+  | ObjCProtocolExpr protocol ->
+      Format.fprintf fmt "@@protocol (%s)" protocol
 
 
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
@@ -638,7 +640,6 @@ and pp_expr_ fmt = function
   | MSPropertyRefExpr -> Format.pp_print_string fmt "<MSPropertyRefExpr>"
   | ObjCBridgedCastExpr -> Format.pp_print_string fmt "<ObjCBridgedCastExpr>"
   | ObjCIndirectCopyRestoreExpr -> Format.pp_print_string fmt "<ObjCIndirectCopyRestoreExpr>"
-  | ObjCProtocolExpr -> Format.pp_print_string fmt "<ObjCProtocolExpr>"
   | ObjCSubscriptRefExpr -> Format.pp_print_string fmt "<ObjCSubscriptRefExpr>"
   | PackExpansionExpr -> Format.pp_print_string fmt "<PackExpansionExpr>"
   | ParenListExpr -> Format.pp_print_string fmt "<ParenListExpr>"
