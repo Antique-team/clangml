@@ -600,6 +600,12 @@ and pp_expr_ fmt = function
       Format.fprintf fmt "objc_selector (%s)" selector
   | ObjCProtocolExpr protocol ->
       Format.fprintf fmt "@@protocol (%s)" protocol
+  | GenericSelectionExpr (controlling_expr, expr_ctyp_assoc_list, result_expr)
+    ->
+      Format.fprintf fmt "_Generic (%a, %a, %a)"
+        pp_expr controlling_expr
+        (Formatx.pp_list (pp_pair pp_expr pp_ctyp)) expr_ctyp_assoc_list
+        pp_expr result_expr
 
 
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
@@ -634,7 +640,6 @@ and pp_expr_ fmt = function
   | ExpressionTraitExpr -> Format.pp_print_string fmt "<ExpressionTraitExpr>"
   | ExprWithCleanups -> Format.pp_print_string fmt "<ExprWithCleanups>"
   | FunctionParmPackExpr -> Format.pp_print_string fmt "<FunctionParmPackExpr>"
-  | GenericSelectionExpr -> Format.pp_print_string fmt "<GenericSelectionExpr>"
   | LambdaExpr -> Format.pp_print_string fmt "<LambdaExpr>"
   | MaterializeTemporaryExpr -> Format.pp_print_string fmt "<MaterializeTemporaryExpr>"
   | MSPropertyRefExpr -> Format.pp_print_string fmt "<MSPropertyRefExpr>"

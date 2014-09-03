@@ -829,6 +829,27 @@ OCamlVisitor::TraverseObjCProtocolExpr (clang::ObjCProtocolExpr *S)
 }
 
 
+bool
+OCamlVisitor::TraverseGenericSelectionExpr (clang::GenericSelectionExpr *S)
+{
+  TRACE;
+
+  ptr<Expr> controlling = must_traverse (S->getControllingExpr ());
+  std::vector<std::tuple<ptr<Expr>, ptr<Ctyp>>> assoc_list;
+  ptr<Expr> result = maybe_traverse (S->getResultExpr ());
+
+  for (unsigned i = 0; i < S->getNumAssocs (); ++i) {
+    ptr<Expr> key   = must_traverse (S->getAssocExpr (i));
+    ptr<Ctyp> value = must_traverse (S->getAssocType (i));
+    assoc_list.emplace_back (key, value);
+  }
+
+  stack.push (mkGenericSelectionExpr (controlling, assoc_list, result));
+
+  return true;
+}
+
+
 UNIMP_STMT (Expr, CXXOperatorCallExpr)
 UNIMP_STMT (Expr, CXXPseudoDestructorExpr)
 UNIMP_STMT (Expr, CXXReinterpretCastExpr)
@@ -845,7 +866,6 @@ UNIMP_STMT (Expr, DependentScopeDeclRefExpr)
 UNIMP_STMT (Expr, ExpressionTraitExpr)
 UNIMP_STMT (Expr, ExprWithCleanups)
 UNIMP_STMT (Expr, FunctionParmPackExpr)
-UNIMP_STMT (Expr, GenericSelectionExpr)
 UNIMP_STMT (Expr, LambdaExpr)
 UNIMP_STMT (Expr, MaterializeTemporaryExpr)
 UNIMP_STMT (Expr, MSPropertyRefExpr)

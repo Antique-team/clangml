@@ -867,6 +867,9 @@ and expr_ = AstBridge.expr_ =
   | ObjCIsaExpr                 of (* base *)expr
   | ObjCSelectorExpr            of (* selector *)string
   | ObjCProtocolExpr            of (* protocol *)string
+  | GenericSelectionExpr        of (* controlling *)expr
+                                 * (* assoc_list *)(expr * ctyp) list
+                                 * (* result *)expr
 
 
   | AsTypeExpr
@@ -902,7 +905,6 @@ and expr_ = AstBridge.expr_ =
   | ExpressionTraitExpr
   | ExprWithCleanups
   | FunctionParmPackExpr
-  | GenericSelectionExpr
   | LambdaExpr
   | MaterializeTemporaryExpr
   | MSPropertyRefExpr
