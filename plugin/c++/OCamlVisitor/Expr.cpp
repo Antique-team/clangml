@@ -835,12 +835,15 @@ OCamlVisitor::TraverseGenericSelectionExpr (clang::GenericSelectionExpr *S)
   TRACE;
 
   ptr<Expr> controlling = must_traverse (S->getControllingExpr ());
-  std::vector<std::tuple<ptr<Expr>, ptr<Ctyp>>> assoc_list;
+  std::vector<std::tuple<ptr<Expr>, option<Ctyp>>> assoc_list;
   ptr<Expr> result = maybe_traverse (S->getResultExpr ());
 
   for (unsigned i = 0; i < S->getNumAssocs (); ++i) {
-    ptr<Expr> key   = must_traverse (S->getAssocExpr (i));
-    ptr<Ctyp> value = must_traverse (S->getAssocType (i));
+    ptr<Expr> key = must_traverse (S->getAssocExpr (i));
+    // the default case has no associated type in
+    // _Generic(1.0, double: 1, float: 2, default: 3);
+    // hence we use an option
+    option<Ctyp> value = maybe_traverse (S->getAssocType (i));
     assoc_list.emplace_back (key, value);
   }
 

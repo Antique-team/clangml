@@ -868,7 +868,7 @@ and expr_ = AstBridge.expr_ =
   | ObjCSelectorExpr            of (* selector *)string
   | ObjCProtocolExpr            of (* protocol *)string
   | GenericSelectionExpr        of (* controlling *)expr
-                                 * (* assoc_list *)(expr * ctyp) list
+                                 * (* assoc_list *)(expr * ctyp option) list
                                  * (* result *)expr
 
 

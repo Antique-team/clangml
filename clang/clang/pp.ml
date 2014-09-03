@@ -602,9 +602,10 @@ and pp_expr_ fmt = function
       Format.fprintf fmt "@@protocol (%s)" protocol
   | GenericSelectionExpr (controlling_expr, expr_ctyp_assoc_list, result_expr)
     ->
-      Format.fprintf fmt "_Generic (%a, %a, %a)"
+      Format.fprintf fmt "_Generic ((%a, %a) = %a)"
         pp_expr controlling_expr
-        (Formatx.pp_list (pp_pair pp_expr pp_ctyp)) expr_ctyp_assoc_list
+        (Formatx.pp_list (pp_pair pp_expr (pp_option pp_ctyp)))
+          expr_ctyp_assoc_list
         pp_expr result_expr
 
 
