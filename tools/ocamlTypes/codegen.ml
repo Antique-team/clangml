@@ -18,7 +18,7 @@ let rec ctyp_of_basic_type = function
       <:ctyp<$ty$ option>>
   | TupleType  (_loc, bts) ->
       let tys =
-        List.rev_map ctyp_of_basic_type bts
+        List.map ctyp_of_basic_type bts
         |> BatList.reduce
              (fun members ty ->
                 Ast.TySta (_loc, members, ty))
