@@ -48,9 +48,7 @@ OCamlVisitor::TraverseNullStmt (clang::NullStmt *S)
 {
   TRACE;
 
-  stack.push (mkNullStmt ());
-
-  return true;
+  return stack.push (mkNullStmt ());
 }
 
 
@@ -59,9 +57,7 @@ OCamlVisitor::TraverseBreakStmt (clang::BreakStmt *S)
 {
   TRACE;
 
-  stack.push (mkBreakStmt ());
-
-  return true;
+  return stack.push (mkBreakStmt ());
 }
 
 
@@ -70,9 +66,7 @@ OCamlVisitor::TraverseContinueStmt (clang::ContinueStmt *S)
 {
   TRACE;
 
-  stack.push (mkContinueStmt ());
-
-  return true;
+  return stack.push (mkContinueStmt ());
 }
 
 
@@ -84,9 +78,7 @@ OCamlVisitor::TraverseLabelStmt (clang::LabelStmt *S)
   clang::StringRef name = S->getDecl ()->getName ();
   ptr<Stmt> sub = must_traverse (S->getSubStmt ());
 
-  stack.push (mkLabelStmt (name, sub));
-
-  return true;
+  return stack.push (mkLabelStmt (name, sub));
 }
 
 
@@ -99,9 +91,7 @@ OCamlVisitor::TraverseCaseStmt (clang::CaseStmt *S)
   option<Expr> rhs = maybe_traverse (S->getRHS ());
   ptr<Stmt> sub = must_traverse (S->getSubStmt ());
 
-  stack.push (mkCaseStmt (lhs, rhs, sub));
-
-  return true;
+  return stack.push (mkCaseStmt (lhs, rhs, sub));
 }
 
 
@@ -112,9 +102,7 @@ OCamlVisitor::TraverseDefaultStmt (clang::DefaultStmt *S)
 
   ptr<Stmt> sub = must_traverse (S->getSubStmt ());
 
-  stack.push (mkDefaultStmt (sub));
-
-  return true;
+  return stack.push (mkDefaultStmt (sub));
 }
 
 
@@ -125,9 +113,7 @@ OCamlVisitor::TraverseGotoStmt (clang::GotoStmt *S)
 
   clang::StringRef name = S->getLabel ()->getName ();
 
-  stack.push (mkGotoStmt (name));
-
-  return true;
+  return stack.push (mkGotoStmt (name));
 }
 
 
@@ -140,9 +126,7 @@ OCamlVisitor::TraverseIfStmt (clang::IfStmt *S)
   ptr<Stmt> thenBranch = must_traverse (S->getThen ());
   option<Stmt> elseBranch = maybe_traverse (S->getElse ());
 
-  stack.push (mkIfStmt (cond, thenBranch, elseBranch));
-
-  return true;
+  return stack.push (mkIfStmt (cond, thenBranch, elseBranch));
 }
 
 
@@ -156,9 +140,7 @@ OCamlVisitor::TraverseForStmt (clang::ForStmt *S)
   option<Expr> inc = maybe_traverse (S->getInc ());
   ptr<Stmt> body = must_traverse (S->getBody ());
 
-  stack.push (mkForStmt (init, cond, inc, body));
-
-  return true;
+  return stack.push (mkForStmt (init, cond, inc, body));
 }
 
 
@@ -170,9 +152,7 @@ OCamlVisitor::TraverseWhileStmt (clang::WhileStmt *S)
   ptr<Expr> cond = must_traverse (S->getCond ());
   ptr<Stmt> body = must_traverse (S->getBody ());
 
-  stack.push (mkWhileStmt (cond, body));
-
-  return true;
+  return stack.push (mkWhileStmt (cond, body));
 }
 
 
@@ -184,9 +164,7 @@ OCamlVisitor::TraverseDoStmt (clang::DoStmt *S)
   ptr<Stmt> body = must_traverse (S->getBody ());
   ptr<Expr> cond = must_traverse (S->getCond ());
 
-  stack.push (mkDoStmt (body, cond));
-
-  return true;
+  return stack.push (mkDoStmt (body, cond));
 }
 
 
@@ -198,9 +176,7 @@ OCamlVisitor::TraverseSwitchStmt (clang::SwitchStmt *S)
   ptr<Expr> cond = must_traverse (S->getCond ());
   ptr<Stmt> body = must_traverse (S->getBody ());
 
-  stack.push (mkSwitchStmt (cond, body));
-
-  return true;
+  return stack.push (mkSwitchStmt (cond, body));
 }
 
 
@@ -211,9 +187,7 @@ OCamlVisitor::TraverseReturnStmt (clang::ReturnStmt *S)
 
   option<Expr> expr = maybe_traverse (S->getRetValue ());
 
-  stack.push (mkReturnStmt (expr));
-
-  return true;
+  return stack.push (mkReturnStmt (expr));
 }
 
 
@@ -228,9 +202,7 @@ OCamlVisitor::TraverseCompoundStmt (clang::CompoundStmt *S)
     traverse (sub);
   list<Stmt> stmts = stack.pop_marked ();
 
-  stack.push (mkCompoundStmt (stmts));
-
-  return true;
+  return stack.push (mkCompoundStmt (stmts));
 }
 
 
@@ -267,9 +239,8 @@ OCamlVisitor::TraverseGCCAsmStmt (clang::GCCAsmStmt *S)
   for (unsigned int i = 0; i < S->getNumClobbers (); i++)
     clobbers.push_back (S->getClobber (i));
 
-  stack.push (ast_bridge::mkGCCAsmStmt (asm_string, outputs, inputs, clobbers));
-
-  return true;
+  return stack.push
+    (ast_bridge::mkGCCAsmStmt (asm_string, outputs, inputs, clobbers));
 }
 
 
@@ -280,9 +251,7 @@ OCamlVisitor::TraverseDeclStmt (clang::DeclStmt *S)
 
   list<Decl> decls = traverse_list (decl_range (S));
 
-  stack.push (mkDeclStmt (decls));
-
-  return true;
+  return stack.push (mkDeclStmt (decls));
 }
 
 
@@ -293,9 +262,7 @@ OCamlVisitor::TraverseIndirectGotoStmt (clang::IndirectGotoStmt *S)
 
   ptr<Expr> expr = must_traverse (S->getTarget ());
 
-  stack.push (mkIndirectGotoStmt (expr));
-
-  return true;
+  return stack.push (mkIndirectGotoStmt (expr));
 }
 
 bool
@@ -309,9 +276,7 @@ OCamlVisitor::TraverseCapturedStmt (clang::CapturedStmt *S)
   ptr<Decl> decl = must_traverse (S->getCapturedDecl ());
   list<Stmt> captures = traverse_list (S->children());
 
-  stack.push (mkCapturedStmt (kind, stmt, decl, captures));
-
-  return true;
+  return stack.push (mkCapturedStmt (kind, stmt, decl, captures));
 }
 
 bool
@@ -321,9 +286,7 @@ OCamlVisitor::TraverseObjCAtFinallyStmt (clang::ObjCAtFinallyStmt *S)
 
   ptr<Stmt> body = must_traverse (S->getFinallyBody ());
 
-  stack.push (mkObjCAtFinallyStmt (body));
-
-  return true;
+  return stack.push (mkObjCAtFinallyStmt (body));
 }
 
 bool
@@ -341,9 +304,7 @@ OCamlVisitor::TraverseObjCAtTryStmt (clang::ObjCAtTryStmt *S)
 
   option<Stmt> finally_body = maybe_traverse (S->getFinallyStmt ());
 
-  stack.push (mkObjCAtTryStmt (try_body, catch_stmts, finally_body));
-
-  return true;
+  return stack.push (mkObjCAtTryStmt (try_body, catch_stmts, finally_body));
 }
 
 bool
@@ -354,9 +315,7 @@ OCamlVisitor::TraverseObjCAtCatchStmt (clang::ObjCAtCatchStmt *S)
   ptr<Decl> param = must_traverse (S->getCatchParamDecl ());
   ptr<Stmt> body = must_traverse (S->getCatchBody ());
 
-  stack.push (mkObjCAtCatchStmt (param, body));
-
-  return true;
+  return stack.push (mkObjCAtCatchStmt (param, body));
 }
 
 bool
@@ -366,9 +325,7 @@ OCamlVisitor::TraverseObjCAtThrowStmt (clang::ObjCAtThrowStmt *S)
 
   ptr<Expr> throw_expr = must_traverse (S->getThrowExpr ());
 
-  stack.push (mkObjCAtThrowStmt (throw_expr));
-
-  return true;
+  return stack.push (mkObjCAtThrowStmt (throw_expr));
 }
 
 bool
@@ -379,9 +336,7 @@ OCamlVisitor::TraverseObjCAtSynchronizedStmt (clang::ObjCAtSynchronizedStmt *S)
   ptr<Expr> expr = must_traverse (S->getSynchExpr ());
   list<Stmt> body = traverse_list (S->getSynchBody ()->children());
 
-  stack.push (mkObjCAtSynchronizedStmt (expr, body));
-
-  return true;
+  return stack.push (mkObjCAtSynchronizedStmt (expr, body));
 }
 
 bool
@@ -393,9 +348,7 @@ OCamlVisitor::TraverseObjCForCollectionStmt (clang::ObjCForCollectionStmt *S)
   ptr<Expr> collection = must_traverse (S-> getCollection());
   ptr<Stmt> body = must_traverse (S-> getBody());
 
-  stack.push (mkObjCForCollectionStmt (element, collection, body));
-
-  return true;
+  return stack.push (mkObjCForCollectionStmt (element, collection, body));
 }
 
 
