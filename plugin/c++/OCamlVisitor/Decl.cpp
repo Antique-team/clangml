@@ -69,9 +69,8 @@ OCamlVisitor::TraverseDecl (clang::Decl *D)
   decl->d        = stack.pop ();
   decl->d_cref   = ref (D);
   decl->d_sloc   = sloc (D);
-  stack.push (decl);
 
-  return true;
+  return stack.push (decl);
 }
 
 
@@ -114,9 +113,7 @@ OCamlVisitor::TraverseFunctionDecl (clang::FunctionDecl *D)
   // Function name.
   ptr<DeclarationName> name = translate_declaration_name (D->getDeclName ());
 
-  stack.push (mkFunctionDecl (type, name, body));
-
-  return true;
+  return stack.push (mkFunctionDecl (type, name, body));
 }
 
 
@@ -161,9 +158,7 @@ OCamlVisitor::TraverseEmptyDecl (clang::EmptyDecl *D)
 {
   TRACE;
 
-  stack.push (mkEmptyDecl ());
-
-  return true;
+  return stack.push (mkEmptyDecl ());
 }
 
 
@@ -175,9 +170,7 @@ OCamlVisitor::TraverseTypedefDecl (clang::TypedefDecl *D)
   ptr<Tloc> type = getTypeLoc (D);
   clang::StringRef name = D->getName ();
 
-  stack.push (mkTypedefDecl (type, name));
-
-  return true;
+  return stack.push (mkTypedefDecl (type, name));
 }
 
 
@@ -194,9 +187,7 @@ OCamlVisitor::TraverseRecordDecl (clang::RecordDecl *D)
   clang::StringRef name = D->getName ();
   list<CxxBaseSpecifier> bases;
 
-  stack.push (mkRecordDecl (kind, name, members, bases));
-
-  return true;
+  return stack.push (mkRecordDecl (kind, name, members, bases));
 }
 
 
@@ -213,9 +204,7 @@ OCamlVisitor::TraverseCXXBaseSpecifier (clang::CXXBaseSpecifier const &B)
   base->cbs_access_spec      = translate_access_specifier (B.getAccessSpecifier ());
   base->cbs_type             = must_traverse (B.getTypeSourceInfo ());
 
-  stack.push (base);
-
-  return true;
+  return stack.push (base);
 }
 
 
@@ -232,9 +221,7 @@ OCamlVisitor::TraverseCXXRecordDecl (clang::CXXRecordDecl *D)
   if (D->isCompleteDefinition ())
     bases = traverse_list (base_spec_range (D));
 
-  stack.push (mkRecordDecl (kind, name, members, bases));
-
-  return true;
+  return stack.push (mkRecordDecl (kind, name, members, bases));
 }
 
 
@@ -245,9 +232,7 @@ OCamlVisitor::TraverseFieldDecl (clang::FieldDecl *D)
 
   ptr<FieldDecl> field = createFieldDecl (D);
 
-  stack.push (mkFieldDecl (field));
-
-  return true;
+  return stack.push (mkFieldDecl (field));
 }
 
 
@@ -259,9 +244,7 @@ OCamlVisitor::TraverseEnumDecl (clang::EnumDecl *D)
   clang::StringRef name = D->getName ();
   list<Decl> enumerators = traverse_list (decl_range (D));
 
-  stack.push (mkEnumDecl (name, enumerators));
-
-  return true;
+  return stack.push (mkEnumDecl (name, enumerators));
 }
 
 
@@ -273,9 +256,7 @@ OCamlVisitor::TraverseEnumConstantDecl (clang::EnumConstantDecl *D)
   clang::StringRef name = D->getName ();
   option<Expr> init = maybe_traverse (D->getInitExpr ());
 
-  stack.push (mkEnumConstantDecl (name, init));
-
-  return true;
+  return stack.push (mkEnumConstantDecl (name, init));
 }
 
 
@@ -289,9 +270,7 @@ OCamlVisitor::TraverseParmVarDecl (clang::ParmVarDecl *D)
   ptr<Tloc> type = getTypeLoc (D);
   clang::StringRef name = D->getName ();
 
-  stack.push (mkParmVarDecl (type, name));
-
-  return true;
+  return stack.push (mkParmVarDecl (type, name));
 }
 
 
@@ -306,9 +285,7 @@ OCamlVisitor::TraverseVarDecl (clang::VarDecl *D)
   clang::StringRef name = D->getName ();
   option<Expr> init = maybe_traverse (D->getInit ());
 
-  stack.push (mkVarDecl (type, name, init));
-
-  return true;
+  return stack.push (mkVarDecl (type, name, init));
 }
 
 
@@ -320,9 +297,7 @@ OCamlVisitor::TraverseTranslationUnitDecl (clang::TranslationUnitDecl *D)
   // We filter out implicit declarations before iterating.
   list<Decl> decls = traverse_explicit_decls (D);
 
-  stack.push (mkTranslationUnitDecl (decls));
-
-  return true;
+  return stack.push (mkTranslationUnitDecl (decls));
 }
 
 bool
@@ -336,9 +311,7 @@ OCamlVisitor::TraverseCapturedDecl (clang::CapturedDecl *D)
   // for (unsigned int i = 0; i < D->getNumParams (); ++i)
   //   params.push_back (must_traverse (D->getParam (i)));
 
-  stack.push (mkCapturedDecl (body));
-
-  return true;
+  return stack.push (mkCapturedDecl (body));
 }
 
 #define UNIMP_DECL(CLASS)					\
@@ -347,9 +320,9 @@ OCamlVisitor::TraverseCapturedDecl (clang::CapturedDecl *D)
     TODO;							\
     TRACE;							\
     IGNORE_ADT (CLASS, D);					\
-    stack.push (mk##CLASS ());					\
-    return true;						\
-  }
+                                                                \
+    return stack.push (mk##CLASS ());			        \
+  }                                                             \
 
 
 bool
@@ -359,9 +332,7 @@ OCamlVisitor::TraverseAccessSpecDecl (clang::AccessSpecDecl *D)
 
   AccessSpecifier spec = translate_access_specifier (D->getAccess ());
 
-  stack.push (mkAccessSpecDecl (spec));
-
-  return true;
+  return stack.push (mkAccessSpecDecl (spec));
 }
 
 
@@ -377,9 +348,7 @@ OCamlVisitor::TraverseClassTemplateDecl (clang::ClassTemplateDecl *D)
   ptr<Decl> templated = must_traverse (D->getTemplatedDecl ());
   list<Decl> params = traverse_list (D->getTemplateParameters ());
 
-  stack.push (mkClassTemplateDecl (templated, params));
-
-  return true;
+  return stack.push (mkClassTemplateDecl (templated, params));
 }
 
 
@@ -390,9 +359,7 @@ OCamlVisitor::TraverseFileScopeAsmDecl (clang::FileScopeAsmDecl *D)
 
   ptr<Expr> asmString = must_traverse (D->getAsmString ());
 
-  stack.push (mkFileScopeAsmDecl (asmString));
-
-  return true;
+  return stack.push (mkFileScopeAsmDecl (asmString));
 }
 
 
@@ -403,9 +370,7 @@ OCamlVisitor::TraverseLabelDecl (clang::LabelDecl *D)
 
   clang::StringRef name = D->getName ();
 
-  stack.push (mkLabelDecl (name));
-
-  return true;
+  return stack.push (mkLabelDecl (name));
 }
 
 
@@ -434,9 +399,7 @@ OCamlVisitor::TraverseLinkageSpecDecl (clang::LinkageSpecDecl *D)
       break;
     }
 
-  stack.push (mkLinkageSpecDecl (decls, lang));
-
-  return true;
+  return stack.push (mkLinkageSpecDecl (decls, lang));
 }
 UNIMP_DECL (MSPropertyDecl)
 UNIMP_DECL (NamespaceAliasDecl)
@@ -452,9 +415,7 @@ OCamlVisitor::TraverseNamespaceDecl (clang::NamespaceDecl *D)
   clang::StringRef name = D->getName ();
   bool isInline = D->isInline ();
 
-  stack.push (mkNamespaceDecl (name, isInline, decls));
-
-  return true;
+  return stack.push (mkNamespaceDecl (name, isInline, decls));
 }
 
 bool
@@ -465,9 +426,7 @@ OCamlVisitor::TraverseStaticAssertDecl (clang::StaticAssertDecl *D)
   ptr<Expr> assertion = must_traverse (D->getAssertExpr ());
   clang::StringRef msg = D->getMessage ()->getString();
 
-  stack.push (mkStaticAssertDecl (assertion, msg));
-
-  return true;
+  return stack.push (mkStaticAssertDecl (assertion, msg));
 }
 
 bool
@@ -478,9 +437,7 @@ OCamlVisitor::TraverseObjCIvarDecl (clang::ObjCIvarDecl *D)
   AccessControl ac = translate_access_control (D->getAccessControl ());
   ptr<FieldDecl> field_decl = createFieldDecl (D);
 
-  stack.push (mkObjCIvarDecl (ac, field_decl));
-
-  return true;
+  return stack.push (mkObjCIvarDecl (ac, field_decl));
 }
 
 bool
@@ -515,9 +472,7 @@ OCamlVisitor::TraverseObjCInterfaceDecl (clang::ObjCInterfaceDecl *D)
       methods.push_back (must_traverse (*it));
     }
 
-  stack.push (mkObjCInterfaceDecl (name, referenced_protocols, ivars, methods));
-
-  return true;
+  return stack.push (mkObjCInterfaceDecl (name, referenced_protocols, ivars, methods));
 }
 
 
@@ -547,10 +502,8 @@ OCamlVisitor::TraverseObjCCategoryDecl (clang::ObjCCategoryDecl *D)
       methods.push_back (must_traverse (*it));
     }
 
-  stack.push (mkObjCCategoryDecl
+  return stack.push (mkObjCCategoryDecl
               (class_interface_name, name, referenced_protocols, methods));
-
-  return true;
 }
 
 
@@ -578,9 +531,7 @@ OCamlVisitor::TraverseObjCProtocolDecl (clang::ObjCProtocolDecl *D)
       methods.push_back (must_traverse (*it));
     }
 
-  stack.push (mkObjCProtocolDecl (name, referenced_protocols, methods));
-
-  return true;
+  return stack.push (mkObjCProtocolDecl (name, referenced_protocols, methods));
 }
 
 bool
@@ -600,9 +551,7 @@ OCamlVisitor::TraverseObjCMethodDecl (clang::ObjCMethodDecl *D)
       params.push_back (must_traverse (*it));
     }
 
-  stack.push (mkObjCMethodDecl (result_type, name, params));
-
-  return true;
+  return stack.push (mkObjCMethodDecl (result_type, name, params));
 }
 
 
@@ -629,9 +578,7 @@ OCamlVisitor::TraverseObjCImplementationDecl (clang::ObjCImplementationDecl *D)
       initializers.push_back (must_traverse ((*it)->getInit ()));
     }
 
-  stack.push (mkObjCImplementationDecl (name, ivars, initializers));
-
-  return true;
+  return stack.push (mkObjCImplementationDecl (name, ivars, initializers));
 }
 
 
@@ -643,9 +590,7 @@ OCamlVisitor::TraverseObjCCategoryImplDecl
 
   clang::StringRef name = D->getName ();
 
-  stack.push (mkObjCCategoryImplDecl (name));
-
-  return true;
+  return stack.push (mkObjCCategoryImplDecl (name));
 }
 
 
@@ -666,9 +611,7 @@ OCamlVisitor::TraverseTemplateTypeParmDecl (clang::TemplateTypeParmDecl *D)
   ptr<Ctyp> type = must_traverse (clang::QualType (D->getTypeForDecl (), 0));
   option<Tloc> defaultArg = maybe_traverse (D->getDefaultArgumentInfo ());
 
-  stack.push (mkTemplateTypeParmDecl (type, defaultArg));
-
-  return true;
+  return stack.push (mkTemplateTypeParmDecl (type, defaultArg));
 }
 UNIMP_DECL (TypeAliasDecl)
 UNIMP_DECL (TypeAliasTemplateDecl)
@@ -683,9 +626,7 @@ OCamlVisitor::TraverseUsingDecl (clang::UsingDecl *D)
 
   ptr<DeclarationName> dname = translate_declaration_name (D->getDeclName ());
 
-  stack.push (mkUsingDecl (dname));
-
-  return true;
+  return stack.push (mkUsingDecl (dname));
 }
 UNIMP_DECL (UsingDirectiveDecl)
 UNIMP_DECL (UsingShadowDecl)
