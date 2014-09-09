@@ -41,9 +41,8 @@ OCamlVisitor::TraverseTypeLoc (clang::TypeLoc TL)
   type_loc->tl_cref = ref (TL);
   type_loc->tl_sloc = sloc (TL);
   type_loc->tl_type = must_traverse (TL.getType ());
-  stack.push (type_loc);
 
-  return true;
+  return stack.push (type_loc);
 }
 
 
@@ -54,9 +53,7 @@ OCamlVisitor::TraverseBuiltinTypeLoc (clang::BuiltinTypeLoc TL)
 
   BuiltinType bt = translate_builtin_type (TL.getTypePtr ()->getKind ());
 
-  stack.push (mkBuiltinTypeLoc (bt));
-
-  return true;
+  return stack.push (mkBuiltinTypeLoc (bt));
 }
 
 
@@ -67,9 +64,7 @@ OCamlVisitor::TraverseAtomicTypeLoc (clang::AtomicTypeLoc TL)
 
   ptr<Tloc> value = must_traverse (TL.getValueLoc ());
 
-  stack.push (mkAtomicTypeLoc (value));
-
-  return true;
+  return stack.push (mkAtomicTypeLoc (value));
 }
 
 
@@ -80,9 +75,7 @@ OCamlVisitor::TraverseTypeOfExprTypeLoc (clang::TypeOfExprTypeLoc TL)
 
   ptr<Expr> expr = must_traverse (TL.getUnderlyingExpr ());
 
-  stack.push (mkTypeOfExprTypeLoc (expr));
-
-  return true;
+  return stack.push (mkTypeOfExprTypeLoc (expr));
 }
 
 
@@ -93,9 +86,7 @@ OCamlVisitor::TraverseTypeOfTypeLoc (clang::TypeOfTypeLoc TL)
 
   ptr<Tloc> type = must_traverse (TL.getUnderlyingTInfo ()->getTypeLoc ());
 
-  stack.push (mkTypeOfTypeLoc (type));
-
-  return true;
+  return stack.push (mkTypeOfTypeLoc (type));
 }
 
 
@@ -107,9 +98,7 @@ OCamlVisitor::TraverseConstantArrayTypeLoc (clang::ConstantArrayTypeLoc TL)
   ptr<Tloc> element = must_traverse (TL.getElementLoc ());
   uint64_t size = TL.getTypePtr ()->getSize ().getZExtValue ();
 
-  stack.push (mkConstantArrayTypeLoc (element, size));
-
-  return true;
+  return stack.push (mkConstantArrayTypeLoc (element, size));
 }
 
 
@@ -121,9 +110,7 @@ OCamlVisitor::TraverseVariableArrayTypeLoc (clang::VariableArrayTypeLoc TL)
   ptr<Tloc> element = must_traverse (TL.getElementLoc ());
   option<Expr> size = maybe_traverse (TL.getSizeExpr ());
 
-  stack.push (mkVariableArrayTypeLoc (element, size));
-
-  return true;
+  return stack.push (mkVariableArrayTypeLoc (element, size));
 }
 
 
@@ -134,9 +121,7 @@ OCamlVisitor::TraverseIncompleteArrayTypeLoc (clang::IncompleteArrayTypeLoc TL)
 
   ptr<Tloc> element = must_traverse (TL.getElementLoc ());
 
-  stack.push (mkIncompleteArrayTypeLoc (element));
-
-  return true;
+  return stack.push (mkIncompleteArrayTypeLoc (element));
 }
 
 
@@ -147,9 +132,7 @@ OCamlVisitor::TraversePointerTypeLoc (clang::PointerTypeLoc TL)
 
   ptr<Tloc> pointee = must_traverse (TL.getPointeeLoc ());
 
-  stack.push (mkPointerTypeLoc (pointee));
-
-  return true;
+  return stack.push (mkPointerTypeLoc (pointee));
 }
 
 
@@ -161,9 +144,7 @@ OCamlVisitor::TraverseElaboratedTypeLoc (clang::ElaboratedTypeLoc TL)
   TraverseNestedNameSpecifierLoc (TL.getQualifierLoc ());
   ptr<Tloc> type = must_traverse (TL.getNamedTypeLoc ());
 
-  stack.push (mkElaboratedTypeLoc (type));
-
-  return true;
+  return stack.push (mkElaboratedTypeLoc (type));
 }
 
 
@@ -216,9 +197,7 @@ OCamlVisitor::TraverseQualifiedTypeLoc (clang::QualifiedTypeLoc TL)
   if (quals.hasAddressSpace ())
     addressSpace = quals.getAddressSpace ();
 
-  stack.push (mkQualifiedTypeLoc (unqual, qualifiers, addressSpace));
-
-  return true;
+  return stack.push (mkQualifiedTypeLoc (unqual, qualifiers, addressSpace));
 }
 
 
@@ -229,9 +208,7 @@ OCamlVisitor::TraverseEnumTypeLoc (clang::EnumTypeLoc TL)
 
   clang::StringRef name = TL.getDecl ()->getName ();
 
-  stack.push (mkEnumTypeLoc (name));
-
-  return true;
+  return stack.push (mkEnumTypeLoc (name));
 }
 
 
@@ -243,9 +220,7 @@ OCamlVisitor::TraverseRecordTypeLoc (clang::RecordTypeLoc TL)
   TagTypeKind kind = translate_tag_type_kind (TL.getDecl ()->getTagKind ());
   clang::StringRef name = TL.getDecl ()->getName ();
 
-  stack.push (mkRecordTypeLoc (kind, name));
-
-  return true;
+  return stack.push (mkRecordTypeLoc (kind, name));
 }
 
 
@@ -256,9 +231,7 @@ OCamlVisitor::TraverseFunctionNoProtoTypeLoc (clang::FunctionNoProtoTypeLoc TL)
 
   ptr<Tloc> result = must_traverse (TL.getResultLoc ());
 
-  stack.push (mkFunctionNoProtoTypeLoc (result));
-
-  return true;
+  return stack.push (mkFunctionNoProtoTypeLoc (result));
 }
 
 
@@ -305,9 +278,7 @@ OCamlVisitor::TraverseTypedefTypeLoc (clang::TypedefTypeLoc TL)
 
   clang::StringRef name = TL.getTypedefNameDecl ()->getName ();
 
-  stack.push (mkTypedefTypeLoc (name));
-
-  return true;
+  return stack.push (mkTypedefTypeLoc (name));
 }
 
 
@@ -318,9 +289,7 @@ OCamlVisitor::TraverseParenTypeLoc (clang::ParenTypeLoc TL)
 
   ptr<Tloc> inner = must_traverse (TL.getInnerLoc ());
 
-  stack.push (mkParenTypeLoc (inner));
-
-  return true;
+  return stack.push (mkParenTypeLoc (inner));
 }
 
 
@@ -331,9 +300,9 @@ OCamlVisitor::Traverse##CLASS##TypeLoc (clang::CLASS##TypeLoc TL)	\
   TODO;									\
   TRACE;								\
   Base::Traverse##CLASS##TypeLoc (TL);					\
-  stack.push (mk##CLASS##TypeLoc ());					\
-  return true;								\
-}
+                                                                        \
+  return stack.push (mk##CLASS##TypeLoc ());                            \
+}                                                                       \
 
 UNIMP_TYPE_LOC (Auto)
 UNIMP_TYPE_LOC (BlockPointer)
@@ -346,9 +315,7 @@ OCamlVisitor::TraverseComplexTypeLoc (clang::ComplexTypeLoc TL)
 
   ptr<Ctyp> element = must_traverse (TL.getTypePtr()->getElementType());
 
-  stack.push (mkComplexTypeLoc (element));
-
-  return true;
+  return stack.push (mkComplexTypeLoc (element));
 }
 
 
@@ -362,9 +329,7 @@ OCamlVisitor::TraverseExtVectorTypeLoc (clang::ExtVectorTypeLoc TL)
   VectorKind vect_kind =
     translate_vector_kind (TL.getTypePtr ()->getVectorKind ());
 
-  stack.push (mkExtVectorTypeLoc (elt_type, num_elts, vect_kind));
-
-  return true;
+  return stack.push (mkExtVectorTypeLoc (elt_type, num_elts, vect_kind));
 }
 
 
@@ -378,9 +343,7 @@ OCamlVisitor::TraverseVectorTypeLoc (clang::VectorTypeLoc TL)
   VectorKind vect_kind =
     translate_vector_kind (TL.getTypePtr ()->getVectorKind ());
 
-  stack.push (mkVectorTypeLoc (elt_type, num_elts, vect_kind));
-
-  return true;
+  return stack.push (mkVectorTypeLoc (elt_type, num_elts, vect_kind));
 }
 
 
@@ -396,9 +359,7 @@ OCamlVisitor::TraverseAttributedTypeLoc (clang::AttributedTypeLoc TL)
   if (TL.hasAttrExprOperand ())
     expr = must_traverse (TL.getAttrExprOperand ());
 
-  stack.push (mkAttributedTypeLoc (attr_kind, modified_loc, expr));
-
-  return true;
+  return stack.push (mkAttributedTypeLoc (attr_kind, modified_loc, expr));
 }
 
 
@@ -409,9 +370,7 @@ OCamlVisitor::TraverseDecayedTypeLoc (clang::DecayedTypeLoc TL)
 
   ptr<Tloc> original = must_traverse (TL.getOriginalLoc ());
 
-  stack.push (mkDecayedTypeLoc (original));
-
-  return true;
+  return stack.push (mkDecayedTypeLoc (original));
 }
 
 
@@ -422,9 +381,7 @@ OCamlVisitor::TraverseDecltypeTypeLoc (clang::DecltypeTypeLoc TL)
 
   ptr<Expr> expr = must_traverse (TL.getUnderlyingExpr ());
 
-  stack.push (mkDecltypeTypeLoc (expr));
-
-  return true;
+  return stack.push (mkDecltypeTypeLoc (expr));
 }
 
 bool
@@ -434,9 +391,7 @@ OCamlVisitor::TraverseObjCObjectPointerTypeLoc (clang::ObjCObjectPointerTypeLoc 
 
   ptr<Tloc> pointee = must_traverse (TL.getPointeeLoc ());
 
-  stack.push (mkObjCObjectPointerTypeLoc (pointee));
-
-  return true;
+  return stack.push (mkObjCObjectPointerTypeLoc (pointee));
 }
 
 bool
@@ -446,9 +401,7 @@ OCamlVisitor::TraverseObjCObjectTypeLoc (clang::ObjCObjectTypeLoc TL)
 
   ptr<Tloc> base = must_traverse (TL.getBaseLoc ());
 
-  stack.push (mkObjCObjectTypeLoc (base));
-
-  return true;
+  return stack.push (mkObjCObjectTypeLoc (base));
 }
 
 bool
@@ -458,9 +411,7 @@ OCamlVisitor::TraverseObjCInterfaceTypeLoc (clang::ObjCInterfaceTypeLoc TL)
 
   clang::StringRef name = TL.getIFaceDecl ()->getName ();
 
-  stack.push (mkObjCInterfaceTypeLoc (name));
-
-  return true;
+  return stack.push (mkObjCInterfaceTypeLoc (name));
 }
 
 
@@ -483,9 +434,7 @@ OCamlVisitor::TraverseTemplateTypeParmTypeLoc (clang::TemplateTypeParmTypeLoc TL
 
   clang::StringRef name = TL.getDecl ()->getName ();
 
-  stack.push (mkTemplateTypeParmTypeLoc (name));
-
-  return true;
+  return stack.push (mkTemplateTypeParmTypeLoc (name));
 }
 
 
