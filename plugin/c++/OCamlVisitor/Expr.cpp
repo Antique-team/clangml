@@ -85,7 +85,7 @@ bool
 OCamlVisitor::TraverseIntegerLiteral (clang::IntegerLiteral *S)
 {
   return stack.push (mkIntegerLiteral
-              (S->getValue ().getSExtValue ()));
+                     (S->getValue ().getSExtValue ()));
 }
 
 
@@ -93,7 +93,7 @@ bool
 OCamlVisitor::TraverseCharacterLiteral (clang::CharacterLiteral *S)
 {
   return stack.push (mkCharacterLiteral
-              (S->getValue ()));
+                     (S->getValue ()));
 }
 
 
@@ -102,7 +102,7 @@ OCamlVisitor::TraverseFloatingLiteral (clang::FloatingLiteral *S)
 {
   // TODO: using approximate value here; should be using exact format
   return stack.push (mkFloatingLiteral
-              (S->getValueAsApproximateDouble ()));
+                     (S->getValueAsApproximateDouble ()));
 }
 
 
@@ -110,7 +110,7 @@ bool
 OCamlVisitor::TraverseStringLiteral (clang::StringLiteral *S)
 {
   return stack.push (mkStringLiteral
-              (S->getBytes ()));
+                     (S->getBytes ()));
 }
 
 
@@ -596,7 +596,7 @@ OCamlVisitor::TraverseObjCMessageExpr (clang::ObjCMessageExpr *S)
     args.push_back (must_traverse (S->getArg (i)));
 
   return stack.push (mkObjCMessageExpr
-              (instance_receiver, class_receiver, selector, args));
+                     (instance_receiver, class_receiver, selector, args));
 }
 
 
