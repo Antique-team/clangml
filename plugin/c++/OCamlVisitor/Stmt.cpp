@@ -14,10 +14,10 @@ OCamlVisitor::TraverseStmt (clang::Stmt *S)
     {
     case clang::Stmt::NoStmtClass: break;
 #define ABSTRACT_STMT(STMT)
-#define STMT(CLASS, PARENT)				\
-    case clang::Stmt::CLASS##Class:			\
-      Traverse##CLASS (static_cast<clang::CLASS *> (S));\
-      break;
+#define STMT(CLASS, PARENT)                                     \
+      case clang::Stmt::CLASS##Class:                           \
+        Traverse##CLASS (static_cast<clang::CLASS *> (S));      \
+        break;
 #include <clang/AST/StmtNodes.inc>
     }
 
