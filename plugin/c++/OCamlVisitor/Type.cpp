@@ -67,9 +67,8 @@ OCamlVisitor::TraverseType (clang::QualType T)
     ctyp->t_canon = ctyp;
   else
     ctyp->t_canon = must_traverse (T.getCanonicalType ());
-  stack.push (ctyp);
 
-  return true;
+  return stack.push (ctyp);
 }
 
 
@@ -80,9 +79,7 @@ OCamlVisitor::TraverseBuiltinType (clang::BuiltinType *T)
 
   BuiltinType bt = translate_builtin_type (T->getKind ());
 
-  stack.push (mkBuiltinType (bt));
-
-  return true;
+  return stack.push (mkBuiltinType (bt));
 }
 
 
@@ -94,9 +91,7 @@ OCamlVisitor::TraversePointerType (clang::PointerType *T)
 
   ptr<Ctyp> pointee = must_traverse (T->getPointeeType ());
 
-  stack.push (mkPointerType (pointee));
-
-  return true;
+  return stack.push (mkPointerType (pointee));
 }
 
 
@@ -110,9 +105,7 @@ OCamlVisitor::TraverseFunctionProtoType (clang::FunctionProtoType *T)
 
   // TODO: exceptions
 
-  stack.push (mkFunctionProtoType (result, args));
-
-  return true;
+  return stack.push (mkFunctionProtoType (result, args));
 }
 
 
@@ -123,9 +116,7 @@ OCamlVisitor::TraverseFunctionNoProtoType (clang::FunctionNoProtoType *T)
 
   ptr<Ctyp> result = must_traverse (T->getResultType ());
 
-  stack.push (mkFunctionNoProtoType (result));
-
-  return true;
+  return stack.push (mkFunctionNoProtoType (result));
 }
 
 
@@ -138,8 +129,8 @@ OCamlVisitor::Traverse##CLASS##Type (clang::CLASS##Type *T)		\
   TODO;									\
   TRACE;								\
   Base::Traverse##CLASS##Type (T);					\
-  stack.push (mk##CLASS##Type ());					\
-  return true;								\
+                                                                        \
+  return stack.push (mk##CLASS##Type ());				\
 }
 
 
@@ -153,9 +144,7 @@ OCamlVisitor::TraverseAttributedType (clang::AttributedType *T)
 
   ptr<Ctyp> modified_type = must_traverse (T->getModifiedType ());
 
-  stack.push (mkAttributedType (attr_kind, modified_type));
-
-  return true;
+  return stack.push (mkAttributedType (attr_kind, modified_type));
 }
 
 
@@ -170,9 +159,7 @@ OCamlVisitor::TraverseComplexType (clang::ComplexType *T)
 
   ptr<Ctyp> element = must_traverse (T->getElementType ());
 
-  stack.push (mkComplexType (element));
-
-  return true;
+  return stack.push (mkComplexType (element));
 }
 
 
@@ -183,9 +170,7 @@ OCamlVisitor::TraverseAtomicType (clang::AtomicType *T)
 
   ptr<Ctyp> value = must_traverse (T->getValueType ());
 
-  stack.push (mkAtomicType (value));
-
-  return true;
+  return stack.push (mkAtomicType (value));
 }
 
 
@@ -199,9 +184,7 @@ OCamlVisitor::TraverseVectorType (clang::VectorType *T)
   VectorKind vect_kind =
     translate_vector_kind (T->getVectorKind ());
 
-  stack.push (mkVectorType (elt_type, num_elts, vect_kind));
-
-  return true;
+  return stack.push (mkVectorType (elt_type, num_elts, vect_kind));
 }
 
 
@@ -213,9 +196,7 @@ OCamlVisitor::TraverseConstantArrayType (clang::ConstantArrayType *T)
   ptr<Ctyp> element = must_traverse (T->getElementType ());
   uint64_t size = T->getSize ().getZExtValue ();
 
-  stack.push (mkConstantArrayType (element, size));
-
-  return true;
+  return stack.push (mkConstantArrayType (element, size));
 }
 
 
@@ -227,9 +208,7 @@ OCamlVisitor::TraverseDecayedType (clang::DecayedType *T)
   ptr<Ctyp> decayed = must_traverse (T->getDecayedType ());
   ptr<Ctyp> original = must_traverse (T->getOriginalType ());
 
-  stack.push (mkDecayedType (decayed, original));
-
-  return true;
+  return stack.push (mkDecayedType (decayed, original));
 }
 
 
@@ -240,9 +219,7 @@ OCamlVisitor::TraverseDecltypeType (clang::DecltypeType *T)
 
   ptr<Expr> expr = must_traverse (T->getUnderlyingExpr ());
 
-  stack.push (mkDecltypeType (expr));
-
-  return true;
+  return stack.push (mkDecltypeType (expr));
 }
 
 
@@ -258,9 +235,7 @@ OCamlVisitor::TraverseElaboratedType (clang::ElaboratedType *T)
   TraverseNestedNameSpecifier (T->getQualifier ());
   ptr<Ctyp> type = must_traverse (T->getNamedType ());
 
-  stack.push (mkElaboratedType (type));
-
-  return true;
+  return stack.push (mkElaboratedType (type));
 }
 
 
@@ -271,9 +246,7 @@ OCamlVisitor::TraverseEnumType (clang::EnumType *T)
 
   clang::StringRef name = T->getDecl ()->getName ();
 
-  stack.push (mkEnumType (name));
-
-  return true;
+  return stack.push (mkEnumType (name));
 }
 
 
@@ -287,9 +260,7 @@ OCamlVisitor::TraverseExtVectorType (clang::ExtVectorType *T)
   VectorKind vect_kind =
     translate_vector_kind (T->getVectorKind ());
 
-  stack.push (mkExtVectorType (elt_type, num_elts, vect_kind));
-
-  return true;
+  return stack.push (mkExtVectorType (elt_type, num_elts, vect_kind));
 }
 
 
@@ -300,9 +271,7 @@ OCamlVisitor::TraverseIncompleteArrayType (clang::IncompleteArrayType *T)
 
   ptr<Ctyp> element = must_traverse (T->getElementType ());
 
-  stack.push (mkIncompleteArrayType (element));
-
-  return true;
+  return stack.push (mkIncompleteArrayType (element));
 }
 
 bool
@@ -312,9 +281,7 @@ OCamlVisitor::TraverseObjCObjectPointerType (clang::ObjCObjectPointerType *T)
 
   ptr<Ctyp> pointee = must_traverse (T->getPointeeType ());
 
-  stack.push (mkObjCObjectPointerType (pointee));
-
-  return true;
+  return stack.push (mkObjCObjectPointerType (pointee));
 }
 
 bool
@@ -324,9 +291,7 @@ OCamlVisitor::TraverseObjCObjectType (clang::ObjCObjectType *T)
 
   ptr<Ctyp> base = must_traverse (T->getBaseType ());
 
-  stack.push (mkObjCObjectType (base));
-
-  return true;
+  return stack.push (mkObjCObjectType (base));
 }
 
 bool
@@ -336,9 +301,7 @@ OCamlVisitor::TraverseObjCInterfaceType (clang::ObjCInterfaceType *T)
 
   clang::StringRef name = T->getDecl ()->getName ();
 
-  stack.push (mkObjCInterfaceType (name));
-
-  return true;
+  return stack.push (mkObjCInterfaceType (name));
 }
 
 
@@ -353,9 +316,7 @@ OCamlVisitor::TraverseParenType (clang::ParenType *T)
 
   ptr<Ctyp> inner = must_traverse (T->getInnerType ());
 
-  stack.push (mkParenType (inner));
-
-  return true;
+  return stack.push (mkParenType (inner));
 }
 
 
@@ -367,9 +328,7 @@ OCamlVisitor::TraverseRecordType (clang::RecordType *T)
   TagTypeKind kind = translate_tag_type_kind (T->getDecl ()->getTagKind ());
   clang::StringRef name = T->getDecl ()->getName ();
 
-  stack.push (mkRecordType (kind, name));
-
-  return true;
+  return stack.push (mkRecordType (kind, name));
 }
 
 
@@ -386,9 +345,7 @@ OCamlVisitor::TraverseTemplateTypeParmType (clang::TemplateTypeParmType *T)
   if (T->getDecl ())
     name = T->getDecl ()->getName ();
 
-  stack.push (mkTemplateTypeParmType (name));
-
-  return true;
+  return stack.push (mkTemplateTypeParmType (name));
 }
 
 
@@ -399,9 +356,7 @@ OCamlVisitor::TraverseTypedefType (clang::TypedefType *T)
 
   clang::StringRef name = T->getDecl ()->getName ();
 
-  stack.push (mkTypedefType (name));
-
-  return true;
+  return stack.push (mkTypedefType (name));
 }
 
 
@@ -412,9 +367,7 @@ OCamlVisitor::TraverseTypeOfExprType (clang::TypeOfExprType *T)
 
   ptr<Expr> expr = must_traverse (T->getUnderlyingExpr ());
 
-  stack.push (mkTypeOfExprType (expr));
-
-  return true;
+  return stack.push (mkTypeOfExprType (expr));
 }
 
 
@@ -425,9 +378,7 @@ OCamlVisitor::TraverseTypeOfType (clang::TypeOfType *T)
 
   ptr<Ctyp> type = must_traverse (T->getUnderlyingType ());
 
-  stack.push (mkTypeOfType (type));
-
-  return true;
+  return stack.push (mkTypeOfType (type));
 }
 
 
@@ -441,9 +392,7 @@ OCamlVisitor::TraverseVariableArrayType (clang::VariableArrayType *T)
   ptr<Ctyp> element = must_traverse (T->getElementType ());
   option<Expr> size = maybe_traverse (T->getSizeExpr ());
 
-  stack.push (mkVariableArrayType (element, size));
-
-  return true;
+  return stack.push (mkVariableArrayType (element, size));
 }
 
 
