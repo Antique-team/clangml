@@ -21,7 +21,8 @@ OCamlVisitor::TraverseTypeLoc (clang::TypeLoc TL)
 
   if (marker == 0)
     {
-      printf ("WARNING: %s creates dummy TypeLoc, as derived function did not produce any\n",
+      printf ("WARNING: %s creates dummy TypeLoc, "
+              "as derived function did not produce any\n",
               __func__);
       stack.push (mkBuiltinTypeLoc (BT_Void));
     }
@@ -256,12 +257,12 @@ OCamlVisitor::TraverseFunctionProtoTypeLoc (clang::FunctionProtoTypeLoc TL)
     {
 #endif
 
-  ptr<Tloc> result = must_traverse (TL.getResultLoc ());
-  list<Decl> args = traverse_list (TL.getParams ());
+      ptr<Tloc> result = must_traverse (TL.getResultLoc ());
+      list<Decl> args = traverse_list (TL.getParams ());
 
-  // TODO: exceptions
+      // TODO: exceptions
 
-  stack.push (mkFunctionProtoTypeLoc (result, args));
+      stack.push (mkFunctionProtoTypeLoc (result, args));
 
 #if !CLANG_BUG_WAS_FIXED
     }
@@ -294,15 +295,15 @@ OCamlVisitor::TraverseParenTypeLoc (clang::ParenTypeLoc TL)
 
 
 #define UNIMP_TYPE_LOC(CLASS)						\
-bool									\
-OCamlVisitor::Traverse##CLASS##TypeLoc (clang::CLASS##TypeLoc TL)	\
-{									\
-  TODO;									\
-  TRACE;								\
-  Base::Traverse##CLASS##TypeLoc (TL);					\
+  bool									\
+  OCamlVisitor::Traverse##CLASS##TypeLoc (clang::CLASS##TypeLoc TL)	\
+  {									\
+    TODO;                                                               \
+    TRACE;								\
+    Base::Traverse##CLASS##TypeLoc (TL);                                \
                                                                         \
-  return stack.push (mk##CLASS##TypeLoc ());                            \
-}                                                                       \
+    return stack.push (mk##CLASS##TypeLoc ());                          \
+  }                                                                     \
 
 UNIMP_TYPE_LOC (Auto)
 UNIMP_TYPE_LOC (BlockPointer)
@@ -385,7 +386,8 @@ OCamlVisitor::TraverseDecltypeTypeLoc (clang::DecltypeTypeLoc TL)
 }
 
 bool
-OCamlVisitor::TraverseObjCObjectPointerTypeLoc (clang::ObjCObjectPointerTypeLoc TL)
+OCamlVisitor::TraverseObjCObjectPointerTypeLoc
+(clang::ObjCObjectPointerTypeLoc TL)
 {
   TRACE;
 
@@ -428,7 +430,8 @@ UNIMP_TYPE_LOC (SubstTemplateTypeParm)
 UNIMP_TYPE_LOC (SubstTemplateTypeParmPack)
 UNIMP_TYPE_LOC (TemplateSpecialization)
 bool
-OCamlVisitor::TraverseTemplateTypeParmTypeLoc (clang::TemplateTypeParmTypeLoc TL)
+OCamlVisitor::TraverseTemplateTypeParmTypeLoc
+(clang::TemplateTypeParmTypeLoc TL)
 {
   TRACE;
 
