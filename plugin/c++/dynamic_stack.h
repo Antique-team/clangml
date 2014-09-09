@@ -98,7 +98,7 @@ public:
   void push_ptr (adt_ptr p);
 
   template<template<typename> class Ptr, typename Derived>
-  void push (Ptr<Derived> p)
+  bool push (Ptr<Derived> p)
   {
     // Requiring this specific template already makes pushing option
     // impossible, because it's option<typename, bool>, but just in case
@@ -113,6 +113,7 @@ public:
     // be null, themselves.
     assert (p);
     push_ptr (p);
+    return true;
   }
 
 
