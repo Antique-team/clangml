@@ -24,7 +24,8 @@ OCamlVisitor::translate_declaration_name (clang::DeclarationName const &name)
     case clang::DeclarationName::CXXConversionFunctionName:
       return mkDN_CXXConversionFunctionName ();
     case clang::DeclarationName::CXXOperatorName:
-      return mkDN_CXXOperatorName (translate_overloaded_operator_kind (name.getCXXOverloadedOperator ()));
+      return mkDN_CXXOperatorName
+        (translate_overloaded_operator_kind (name.getCXXOverloadedOperator ()));
     case clang::DeclarationName::CXXLiteralOperatorName:
       printf ("CXXLiteralOperatorName: %s\n", name.getAsString ().c_str ());
       break;
@@ -201,7 +202,8 @@ OCamlVisitor::TraverseCXXBaseSpecifier (clang::CXXBaseSpecifier const &B)
   base->cbs_base_of_class    = B.isBaseOfClass ();
   base->cbs_pack_expansion   = B.isPackExpansion ();
   base->cbs_inherit_ctors    = B.getInheritConstructors ();
-  base->cbs_access_spec      = translate_access_specifier (B.getAccessSpecifier ());
+  base->cbs_access_spec      =
+    translate_access_specifier (B.getAccessSpecifier ());
   base->cbs_type             = must_traverse (B.getTypeSourceInfo ());
 
   return stack.push (base);
@@ -314,15 +316,15 @@ OCamlVisitor::TraverseCapturedDecl (clang::CapturedDecl *D)
   return stack.push (mkCapturedDecl (body));
 }
 
-#define UNIMP_DECL(CLASS)					\
-  bool OCamlVisitor::Traverse##CLASS (clang::CLASS *D)		\
-  {								\
-    TODO;							\
-    TRACE;							\
-    IGNORE_ADT (CLASS, D);					\
-                                                                \
-    return stack.push (mk##CLASS ());			        \
-  }                                                             \
+#define UNIMP_DECL(CLASS)                               \
+  bool OCamlVisitor::Traverse##CLASS (clang::CLASS *D)  \
+  {                                                     \
+    TODO;                                               \
+    TRACE;                                              \
+    IGNORE_ADT (CLASS, D);                              \
+                                                        \
+    return stack.push (mk##CLASS ());                   \
+  }                                                     \
 
 
 bool
@@ -472,7 +474,8 @@ OCamlVisitor::TraverseObjCInterfaceDecl (clang::ObjCInterfaceDecl *D)
       methods.push_back (must_traverse (*it));
     }
 
-  return stack.push (mkObjCInterfaceDecl (name, referenced_protocols, ivars, methods));
+  return stack.push
+    (mkObjCInterfaceDecl (name, referenced_protocols, ivars, methods));
 }
 
 
@@ -502,8 +505,9 @@ OCamlVisitor::TraverseObjCCategoryDecl (clang::ObjCCategoryDecl *D)
       methods.push_back (must_traverse (*it));
     }
 
-  return stack.push (mkObjCCategoryDecl
-              (class_interface_name, name, referenced_protocols, methods));
+  return stack.push
+    (mkObjCCategoryDecl
+     (class_interface_name, name, referenced_protocols, methods));
 }
 
 
