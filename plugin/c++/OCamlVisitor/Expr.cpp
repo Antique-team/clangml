@@ -13,9 +13,7 @@ OCamlVisitor::TraverseUnaryOperator (clang::UnaryOperator *S)
   UnaryOperator op = translate_unary_operator_kind (S->getOpcode ());
   ptr<Expr> subExpr = must_traverse (S->getSubExpr ());
 
-  stack.push (mkUnaryOperator (op, subExpr));
-
-  return true;
+  return stack.push (mkUnaryOperator (op, subExpr));
 }
 
 
@@ -28,9 +26,7 @@ OCamlVisitor::TraverseBinaryOperator (clang::BinaryOperator *S)
   ptr<Expr> lhs = must_traverse (S->getLHS ());
   ptr<Expr> rhs = must_traverse (S->getRHS ());
 
-  stack.push (mkBinaryOperator (op, lhs, rhs));
-
-  return true;
+  return stack.push (mkBinaryOperator (op, lhs, rhs));
 }
 
 
@@ -50,23 +46,20 @@ OCamlVisitor::TraverseConditionalOperator (clang::ConditionalOperator *S)
   ptr<Expr> trueExpr = must_traverse (S->getTrueExpr ());
   ptr<Expr> falseExpr = must_traverse (S->getFalseExpr ());
 
-  stack.push (mkConditionalOperator (cond, trueExpr, falseExpr));
-
-  return true;
+  return stack.push (mkConditionalOperator (cond, trueExpr, falseExpr));
 }
 
 
 bool
-OCamlVisitor::TraverseBinaryConditionalOperator (clang::BinaryConditionalOperator *S)
+OCamlVisitor::TraverseBinaryConditionalOperator
+(clang::BinaryConditionalOperator *S)
 {
   TRACE;
 
   ptr<Expr> cond = must_traverse (S->getCond ());
   ptr<Expr> falseExpr = must_traverse (S->getFalseExpr ());
 
-  stack.push (mkBinaryConditionalOperator (cond, falseExpr));
-
-  return true;
+  return stack.push (mkBinaryConditionalOperator (cond, falseExpr));
 }
 
 
@@ -77,9 +70,7 @@ OCamlVisitor::TraverseOpaqueValueExpr (clang::OpaqueValueExpr *S)
 
   ptr<Expr> sourceExpr = must_traverse (S->getSourceExpr ());
 
-  stack.push (mkOpaqueValueExpr (sourceExpr));
-
-  return true;
+  return stack.push (mkOpaqueValueExpr (sourceExpr));
 }
 
 
@@ -93,20 +84,16 @@ OCamlVisitor::TraverseOpaqueValueExpr (clang::OpaqueValueExpr *S)
 bool
 OCamlVisitor::TraverseIntegerLiteral (clang::IntegerLiteral *S)
 {
-  stack.push (mkIntegerLiteral
+  return stack.push (mkIntegerLiteral
               (S->getValue ().getSExtValue ()));
-
-  return true;
 }
 
 
 bool
 OCamlVisitor::TraverseCharacterLiteral (clang::CharacterLiteral *S)
 {
-  stack.push (mkCharacterLiteral
+  return stack.push (mkCharacterLiteral
               (S->getValue ()));
-
-  return true;
 }
 
 
@@ -114,20 +101,16 @@ bool
 OCamlVisitor::TraverseFloatingLiteral (clang::FloatingLiteral *S)
 {
   // TODO: using approximate value here; should be using exact format
-  stack.push (mkFloatingLiteral
+  return stack.push (mkFloatingLiteral
               (S->getValueAsApproximateDouble ()));
-
-  return true;
 }
 
 
 bool
 OCamlVisitor::TraverseStringLiteral (clang::StringLiteral *S)
 {
-  stack.push (mkStringLiteral
+  return stack.push (mkStringLiteral
               (S->getBytes ()));
-
-  return true;
 }
 
 
@@ -141,18 +124,14 @@ OCamlVisitor::TraverseObjCStringLiteral (clang::ObjCStringLiteral *S)
 bool
 OCamlVisitor::TraverseObjCBoolLiteralExpr (clang::ObjCBoolLiteralExpr *S)
 {
-  stack.push (mkObjCBoolLiteralExpr (S->getValue ()));
-
-  return true;
+  return stack.push (mkObjCBoolLiteralExpr (S->getValue ()));
 }
 
 
 bool
 OCamlVisitor::TraverseCXXBoolLiteralExpr (clang::CXXBoolLiteralExpr *S)
 {
-  stack.push (mkCXXBoolLiteralExpr (S->getValue ()));
-
-  return true;
+  return stack.push (mkCXXBoolLiteralExpr (S->getValue ()));
 }
 
 
@@ -163,9 +142,7 @@ OCamlVisitor::TraverseImaginaryLiteral (clang::ImaginaryLiteral *S)
 
   ptr<Expr> sub = must_traverse (S->getSubExpr ());
 
-  stack.push (mkImaginaryLiteral (sub));
-
-  return true;
+  return stack.push (mkImaginaryLiteral (sub));
 }
 
 
@@ -181,9 +158,7 @@ OCamlVisitor::TraverseImplicitValueInitExpr (clang::ImplicitValueInitExpr *S)
 {
   TRACE;
 
-  stack.push (mkImplicitValueInitExpr ());
-
-  return true;
+  return stack.push (mkImplicitValueInitExpr ());
 }
 
 
@@ -195,9 +170,7 @@ OCamlVisitor::TraverseArraySubscriptExpr (clang::ArraySubscriptExpr *S)
   ptr<Expr> base = must_traverse (S->getBase ());
   ptr<Expr> idx = must_traverse (S->getIdx ());
 
-  stack.push (mkArraySubscriptExpr (base, idx));
-
-  return true;
+  return stack.push (mkArraySubscriptExpr (base, idx));
 }
 
 
@@ -208,9 +181,7 @@ OCamlVisitor::TraverseStmtExpr (clang::StmtExpr *S)
 
   ptr<Stmt> stmt = must_traverse (S->getSubStmt ());
 
-  stack.push (mkStmtExpr (stmt));
-
-  return true;
+  return stack.push (mkStmtExpr (stmt));
 }
 
 
@@ -221,9 +192,7 @@ OCamlVisitor::TraverseDeclRefExpr (clang::DeclRefExpr *S)
 
   clang::StringRef name = getName (S);
 
-  stack.push (mkDeclRefExpr (name));
-
-  return true;
+  return stack.push (mkDeclRefExpr (name));
 }
 
 
@@ -234,9 +203,7 @@ OCamlVisitor::TraversePredefinedExpr (clang::PredefinedExpr *S)
 
   PredefinedExpr kind = translate_predefined_expr (S->getIdentType ());
 
-  stack.push (mkPredefinedExpr (kind));
-
-  return true;
+  return stack.push (mkPredefinedExpr (kind));
 }
 
 
@@ -249,9 +216,7 @@ OCamlVisitor::TraverseCStyleCastExpr (clang::CStyleCastExpr *S)
   ptr<Tloc> type = must_traverse (S->getTypeInfoAsWritten ()->getTypeLoc ());
   ptr<Expr> sub = must_traverse (S->getSubExpr ());
 
-  stack.push (mkCStyleCastExpr (kind, type, sub));
-
-  return true;
+  return stack.push (mkCStyleCastExpr (kind, type, sub));
 }
 
 
@@ -263,9 +228,7 @@ OCamlVisitor::TraverseImplicitCastExpr (clang::ImplicitCastExpr *S)
   CastKind kind = translate_cast_kind (S->getCastKind ());
   ptr<Expr> sub = must_traverse (S->getSubExpr ());
 
-  stack.push (mkImplicitCastExpr (kind, sub));
-
-  return true;
+  return stack.push (mkImplicitCastExpr (kind, sub));
 }
 
 
@@ -276,9 +239,7 @@ OCamlVisitor::TraverseParenExpr (clang::ParenExpr *S)
 
   ptr<Expr> sub = must_traverse (S->getSubExpr ());
 
-  stack.push (mkParenExpr (sub));
-
-  return true;
+  return stack.push (mkParenExpr (sub));
 }
 
 
@@ -290,9 +251,7 @@ OCamlVisitor::TraverseCompoundLiteralExpr (clang::CompoundLiteralExpr *S)
   ptr<Tloc> type = getTypeLoc (S);
   ptr<Expr> init = must_traverse (S->getInitializer ());
 
-  stack.push (mkCompoundLiteralExpr (type, init));
-
-  return true;
+  return stack.push (mkCompoundLiteralExpr (type, init));
 }
 
 
@@ -331,9 +290,8 @@ OCamlVisitor::TraverseDesignator (clang::DesignatedInitExpr::Designator D,
   ptr<Desg> designator = mkDesg ();
   designator->dr = dr;
   designator->dr_sloc = sloc (S);
-  stack.push (designator);
 
-  return true;
+  return stack.push (designator);
 }
 
 
@@ -345,9 +303,7 @@ OCamlVisitor::TraverseDesignatedInitExpr (clang::DesignatedInitExpr *S)
   list<Desg> designators = traverse_list (designator_range (S), S);
   ptr<Expr> init = must_traverse (S->getInit ());
 
-  stack.push (mkDesignatedInitExpr (designators, init));
-
-  return true;
+  return stack.push (mkDesignatedInitExpr (designators, init));
 }
 
 
@@ -358,9 +314,7 @@ OCamlVisitor::TraverseInitListExpr (clang::InitListExpr *S)
 
   list<Expr> inits = traverse_list (S->children ());
 
-  stack.push (mkInitListExpr (inits));
-
-  return true;
+  return stack.push (mkInitListExpr (inits));
 }
 
 
@@ -372,9 +326,7 @@ OCamlVisitor::TraverseVAArgExpr (clang::VAArgExpr *S)
   ptr<Expr> sub = must_traverse (S->getSubExpr ());
   ptr<Tloc> type = must_traverse (S->getWrittenTypeInfo ()->getTypeLoc ());
 
-  stack.push (mkVAArgExpr (sub, type));
-
-  return true;
+  return stack.push (mkVAArgExpr (sub, type));
 }
 
 
@@ -386,9 +338,7 @@ OCamlVisitor::TraverseCallExpr (clang::CallExpr *S)
   ptr<Expr> callee = must_traverse (S->getCallee ());
   list<Expr> args = traverse_list (arg_range (S));
 
-  stack.push (mkCallExpr (callee, args));
-
-  return true;
+  return stack.push (mkCallExpr (callee, args));
 }
 
 
@@ -401,9 +351,7 @@ OCamlVisitor::TraverseMemberExpr (clang::MemberExpr *S)
   clang::StringRef member = S->getMemberDecl ()->getName ();
   bool isArrow = S->isArrow ();
 
-  stack.push (mkMemberExpr (base, member, isArrow));
-
-  return true;
+  return stack.push (mkMemberExpr (base, member, isArrow));
 }
 
 
@@ -423,7 +371,8 @@ OCamlVisitor::pushUnaryExprOrTypeTraitExpr (clang::UnaryExprOrTypeTraitExpr *S,
 
 
 bool
-OCamlVisitor::TraverseUnaryExprOrTypeTraitExpr (clang::UnaryExprOrTypeTraitExpr *S)
+OCamlVisitor::TraverseUnaryExprOrTypeTraitExpr
+(clang::UnaryExprOrTypeTraitExpr *S)
 {
   TRACE;
 
@@ -451,9 +400,7 @@ OCamlVisitor::TraverseAddrLabelExpr (clang::AddrLabelExpr *S)
 
   clang::StringRef label = S->getLabel ()->getName ();
 
-  stack.push (mkAddrLabelExpr (label));
-
-  return true;
+  return stack.push (mkAddrLabelExpr (label));
 }
 
 
@@ -468,7 +415,8 @@ OCamlVisitor::TraverseOffsetOfNode (clang::OffsetOfExpr::OffsetOfNode N,
   switch (N.getKind ())
     {
     case clang::OffsetOfExpr::OffsetOfNode::Array:
-      node = mkOON_Array (must_traverse (S->getIndexExpr (N.getArrayExprIndex ())));
+      node = mkOON_Array
+        (must_traverse (S->getIndexExpr (N.getArrayExprIndex ())));
       break;
     case clang::OffsetOfExpr::OffsetOfNode::Field:
       node = mkOON_Field (N.getField ()->getName ());
@@ -481,9 +429,7 @@ OCamlVisitor::TraverseOffsetOfNode (clang::OffsetOfExpr::OffsetOfNode N,
       break;
     }
 
-  stack.push (node);
-
-  return true;
+  return stack.push (node);
 }
 
 
@@ -495,9 +441,7 @@ OCamlVisitor::TraverseOffsetOfExpr (clang::OffsetOfExpr *S)
   ptr<Tloc> type = must_traverse (S->getTypeSourceInfo ()->getTypeLoc ());
   list<OffsetofNode> components = traverse_list (offsetof_node_range (S), S);
 
-  stack.push (mkOffsetOfExpr (type, components));
-
-  return true;
+  return stack.push (mkOffsetOfExpr (type, components));
 }
 
 
@@ -509,9 +453,7 @@ OCamlVisitor::TraverseExtVectorElementExpr (clang::ExtVectorElementExpr *S)
   ptr<Expr> base = must_traverse (S->getBase ());
   clang::StringRef accessor = S->getAccessor ().getName ();
 
-  stack.push (mkExtVectorElementExpr (base, accessor));
-
-  return true;
+  return stack.push (mkExtVectorElementExpr (base, accessor));
 }
 
 
@@ -523,9 +465,7 @@ OCamlVisitor::TraverseAtomicExpr (clang::AtomicExpr *S)
   AtomicOp op = translate_atomic_op (S->getOp ());
   list<Expr> subExprs = traverse_list (S->children ());
 
-  stack.push (mkAtomicExpr (op, subExprs));
-
-  return true;
+  return stack.push (mkAtomicExpr (op, subExprs));
 }
 
 
@@ -536,9 +476,7 @@ OCamlVisitor::TraverseShuffleVectorExpr (clang::ShuffleVectorExpr *S)
 
   list<Expr> subExprs = traverse_list (S->children ());
 
-  stack.push (mkShuffleVectorExpr (subExprs));
-
-  return true;
+  return stack.push (mkShuffleVectorExpr (subExprs));
 }
 
 
@@ -551,9 +489,7 @@ OCamlVisitor::TraverseBinaryTypeTraitExpr (clang::BinaryTypeTraitExpr *S)
   ptr<Ctyp> lhs = must_traverse (S->getLhsType ());
   ptr<Ctyp> rhs = must_traverse (S->getRhsType ());
 
-  stack.push (mkBinaryTypeTraitExpr (trait, lhs, rhs));
-
-  return true;
+  return stack.push (mkBinaryTypeTraitExpr (trait, lhs, rhs));
 }
 
 
@@ -565,9 +501,7 @@ OCamlVisitor::TraverseUnaryTypeTraitExpr (clang::UnaryTypeTraitExpr *S)
   UnaryTypeTrait trait = translate_unary_type_trait (S->getTrait ());
   ptr<Ctyp> queried = must_traverse (S->getQueriedType ());
 
-  stack.push (mkUnaryTypeTraitExpr (trait, queried));
-
-  return true;
+  return stack.push (mkUnaryTypeTraitExpr (trait, queried));
 }
 
 
@@ -580,9 +514,7 @@ OCamlVisitor::TraverseArrayTypeTraitExpr (clang::ArrayTypeTraitExpr *S)
   ptr<Ctyp> queried = must_traverse (S->getQueriedType ());
   option<Expr> dimension = maybe_traverse (S->getDimensionExpression ());
 
-  stack.push (mkArrayTypeTraitExpr (trait, queried, dimension));
-
-  return true;
+  return stack.push (mkArrayTypeTraitExpr (trait, queried, dimension));
 }
 
 
@@ -594,9 +526,7 @@ OCamlVisitor::TraverseConvertVectorExpr (clang::ConvertVectorExpr *S)
   ptr<Expr> src  = must_traverse (S->getSrcExpr ());
   ptr<Ctyp> type = must_traverse (S->getTypeSourceInfo ()->getType());
 
-  stack.push (mkConvertVectorExpr (src, type));
-
-  return true;
+  return stack.push (mkConvertVectorExpr (src, type));
 }
 
 
@@ -609,9 +539,7 @@ OCamlVisitor::TraverseChooseExpr (clang::ChooseExpr *S)
   ptr<Expr> lhs  = must_traverse (S->getLHS ());
   ptr<Expr> rhs  = must_traverse (S->getRHS ());
 
-  stack.push (mkChooseExpr (cond, lhs, rhs));
-
-  return true;
+  return stack.push (mkChooseExpr (cond, lhs, rhs));
 }
 
 
@@ -637,9 +565,7 @@ OCamlVisitor::TraverseCXXNullPtrLiteralExpr (clang::CXXNullPtrLiteralExpr *S)
 {
   TRACE;
 
-  stack.push (mkCXXNullPtrLiteralExpr ());
-
-  return true;
+  return stack.push (mkCXXNullPtrLiteralExpr ());
 }
 
 
@@ -650,9 +576,7 @@ OCamlVisitor::TraverseGNUNullExpr (clang::GNUNullExpr *S)
 
   ptr<Ctyp> type = must_traverse (S->getType ());
 
-  stack.push (mkGNUNullExpr (type));
-
-  return true;
+  return stack.push (mkGNUNullExpr (type));
 }
 
 
@@ -671,10 +595,8 @@ OCamlVisitor::TraverseObjCMessageExpr (clang::ObjCMessageExpr *S)
   for (unsigned i = 0; i < S->getNumArgs (); ++i)
     args.push_back (must_traverse (S->getArg (i)));
 
-  stack.push (mkObjCMessageExpr
+  return stack.push (mkObjCMessageExpr
               (instance_receiver, class_receiver, selector, args));
-
-  return true;
 }
 
 
@@ -687,9 +609,7 @@ OCamlVisitor::TraverseObjCArrayLiteral (clang::ObjCArrayLiteral *S)
   for (unsigned i = 0; i < S->getNumElements (); ++i)
     elements.push_back (must_traverse (S->getElement (i)));
 
-  stack.push (mkObjCArrayLiteral (elements));
-
-  return true;
+  return stack.push (mkObjCArrayLiteral (elements));
 }
 
 
@@ -707,9 +627,7 @@ OCamlVisitor::TraverseObjCDictionaryLiteral (clang::ObjCDictionaryLiteral *S)
       map.emplace_back (key, value);
     }
 
-  stack.push (mkObjCDictionaryLiteral (map));
-
-  return true;
+  return stack.push (mkObjCDictionaryLiteral (map));
 }
 
 
@@ -720,9 +638,7 @@ OCamlVisitor::TraverseObjCEncodeExpr (clang::ObjCEncodeExpr *S)
 
   ptr<Ctyp> encoded_type = must_traverse (S->getEncodedType ());
 
-  stack.push (mkObjCEncodeExpr (encoded_type));
-
-  return true;
+  return stack.push (mkObjCEncodeExpr (encoded_type));
 }
 
 
@@ -739,9 +655,7 @@ OCamlVisitor::TraverseObjCIvarRefExpr (clang::ObjCIvarRefExpr *S)
 
   bool isFreeIvar = S->isFreeIvar ();
 
-  stack.push (mkObjCIvarRefExpr (base, decl, isArrow, isFreeIvar));
-
-  return true;
+  return stack.push (mkObjCIvarRefExpr (base, decl, isArrow, isFreeIvar));
 }
 
 
@@ -752,9 +666,7 @@ OCamlVisitor::TraverseObjCBoxedExpr (clang::ObjCBoxedExpr *S)
 
   ptr<Expr> sub_expr = must_traverse (S->getSubExpr ());
 
-  stack.push (mkObjCBoxedExpr (sub_expr));
-
-  return true;
+  return stack.push (mkObjCBoxedExpr (sub_expr));
 }
 
 
@@ -765,9 +677,7 @@ OCamlVisitor::TraverseObjCPropertyRefExpr (clang::ObjCPropertyRefExpr *S)
 
   ptr<Expr> base = must_traverse (S->getBase ());
 
-  stack.push (mkObjCPropertyRefExpr (base));
-
-  return true;
+  return stack.push (mkObjCPropertyRefExpr (base));
 }
 
 
@@ -778,9 +688,7 @@ OCamlVisitor::TraverseObjCIsaExpr (clang::ObjCIsaExpr *S)
 
   ptr<Expr> base = must_traverse (S->getBase ());
 
-  stack.push (mkObjCIsaExpr (base));
-
-  return true;
+  return stack.push (mkObjCIsaExpr (base));
 }
 
 
@@ -797,9 +705,7 @@ OCamlVisitor::TraversePseudoObjectExpr (clang::PseudoObjectExpr *S)
     semantic.push_back (must_traverse (S->getSemanticExpr (i)));
   }
 
-  stack.push (mkPseudoObjectExpr (syntactic, semantic, result));
-
-  return true;
+  return stack.push (mkPseudoObjectExpr (syntactic, semantic, result));
 }
 
 
@@ -810,9 +716,7 @@ OCamlVisitor::TraverseObjCSelectorExpr (clang::ObjCSelectorExpr *S)
 
   clang::StringRef selector = S->getSelector ().getNameForSlot (0);
 
-  stack.push (mkObjCSelectorExpr (selector));
-
-  return true;
+  return stack.push (mkObjCSelectorExpr (selector));
 }
 
 
@@ -823,9 +727,7 @@ OCamlVisitor::TraverseObjCProtocolExpr (clang::ObjCProtocolExpr *S)
 
   clang::StringRef protocol = S->getProtocol ()->getName ();
 
-  stack.push (mkObjCProtocolExpr (protocol));
-
-  return true;
+  return stack.push (mkObjCProtocolExpr (protocol));
 }
 
 
@@ -847,9 +749,7 @@ OCamlVisitor::TraverseGenericSelectionExpr (clang::GenericSelectionExpr *S)
     assoc_list.emplace_back (key, value);
   }
 
-  stack.push (mkGenericSelectionExpr (controlling, assoc_list, result));
-
-  return true;
+  return stack.push (mkGenericSelectionExpr (controlling, assoc_list, result));
 }
 
 
