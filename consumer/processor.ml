@@ -6,7 +6,9 @@ let process clang =
   print_endline @@ "%% processing file " ^ file;
   print_string "--------------------- Clang CST ---------------------";
   Format.printf "@[<v2>@,%a@]@."
-    Clang.Pp.pp_decl decl
+    Clang.Pp.pp_decl decl;
+  Printf.printf "--------------------- gory details ---------------------\n";
+  Printf.printf "%s\n" (Clang.Pp.string_of_decl_ decl.d)
 
 let () =
   Printexc.record_backtrace true;
