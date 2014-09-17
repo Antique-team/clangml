@@ -8,7 +8,11 @@ let process clang =
   Format.printf "@[<v2>@,%a@]@."
     Clang.Pp.pp_decl decl;
   Printf.printf "--------------------- gory details ---------------------\n";
-  Printf.printf "%s\n" (Clang.Pp.string_of_decl_ decl.d)
+  Printf.printf "%s\n"
+    (Clang.Pp.string_of_decl_ decl.d
+     (* since the pretty-printer-introduced indentation is completely useless,
+        let's get rid of it *)
+     |> Str.global_replace (Str.regexp "^[ \t]+") "")
 
 let () =
   Printexc.record_backtrace true;
