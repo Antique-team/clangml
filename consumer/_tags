@@ -1,22 +1,3 @@
 # camlp4
-<memcad/*/*.ml{,i}>: package(apron)
-
-<mainClang.ml{,i}>: package(apron)
-
-#<*.ml{,i}>: package(deriving.syntax), syntax(camlp4o), package(clang)
-#<*.{byte,native}>: package(clang)
-<*.ml{,i}>: package(deriving.syntax), package(unix), syntax(camlp4o)
-<*.{byte,native}>: package(deriving), package(unix), package(ANSITerminal)
-<*.{byte,native}>: package(apron), apron-link(boxMPQ), apron-link(octMPQ), apron-link(polkaMPQ)
-
-<memcad/main/batch.{byte,native}>: package(unix)
-<memcad/main/main.{byte,native}>: package(apron), apron-link(boxMPQ), apron-link(octMPQ), apron-link(polkaMPQ)
-<memcad/main/main.{byte,native}>: package(deriving)
-
-<memcad/c/*.ml{,i}>: package(deriving.syntax), syntax(camlp4o)
-
-"memcad/c": include
-"memcad/lib": include
-"memcad/main": include
-"memcad/nd": include
-"memcad/sd": include
+<*.ml{,i}>: package(deriving.syntax), package(unix), package(str), syntax(camlp4o)
+<*.{byte,native}>: package(deriving), package(unix), package(str), package(ANSITerminal)
