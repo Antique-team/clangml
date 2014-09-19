@@ -140,6 +140,14 @@ let parse args continue =
         with Not_found ->
           "."
       in
+      let clangml_ocamlfind_path =
+        let maybe_path =
+          Util.Various.get_command_output
+            "ocamlfind -query clangml"
+        in match maybe_path with
+        | [] -> "clangml.dylib"
+        | p :: _rest -> p ^ "/clangml.dylib"
+      in
 
       List.find (fun candidate ->
         try
@@ -150,9 +158,9 @@ let parse args continue =
       ) [
         "clangml.dylib";
         "_build/clangml.dylib";
-        "../../_build/clangml.dylib";
         clangml_path ^ "/clangml.dylib";
         Config.destdir ^ "/clang/clangml.dylib";
+        clangml_ocamlfind_path
       ]
 
     with Not_found ->

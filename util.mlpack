@@ -6,3 +6,4 @@ util/Option
 util/Prelude
 util/SparseIntMap
 util/SparseIntSet
+util/Various
