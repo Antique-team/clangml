@@ -24,8 +24,12 @@ let rec identifier_of_expr = function
   | ImplicitCastExpr (_, expr)
   | ParenExpr expr -> identifier_of_expr expr.e
 
-  | _ -> failwith "invalid expression (not an identifier)"
+  | UnaryOperator (UO_Deref, expr) -> identifier_of_expr expr.e
+  | MemberExpr (base, _, _) -> identifier_of_expr base.e
+  | ArraySubscriptExpr (base, _index) -> identifier_of_expr base.e
 
+  | e -> failwith (Printf.sprintf "invalid expression (not an identifier): %s"
+                     (Pp.string_of_expr_ e))
 
 let is_volatile_tloc = function
   | QualifiedTypeLoc (_, qual, _) ->
