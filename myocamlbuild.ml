@@ -1,18 +1,10 @@
 open Ocamlbuild_plugin
 
 
-module Config = struct
-  let ocaml_ver = "4.01"
-  let ocaml_rev = "0"
-
-  let clang_version = "3.4"
-end
-
-
 module Vars = struct
-  include Config
-
-  let ocaml_version = ocaml_ver ^ "." ^ ocaml_rev
+  let clang_version = "3.4"
+  let ocaml_version = Sys.ocaml_version
+  let ocaml_ver = Filename.chop_extension ocaml_version
   let ocaml_dist = "ocaml-" ^ ocaml_version
   let ocaml_tar = ocaml_dist ^ ".tar.gz"
 end
