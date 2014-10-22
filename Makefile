@@ -19,6 +19,7 @@ $(MAIN).native: $(ALL_FILES)
 
 clean:
 	ocamlbuild -clean
+	\rm -f mainClang.native
 
 wc:
 	@find */					\
