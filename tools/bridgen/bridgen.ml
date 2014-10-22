@@ -25,7 +25,7 @@ let cpp_name name =
           name (underscore + 1)
           name underscore
           (length - underscore - 1);
-        name.[underscore] <- Char.uppercase name.[underscore];
+        Bytes.set name underscore (Char.uppercase name.[underscore]);
         to_camelcase (length - 1) name
       )
     with Not_found ->

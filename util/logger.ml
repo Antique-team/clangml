@@ -176,13 +176,13 @@ module Make (P: PARAM) : S = struct
       in
       !nsp_ref, !n_ref
     in
-    let fmtstr' = String.create (n + nsp) in
+    let fmtstr' = Bytes.create (n + nsp) in
     let _ =
       let i = ref 0 in
       String.iter
         (fun c ->
-              if BrkSp.is_break_space c then (fmtstr'.[!i] <- '@'; incr i; fmtstr'.[!i] <- ' ')
-              else fmtstr'.[!i] <- c;
+              if BrkSp.is_break_space c then (Bytes.set fmtstr' !i '@'; incr i; Bytes.set fmtstr' !i ' ')
+              else Bytes.set fmtstr' !i c;
               incr i)
         fmtstr;
       BrkSp.reset_state ()
