@@ -28,8 +28,10 @@ let rec identifier_of_expr = function
   | MemberExpr (base, _, _) -> identifier_of_expr base.e
   | ArraySubscriptExpr (base, _index) -> identifier_of_expr base.e
 
-  | e -> failwith (Printf.sprintf "invalid expression (not an identifier): %s"
-                     (Pp.string_of_expr_ e))
+  | e -> failwith
+           (Printf.sprintf
+              "identifier_of_expr: invalid expression (not an identifier): %s"
+              (Pp.string_of_expr_ e))
 
 let is_volatile_tloc = function
   | QualifiedTypeLoc (_, qual, _) ->
@@ -41,11 +43,11 @@ let fields_of_record_decl = function
   | RecordDecl (_, _, Some members, _) -> members
   | RecordDecl (ttk, name, None, _) ->
     failwith
-      (Printf.sprintf "incomplete record type ttk: %s name: %s"
-         (Pp.string_of_tag_type_kind ttk)
-         name)
+      (Printf.sprintf
+         "fields_of_record_decl: incomplete record type ttk: %s name: %s"
+         (Pp.string_of_tag_type_kind ttk) name)
   | _ -> failwith "decl is not a RecordDecl"
 
 let underlying_type_of_typedef_decl = function
   | TypedefDecl (ty, _) -> ty
-  | _ -> failwith "decl is not a TypedefDecl"
+  | _ -> failwith "underlying_type_of_typedef_decl: decl is not a TypedefDecl"
