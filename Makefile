@@ -14,7 +14,7 @@ ALL_FILES := $(shell find */ -type f -not -wholename "_build/*" \
 
 
 $(MAIN).native: $(ALL_FILES)
-	ocamlbuild -cflags -annot $(TARGETS)
+	ocamlbuild -cflags -annot $(TARGETS) -package bytes
 	@touch $@
 
 clean:
