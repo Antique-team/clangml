@@ -392,7 +392,7 @@ and pp_expr_ fmt = function
       else
         Format.fprintf fmt "(%a %s)" pp_expr e (string_of_unary_op op)
   | BinaryOperator (op, e1, e2) ->
-      Format.fprintf fmt "(%a %s %a)"
+      Format.fprintf fmt "((%a) %s (%a))"
         pp_expr e1
         (string_of_binary_op op)
         pp_expr e2
@@ -401,22 +401,22 @@ and pp_expr_ fmt = function
   | PredefinedExpr kind ->
       Format.pp_print_string fmt (string_of_predefined_expr kind)
   | ImplicitCastExpr (_, expr) ->
-      Format.fprintf fmt "%a"
+      Format.fprintf fmt "(%a)"
         pp_expr expr
   | CompoundLiteralExpr (ty, expr)
   | CStyleCastExpr (_, ty, expr) ->
-      Format.fprintf fmt "(%a)%a"
+      Format.fprintf fmt "(%a)(%a)"
         pp_tloc ty
         pp_expr expr
   | ParenExpr expr ->
       Format.fprintf fmt "(%a)"
         pp_expr expr
   | VAArgExpr (sub, ty) ->
-      Format.fprintf fmt "va_arg (%a, %a)"
+      Format.fprintf fmt "va_arg ((%a), (%a))"
         pp_expr sub
         pp_tloc ty
   | CallExpr (callee, args) ->
-      Format.fprintf fmt "%a (%a)"
+      Format.fprintf fmt "(%a) (%a)"
         pp_expr callee
         (Formatx.pp_list pp_expr) args
   | MemberExpr (base, member, is_arrow) ->
@@ -425,16 +425,16 @@ and pp_expr_ fmt = function
         (if is_arrow then "->" else ".")
         member
   | ConditionalOperator (cond, true_expr, false_expr) ->
-      Format.fprintf fmt "%a ? %a : %a"
+      Format.fprintf fmt "(%a) ? (%a) : (%a)"
         pp_expr cond
         pp_expr true_expr
         pp_expr false_expr
   | BinaryConditionalOperator (cond, false_expr) ->
-      Format.fprintf fmt "%a ?: %a"
+      Format.fprintf fmt "(%a) ?: (%a)"
         pp_expr cond
         pp_expr false_expr
   | DesignatedInitExpr (designators, init) ->
-      Format.fprintf fmt "%a = %a"
+      Format.fprintf fmt "(%a) = (%a)"
         (Formatx.pp_list ~sep:(Formatx.pp_sep "") pp_desg) designators
         pp_expr init
   | InitListExpr inits ->
@@ -453,23 +453,23 @@ and pp_expr_ fmt = function
       Format.fprintf fmt "&&%s"
         label
   | OffsetOfExpr (ty, components) ->
-      Format.fprintf fmt "offsetof (%a, %a)"
+      Format.fprintf fmt "offsetof ((%a), (%a))"
         pp_tloc ty
         (Formatx.pp_list pp_offsetof_node) components
   | SizeOfExpr expr ->
-      Format.fprintf fmt "sizeof %a"
+      Format.fprintf fmt "sizeof_e (%a)"
         pp_expr expr
   | SizeOfType ty ->
-      Format.fprintf fmt "sizeof (%a)"
+      Format.fprintf fmt "sizeof_t (%a)"
         pp_tloc ty
   | AlignOfExpr expr ->
-      Format.fprintf fmt "alignof %a"
+      Format.fprintf fmt "alignof_e (%a)"
         pp_expr expr
   | AlignOfType ty ->
-      Format.fprintf fmt "alignof (%a)"
+      Format.fprintf fmt "alignof_t (%a)"
         pp_tloc ty
   | VecStepExpr expr ->
-      Format.fprintf fmt "vec_step %a"
+      Format.fprintf fmt "vec_step (%a)"
         pp_expr expr
   | VecStepType ty ->
       Format.fprintf fmt "vec_step (%a)"
@@ -486,7 +486,7 @@ and pp_expr_ fmt = function
       Format.fprintf fmt "(%a)"
         (Formatx.pp_list pp_expr) sub_exprs
   | BinaryTypeTraitExpr (trait, lhs, rhs) ->
-      Format.fprintf fmt "%s (%a, %a)"
+      Format.fprintf fmt "%s ((%a), (%a))"
         (string_of_binary_type_trait trait)
         pp_ctyp lhs
         pp_ctyp rhs
@@ -495,11 +495,11 @@ and pp_expr_ fmt = function
         (string_of_unary_type_trait trait)
         pp_ctyp queried
   | ConvertVectorExpr (src, ty) ->
-      Format.fprintf fmt "convert_vector(%a, %a)"
+      Format.fprintf fmt "convert_vector((%a), (%a))"
         pp_expr src
         pp_ctyp ty
   | ChooseExpr (cond, lhs, rhs) ->
-      Format.fprintf fmt "choose_expr(%a, %a, %a)"
+      Format.fprintf fmt "choose_expr((%a), (%a), (%a))"
         pp_expr cond
         pp_expr lhs
         pp_expr rhs
@@ -507,7 +507,7 @@ and pp_expr_ fmt = function
       Format.fprintf fmt "gnu_null (%a)"
         pp_ctyp ty
   | ArrayTypeTraitExpr (trait, queried, Some dimension) ->
-      Format.fprintf fmt "%s (%a, %a)"
+      Format.fprintf fmt "%s ((%a), (%a))"
         (string_of_array_type_trait trait)
         pp_ctyp queried
         pp_expr dimension
@@ -518,7 +518,7 @@ and pp_expr_ fmt = function
   | CXXNullPtrLiteralExpr ->
       Format.fprintf fmt "nullptr"
   | OpaqueValueExpr expr ->
-      Format.fprintf fmt "opaque_value %a"
+      Format.fprintf fmt "opaque_value (%a)"
         pp_expr expr
   | ObjCStringLiteral s ->
       Format.fprintf fmt "@@\"%s\""
@@ -674,14 +674,14 @@ and pp_stmt_ fmt = function
   | ContinueStmt ->
       Format.pp_print_string fmt "continue;"
   | LabelStmt (name, sub) ->
-      Format.fprintf fmt "%s: %a"
+      Format.fprintf fmt "%s: (%a)"
         name
         pp_stmt sub
   | GotoStmt name ->
       Format.fprintf fmt "goto %s;"
         name
   | ExprStmt e ->
-      Format.fprintf fmt "%a;"
+      Format.fprintf fmt "(%a);"
         pp_expr e
   | CompoundStmt ss ->
       Format.fprintf fmt "@\n@[<v2>{@\n%a@]@\n}"
@@ -689,49 +689,49 @@ and pp_stmt_ fmt = function
   | ReturnStmt None ->
       Format.fprintf fmt "return;"
   | ReturnStmt (Some e) ->
-      Format.fprintf fmt "return %a;"
+      Format.fprintf fmt "return (%a);"
         pp_expr e
   | DefaultStmt sub ->
-      Format.fprintf fmt "default: %a"
+      Format.fprintf fmt "default: (%a)"
         pp_stmt sub
   | CaseStmt (lhs, None, sub) ->
-      Format.fprintf fmt "case %a: %a"
+      Format.fprintf fmt "case (%a): (%a)"
         pp_expr lhs
         pp_stmt sub
   | CaseStmt (lhs, Some rhs, sub) ->
-      Format.fprintf fmt "case %a ... %a: %a"
+      Format.fprintf fmt "case (%a) ... (%a): (%a)"
         pp_expr lhs
         pp_expr rhs
         pp_stmt sub
   | ForStmt (init, cond, inc, body) ->
-      Format.fprintf fmt "for (%a%a;%a) %a"
+      Format.fprintf fmt "for ((%a);(%a);(%a)) {%a}"
         (pp_option pp_stmt) init
         (pp_option pp_expr) cond
         (pp_option pp_expr) inc
         pp_stmt body
   | WhileStmt (cond, body) ->
-      Format.fprintf fmt "while (%a) %a"
+      Format.fprintf fmt "while (%a) {%a}"
         pp_expr cond
         pp_stmt body
   | DoStmt (body, cond) ->
-      Format.fprintf fmt "do %a while (%a)"
+      Format.fprintf fmt "do {%a} while (%a)"
         pp_stmt body
         pp_expr cond
   | SwitchStmt (cond, body) ->
-      Format.fprintf fmt "switch (%a) %a"
+      Format.fprintf fmt "switch (%a) {%a}"
         pp_expr cond
         pp_stmt body
   | IfStmt (cond, thn, None) ->
-      Format.fprintf fmt "if (%a) %a"
+      Format.fprintf fmt "if (%a) {%a}"
         pp_expr cond
         pp_stmt thn
   | IfStmt (cond, thn, Some els) ->
-      Format.fprintf fmt "if (%a) %a@\nelse %a"
+      Format.fprintf fmt "if (%a) {%a}@\nelse {%a}"
         pp_expr cond
         pp_stmt thn
         pp_stmt els
   | DeclStmt decls ->
-      Format.fprintf fmt "%a;"
+      Format.fprintf fmt "(%a);"
         (Formatx.pp_list pp_decl) decls
   | GCCAsmStmt (asm_string, outputs, inputs, clobbers) ->
       Format.fprintf fmt "asm (%a:%a:%a:%a);"
@@ -740,39 +740,39 @@ and pp_stmt_ fmt = function
         (Formatx.pp_list pp_asm_arg) inputs
         (Formatx.pp_list Format.pp_print_string) clobbers
   | IndirectGotoStmt expr ->
-      Format.fprintf fmt "goto *%a"
+      Format.fprintf fmt "goto *(%a)"
         pp_expr expr
   | CapturedStmt (kind, stmt, decl, captures) ->
-      Format.fprintf fmt "captured_stmt %s %a %a (%a)"
+      Format.fprintf fmt "captured_stmt %s (%a) (%a) (%a)"
         (string_of_captured_region_kind kind)
         pp_stmt stmt
         pp_decl decl
         (Formatx.pp_list pp_stmt) captures
   | ObjCAtCatchStmt (param, body) ->
-      Format.fprintf fmt "@@catch (%a) %a"
+      Format.fprintf fmt "@@catch (%a) {%a}"
         pp_decl param
         pp_stmt body
   | ObjCAtFinallyStmt body ->
-      Format.fprintf fmt "@@finally %a"
+      Format.fprintf fmt "@@finally {%a}"
         pp_stmt body
   | ObjCAtTryStmt (try_body, catch_stmts, Some finally_body) ->
-      Format.fprintf fmt "@@try %a %a %a"
+      Format.fprintf fmt "@@try {%a} catch {%a} finally {%a}"
         pp_stmt try_body
         (Formatx.pp_list pp_stmt) catch_stmts
         pp_stmt finally_body
   | ObjCAtTryStmt (try_body, catch_stmts, None) ->
-      Format.fprintf fmt "@@try %a %a"
+      Format.fprintf fmt "@@try {%a} catch {%a}"
         pp_stmt try_body
         (Formatx.pp_list pp_stmt) catch_stmts
   | ObjCAtThrowStmt expr ->
-      Format.fprintf fmt "@@throw %a;"
+      Format.fprintf fmt "@@throw (%a);"
         pp_expr expr
   | ObjCAtSynchronizedStmt (expr, stmts) ->
-      Format.fprintf fmt "@@synchronized (%a) { %a }"
+      Format.fprintf fmt "@@synchronized (%a) {%a}"
         pp_expr expr
         (Formatx.pp_list pp_stmt) stmts
   | ObjCForCollectionStmt (element_stmt, collection_expr, body_stmt) ->
-      Format.fprintf fmt "objc_for_collection ((%a) in %a) %a"
+      Format.fprintf fmt "objc_for_collection ((%a) in (%a)) {%a}"
         pp_stmt element_stmt
         pp_expr collection_expr
         pp_stmt body_stmt
