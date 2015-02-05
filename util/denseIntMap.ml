@@ -22,6 +22,8 @@ type ('key, 'value) t = 'value array
 let find idx arr =
   Array.get arr (idx : 'key key :> int)
 
+let to_array map =
+  (map : ('key, 'value) t :> 'value array)
 
 let iter = Array.iteri
 

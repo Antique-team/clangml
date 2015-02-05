@@ -16,6 +16,8 @@ type ('key, 'value) t = private 'value array
 
 val find : 'key key -> ('key, 'value) t -> 'value
   (* Retrieve a value for a key. *)
+val to_array : ('key, 'value) t -> 'value array
+  (* Retrieve the array of values. *)
 val iter : ('key key -> 'value -> unit) -> ('key, 'value) t -> unit
   (* Iterate over keys and their respective values. *)
 val fold : ('key key -> 'value -> 'a -> 'a) -> ('key, 'value) t -> 'a -> 'a
