@@ -130,7 +130,7 @@ value_of_context::data::resize (size_t type, size_t max_id) const
   assert (type < caml_array_length (cache));
   old_cache = Field (cache, type);
 
-  if (old_cache == 0)
+  if (old_cache == Val_unit)
     {
       new_cache = caml_alloc (max_id + max_id / 8 + 10, 0);
 #if DEBUG_INIT
@@ -173,7 +173,7 @@ value_of_context::data::resize (size_t type, size_t max_id) const
 #endif
     }
 
-  assert (new_cache != 0);
+  assert (new_cache != Val_unit);
   Store_field (cache, type, new_cache);
 
 #if DEBUG_DUMP
