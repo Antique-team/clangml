@@ -64,7 +64,8 @@ let name_of_request : type a. a request -> string = function
 let connect (handle : 'a request -> 'a) =
   let (server_read, server_write) =
     try
-      Marshal.from_string (Scanf.unescaped @@ Sys.getenv "PIPE_FDS") 0
+      (Marshal.from_string (Scanf.unescaped @@ Sys.getenv "PIPE_FDS") 0
+       : Unix.file_descr * Unix.file_descr)
     with Not_found ->
       failwith "PIPE_FDS environment variable must be set"
   in
@@ -74,7 +75,7 @@ let connect (handle : 'a request -> 'a) =
 
   let rec io_loop () =
     (* Read request. *)
-    let request = Marshal.from_channel input in
+    let request = (Marshal.from_channel input: 'a request) in
 
     (* Handle request. *)
     let response =
@@ -123,7 +124,7 @@ let request { input; output } (msg : 'a request) : 'a =
 
   Marshal.to_channel output msg [];
   flush output;
-  match Marshal.from_channel input with
+  match (Marshal.from_channel input: 'a response) with
   | Error error ->
       raise (E error)
   | Success value ->
@@ -183,7 +184,8 @@ let parse args continue =
 
       let argv =
         let clang = [
-          "clang";
+          (* "/usr/bin/gdb"; "--args"; *)
+          "/usr/bin/clang";
           "-fsyntax-only";
           "-Xclang"; "-load";
           "-Xclang"; plugin;
