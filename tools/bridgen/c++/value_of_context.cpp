@@ -223,7 +223,7 @@ value_of_context::get (size_t type) const
 
   // Count the number of actual values.
   size_t size = 0;
-  while (Field (typed_cache, size))
+  while (Field (typed_cache, size) != Val_unit)
     size++;
 
   slice = caml_alloc (size, 0);
