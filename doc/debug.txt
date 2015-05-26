@@ -1,0 +1,9 @@
+
+steps to debug the clang OCaml plugin
+=====================================
+
+1) open clang/clang/api.ml, prepend "/usr/bin/gdb"; "--args"; to the
+   argument list (argv) where clang is called
+2) run processor.native on some C source file
+3) when gdb opens, enter "set follow-fork-mode child"
+4) "run" (in gdb)
