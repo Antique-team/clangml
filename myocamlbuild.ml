@@ -64,7 +64,7 @@ let find_ocamlpicdir_no_opam () =
   Unix.chdir Vars.ocaml_dist;
 
   (* runtime *)
-  if not (Sys.file_exists "asmrun/libasmrun.a") then (
+  if not (Sys.file_exists "asmrun/libasmrun_pic.a") then (
     if Sys.command "make world" <> 0 then
       failwith "unable to build ocaml runtime";
     if Sys.command "make world.opt" <> 0 then
@@ -72,7 +72,7 @@ let find_ocamlpicdir_no_opam () =
   );
 
   (* install *)
-  if not (Sys.file_exists "_install/lib/ocaml/libasmrun.a") then (
+  if not (Sys.file_exists "_install/lib/ocaml/libasmrun_pic.a") then (
     if Sys.command "make install" <> 0 then
       failwith "unable to install ocaml runtime";
   );
@@ -85,8 +85,8 @@ let find_ocamlpicdir () : string =
     let opamdir = pread "opam config var root" in
     (* See if opam exists. *)
     if Sys.file_exists opamdir then (
-      let picdir      = opamdir ^ "/" ^ Vars.ocaml_version ^ "+PIC" in
-      let libasmrun_a = picdir ^ "/lib/ocaml/libasmrun.a" in
+      let picdir      = opamdir ^ "/" ^ Vars.ocaml_version in
+      let libasmrun_a = picdir ^ "/lib/ocaml/libasmrun_pic.a" in
       (* See if there is the library we need. *)
       if Sys.file_exists libasmrun_a then
         picdir
@@ -124,7 +124,7 @@ let find_ocamlpicdir () : string =
 
 
 let ocamlpicdir =
-  if not (Sys.file_exists @@ Vars.ocaml_dist ^ "/_install/lib/ocaml/libasmrun.a") then
+  if not (Sys.file_exists @@ Vars.ocaml_dist ^ "/_install/lib/ocaml/libasmrun_pic.a") then
     find_ocamlpicdir ()
   else
     find_ocamlpicdir_no_opam ()
@@ -171,7 +171,7 @@ let ldflags = Sh("`" ^ llvm_config ^ " --ldflags`") :: atomise [
   "-lpthread";
   "-ldl";
   "-ltinfo";
-  "-lasmrun";
+  "-lasmrun_pic";
   "-lunix";
   "-L" ^ ocamlpicdir ^ "/lib/ocaml";
   "-Wl,-rpath," ^ ocamlpicdir ^ "/lib/ocaml";
