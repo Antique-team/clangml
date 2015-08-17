@@ -82,14 +82,15 @@ let find_ocamlpicdir_no_opam () =
 
 let find_ocamlpicdir () : string =
   try
-    let opamdir = pread "opam config var root" in
+    let opam_dir = pread "opam config var root" in
+    let opam_switch_dir = pread "opam config var switch" in
     (* See if opam exists. *)
-    if Sys.file_exists opamdir then (
-      let picdir      = opamdir ^ "/" ^ Vars.ocaml_version in
-      let libasmrun_a = picdir ^ "/lib/ocaml/libasmrun_pic.a" in
+    if Sys.file_exists opam_dir then (
+      let pic_dir      = opam_dir ^ "/" ^ opam_switch_dir in
+      let libasmrun_a = pic_dir ^ "/lib/ocaml/libasmrun_pic.a" in
       (* See if there is the library we need. *)
       if Sys.file_exists libasmrun_a then
-        picdir
+        pic_dir
 
       (* No opam version of 4.01.0+PIC. Ask the user whether he wants
          to use opam to install one. *)
@@ -105,7 +106,7 @@ let find_ocamlpicdir () : string =
           failwith "opam failed to switch back to preferred compiler";
         (* Now our file should exist. *)
         if Sys.file_exists libasmrun_a then
-          picdir
+          pic_dir
         else
           failwith "despite installing ocaml with PIC, the required runtime \
                     library was not found."
