@@ -41,7 +41,7 @@ value_of_context::data::dump (char const *msg, ...) const
       printf ("%2zu: ", type);
 
       value typed_cache = Field (cache, type);
-      if (typed_cache == 0)
+      if (typed_cache == Val_unit)
         {
           printf ("(0) []\n");
         }
@@ -67,9 +67,7 @@ value_of_context::data::get (size_t type) const
 {
   // get cache for type id
   assert (type < caml_array_length (cache));
-  value typed_cache = Field (cache, type);
-
-  return typed_cache;
+  return (Field (cache, type));
 }
 
 
@@ -80,14 +78,14 @@ value_of_context::data::set (size_t type, size_t index, value result) const
 
   // get cache for type id
   value typed_cache = get (type);
-  assert (typed_cache != 0);
+  assert (typed_cache != Val_unit);
 
   // ensure enough space in the cache for that type
   assert (index < caml_array_length (typed_cache));
 
   // we only store heap values
   assert (Is_block (result));
-  assert (result != 0);
+  assert (result != Val_unit);
 
   // save value in typed cache
   Store_field (typed_cache, index, result);
@@ -105,12 +103,12 @@ value_of_context::data::get (size_t type, size_t index) const
   value typed_cache = get (type);
 
   // no values for this type
-  if (typed_cache == 0)
-    return 0;
+  if (typed_cache == Val_unit)
+    return Val_unit;
 
   // this index doesn't exist (yet)
   if (index >= caml_array_length (typed_cache))
-    return 0;
+    return Val_unit;
 
   return Field (typed_cache, index);
 }
@@ -154,14 +152,11 @@ value_of_context::data::resize (size_t type, size_t max_id) const
 #if DEBUG_RESIZE
           printf ("%zu/%zu: %ld\n", i, length, tmp);
 #endif
-          if (!Is_block (tmp))
+          if (Is_block (tmp))
             {
-              std::ostringstream message;
-              message << "value at " << i << ": `" << tmp << "' is not a block";
-              throw std::runtime_error (message.str ());
+              assert (i < caml_array_length (new_cache));
+              Store_field (new_cache, i, tmp);
             }
-          assert (i < caml_array_length (new_cache));
-          Store_field (new_cache, i, tmp);
         }
 
 #if DEBUG_RESIZE
