@@ -83,7 +83,13 @@ let find_ocamlpicdir_no_opam () =
 let find_ocamlpicdir () : string =
   try
     let opam_dir = pread "opam config var root" in
-    let opam_switch_dir = pread "opam config var switch" in
+    let opam_switch_dir =
+      let dir = pread "opam config var switch" in
+      if dir = "system" then
+        "/usr"
+      else
+        dir
+    in
     (* See if opam exists. *)
     if Sys.file_exists opam_dir then (
       let pic_dir      = opam_dir ^ "/" ^ opam_switch_dir in
