@@ -2,13 +2,14 @@ open Ocamlbuild_plugin
 
 
 module Vars = struct
-  let clang_version = "3.4"
+  let clang_version = "3.5"
   let ocaml_version = Sys.ocaml_version
   let ocaml_ver = Filename.chop_extension ocaml_version
   let ocaml_dist = "ocaml-" ^ ocaml_version
   let ocaml_tar = ocaml_dist ^ ".tar.gz"
 end
 
+let cpp_compiler = "clang++-" ^ Vars.clang_version
 
 type _ prompt_question =
   | PQ_YN : [`PQ_YN] prompt_question
@@ -349,7 +350,7 @@ let () =
             let tags = tags_of_pathname (env "%.cpp") ++ "c++" ++ "compile" in
 
             Cmd (S(atomise [
-              "clang++";
+              cpp_compiler;
               "-c"; "-o"; env "%.o";
             ] @ cxxflags @ [T tags; A(env "%.cpp")]))
           end;
@@ -386,7 +387,7 @@ let () =
           ~deps:objects
           begin fun env build ->
             Cmd (S(atomise ([
-              "clang++";
+              cpp_compiler;
               "-o";
               "clangml.dylib" ;
             ] @ objects) @ ldflags))
