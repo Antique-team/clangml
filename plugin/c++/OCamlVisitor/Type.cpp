@@ -100,7 +100,7 @@ OCamlVisitor::TraverseFunctionProtoType (clang::FunctionProtoType *T)
 {
   TRACE;
 
-  ptr<Ctyp> result = must_traverse (T->getResultType ());
+  ptr<Ctyp> result = must_traverse (T->getReturnType ());
   list<Ctyp> args = traverse_list (arg_type_range (T));
 
   // TODO: exceptions
@@ -114,7 +114,7 @@ OCamlVisitor::TraverseFunctionNoProtoType (clang::FunctionNoProtoType *T)
 {
   TRACE;
 
-  ptr<Ctyp> result = must_traverse (T->getResultType ());
+  ptr<Ctyp> result = must_traverse (T->getReturnType ());
 
   return stack.push (mkFunctionNoProtoType (result));
 }

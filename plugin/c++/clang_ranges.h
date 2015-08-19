@@ -57,8 +57,8 @@ param_range = [] (clang::FunctionDecl *D)
 static const auto
 arg_type_range = [] (clang::FunctionProtoType *T)
 {
-  return boost::make_iterator_range (T->arg_type_begin (),
-                                     T->arg_type_end ());
+  return boost::make_iterator_range (T->param_type_begin (),
+                                     T->param_type_end ());
 };
 
 

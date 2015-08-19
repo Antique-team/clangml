@@ -543,7 +543,7 @@ OCamlVisitor::TraverseObjCMethodDecl (clang::ObjCMethodDecl *D)
 {
   TRACE;
 
-  ptr<Ctyp> result_type = must_traverse (D->getResultType ());
+  ptr<Ctyp> result_type = must_traverse (D->getReturnType ());
 
   clang::StringRef name = D->getSelector().getNameForSlot(0);
 
