@@ -12,19 +12,38 @@ ALL_FILES := $(shell find */ -type f -not -wholename "_build/*" \
 
 
 $(MAIN).native: $(ALL_FILES)
-	# replace util.mlpack by util.ml
+	# pack util.ml
 	ocp-pack util/prelude.ml util/denseIntMap.ml util/formatx.ml \
           util/logger.ml util/option.ml util/sparseIntMap.ml \
           util/sparseIntSet.ml util/various.ml \
 	  -o util.ml
-	# # replace ocamlTypes.mlpack by ocamlTypes.ml
 	# ocp-pack tools/ocamlTypes/codegen.ml tools/ocamlTypes/parse.ml \
         #   tools/ocamlTypes/print.ml tools/ocamlTypes/process.ml \
 	#   tools/ocamlTypes/sig.ml tools/ocamlTypes/type_graph.ml \
 	#   -o ocamlTypes.ml
-	# replace analysis.mlpack by analysis.ml
+	# pack analysis.ml
 	ocp-pack clang/analysis/all.ml clang/analysis/namingConvention.ml \
           -o analysis.ml
+	# force generation of files
+	ocamlbuild clang/clang/config.ml clang/clang/astBridge.ml \
+          clang/clang/slocBridge.ml clang/clang/foldVisitor.ml \
+	  clang/clang/iterVisitor.ml clang/clang/mapVisitor.ml \
+          clang/clang/astSimple.ml clang/clang/astSimplify.ml
+	# pack clang.ml
+	ocp-pack clang/clang/sloc.ml clang/clang/ref.ml \
+          _build/clang/clang/astBridge.ml \
+	  clang/clang/ast.ml _build/clang/clang/config.ml clang/clang/api.ml \
+	  clang/clang/invariants.ml \
+          clang/clang/pp.ml clang/clang/query.ml \
+          clang/clang/simplify.ml \
+	  _build/clang/clang/astSimple.ml \
+	  _build/clang/clang/astSimplify.ml \
+	  clang/clang/types.ml \
+	  clang/clang/visitor.ml \
+	  _build/clang/clang/slocBridge.ml \
+	  _build/clang/clang/foldVisitor.ml _build/clang/clang/iterVisitor.ml \
+          _build/clang/clang/mapVisitor.ml \
+	  -o clang.ml
 	ocamlbuild -cflags -annot $(TARGETS) -package bytes
 	@touch $@
 
