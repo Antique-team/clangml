@@ -9,5 +9,6 @@ true: debug
 "ocaml-4.01.0": -traverse
 "big-tests": -traverse
 
-"util.ml": package(deriving.syntax), syntax(camlp4o)
+"util.ml":     package(deriving.syntax), syntax(camlp4o)
 "analysis.ml": package(deriving.syntax), syntax(camlp4o), package(ANSITerminal)
+"clang.ml":    package(deriving.syntax), syntax(camlp4o)
