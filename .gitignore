@@ -11,3 +11,4 @@ ml_etags
 doc/html
 util.ml
 analysis.ml
+clang.ml
