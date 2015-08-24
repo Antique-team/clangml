@@ -15,7 +15,16 @@ $(MAIN).native: $(ALL_FILES)
 	# replace util.mlpack by util.ml
 	ocp-pack util/prelude.ml util/denseIntMap.ml util/formatx.ml \
           util/logger.ml util/option.ml util/sparseIntMap.ml \
-          util/sparseIntSet.ml util/various.ml -o util.ml
+          util/sparseIntSet.ml util/various.ml \
+	  -o util.ml
+	# # replace ocamlTypes.mlpack by ocamlTypes.ml
+	# ocp-pack tools/ocamlTypes/codegen.ml tools/ocamlTypes/parse.ml \
+        #   tools/ocamlTypes/print.ml tools/ocamlTypes/process.ml \
+	#   tools/ocamlTypes/sig.ml tools/ocamlTypes/type_graph.ml \
+	#   -o ocamlTypes.ml
+	# replace analysis.mlpack by analysis.ml
+	ocp-pack clang/analysis/all.ml clang/analysis/namingConvention.ml \
+          -o analysis.ml
 	ocamlbuild -cflags -annot $(TARGETS) -package bytes
 	@touch $@
 
