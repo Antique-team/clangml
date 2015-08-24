@@ -62,12 +62,10 @@ wc:
 install: $(MAIN).native
 	ocamlfind install clangml META		\
 		_build/clangml.dylib		\
-		_build/clang/*.cm[iox]		\
-		_build/clang/*.o		\
-		_build/clang/clang/*.mli	\
-		_build/clang/clang/ast.ml	\
-		_build/util.cm[iox]		\
-		_build/util.o
+		_build/*.cm[iox]		\
+		_build/*.o		        \
+		clang/clang/*.mli 	        \
+		clang/clang/ast.ml
 
 uninstall:
 	ocamlfind remove clangml
