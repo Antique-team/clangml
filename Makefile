@@ -49,7 +49,7 @@ $(MAIN).native: $(ALL_FILES)
 
 clean:
 	ocamlbuild -clean
-	\rm -f mainClang.native
+	\rm -f mainClang.native util.ml analysis.ml clang.ml
 
 wc:
 	@find */					\
