@@ -361,15 +361,15 @@ let () =
             "%.a";
             "util.cmx";
             "util.o";
-            "clang/clang.cmx";
-            "clang/clang.o";
+            "clang.cmx";
+            "clang.o";
           ]
           begin fun env build ->
             Cmd (S (atomise [
               "ocamlfind";
               "ocamlopt";
               "util.cmx";
-              "clang/clang.cmx";
+              "clang.cmx";
               env "%.cmxa";
               "-output-obj";
               "-o";
@@ -390,34 +390,6 @@ let () =
               "-o";
               "clangml.dylib" ;
             ] @ objects) @ ldflags))
-          end;
-
-        rule "Noweb to OCaml interface file"
-          ~prod:"%.mli"
-          ~dep:"%.ml.nw"
-          begin fun env build ->
-            Cmd (S[
-              A"notangle";
-              A"-L# %L \"%F\"%N";
-              A"-R.mli";
-              A(env "%.ml.nw");
-              Sh">";
-              A(env "%.mli");
-            ])
-          end;
-
-        rule "Noweb to OCaml implementation file"
-          ~prod:"%.ml"
-          ~dep:"%.ml.nw"
-          begin fun env build ->
-            Cmd (S[
-              A"notangle";
-              A"-L# %L \"%F\"%N";
-              A"-R.ml";
-              A(env "%.ml.nw");
-              Sh">";
-              A(env "%.ml");
-            ])
           end;
 
     | _ ->
