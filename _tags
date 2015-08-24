@@ -9,6 +9,13 @@ true: debug
 "ocaml-4.01.0": -traverse
 "big-tests": -traverse
 
-"util.ml":     package(deriving.syntax), syntax(camlp4o)
+"util.ml": package(deriving.syntax), syntax(camlp4o)
 "analysis.ml": package(deriving.syntax), syntax(camlp4o), package(ANSITerminal)
-"clang.ml":    package(deriving.syntax), syntax(camlp4o)
+"clang.ml": package(deriving.syntax), syntax(camlp4o)
+"sig.ml": package(camlp4), package(deriving.syntax), syntax(camlp4o)
+"parse.ml": package(camlp4.quotations), syntax(camlp4o)
+"print.ml": package(camlp4)
+"process.ml": package(camlp4)
+"sig.ml": package(camlp4)
+<codegen_impl.ml{,i}>: package(batteries), package(camlp4.quotations), camlp4of
+<type_graph.ml{,i}>: package(camlp4)
