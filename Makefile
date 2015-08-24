@@ -12,6 +12,10 @@ ALL_FILES := $(shell find */ -type f -not -wholename "_build/*" \
 
 
 $(MAIN).native: $(ALL_FILES)
+	# replace util.mlpack by util.ml
+	ocp-pack util/prelude.ml util/denseIntMap.ml util/formatx.ml \
+          util/logger.ml util/option.ml util/sparseIntMap.ml \
+          util/sparseIntSet.ml util/various.ml -o util.ml
 	ocamlbuild -cflags -annot $(TARGETS) -package bytes
 	@touch $@
 
