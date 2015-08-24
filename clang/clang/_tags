@@ -1,5 +1,2 @@
 # camlp4
 <*.ml{,i}>: package(deriving.syntax), syntax(camlp4o)
-
-# pack
-<*.cmx>: for-pack(Clang)
