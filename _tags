@@ -10,3 +10,4 @@ true: debug
 "big-tests": -traverse
 
 "util.ml": package(deriving.syntax), syntax(camlp4o)
+"analysis.ml": package(deriving.syntax), syntax(camlp4o), package(ANSITerminal)
