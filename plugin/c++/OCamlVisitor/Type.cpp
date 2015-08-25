@@ -381,6 +381,16 @@ OCamlVisitor::TraverseTypeOfType (clang::TypeOfType *T)
   return stack.push (mkTypeOfType (type));
 }
 
+bool
+OCamlVisitor::TraverseAdjustedType (clang::AdjustedType *T)
+{
+  TRACE;
+
+  ptr<Ctyp> ori_type = must_traverse (T->getOriginalType ());
+  ptr<Ctyp> adj_type = must_traverse (T->getAdjustedType ());
+
+  return stack.push (mkAdjustedType (ori_type, adj_type));
+}
 
 UNIMP_TYPE(UnaryTransform)
 UNIMP_TYPE(UnresolvedUsing)

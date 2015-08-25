@@ -480,29 +480,29 @@ OCamlVisitor::TraverseShuffleVectorExpr (clang::ShuffleVectorExpr *S)
 }
 
 
-bool
-OCamlVisitor::TraverseBinaryTypeTraitExpr (clang::BinaryTypeTraitExpr *S)
-{
-  TRACE;
+// bool
+// OCamlVisitor::TraverseBinaryTypeTraitExpr (clang::BinaryTypeTraitExpr *S)
+// {
+//   TRACE;
 
-  BinaryTypeTrait trait = translate_binary_type_trait (S->getTrait ());
-  ptr<Ctyp> lhs = must_traverse (S->getLhsType ());
-  ptr<Ctyp> rhs = must_traverse (S->getRhsType ());
+//   BinaryTypeTrait trait = translate_binary_type_trait (S->getTrait ());
+//   ptr<Ctyp> lhs = must_traverse (S->getLhsType ());
+//   ptr<Ctyp> rhs = must_traverse (S->getRhsType ());
 
-  return stack.push (mkBinaryTypeTraitExpr (trait, lhs, rhs));
-}
+//   return stack.push (mkBinaryTypeTraitExpr (trait, lhs, rhs));
+// }
 
 
-bool
-OCamlVisitor::TraverseUnaryTypeTraitExpr (clang::UnaryTypeTraitExpr *S)
-{
-  TRACE;
+// bool
+// OCamlVisitor::TraverseUnaryTypeTraitExpr (clang::UnaryTypeTraitExpr *S)
+// {
+//   TRACE;
 
-  UnaryTypeTrait trait = translate_unary_type_trait (S->getTrait ());
-  ptr<Ctyp> queried = must_traverse (S->getQueriedType ());
+//   UnaryTypeTrait trait = translate_unary_type_trait (S->getTrait ());
+//   ptr<Ctyp> queried = must_traverse (S->getQueriedType ());
 
-  return stack.push (mkUnaryTypeTraitExpr (trait, queried));
-}
+//   return stack.push (mkUnaryTypeTraitExpr (trait, queried));
+// }
 
 
 bool

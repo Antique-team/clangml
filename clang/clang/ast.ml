@@ -239,6 +239,7 @@ type type_qualifier = AstBridge.type_qualifier =
 (* [clang/AST/Expr.h] *)
 type predefined_expr = AstBridge.predefined_expr =
   | PE_Func
+  | PE_FuncSig
   | PE_Function
   | PE_LFunction
   | PE_FuncDName
@@ -472,6 +473,7 @@ type cast_kind = AstBridge.cast_kind =
   | CK_CopyAndAutoreleaseBlockObject
   | CK_BuiltinFnToFnPtr
   | CK_ZeroToOCLEvent
+  | CK_AddressSpaceConversion
   deriving (Show)
 
 
@@ -993,9 +995,24 @@ and stmt_ = AstBridge.stmt_ =
   | MSDependentExistsStmt
   | ObjCAutoreleasePoolStmt
   | OMPParallelDirective
+  | OMPBarrierDirective
+  | OMPCriticalDirective
+  | OMPFlushDirective
+  | OMPForDirective
+  | OMPMasterDirective
+  | OMPParallelForDirective
+  | OMPParallelSectionsDirective
+  | OMPSectionDirective
+  | OMPSectionsDirective
+  | OMPSimdDirective
+  | OMPSingleDirective
+  | OMPTaskDirective
+  | OMPTaskwaitDirective
+  | OMPTaskyieldDirective
   | SEHExceptStmt
   | SEHFinallyStmt
   | SEHTryStmt
+  | SEHLeaveStmt
 
 and asm_arg = AstBridge.asm_arg = {
   aa_constraint : string;
@@ -1048,6 +1065,8 @@ and tloc_ = AstBridge.tloc_ =
   | ObjCObjectPointerTypeLoc    of (* pointee *)tloc
   | ObjCObjectTypeLoc           of (* base *)tloc
   | ObjCInterfaceTypeLoc        of (* name *)string
+  | AdjustedTypeLoc             of (* original *)tloc
+                                 * (* inner *)ctyp
 
   | AutoTypeLoc
   | BlockPointerTypeLoc
@@ -1112,6 +1131,8 @@ and ctyp_ = AstBridge.ctyp_ =
   | ObjCObjectPointerType       of (* pointee *)ctyp
   | ObjCObjectType              of (* base *)ctyp
   | ObjCInterfaceType           of (* name *)string
+  | AdjustedType                of (* original *)ctyp
+                                 * (* adjusted *)ctyp
 
   | AutoType
   | BlockPointerType

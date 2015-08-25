@@ -440,6 +440,17 @@ OCamlVisitor::TraverseTemplateTypeParmTypeLoc
   return stack.push (mkTemplateTypeParmTypeLoc (name));
 }
 
+bool
+OCamlVisitor::TraverseAdjustedTypeLoc (clang::AdjustedTypeLoc TL)
+{
+  TRACE;
+
+  ptr<Tloc> original = must_traverse (TL.getOriginalLoc ());
+  ptr<Ctyp> inner = must_traverse (TL.getInnerType ());
+
+  return stack.push (mkAdjustedTypeLoc (original, inner));
+}
+
 
 UNIMP_TYPE_LOC (UnaryTransform)
 UNIMP_TYPE_LOC (UnresolvedUsing)
