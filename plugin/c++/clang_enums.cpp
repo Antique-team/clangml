@@ -129,6 +129,7 @@ translate_attributed_type_kind (clang::AttributedType::Kind kind)
     case clang::AttributedType::Kind::attr_ptr64:                return ATK_ptr64;
     case clang::AttributedType::Kind::attr_sptr:                 return ATK_sptr;
     case clang::AttributedType::Kind::attr_uptr:                 return ATK_uptr;
+    case clang::AttributedType::Kind::attr_vectorcall:           return ATK_vectorcall;
     }
     throw std::runtime_error ("invalid attributed type kind");
 }

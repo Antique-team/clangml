@@ -57,7 +57,7 @@ clang_type_sizeof (value context, value ctyp)
 
   int64 size = 0;
   if (!type->isIncompleteType ())
-    size = ctx->getTypeInfo (type).first / CHAR_BIT;
+    size = ctx->getTypeInfo (type).Width / CHAR_BIT;
 
   return caml_copy_int64 (size);
 }
@@ -74,7 +74,7 @@ clang_type_alignof (value context, value ctyp)
 
   int align = 0;
   if (!type->isIncompleteType ())
-    align = ctx->getTypeInfo (type).second / CHAR_BIT;
+    align = ctx->getTypeInfo (type).Align / CHAR_BIT;
 
   return Val_int (align);
 }
