@@ -230,7 +230,7 @@ OCamlVisitor::TraverseFunctionNoProtoTypeLoc (clang::FunctionNoProtoTypeLoc TL)
 {
   TRACE;
 
-  ptr<Tloc> result = must_traverse (TL.getResultLoc ());
+  ptr<Tloc> result = must_traverse (TL.getReturnLoc ());
 
   return stack.push (mkFunctionNoProtoTypeLoc (result));
 }
@@ -249,7 +249,7 @@ OCamlVisitor::TraverseFunctionProtoTypeLoc (clang::FunctionProtoTypeLoc TL)
 
   if (is_buggy)
     {
-      ptr<Tloc> result = must_traverse (TL.getResultLoc ());
+      ptr<Tloc> result = must_traverse (TL.getReturnLoc ());
 
       stack.push (mkFunctionNoProtoTypeLoc (result));
     }
@@ -257,7 +257,7 @@ OCamlVisitor::TraverseFunctionProtoTypeLoc (clang::FunctionProtoTypeLoc TL)
     {
 #endif
 
-      ptr<Tloc> result = must_traverse (TL.getResultLoc ());
+      ptr<Tloc> result = must_traverse (TL.getReturnLoc ());
       list<Decl> args = traverse_list (TL.getParams ());
 
       // TODO: exceptions
@@ -438,6 +438,17 @@ OCamlVisitor::TraverseTemplateTypeParmTypeLoc
   clang::StringRef name = TL.getDecl ()->getName ();
 
   return stack.push (mkTemplateTypeParmTypeLoc (name));
+}
+
+bool
+OCamlVisitor::TraverseAdjustedTypeLoc (clang::AdjustedTypeLoc TL)
+{
+  TRACE;
+
+  ptr<Tloc> original = must_traverse (TL.getOriginalLoc ());
+  ptr<Ctyp> inner = must_traverse (TL.getInnerType ());
+
+  return stack.push (mkAdjustedTypeLoc (original, inner));
 }
 
 

@@ -159,7 +159,8 @@ let rec tloc_of_ctyp sloc ty =
         ObjCObjectTypeLoc (tloc_of_ctyp sloc base)
     | ObjCInterfaceType name ->
         ObjCInterfaceTypeLoc name
-
+    | AdjustedType (original, adjusted) ->
+        AdjustedTypeLoc (tloc_of_ctyp sloc original, adjusted)
 
     | AutoType -> AutoTypeLoc
     | BlockPointerType -> BlockPointerTypeLoc

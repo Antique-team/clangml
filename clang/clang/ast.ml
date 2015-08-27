@@ -239,6 +239,7 @@ type type_qualifier = AstBridge.type_qualifier =
 (* [clang/AST/Expr.h] *)
 type predefined_expr = AstBridge.predefined_expr =
   | PE_Func
+  | PE_FuncSig
   | PE_Function
   | PE_LFunction
   | PE_FuncDName
@@ -297,6 +298,7 @@ type attributed_type_kind = AstBridge.attributed_type_kind =
  | ATK_ptr64
  | ATK_sptr
  | ATK_uptr
+ | ATK_vectorcall
  deriving (Show)
 
 
@@ -472,6 +474,7 @@ type cast_kind = AstBridge.cast_kind =
   | CK_CopyAndAutoreleaseBlockObject
   | CK_BuiltinFnToFnPtr
   | CK_ZeroToOCLEvent
+  | CK_AddressSpaceConversion
   deriving (Show)
 
 
@@ -884,6 +887,7 @@ and expr_ = AstBridge.expr_ =
   | CXXDeleteExpr
   | CXXDependentScopeMemberExpr
   | CXXDynamicCastExpr
+  | CXXFoldExpr
   | CXXFunctionalCastExpr
   | CXXMemberCallExpr
   | CXXNewExpr
@@ -917,6 +921,7 @@ and expr_ = AstBridge.expr_ =
   | SubstNonTypeTemplateParmExpr
   | SubstNonTypeTemplateParmPackExpr
   | TypeTraitExpr
+  | TypoExpr
   | UnresolvedLookupExpr
   | UnresolvedMemberExpr
   | UserDefinedLiteral
@@ -991,10 +996,31 @@ and stmt_ = AstBridge.stmt_ =
   | CXXTryStmt
   | MSAsmStmt
   | MSDependentExistsStmt
-  | ObjCAutoreleasePoolStmt
+  | OMPAtomicDirective
+  | OMPBarrierDirective
+  | OMPCriticalDirective
+  | OMPFlushDirective
+  | OMPForDirective
+  | OMPForSimdDirective
+  | OMPMasterDirective
+  | OMPOrderedDirective
   | OMPParallelDirective
+  | OMPParallelForDirective
+  | OMPParallelForSimdDirective
+  | OMPParallelSectionsDirective
+  | OMPSectionDirective
+  | OMPSectionsDirective
+  | OMPSimdDirective
+  | OMPSingleDirective
+  | OMPTargetDirective
+  | OMPTaskDirective
+  | OMPTaskwaitDirective
+  | OMPTaskyieldDirective
+  | OMPTeamsDirective
+  | ObjCAutoreleasePoolStmt
   | SEHExceptStmt
   | SEHFinallyStmt
+  | SEHLeaveStmt
   | SEHTryStmt
 
 and asm_arg = AstBridge.asm_arg = {
@@ -1048,6 +1074,8 @@ and tloc_ = AstBridge.tloc_ =
   | ObjCObjectPointerTypeLoc    of (* pointee *)tloc
   | ObjCObjectTypeLoc           of (* base *)tloc
   | ObjCInterfaceTypeLoc        of (* name *)string
+  | AdjustedTypeLoc             of (* original *)tloc
+                                 * (* inner *)ctyp
 
   | AutoTypeLoc
   | BlockPointerTypeLoc
@@ -1060,8 +1088,8 @@ and tloc_ = AstBridge.tloc_ =
   | MemberPointerTypeLoc
   | PackExpansionTypeLoc
   | RValueReferenceTypeLoc
-  | SubstTemplateTypeParmTypeLoc
   | SubstTemplateTypeParmPackTypeLoc
+  | SubstTemplateTypeParmTypeLoc
   | TemplateSpecializationTypeLoc
   | UnaryTransformTypeLoc
   | UnresolvedUsingTypeLoc
@@ -1112,6 +1140,8 @@ and ctyp_ = AstBridge.ctyp_ =
   | ObjCObjectPointerType       of (* pointee *)ctyp
   | ObjCObjectType              of (* base *)ctyp
   | ObjCInterfaceType           of (* name *)string
+  | AdjustedType                of (* original *)ctyp
+                                 * (* adjusted *)ctyp
 
   | AutoType
   | BlockPointerType
@@ -1198,19 +1228,26 @@ and decl_ = AstBridge.decl_ =
 
 
   | BlockDecl
+  | CXXConstructorDecl
+  | CXXConversionDecl
+  | CXXDestructorDecl
   | ClassScopeFunctionSpecializationDecl
+  | ClassTemplatePartialSpecializationDecl
+  | ClassTemplateSpecializationDecl
   | FriendDecl
   | FriendTemplateDecl
   | FunctionTemplateDecl
+  | ImplicitParamDecl
   | ImportDecl
   | IndirectFieldDecl
   | MSPropertyDecl
   | NamespaceAliasDecl
   | NonTypeTemplateParmDecl
+  | OMPThreadPrivateDecl
+  | ObjCAtDefsFieldDecl
   | ObjCCompatibleAliasDecl
   | ObjCPropertyDecl
   | ObjCPropertyImplDecl
-  | OMPThreadPrivateDecl
   | TemplateTemplateParmDecl
   | TypeAliasDecl
   | TypeAliasTemplateDecl
@@ -1219,15 +1256,8 @@ and decl_ = AstBridge.decl_ =
   | UsingDirectiveDecl
   | UsingShadowDecl
   | VarTemplateDecl
-  | ClassTemplateSpecializationDecl
-  | ClassTemplatePartialSpecializationDecl
-  | ObjCAtDefsFieldDecl
-  | CXXConstructorDecl
-  | CXXConversionDecl
-  | CXXDestructorDecl
-  | ImplicitParamDecl
-  | VarTemplateSpecializationDecl
   | VarTemplatePartialSpecializationDecl
+  | VarTemplateSpecializationDecl
 
 
 and field_decl = AstBridge.field_decl = {

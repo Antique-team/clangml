@@ -480,29 +480,29 @@ OCamlVisitor::TraverseShuffleVectorExpr (clang::ShuffleVectorExpr *S)
 }
 
 
-bool
-OCamlVisitor::TraverseBinaryTypeTraitExpr (clang::BinaryTypeTraitExpr *S)
-{
-  TRACE;
+// bool
+// OCamlVisitor::TraverseBinaryTypeTraitExpr (clang::BinaryTypeTraitExpr *S)
+// {
+//   TRACE;
 
-  BinaryTypeTrait trait = translate_binary_type_trait (S->getTrait ());
-  ptr<Ctyp> lhs = must_traverse (S->getLhsType ());
-  ptr<Ctyp> rhs = must_traverse (S->getRhsType ());
+//   BinaryTypeTrait trait = translate_binary_type_trait (S->getTrait ());
+//   ptr<Ctyp> lhs = must_traverse (S->getLhsType ());
+//   ptr<Ctyp> rhs = must_traverse (S->getRhsType ());
 
-  return stack.push (mkBinaryTypeTraitExpr (trait, lhs, rhs));
-}
+//   return stack.push (mkBinaryTypeTraitExpr (trait, lhs, rhs));
+// }
 
 
-bool
-OCamlVisitor::TraverseUnaryTypeTraitExpr (clang::UnaryTypeTraitExpr *S)
-{
-  TRACE;
+// bool
+// OCamlVisitor::TraverseUnaryTypeTraitExpr (clang::UnaryTypeTraitExpr *S)
+// {
+//   TRACE;
 
-  UnaryTypeTrait trait = translate_unary_type_trait (S->getTrait ());
-  ptr<Ctyp> queried = must_traverse (S->getQueriedType ());
+//   UnaryTypeTrait trait = translate_unary_type_trait (S->getTrait ());
+//   ptr<Ctyp> queried = must_traverse (S->getQueriedType ());
 
-  return stack.push (mkUnaryTypeTraitExpr (trait, queried));
-}
+//   return stack.push (mkUnaryTypeTraitExpr (trait, queried));
+// }
 
 
 bool
@@ -753,6 +753,7 @@ OCamlVisitor::TraverseGenericSelectionExpr (clang::GenericSelectionExpr *S)
 }
 
 
+UNIMP_STMT (Expr, CXXFoldExpr)
 UNIMP_STMT (Expr, CXXOperatorCallExpr)
 UNIMP_STMT (Expr, CXXPseudoDestructorExpr)
 UNIMP_STMT (Expr, CXXReinterpretCastExpr)
@@ -766,12 +767,12 @@ UNIMP_STMT (Expr, CXXTypeidExpr)
 UNIMP_STMT (Expr, CXXUnresolvedConstructExpr)
 UNIMP_STMT (Expr, CXXUuidofExpr)
 UNIMP_STMT (Expr, DependentScopeDeclRefExpr)
-UNIMP_STMT (Expr, ExpressionTraitExpr)
 UNIMP_STMT (Expr, ExprWithCleanups)
+UNIMP_STMT (Expr, ExpressionTraitExpr)
 UNIMP_STMT (Expr, FunctionParmPackExpr)
 UNIMP_STMT (Expr, LambdaExpr)
-UNIMP_STMT (Expr, MaterializeTemporaryExpr)
 UNIMP_STMT (Expr, MSPropertyRefExpr)
+UNIMP_STMT (Expr, MaterializeTemporaryExpr)
 UNIMP_STMT (Expr, ObjCBridgedCastExpr)
 UNIMP_STMT (Expr, ObjCIndirectCopyRestoreExpr)
 UNIMP_STMT (Expr, ObjCSubscriptRefExpr)
@@ -781,6 +782,7 @@ UNIMP_STMT (Expr, SizeOfPackExpr)
 UNIMP_STMT (Expr, SubstNonTypeTemplateParmExpr)
 UNIMP_STMT (Expr, SubstNonTypeTemplateParmPackExpr)
 UNIMP_STMT (Expr, TypeTraitExpr)
+UNIMP_STMT (Expr, TypoExpr)
 UNIMP_STMT (Expr, UnresolvedLookupExpr)
 UNIMP_STMT (Expr, UnresolvedMemberExpr)
 UNIMP_STMT (Expr, UserDefinedLiteral)

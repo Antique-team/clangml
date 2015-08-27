@@ -100,7 +100,7 @@ OCamlVisitor::TraverseFunctionProtoType (clang::FunctionProtoType *T)
 {
   TRACE;
 
-  ptr<Ctyp> result = must_traverse (T->getResultType ());
+  ptr<Ctyp> result = must_traverse (T->getReturnType ());
   list<Ctyp> args = traverse_list (arg_type_range (T));
 
   // TODO: exceptions
@@ -114,7 +114,7 @@ OCamlVisitor::TraverseFunctionNoProtoType (clang::FunctionNoProtoType *T)
 {
   TRACE;
 
-  ptr<Ctyp> result = must_traverse (T->getResultType ());
+  ptr<Ctyp> result = must_traverse (T->getReturnType ());
 
   return stack.push (mkFunctionNoProtoType (result));
 }
@@ -381,6 +381,16 @@ OCamlVisitor::TraverseTypeOfType (clang::TypeOfType *T)
   return stack.push (mkTypeOfType (type));
 }
 
+bool
+OCamlVisitor::TraverseAdjustedType (clang::AdjustedType *T)
+{
+  TRACE;
+
+  ptr<Ctyp> ori_type = must_traverse (T->getOriginalType ());
+  ptr<Ctyp> adj_type = must_traverse (T->getAdjustedType ());
+
+  return stack.push (mkAdjustedType (ori_type, adj_type));
+}
 
 UNIMP_TYPE(UnaryTransform)
 UNIMP_TYPE(UnresolvedUsing)

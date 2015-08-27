@@ -19,8 +19,8 @@ ast_bridge::CastKind translate_cast_kind (clang::CastKind kind);
 ast_bridge::AtomicOp translate_atomic_op (clang::AtomicExpr::AtomicOp ao);
 ast_bridge::AccessSpecifier translate_access_specifier (clang::AccessSpecifier spec);
 ast_bridge::OverloadedOperatorKind translate_overloaded_operator_kind (clang::OverloadedOperatorKind kind);
-ast_bridge::BinaryTypeTrait translate_binary_type_trait (clang::BinaryTypeTrait trait);
-ast_bridge::UnaryTypeTrait translate_unary_type_trait (clang::UnaryTypeTrait trait);
+/* ast_bridge::BinaryTypeTrait translate_binary_type_trait (clang::BinaryTypeTrait trait); */
+/* ast_bridge::UnaryTypeTrait translate_unary_type_trait (clang::UnaryTypeTrait trait); */
 ast_bridge::ArrayTypeTrait translate_array_type_trait (clang::ArrayTypeTrait trait);
 ast_bridge::CapturedRegionKind translate_captured_region_kind (clang::CapturedRegionKind kind);
 ast_bridge::AccessControl translate_access_control (clang::ObjCIvarDecl::AccessControl ac);

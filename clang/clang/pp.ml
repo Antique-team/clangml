@@ -71,6 +71,7 @@ let string_of_qualifier = function
 
 let string_of_predefined_expr = function
   | PE_Func			-> "__func__"
+  | PE_FuncSig			-> "__funcsig__"
   | PE_Function			-> "__FUNCTION__"
   | PE_LFunction		-> "__LFUNCTION__"
   | PE_FuncDName		-> "__FUNCDNAME__"
@@ -149,6 +150,7 @@ let string_of_attributed_type_kind = function
   | ATK_ptr64			-> "ptr64"
   | ATK_sptr			-> "sptr"
   | ATK_uptr			-> "uptr"
+  | ATK_vectorcall              -> "vectorcall"
 
 let string_of_elaborated_type_keyword = function
   | ETK_Struct			-> "struct"
@@ -575,7 +577,7 @@ and pp_expr_ fmt = function
       Format.fprintf fmt "@@[ %a ]"
         (Formatx.pp_list pp_expr) elements
   | ObjCBoxedExpr sub ->
-      Format.fprintf fmt "@@{ %a }" pp_expr sub 
+      Format.fprintf fmt "@@{ %a }" pp_expr sub
   | ObjCDictionaryLiteral map ->
       Format.fprintf fmt "{ %a }"
         (Formatx.pp_list (pp_pair pp_expr pp_expr)) map
@@ -621,6 +623,7 @@ and pp_expr_ fmt = function
   | CXXDeleteExpr -> Format.pp_print_string fmt "<CXXDeleteExpr>"
   | CXXDependentScopeMemberExpr -> Format.pp_print_string fmt "<CXXDependentScopeMemberExpr>"
   | CXXDynamicCastExpr -> Format.pp_print_string fmt "<CXXDynamicCastExpr>"
+  | CXXFoldExpr -> Format.pp_print_string fmt "<CXXFoldExpr>"
   | CXXFunctionalCastExpr -> Format.pp_print_string fmt "<CXXFunctionalCastExpr>"
   | CXXMemberCallExpr -> Format.pp_print_string fmt "<CXXMemberCallExpr>"
   | CXXNewExpr -> Format.pp_print_string fmt "<CXXNewExpr>"
@@ -653,6 +656,7 @@ and pp_expr_ fmt = function
   | SubstNonTypeTemplateParmExpr -> Format.pp_print_string fmt "<SubstNonTypeTemplateParmExpr>"
   | SubstNonTypeTemplateParmPackExpr -> Format.pp_print_string fmt "<SubstNonTypeTemplateParmPackExpr>"
   | TypeTraitExpr -> Format.pp_print_string fmt "<TypeTraitExpr>"
+  | TypoExpr -> Format.pp_print_string fmt "<TypoExpr>"
   | UnresolvedLookupExpr -> Format.pp_print_string fmt "<UnresolvedLookupExpr>"
   | UnresolvedMemberExpr -> Format.pp_print_string fmt "<UnresolvedMemberExpr>"
   | UserDefinedLiteral -> Format.pp_print_string fmt "<UserDefinedLiteral>"
@@ -778,16 +782,37 @@ and pp_stmt_ fmt = function
         pp_stmt body_stmt
 
 
-  | OMPParallelDirective -> Format.pp_print_string fmt "<OMPParallelDirective>"
   | AttributedStmt -> Format.pp_print_string fmt "<AttributedStmt>"
   | CXXCatchStmt -> Format.pp_print_string fmt "<CXXCatchStmt>"
   | CXXForRangeStmt -> Format.pp_print_string fmt "<CXXForRangeStmt>"
   | CXXTryStmt -> Format.pp_print_string fmt "<CXXTryStmt>"
   | MSAsmStmt -> Format.pp_print_string fmt "<MSAsmStmt>"
   | MSDependentExistsStmt -> Format.pp_print_string fmt "<MSDependentExistsStmt>"
+  | OMPAtomicDirective -> Format.pp_print_string fmt "<OMPAtomicDirective>"
+  | OMPBarrierDirective -> Format.pp_print_string fmt "<OMPBarrierDirective>"
+  | OMPCriticalDirective -> Format.pp_print_string fmt "<OMPCriticalDirective>"
+  | OMPFlushDirective -> Format.pp_print_string fmt "<OMPFlushDirective>"
+  | OMPForDirective -> Format.pp_print_string fmt "<OMPForDirective>"
+  | OMPForSimdDirective -> Format.pp_print_string fmt "<OMPForSimdDirective>"
+  | OMPMasterDirective -> Format.pp_print_string fmt "<OMPMasterDirective>"
+  | OMPOrderedDirective -> Format.pp_print_string fmt "<OMPOrderedDirective>"
+  | OMPParallelDirective -> Format.pp_print_string fmt "<OMPParallelDirective>"
+  | OMPParallelForDirective -> Format.pp_print_string fmt "<OMPParallelForDirective>"
+  | OMPParallelSectionsDirective -> Format.pp_print_string fmt "<OMPParallelSectionsDirective>"
+  | OMPParallelForSimdDirective -> Format.pp_print_string fmt "<OMPParallelForSimdDirective>"
+  | OMPSectionDirective -> Format.pp_print_string fmt "<OMPSectionDirective>"
+  | OMPSectionsDirective -> Format.pp_print_string fmt "<OMPSectionsDirective>"
+  | OMPSimdDirective -> Format.pp_print_string fmt "<OMPSimdDirective>"
+  | OMPSingleDirective -> Format.pp_print_string fmt "<OMPSingleDirective>"
+  | OMPTargetDirective -> Format.pp_print_string fmt "<OMPTargetDirective>"
+  | OMPTaskDirective -> Format.pp_print_string fmt "<OMPTaskDirective>"
+  | OMPTaskwaitDirective -> Format.pp_print_string fmt "<OMPTaskwaitDirective>"
+  | OMPTaskyieldDirective -> Format.pp_print_string fmt "<OMPTaskyieldDirective>"
+  | OMPTeamsDirective -> Format.pp_print_string fmt "<OMPTeamsDirective>"
   | ObjCAutoreleasePoolStmt -> Format.pp_print_string fmt "<ObjCAutoreleasePoolStmt>"
   | SEHExceptStmt -> Format.pp_print_string fmt "<SEHExceptStmt>"
   | SEHFinallyStmt -> Format.pp_print_string fmt "<SEHFinallyStmt>"
+  | SEHLeaveStmt -> Format.pp_print_string fmt "<SEHLeaveStmt>"
   | SEHTryStmt -> Format.pp_print_string fmt "<SEHTryStmt>"
 
 and pp_stmt fmt stmt =
@@ -885,6 +910,10 @@ and pp_tloc_ fmt = function
   | ObjCInterfaceTypeLoc name ->
       Format.fprintf fmt "%s"
         name
+  | AdjustedTypeLoc (original, inner) ->
+      Format.fprintf fmt "%a %a"
+        pp_tloc original
+        pp_ctyp inner
 
 
   | DecayedTypeLoc _ -> Format.pp_print_string fmt "<DecayedTypeLoc>"
@@ -991,7 +1020,10 @@ and pp_ctyp_ fmt = function
   | ObjCInterfaceType name ->
       Format.fprintf fmt "%s"
         name
-
+  | AdjustedType (original, adjusted) ->
+      Format.fprintf fmt "%a %a"
+        pp_ctyp original
+        pp_ctyp adjusted
 
   | AutoType -> Format.pp_print_string fmt "<AutoType>"
   | BlockPointerType -> Format.pp_print_string fmt "<BlockPointerType>"
@@ -1231,7 +1263,7 @@ and pp_field_decl fmt { fd_type = ty;
                    pp_named_arg (name, ty)
                    pp_expr init
 
-(* functions so that users of clangml don't need to depend on deriving 
+(* functions so that users of clangml don't need to depend on deriving
    and it's syntax extension *)
 
 let string_of_ctyp = Show.show<ctyp>

@@ -185,7 +185,7 @@ let parse args continue =
       let argv =
         let clang = [
           (* "/usr/bin/gdb"; "--args"; *)
-          "/usr/bin/clang";
+          "/usr/bin/clang-3.6";
           "-fsyntax-only";
           "-Xclang"; "-load";
           "-Xclang"; plugin;
