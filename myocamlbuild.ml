@@ -9,7 +9,24 @@ module Vars = struct
   let ocaml_tar = ocaml_dist ^ ".tar.gz"
 end
 
-let cpp_compiler = "clang++-" ^ Vars.clang_version
+let command_exists (cmd: string): bool =
+  Unix.(
+    system ("which " ^ cmd ^ " 2>&1 > /dev/null") = WEXITED 0
+  )
+
+exception No_command_found of string list
+
+let first_command_found (cmds: string list): string =
+  let filtered = List.filter command_exists cmds in
+  match filtered with
+  | [] -> raise (No_command_found cmds)
+  | cmd :: _ -> cmd
+
+let cpp_compiler =
+  first_command_found ["clang++-" ^ Vars.clang_version; "clang++"]
+
+let llvm_config =
+  first_command_found ["llvm-config-" ^ Vars.clang_version; "llvm-config"]
 
 type _ prompt_question =
   | PQ_YN : [`PQ_YN] prompt_question
@@ -139,18 +156,6 @@ let ocamlpicdir =
 
 
 let atomise = List.map (fun a -> A a)
-
-let command_exists (cmd: string): bool =
-  Unix.(
-    system ("which " ^ cmd ^ " 2>&1 > /dev/null") = WEXITED 0
-  )
-
-let llvm_config =
-  let llvm_config_v = "llvm-config-" ^ Vars.clang_version in
-  if command_exists llvm_config_v then
-    llvm_config_v
-  else
-    "llvm-config"
 
 let cxxflags = Sh("`" ^ llvm_config ^ " --cxxflags`") :: atomise [
   "-Wall";
