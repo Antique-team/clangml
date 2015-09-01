@@ -130,6 +130,18 @@ let request { input; output } (msg : 'a request) : 'a =
   | Success value ->
       value
 
+let command_exists (cmd: string): bool =
+  Unix.(
+    system ("which " ^ cmd ^ " 2>&1 > /dev/null") = WEXITED 0
+  )
+
+exception No_command_found of string list
+
+let first_command_found (cmds: string list): string =
+  let filtered = List.filter command_exists cmds in
+  match filtered with
+  | [] -> raise (No_command_found cmds)
+  | cmd :: _ -> cmd
 
 let parse args continue =
   (* Try to find our clang plugin. *)
@@ -182,10 +194,12 @@ let parse args continue =
         String.escaped (Marshal.to_string (server_read, server_write) [])
       in
 
+      let c_compiler = first_command_found ["clang-3.6"; "clang"] in
+
       let argv =
         let clang = [
           (* "/usr/bin/gdb"; "--args"; *)
-          "/usr/bin/clang-3.6";
+          c_compiler;
           "-fsyntax-only";
           "-Xclang"; "-load";
           "-Xclang"; plugin;
@@ -222,7 +236,7 @@ let parse args continue =
       (* Close unneeded fds. *)
       List.iter Unix.close [server_read; server_write];
 
-      finally 
+      finally
         (fun () ->
            let token =
              try
