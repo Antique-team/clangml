@@ -140,7 +140,17 @@ let ocamlpicdir =
 
 let atomise = List.map (fun a -> A a)
 
-let llvm_config = "llvm-config-" ^ Vars.clang_version
+let command_exists (cmd: string): bool =
+  Unix.(
+    system ("which " ^ cmd ^ " 2>&1 > /dev/null") = WEXITED 0
+  )
+
+let llvm_config =
+  let llvm_config_v = "llvm-config-" ^ Vars.clang_version in
+  if command_exists llvm_config_v then
+    llvm_config_v
+  else
+    "llvm-config"
 
 let cxxflags = Sh("`" ^ llvm_config ^ " --cxxflags`") :: atomise [
   "-Wall";
