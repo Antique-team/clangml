@@ -1,7 +1,6 @@
 # common
 util/DenseIntMap
 util/Formatx
-util/Logger
 util/Option
 util/Prelude
 util/SparseIntMap

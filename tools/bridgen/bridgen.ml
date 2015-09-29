@@ -1,10 +1,9 @@
 open Util
 open OcamlTypes.Sig
 open OcamlTypes.Process
+open Prelude
 
-module Log = Logger.Make(struct let tag = "main" end)
 
-let (%) f g x = f (g x)
 
 
 (**
@@ -391,8 +390,8 @@ let gen_code_for_ocaml_type ctx = function
   | SumType ty -> gen_code_for_sum_type ctx ty
   | RecordType ty -> gen_code_for_record_type ctx ty
   | AliasType _ -> ([], [], [])
-  | Version _ -> Log.err "version in recursive type"
-  | RecursiveType _ -> Log.err "recursive type in recursive type"
+  | Version _ -> abort (Log.fatal "version in recursive type")
+  | RecursiveType _ -> abort (Log.fatal "recursive type in recursive type")
 
 
 let gen_code_for_rec_type ctx = function
@@ -461,11 +460,10 @@ let parse_and_generate dir basename source =
       |> List.flatten
     with
     | [version] -> ()
-    | [] ->
-        Log.err "No version found"
+    | [] -> abort (Log.error "No version found") 
     | versions ->
-        Log.err "Multiple versions found: [%a]"
-          (Formatx.pp_list Formatx.pp_print_string) versions
+        abort (Log.error "Multiple versions found: %s"
+                 (string_of_list (fun x -> x) "; " versions))
   end;
 
   (*print_endline (Show.show_list<ocaml_type> ocaml_types);*)

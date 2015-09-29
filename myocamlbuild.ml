@@ -394,6 +394,7 @@ let () =
               "-linkall";
               "-package"; "deriving";
               "-package"; "unix";
+              "-package"; "dolog";
               "-linkpkg";
             ]))
           end;

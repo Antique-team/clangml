@@ -1,8 +1,8 @@
 open Camlp4.PreCast
 open OcamlTypes.Sig
 open OcamlTypes.Process
+open Util.Prelude
 
-module Log = Util.Logger.Make(struct let tag = "ToSimple" end)
 
 
 type env = {
@@ -25,7 +25,7 @@ let rec simplify_basic_type = function
   | TupleType (_loc, [ty1; ty2; ty3]) ->
       <:expr<simplify_tuple3 $simplify_basic_type ty1$ $simplify_basic_type ty2$ $simplify_basic_type ty3$>>
   | TupleType (_loc, tys) ->
-      Log.unimp "tuples with more than 3 elements"
+      abort (Log.fatal "unimp: tuples with more than 3 elements")
   | ClangType _ | RefType _ -> assert false
 
 
