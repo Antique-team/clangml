@@ -175,7 +175,7 @@ let make_simplify_record_type env filtered_types rt =
            )
       in
 
-      <:expr<{ $rec_bindings$ }>>
+      <:expr<{ () with $rec_bindings$ }>>
   in
 
   <:binding<
