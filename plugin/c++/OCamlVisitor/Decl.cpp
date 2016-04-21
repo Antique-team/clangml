@@ -1,5 +1,8 @@
 #include "OCamlVisitor.h"
 
+const char* getDeclNameAsString(clang::DeclarationName const &name) {
+  return name.getAsIdentifierInfo()->getNameStart();
+}
 
 ptr<DeclarationName>
 OCamlVisitor::translate_declaration_name (clang::DeclarationName const &name)
@@ -7,15 +10,16 @@ OCamlVisitor::translate_declaration_name (clang::DeclarationName const &name)
   switch (name.getNameKind ())
     {
     case clang::DeclarationName::Identifier:
-      return mkDN_Identifier (strdup (name.getAsString ().c_str ()));
+      // FBR: add assert stmt
+      return mkDN_Identifier( strdup (getDeclNameAsString (name) ));
     case clang::DeclarationName::ObjCZeroArgSelector:
-      printf ("ObjCZeroArgSelector: %s\n", name.getAsString ().c_str ());
+      printf ("ObjCZeroArgSelector: %s\n", getDeclNameAsString (name));
       break;
     case clang::DeclarationName::ObjCOneArgSelector:
-      printf ("ObjCOneArgSelector: %s\n", name.getAsString ().c_str ());
+      printf ("ObjCOneArgSelector: %s\n", getDeclNameAsString (name));
       break;
     case clang::DeclarationName::ObjCMultiArgSelector:
-      printf ("ObjCMultiArgSelector: %s\n", name.getAsString ().c_str ());
+      printf ("ObjCMultiArgSelector: %s\n", getDeclNameAsString (name));
       break;
     case clang::DeclarationName::CXXConstructorName:
       return mkDN_CXXConstructorName (must_traverse (name.getCXXNameType ()));
@@ -27,10 +31,10 @@ OCamlVisitor::translate_declaration_name (clang::DeclarationName const &name)
       return mkDN_CXXOperatorName
         (translate_overloaded_operator_kind (name.getCXXOverloadedOperator ()));
     case clang::DeclarationName::CXXLiteralOperatorName:
-      printf ("CXXLiteralOperatorName: %s\n", name.getAsString ().c_str ());
+      printf ("CXXLiteralOperatorName: %s\n", getDeclNameAsString (name));
       break;
     case clang::DeclarationName::CXXUsingDirective:
-      printf ("CXXUsingDirective: %s\n", name.getAsString ().c_str ());
+      printf ("CXXUsingDirective: %s\n", getDeclNameAsString (name));
       break;
     }
 
