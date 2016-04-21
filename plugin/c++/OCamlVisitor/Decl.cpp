@@ -1,6 +1,11 @@
 #include "OCamlVisitor.h"
 
-const char* getDeclNameAsString(clang::DeclarationName const &name) {
+const char* getNameAsString (clang::DeclarationName const &name)
+{
+  // name.getAsString().c_str() make linking with gcc5-compiled
+  // libraries fail; for example on Ubuntu 15.10
+  // assert( strcmp(name.getAsString().c_str(),
+  //                name.getAsIdentifierInfo()->getNameStart()) == 0);
   return name.getAsIdentifierInfo()->getNameStart();
 }
 
@@ -11,15 +16,15 @@ OCamlVisitor::translate_declaration_name (clang::DeclarationName const &name)
     {
     case clang::DeclarationName::Identifier:
       // FBR: add assert stmt
-      return mkDN_Identifier( strdup (getDeclNameAsString (name) ));
+      return mkDN_Identifier( strdup (getNameAsString (name) ));
     case clang::DeclarationName::ObjCZeroArgSelector:
-      printf ("ObjCZeroArgSelector: %s\n", getDeclNameAsString (name));
+      printf ("ObjCZeroArgSelector: %s\n", getNameAsString (name));
       break;
     case clang::DeclarationName::ObjCOneArgSelector:
-      printf ("ObjCOneArgSelector: %s\n", getDeclNameAsString (name));
+      printf ("ObjCOneArgSelector: %s\n", getNameAsString (name));
       break;
     case clang::DeclarationName::ObjCMultiArgSelector:
-      printf ("ObjCMultiArgSelector: %s\n", getDeclNameAsString (name));
+      printf ("ObjCMultiArgSelector: %s\n", getNameAsString (name));
       break;
     case clang::DeclarationName::CXXConstructorName:
       return mkDN_CXXConstructorName (must_traverse (name.getCXXNameType ()));
@@ -31,10 +36,10 @@ OCamlVisitor::translate_declaration_name (clang::DeclarationName const &name)
       return mkDN_CXXOperatorName
         (translate_overloaded_operator_kind (name.getCXXOverloadedOperator ()));
     case clang::DeclarationName::CXXLiteralOperatorName:
-      printf ("CXXLiteralOperatorName: %s\n", getDeclNameAsString (name));
+      printf ("CXXLiteralOperatorName: %s\n", getNameAsString (name));
       break;
     case clang::DeclarationName::CXXUsingDirective:
-      printf ("CXXUsingDirective: %s\n", getDeclNameAsString (name));
+      printf ("CXXUsingDirective: %s\n", getNameAsString (name));
       break;
     }
 
