@@ -299,6 +299,10 @@ type attributed_type_kind = AstBridge.attributed_type_kind =
  | ATK_sptr
  | ATK_uptr
  | ATK_vectorcall
+ | ATK_nonnull
+ | ATK_nullable
+ | ATK_null_unspecified
+ | ATK_objc_kindof
  deriving (Show)
 
 
@@ -906,12 +910,14 @@ and expr_ = AstBridge.expr_ =
   | CXXUnresolvedConstructExpr
   | CXXUuidofExpr
   | DependentScopeDeclRefExpr
+  | DesignatedInitUpdateExpr
   | ExpressionTraitExpr
   | ExprWithCleanups
   | FunctionParmPackExpr
   | LambdaExpr
   | MaterializeTemporaryExpr
   | MSPropertyRefExpr
+  | NoInitExpr
   | ObjCBridgedCastExpr
   | ObjCIndirectCopyRestoreExpr
   | ObjCSubscriptRefExpr
@@ -998,6 +1004,8 @@ and stmt_ = AstBridge.stmt_ =
   | MSDependentExistsStmt
   | OMPAtomicDirective
   | OMPBarrierDirective
+  | OMPCancelDirective
+  | OMPCancellationPointDirective
   | OMPCriticalDirective
   | OMPFlushDirective
   | OMPForDirective
@@ -1014,6 +1022,7 @@ and stmt_ = AstBridge.stmt_ =
   | OMPSingleDirective
   | OMPTargetDirective
   | OMPTaskDirective
+  | OMPTaskgroupDirective
   | OMPTaskwaitDirective
   | OMPTaskyieldDirective
   | OMPTeamsDirective
@@ -1226,7 +1235,8 @@ and decl_ = AstBridge.decl_ =
                                  * (* referenced protocols *)string list
                                  * (* methods *)decl list
 
-
+  | ObjCTypeParamDecl
+  | ExternCContextDecl
   | BlockDecl
   | CXXConstructorDecl
   | CXXConversionDecl

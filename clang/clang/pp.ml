@@ -151,6 +151,10 @@ let string_of_attributed_type_kind = function
   | ATK_sptr			-> "sptr"
   | ATK_uptr			-> "uptr"
   | ATK_vectorcall              -> "vectorcall"
+  | ATK_nonnull                 -> "nonnull"
+  | ATK_nullable                -> "nullable"
+  | ATK_null_unspecified        -> "null_unspecified"
+  | ATK_objc_kindof             -> "objc_kindof"
 
 let string_of_elaborated_type_keyword = function
   | ETK_Struct			-> "struct"
@@ -641,12 +645,14 @@ and pp_expr_ fmt = function
   | CXXUnresolvedConstructExpr -> Format.pp_print_string fmt "<CXXUnresolvedConstructExpr>"
   | CXXUuidofExpr -> Format.pp_print_string fmt "<CXXUuidofExpr>"
   | DependentScopeDeclRefExpr -> Format.pp_print_string fmt "<DependentScopeDeclRefExpr>"
+  | DesignatedInitUpdateExpr -> Format.pp_print_string fmt "<DesignatedInitUpdateExpr>"
   | ExpressionTraitExpr -> Format.pp_print_string fmt "<ExpressionTraitExpr>"
   | ExprWithCleanups -> Format.pp_print_string fmt "<ExprWithCleanups>"
   | FunctionParmPackExpr -> Format.pp_print_string fmt "<FunctionParmPackExpr>"
   | LambdaExpr -> Format.pp_print_string fmt "<LambdaExpr>"
   | MaterializeTemporaryExpr -> Format.pp_print_string fmt "<MaterializeTemporaryExpr>"
   | MSPropertyRefExpr -> Format.pp_print_string fmt "<MSPropertyRefExpr>"
+  | NoInitExpr -> Format.pp_print_string fmt "<NoInitExpr>"
   | ObjCBridgedCastExpr -> Format.pp_print_string fmt "<ObjCBridgedCastExpr>"
   | ObjCIndirectCopyRestoreExpr -> Format.pp_print_string fmt "<ObjCIndirectCopyRestoreExpr>"
   | ObjCSubscriptRefExpr -> Format.pp_print_string fmt "<ObjCSubscriptRefExpr>"
@@ -790,6 +796,8 @@ and pp_stmt_ fmt = function
   | MSDependentExistsStmt -> Format.pp_print_string fmt "<MSDependentExistsStmt>"
   | OMPAtomicDirective -> Format.pp_print_string fmt "<OMPAtomicDirective>"
   | OMPBarrierDirective -> Format.pp_print_string fmt "<OMPBarrierDirective>"
+  | OMPCancelDirective -> Format.pp_print_string fmt "<OMPCancelDirective>"
+  | OMPCancellationPointDirective -> Format.pp_print_string fmt "<OMPCancellationPointDirective>"
   | OMPCriticalDirective -> Format.pp_print_string fmt "<OMPCriticalDirective>"
   | OMPFlushDirective -> Format.pp_print_string fmt "<OMPFlushDirective>"
   | OMPForDirective -> Format.pp_print_string fmt "<OMPForDirective>"
@@ -806,6 +814,7 @@ and pp_stmt_ fmt = function
   | OMPSingleDirective -> Format.pp_print_string fmt "<OMPSingleDirective>"
   | OMPTargetDirective -> Format.pp_print_string fmt "<OMPTargetDirective>"
   | OMPTaskDirective -> Format.pp_print_string fmt "<OMPTaskDirective>"
+  | OMPTaskgroupDirective -> Format.pp_print_string fmt "<OMPTaskgroupDirective>"
   | OMPTaskwaitDirective -> Format.pp_print_string fmt "<OMPTaskwaitDirective>"
   | OMPTaskyieldDirective -> Format.pp_print_string fmt "<OMPTaskyieldDirective>"
   | OMPTeamsDirective -> Format.pp_print_string fmt "<OMPTeamsDirective>"
@@ -1205,6 +1214,8 @@ and pp_decl_ fmt = function
         (Formatx.pp_list ~sep:(Formatx.pp_sep "; ") pp_decl) methods
 
 
+  | ObjCTypeParamDecl -> Format.pp_print_string fmt "<ObjCTypeParamDecl>"
+  | ExternCContextDecl -> Format.pp_print_string fmt "<ExternCContextDecl>"
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"
   | ClassScopeFunctionSpecializationDecl -> Format.pp_print_string fmt "<ClassScopeFunctionSpecializationDecl>"
   | FriendDecl -> Format.pp_print_string fmt "<FriendDecl>"

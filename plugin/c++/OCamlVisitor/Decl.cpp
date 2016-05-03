@@ -347,6 +347,8 @@ OCamlVisitor::TraverseAccessSpecDecl (clang::AccessSpecDecl *D)
 }
 
 
+UNIMP_DECL (ObjCTypeParamDecl)
+UNIMP_DECL (ExternCContextDecl)
 UNIMP_DECL (BlockDecl)
 UNIMP_DECL (ClassScopeFunctionSpecializationDecl)
 

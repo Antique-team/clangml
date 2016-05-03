@@ -387,6 +387,9 @@ OCamlVisitor::TraverseUnaryExprOrTypeTraitExpr
     case clang::UETT_VecStep:
       pushUnaryExprOrTypeTraitExpr (S, mkVecStepType, mkVecStepExpr);
       break;
+    case clang::UETT_OpenMPRequiredSimdAlign:
+      throw std::runtime_error ("Expr.cpp: UETT_OpenMPRequiredSimdAlign");
+      break;
     }
 
   return true;
@@ -558,7 +561,8 @@ UNIMP_STMT (Expr, CXXFunctionalCastExpr)
 UNIMP_STMT (Expr, CXXMemberCallExpr)
 UNIMP_STMT (Expr, CXXNewExpr)
 UNIMP_STMT (Expr, CXXNoexceptExpr)
-
+UNIMP_STMT (Expr, DesignatedInitUpdateExpr)
+UNIMP_STMT (Expr, NoInitExpr)
 
 bool
 OCamlVisitor::TraverseCXXNullPtrLiteralExpr (clang::CXXNullPtrLiteralExpr *S)

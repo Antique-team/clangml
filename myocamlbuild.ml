@@ -2,7 +2,7 @@ open Ocamlbuild_plugin
 
 
 module Vars = struct
-  let clang_version = "3.6"
+  let clang_version = "3.7"
   let ocaml_version = Sys.ocaml_version
   let ocaml_ver = Filename.chop_extension ocaml_version
   let ocaml_dist = "ocaml-" ^ ocaml_version

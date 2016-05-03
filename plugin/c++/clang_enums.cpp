@@ -121,7 +121,6 @@ translate_attributed_type_kind (clang::AttributedType::Kind kind)
     case clang::AttributedType::Kind::attr_stdcall:              return ATK_stdcall;
     case clang::AttributedType::Kind::attr_thiscall:             return ATK_thiscall;
     case clang::AttributedType::Kind::attr_pascal:               return ATK_pascal;
-    case clang::AttributedType::Kind::attr_pnaclcall:            return ATK_pnaclcall;
     case clang::AttributedType::Kind::attr_inteloclbicc:         return ATK_inteloclbicc;
     case clang::AttributedType::Kind::attr_ms_abi:               return ATK_ms_abi;
     case clang::AttributedType::Kind::attr_sysv_abi:             return ATK_sysv_abi;
@@ -130,6 +129,10 @@ translate_attributed_type_kind (clang::AttributedType::Kind kind)
     case clang::AttributedType::Kind::attr_sptr:                 return ATK_sptr;
     case clang::AttributedType::Kind::attr_uptr:                 return ATK_uptr;
     case clang::AttributedType::Kind::attr_vectorcall:           return ATK_vectorcall;
+    case clang::AttributedType::Kind::attr_nonnull:              return ATK_nonnull;
+    case clang::AttributedType::Kind::attr_nullable:             return ATK_nullable;
+    case clang::AttributedType::Kind::attr_null_unspecified:     return ATK_null_unspecified;
+    case clang::AttributedType::Kind::attr_objc_kindof:          return ATK_objc_kindof;
     }
     throw std::runtime_error ("invalid attributed type kind");
 }
