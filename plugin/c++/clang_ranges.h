@@ -73,7 +73,7 @@ base_spec_range = [] (clang::CXXRecordDecl *D)
 
 struct offsetof_node_iterator
 {
-  typedef clang::OffsetOfExpr::OffsetOfNode *	iterator_type;
+  typedef clang::OffsetOfNode *	iterator_type;
 private:
   clang::OffsetOfExpr *S;
   unsigned component;
@@ -112,7 +112,7 @@ public:
     return *this;
   }
 
-  clang::OffsetOfExpr::OffsetOfNode const &operator* () const
+  clang::OffsetOfNode const &operator* () const
   {
     return S->getComponent (component);
   }

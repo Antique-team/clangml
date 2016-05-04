@@ -2,7 +2,7 @@ open Ocamlbuild_plugin
 
 
 module Vars = struct
-  let clang_version = "3.7"
+  let clang_version = "3.8"
   let ocaml_version = Sys.ocaml_version
   let ocaml_ver = Filename.chop_extension ocaml_version
   let ocaml_dist = "ocaml-" ^ ocaml_version
@@ -157,7 +157,8 @@ let ocamlpicdir =
 
 let atomise = List.map (fun a -> A a)
 
-let cxxflags = Sh("`" ^ llvm_config ^ " --cxxflags`") :: atomise [
+let cxxflags = Sh("`" ^ llvm_config ^
+                  " --cxxflags | sed 's/\-Wno\-maybe\-uninitialized/\-Wno\-uninitialized/g'`") :: atomise [
   "-Wall";
   "-Wextra";
   "-Werror";

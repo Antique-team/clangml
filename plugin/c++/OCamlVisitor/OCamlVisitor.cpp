@@ -14,7 +14,7 @@ adt_ptr OCamlVisitor::cached (clang::TypeLoc p, adt_ptr value)
 adt_ptr OCamlVisitor::cached (clang::DesignatedInitExpr::Designator p, adt_ptr value)
 { return nullptr; }
 
-adt_ptr OCamlVisitor::cached (clang::OffsetOfExpr::OffsetOfNode p, adt_ptr value)
+adt_ptr OCamlVisitor::cached (clang::OffsetOfNode p, adt_ptr value)
 { return nullptr; }
 
 adt_ptr OCamlVisitor::cached (clang::Decl *p, adt_ptr value)
@@ -33,8 +33,8 @@ void OCamlVisitor::dump (clang::TypeLoc TL)
 void OCamlVisitor::dump (clang::DesignatedInitExpr::Designator const &p)
 { puts ("<clang::DesignatedInitExpr::Designator>"); }
 
-void OCamlVisitor::dump (clang::OffsetOfExpr::OffsetOfNode const &p)
-{ puts ("<clang::OffsetOfExpr::OffsetOfNode>"); }
+void OCamlVisitor::dump (clang::OffsetOfNode const &p)
+{ puts ("<clang::OffsetOfNode>"); }
 
 void OCamlVisitor::dump (clang::CXXBaseSpecifier const &p)
 { puts ("<clang::CXXBaseSpecifier>"); }
@@ -62,9 +62,9 @@ void OCamlVisitor::traverse (clang::DesignatedInitExpr::Designator const &D,
                              clang::DesignatedInitExpr *S)
 { traverse<clang::DesignatedInitExpr::Designator, clang::DesignatedInitExpr *, &OCamlVisitor::TraverseDesignator> (D, S); }
 
-void OCamlVisitor::traverse (clang::OffsetOfExpr::OffsetOfNode const &N,
+void OCamlVisitor::traverse (clang::OffsetOfNode const &N,
                              clang::OffsetOfExpr *S)
-{ traverse<clang::OffsetOfExpr::OffsetOfNode, clang::OffsetOfExpr *, &OCamlVisitor::TraverseOffsetOfNode> (N, S); }
+{ traverse<clang::OffsetOfNode, clang::OffsetOfExpr *, &OCamlVisitor::TraverseOffsetOfNode> (N, S); }
 
 void OCamlVisitor::traverse (clang::CXXBaseSpecifier const &B)
 { traverse<clang::CXXBaseSpecifier const &, &OCamlVisitor::TraverseCXXBaseSpecifier> (B); }

@@ -55,7 +55,7 @@ private:
   adt_ptr cached (clang::QualType			p, adt_ptr value = nullptr);
   adt_ptr cached (clang::TypeLoc			p, adt_ptr value = nullptr);
   adt_ptr cached (clang::DesignatedInitExpr::Designator	p, adt_ptr value = nullptr);
-  adt_ptr cached (clang::OffsetOfExpr::OffsetOfNode	p, adt_ptr value = nullptr);
+  adt_ptr cached (clang::OffsetOfNode	                p, adt_ptr value = nullptr);
   adt_ptr cached (clang::Decl *				p, adt_ptr value = nullptr);
   adt_ptr cached (clang::Stmt *				p, adt_ptr value = nullptr);
   adt_ptr cached (clang::CXXBaseSpecifier		p, adt_ptr value = nullptr);
@@ -67,7 +67,7 @@ private:
 
   static void dump (clang::TypeLoc TL);
   static void dump (clang::DesignatedInitExpr::Designator const &D);
-  static void dump (clang::OffsetOfExpr::OffsetOfNode const &N);
+  static void dump (clang::OffsetOfNode const &N);
   static void dump (clang::CXXBaseSpecifier const &B);
 
 
@@ -136,7 +136,7 @@ private:
   void traverse (clang::QualType T);
   void traverse (clang::DesignatedInitExpr::Designator const &D,
                  clang::DesignatedInitExpr *S);
-  void traverse (clang::OffsetOfExpr::OffsetOfNode const &N,
+  void traverse (clang::OffsetOfNode const &N,
                  clang::OffsetOfExpr *S);
   void traverse (clang::CXXBaseSpecifier const &B);
 
@@ -289,7 +289,7 @@ public:
   bool TraverseDesignator (clang::DesignatedInitExpr::Designator D,
                            clang::DesignatedInitExpr *S);
 
-  bool TraverseOffsetOfNode (clang::OffsetOfExpr::OffsetOfNode D,
+  bool TraverseOffsetOfNode (clang::OffsetOfNode D,
                              clang::OffsetOfExpr *S);
 
   template<typename TypeFactory, typename ExprFactory>
