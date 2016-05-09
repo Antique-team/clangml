@@ -309,6 +309,8 @@ UNIMP_TYPE(InjectedClassName)
 UNIMP_TYPE(LValueReference)
 UNIMP_TYPE(MemberPointer)
 UNIMP_TYPE(PackExpansion)
+UNIMP_TYPE(Pipe) // OpenCL
+
 bool
 OCamlVisitor::TraverseParenType (clang::ParenType *T)
 {

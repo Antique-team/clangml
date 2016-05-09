@@ -23,6 +23,7 @@ translate_unary_operator_kind (clang::UnaryOperatorKind kind)
     case clang::UO_Real:      return UO_Real;
     case clang::UO_Imag:      return UO_Imag;
     case clang::UO_Extension: return UO_Extension;
+    case clang::UO_Coawait:   return UO_Coawait;
     }
   throw std::runtime_error ("invalid unary operator kind");
 }
@@ -133,6 +134,8 @@ translate_attributed_type_kind (clang::AttributedType::Kind kind)
     case clang::AttributedType::Kind::attr_nullable:             return ATK_nullable;
     case clang::AttributedType::Kind::attr_null_unspecified:     return ATK_null_unspecified;
     case clang::AttributedType::Kind::attr_objc_kindof:          return ATK_objc_kindof;
+    case clang::AttributedType::Kind::attr_objc_inert_unsafe_unretained:
+      return ATK_objc_inert_unsafe_unretained;
     }
     throw std::runtime_error ("invalid attributed type kind");
 }
@@ -190,6 +193,7 @@ translate_cast_kind (clang::CastKind kind)
 {
   switch (kind)
     {
+    case clang::CK_BooleanToSignedIntegral:          return CK_BooleanToSignedIntegral;
     case clang::CK_Dependent:                        return CK_Dependent;
     case clang::CK_BitCast:                          return CK_BitCast;
     case clang::CK_LValueBitCast:                    return CK_LValueBitCast;

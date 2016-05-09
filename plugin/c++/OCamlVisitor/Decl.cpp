@@ -346,7 +346,7 @@ OCamlVisitor::TraverseAccessSpecDecl (clang::AccessSpecDecl *D)
   return stack.push (mkAccessSpecDecl (spec));
 }
 
-
+UNIMP_DECL (BuiltinTemplateDecl)
 UNIMP_DECL (ObjCTypeParamDecl)
 UNIMP_DECL (ExternCContextDecl)
 UNIMP_DECL (BlockDecl)
@@ -652,5 +652,4 @@ UNIMP_DECL (ObjCAtDefsFieldDecl)
 UNIMP_DECL (ImplicitParamDecl)
 UNIMP_DECL (VarTemplateSpecializationDecl)
 UNIMP_DECL (VarTemplatePartialSpecializationDecl)
-
 // }}}

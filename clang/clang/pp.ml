@@ -57,6 +57,7 @@ let string_of_overloaded_operator_kind = function
   | OO_Call			-> "()"
   | OO_Subscript		-> "[]"
   | OO_Conditional		-> "?"
+  | OO_Coawait                  -> "__await"
 
 let string_of_qualifier = function
   | TQ_Const			-> "const"
@@ -155,6 +156,7 @@ let string_of_attributed_type_kind = function
   | ATK_nullable                -> "nullable"
   | ATK_null_unspecified        -> "null_unspecified"
   | ATK_objc_kindof             -> "objc_kindof"
+  | ATK_objc_inert_unsafe_unretained -> "objc_inert_unsafe_unretained"
 
 let string_of_elaborated_type_keyword = function
   | ETK_Struct			-> "struct"
@@ -194,14 +196,25 @@ let string_of_builtin_type = function
   | BT_ObjCId			-> "objcid"
   | BT_ObjCClass		-> "objcclass"
   | BT_ObjCSel			-> "objcsel"
+  | BT_OCLClkEvent              -> "oclclkevent"
   | BT_OCLImage1d		-> "oclimage1d"
   | BT_OCLImage1dArray		-> "oclimage1darray"
   | BT_OCLImage1dBuffer		-> "oclimage1dbuffer"
   | BT_OCLImage2d		-> "oclimage2d"
   | BT_OCLImage2dArray		-> "oclimage2darray"
+  | BT_OCLImage2dArrayDepth     -> "oclimage2darraydepth"
+  | BT_OCLImage2dArrayMSAA      -> "oclimage2darraymsaa"
+  | BT_OCLImage2dArrayMSAADepth -> "oclimage2darraymsaadepth"
+  | BT_OCLImage2dDepth          -> "oclimage2ddepth"
+  | BT_OCLImage2dMSAA           -> "oclimage2dmsaa"
+  | BT_OCLImage2dMSAADepth      -> "oclimage2dmsaadepth"
   | BT_OCLImage3d		-> "oclimage3d"
   | BT_OCLSampler		-> "oclsampler"
   | BT_OCLEvent			-> "oclevent"
+  | BT_OCLNDRange               -> "oclndrange"
+  | BT_OCLQueue                 -> "oclqueue"
+  | BT_OCLReserveID             -> "oclreserveid"
+  | BT_OMPArraySection          -> "omparraysection"
   | BT_Dependent		-> "dependent"
   | BT_Overload			-> "overload"
   | BT_BoundMember		-> "boundmember"
@@ -225,6 +238,7 @@ let string_of_unary_op = function
   | UO_Real			-> "__real"
   | UO_Imag			-> "__imag"
   | UO_Extension		-> "__extension__"
+  | UO_Coawait                  -> "__await"
 
 
 let string_of_binary_op = function
@@ -617,6 +631,10 @@ and pp_expr_ fmt = function
 
   | AsTypeExpr -> Format.pp_print_string fmt "<AsTypeExpr>"
   | BlockExpr -> Format.pp_print_string fmt "<BlockExpr>"
+  | CoawaitExpr -> Format.pp_print_string fmt "<CoawaitExpr>"
+  | CoyieldExpr -> Format.pp_print_string fmt "<CoyieldExpr>"
+  | MSPropertySubscriptExpr -> Format.pp_print_string fmt "<MSPropertySubscriptExpr>"
+  | OMPArraySectionExpr -> Format.pp_print_string fmt "<OMPArraySectionExpr>"
   | CompoundAssignOperator -> Format.pp_print_string fmt "<CompoundAssignOperator>"
   | CUDAKernelCallExpr -> Format.pp_print_string fmt "<CUDAKernelCallExpr>"
   | CXXBindTemporaryExpr -> Format.pp_print_string fmt "<CXXBindTemporaryExpr>"
@@ -788,6 +806,14 @@ and pp_stmt_ fmt = function
         pp_stmt body_stmt
 
 
+  | CoreturnStmt -> Format.pp_print_string fmt "<CoreturnStmt>"
+  | CoroutineBodyStmt -> Format.pp_print_string fmt "<CoroutineBodyStmt>"
+  | OMPDistributeDirective -> Format.pp_print_string fmt "<OMPDistributeDirective>"
+
+  | OMPTargetDataDirective -> Format.pp_print_string fmt "<OMPTargetDataDirective>"
+  | OMPTaskLoopDirective -> Format.pp_print_string fmt "<OMPTaskLoopDirective>"
+  | OMPTaskLoopSimdDirective -> Format.pp_print_string fmt "<OMPTaskLoopSimdDirective>"
+
   | AttributedStmt -> Format.pp_print_string fmt "<AttributedStmt>"
   | CXXCatchStmt -> Format.pp_print_string fmt "<CXXCatchStmt>"
   | CXXForRangeStmt -> Format.pp_print_string fmt "<CXXForRangeStmt>"
@@ -936,6 +962,7 @@ and pp_tloc_ fmt = function
   | LValueReferenceTypeLoc -> Format.pp_print_string fmt "<LValueReferenceTypeLoc>"
   | MemberPointerTypeLoc -> Format.pp_print_string fmt "<MemberPointerTypeLoc>"
   | PackExpansionTypeLoc -> Format.pp_print_string fmt "<PackExpansionTypeLoc>"
+  | PipeTypeLoc -> Format.pp_print_string fmt "<PipeTypeLoc>"
   | RValueReferenceTypeLoc -> Format.pp_print_string fmt "<RValueReferenceTypeLoc>"
   | SubstTemplateTypeParmTypeLoc -> Format.pp_print_string fmt "<SubstTemplateTypeParmTypeLoc>"
   | SubstTemplateTypeParmPackTypeLoc -> Format.pp_print_string fmt "<SubstTemplateTypeParmPackTypeLoc>"
@@ -1043,6 +1070,7 @@ and pp_ctyp_ fmt = function
   | InjectedClassNameType -> Format.pp_print_string fmt "<InjectedClassNameType>"
   | LValueReferenceType -> Format.pp_print_string fmt "<LValueReferenceType>"
   | MemberPointerType -> Format.pp_print_string fmt "<MemberPointerType>"
+  | PipeType -> Format.pp_print_string fmt "<PipeType>"
   | PackExpansionType -> Format.pp_print_string fmt "<PackExpansionType>"
   | RValueReferenceType -> Format.pp_print_string fmt "<RValueReferenceType>"
   | SubstTemplateTypeParmPackType -> Format.pp_print_string fmt "<SubstTemplateTypeParmPackType>"
@@ -1214,6 +1242,7 @@ and pp_decl_ fmt = function
         (Formatx.pp_list ~sep:(Formatx.pp_sep "; ") pp_decl) methods
 
 
+  | BuiltinTemplateDecl -> Format.pp_print_string fmt "<BuiltinTemplateDecl>"
   | ObjCTypeParamDecl -> Format.pp_print_string fmt "<ObjCTypeParamDecl>"
   | ExternCContextDecl -> Format.pp_print_string fmt "<ExternCContextDecl>"
   | BlockDecl -> Format.pp_print_string fmt "<BlockDecl>"

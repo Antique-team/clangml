@@ -280,6 +280,8 @@ type attributed_type_kind = AstBridge.attributed_type_kind =
  | ATK_neon_polyvector_type
  (* enumerated operand (string or keyword) *)
  | ATK_objc_gc
+ | ATK_objc_inert_unsafe_unretained
+ | ATK_objc_kindof
  | ATK_objc_ownership
  | ATK_pcs
  | ATK_pcs_vfp
@@ -302,7 +304,6 @@ type attributed_type_kind = AstBridge.attributed_type_kind =
  | ATK_nonnull
  | ATK_nullable
  | ATK_null_unspecified
- | ATK_objc_kindof
  deriving (Show)
 
 
@@ -323,6 +324,8 @@ type elaborated_type_keyword = AstBridge.elaborated_type_keyword =
 (* The kind of operation required for a conversion.
    [clang/AST/OperationKinds.h] *)
 type cast_kind = AstBridge.cast_kind =
+  | CK_BooleanToSignedIntegral
+    (* Convert a boolean to -1 or 0 for true and false, respectively. *)
   | CK_Dependent
     (* A conversion which cannot yet be analyzed because
        either the expression or target type is dependent.  These are
@@ -533,6 +536,7 @@ type unary_operator = AstBridge.unary_operator =
   | UO_Real	(* __real *) (* "__real expr"/"__imag expr" Extension. *)
   | UO_Imag     (* __imag *)
   | UO_Extension(* __extension__ marker. *)
+  | UO_Coawait  (* __await C++ coroutine await *)
   deriving (Show)
 
 (* [llvm-3.4/include/clang/Basic/TypeTraits.h] *)
@@ -683,6 +687,7 @@ type overloaded_operator_kind = AstBridge.overloaded_operator_kind =
   | OO_Call			(* "()"       *)
   | OO_Subscript		(* "[]"       *)
   | OO_Conditional		(* "?"        *)
+  | OO_Coawait                  (* __await    *)
   deriving (Show)
 
 
@@ -722,14 +727,26 @@ type builtin_type = AstBridge.builtin_type =
   | BT_ObjCClass
   | BT_ObjCSel
 
+  | BT_OCLClkEvent
+  | BT_OCLEvent
   | BT_OCLImage1d
   | BT_OCLImage1dArray
   | BT_OCLImage1dBuffer
   | BT_OCLImage2d
   | BT_OCLImage2dArray
+  | BT_OCLImage2dArrayDepth
+  | BT_OCLImage2dArrayMSAA
+  | BT_OCLImage2dArrayMSAADepth
+  | BT_OCLImage2dDepth
+  | BT_OCLImage2dMSAA
+  | BT_OCLImage2dMSAADepth
   | BT_OCLImage3d
+  | BT_OCLNDRange
+  | BT_OCLQueue
+  | BT_OCLReserveID
   | BT_OCLSampler
-  | BT_OCLEvent
+
+  | BT_OMPArraySection
 
   | BT_Dependent
   | BT_Overload
@@ -881,7 +898,6 @@ and expr_ = AstBridge.expr_ =
 
   | AsTypeExpr
   | BlockExpr
-  | CompoundAssignOperator
   | CUDAKernelCallExpr
   | CXXBindTemporaryExpr
   | CXXConstCastExpr
@@ -909,15 +925,20 @@ and expr_ = AstBridge.expr_ =
   | CXXTypeidExpr
   | CXXUnresolvedConstructExpr
   | CXXUuidofExpr
+  | CoawaitExpr
+  | CompoundAssignOperator
+  | CoyieldExpr
   | DependentScopeDeclRefExpr
   | DesignatedInitUpdateExpr
-  | ExpressionTraitExpr
   | ExprWithCleanups
+  | ExpressionTraitExpr
   | FunctionParmPackExpr
   | LambdaExpr
-  | MaterializeTemporaryExpr
   | MSPropertyRefExpr
+  | MSPropertySubscriptExpr
+  | MaterializeTemporaryExpr
   | NoInitExpr
+  | OMPArraySectionExpr
   | ObjCBridgedCastExpr
   | ObjCIndirectCopyRestoreExpr
   | ObjCSubscriptRefExpr
@@ -1000,6 +1021,8 @@ and stmt_ = AstBridge.stmt_ =
   | CXXCatchStmt
   | CXXForRangeStmt
   | CXXTryStmt
+  | CoreturnStmt
+  | CoroutineBodyStmt
   | MSAsmStmt
   | MSDependentExistsStmt
   | OMPAtomicDirective
@@ -1007,6 +1030,7 @@ and stmt_ = AstBridge.stmt_ =
   | OMPCancelDirective
   | OMPCancellationPointDirective
   | OMPCriticalDirective
+  | OMPDistributeDirective
   | OMPFlushDirective
   | OMPForDirective
   | OMPForSimdDirective
@@ -1020,8 +1044,11 @@ and stmt_ = AstBridge.stmt_ =
   | OMPSectionsDirective
   | OMPSimdDirective
   | OMPSingleDirective
+  | OMPTargetDataDirective
   | OMPTargetDirective
   | OMPTaskDirective
+  | OMPTaskLoopDirective
+  | OMPTaskLoopSimdDirective
   | OMPTaskgroupDirective
   | OMPTaskwaitDirective
   | OMPTaskyieldDirective
@@ -1096,6 +1123,7 @@ and tloc_ = AstBridge.tloc_ =
   | LValueReferenceTypeLoc
   | MemberPointerTypeLoc
   | PackExpansionTypeLoc
+  | PipeTypeLoc
   | RValueReferenceTypeLoc
   | SubstTemplateTypeParmPackTypeLoc
   | SubstTemplateTypeParmTypeLoc
@@ -1162,6 +1190,7 @@ and ctyp_ = AstBridge.ctyp_ =
   | LValueReferenceType
   | MemberPointerType
   | PackExpansionType
+  | PipeType
   | RValueReferenceType
   | SubstTemplateTypeParmPackType
   | SubstTemplateTypeParmType
@@ -1235,15 +1264,15 @@ and decl_ = AstBridge.decl_ =
                                  * (* referenced protocols *)string list
                                  * (* methods *)decl list
 
-  | ObjCTypeParamDecl
-  | ExternCContextDecl
   | BlockDecl
+  | BuiltinTemplateDecl
   | CXXConstructorDecl
   | CXXConversionDecl
   | CXXDestructorDecl
   | ClassScopeFunctionSpecializationDecl
   | ClassTemplatePartialSpecializationDecl
   | ClassTemplateSpecializationDecl
+  | ExternCContextDecl
   | FriendDecl
   | FriendTemplateDecl
   | FunctionTemplateDecl
@@ -1258,6 +1287,7 @@ and decl_ = AstBridge.decl_ =
   | ObjCCompatibleAliasDecl
   | ObjCPropertyDecl
   | ObjCPropertyImplDecl
+  | ObjCTypeParamDecl
   | TemplateTemplateParmDecl
   | TypeAliasDecl
   | TypeAliasTemplateDecl
