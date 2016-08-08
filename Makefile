@@ -1,5 +1,3 @@
-APRON_INST := $(HOME)/code/git/apron-dist/install/lib
-export LD_LIBRARY_PATH := $(APRON_INST)
 
 MAIN = mainClang
 

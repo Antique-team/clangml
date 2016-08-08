@@ -1,10 +1,7 @@
 open Util
 open OcamlTypes.Sig
 open OcamlTypes.Process
-
-module Log = Logger.Make(struct let tag = "main" end)
-
-let (%) f g x = f (g x)
+open Prelude
 
 
 (**
@@ -25,7 +22,7 @@ let cpp_name name =
           name (underscore + 1)
           name underscore
           (length - underscore - 1);
-        Bytes.set name underscore (Char.uppercase name.[underscore]);
+        Bytes.set name underscore (Char.uppercase_ascii name.[underscore]);
         to_camelcase (length - 1) name
       )
     with Not_found ->
@@ -33,7 +30,7 @@ let cpp_name name =
       String.sub name 0 length
   in
   (* First copy here. *)
-  to_camelcase (String.length name) (String.capitalize name)
+  to_camelcase (String.length name) (String.capitalize_ascii name)
 
 
 (*****************************************************
@@ -391,8 +388,8 @@ let gen_code_for_ocaml_type ctx = function
   | SumType ty -> gen_code_for_sum_type ctx ty
   | RecordType ty -> gen_code_for_record_type ctx ty
   | AliasType _ -> ([], [], [])
-  | Version _ -> Log.err "version in recursive type"
-  | RecursiveType _ -> Log.err "recursive type in recursive type"
+  | Version _ -> abort (Log.error "version in recursive type")
+  | RecursiveType _ -> abort (Log.error "recursive type in recursive type")
 
 
 let gen_code_for_rec_type ctx = function
@@ -462,10 +459,10 @@ let parse_and_generate dir basename source =
     with
     | [version] -> ()
     | [] ->
-        Log.err "No version found"
+        Log.error "No version found"
     | versions ->
-        Log.err "Multiple versions found: [%a]"
-          (Formatx.pp_list Formatx.pp_print_string) versions
+        Log.error "Multiple versions found: [%s]"
+          (string_of_list (fun x -> x) ", " versions)
   end;
 
   (*print_endline (Show.show_list<ocaml_type> ocaml_types);*)

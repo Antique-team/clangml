@@ -1,10 +1,9 @@
 (* Common functionality. *)
 open Util
 open Sig
+open Prelude
 
-module Log = Logger.Make(struct let tag = "ProcessOCamlTypes" end)
-
-let (%) f g x = f (g x)
+module Log = Log.Make(struct let section = "ProcessOCamlTypes" end)
 
 
 type context = {
@@ -41,8 +40,8 @@ let partition_type_names =
         (enums, name :: classes)
     | AliasType _ ->
         (enums, classes)
-    | Version _ -> Log.err "version does not have a type name"
-    | RecursiveType _ -> Log.err "recursive types do not have a type name"
+    | Version _ -> abort (Log.error "version does not have a type name")
+    | RecursiveType _ -> abort (Log.error "recursive types do not have a type name")
   ) ([], [])
 
 

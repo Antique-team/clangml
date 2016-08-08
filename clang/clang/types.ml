@@ -1,7 +1,7 @@
 open Ast
 open Util
 
-module Log = Logger.Make(struct let tag = "Types" end)
+module Log = Log.Make(struct let section = "Types" end)
 
 
 module Ordered_ctyp : Map.OrderedType

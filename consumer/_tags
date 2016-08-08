@@ -1,3 +1,3 @@
 # camlp4
-<*.ml{,i}>: package(deriving.syntax), package(unix), package(str), syntax(camlp4o)
-<*.{byte,native}>: package(deriving), package(unix), package(str), package(ANSITerminal)
+<*.ml{,i}>: package(dolog), package(deriving.syntax), package(unix), package(str), syntax(camlp4o)
+<*.{byte,native}>: package(dolog), package(deriving), package(unix), package(str), package(ANSITerminal)

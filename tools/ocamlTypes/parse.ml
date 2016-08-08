@@ -10,7 +10,7 @@ open Print
 (* *)
 (* *)
 
-module Log = Logger.Make(struct let tag = "parse" end)
+module Log = Log.Make(struct let section = "parse" end)
 
 
 let rec ast_type_to_type (ctyp: Ast.ctyp) =
@@ -41,7 +41,7 @@ let rec ast_type_to_type (ctyp: Ast.ctyp) =
 
   | ty ->
       Print.print_ctyp ty;
-      Log.unimp "ast_type_to_type"
+      abort (Log.fatal "unimp: ast_type_to_type")
 
 
 and type_list_of_TySta accu = function
@@ -86,7 +86,7 @@ let flatten_ast_tuple_type_components (t : Ast.ctyp) : Ast.ctyp list =
         in
         flatten_tuple_type_contents_aux t []
       end
-  | _ -> Log.err "Expected tuple type contents to be Ast.TyAnd"
+  | _ -> abort (Log.fatal "Expected tuple type contents to be Ast.TyAnd")
 
 
 let ast_sum_type_branch_to_branch (ctyp: Ast.ctyp) : sum_type_branch =
@@ -105,7 +105,7 @@ let ast_sum_type_branch_to_branch (ctyp: Ast.ctyp) : sum_type_branch =
               [of_components]
         in
         (loc, identifier, n_ary_components)
-    | _ -> Log.err "Unhandled sum type branch"
+    | _ -> abort (Log.fatal "Unhandled sum type branch")
   in
   {
     stb_loc = loc;
@@ -141,7 +141,7 @@ let map_record_member = function
         rtm_type = ast_type_to_type ty;
       }
   | ty ->
-      Log.err "unhandled record member format"
+      abort (Log.error "unhandled record member format")
 
 
 let map_record_members =
@@ -166,7 +166,7 @@ let map_rec_type = function
       AliasType (loc, name, ast_type_to_type other)
   | ty ->
       (* Perhaps ignore this instead. *)
-      Log.unimp "only sum types are supported"
+      abort (Log.fatal "unimp: only sum types are supported")
 
 
 let ast_str_item_to_sum_type types (str_item : Ast.str_item) : ocaml_type list =

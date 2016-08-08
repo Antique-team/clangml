@@ -9,7 +9,24 @@ module Vars = struct
   let ocaml_tar = ocaml_dist ^ ".tar.gz"
 end
 
-let cpp_compiler = "clang++-" ^ Vars.clang_version
+let command_exists (cmd: string): bool =
+  Unix.(
+    system ("which " ^ cmd ^ " 2>&1 > /dev/null") = WEXITED 0
+  )
+
+exception No_command_found of string list
+
+let first_command_found (cmds: string list): string =
+  let filtered = List.filter command_exists cmds in
+  match filtered with
+  | [] -> raise (No_command_found cmds)
+  | cmd :: _ -> cmd
+
+let cpp_compiler =
+  first_command_found ["clang++-" ^ Vars.clang_version; "clang++"]
+
+let llvm_config =
+  first_command_found ["llvm-config-" ^ Vars.clang_version; "llvm-config"]
 
 type _ prompt_question =
   | PQ_YN : [`PQ_YN] prompt_question
@@ -25,7 +42,7 @@ let prompt_answer : type a. a prompt_question -> string -> a prompt_answer =
   fun kind answer ->
     match kind with
     | PQ_YN ->
-        (match String.lowercase answer with
+        (match String.lowercase_ascii answer with
          | "y" | "yes" | "" -> PA_Y
          | _ -> PA_N
         )
@@ -316,7 +333,7 @@ let () =
               Sh"|";
               A"sed"; A"-e";
               A("s/\\s\\+deriving (Show)//;s/= "
-                ^ String.capitalize (env "%")
+                ^ String.capitalize_ascii (env "%")
                 ^ "Bridge.\\w\\+ //");
               Sh">";
               A(env "clang/clang/%Bridge.ml");
@@ -379,6 +396,7 @@ let () =
               "-linkall";
               "-package"; "deriving";
               "-package"; "unix";
+              "-package"; "dolog";
               "-linkpkg";
             ]))
           end;

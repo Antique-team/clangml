@@ -3,8 +3,9 @@
 (* it to source code. *)
 
 open Util
+open Prelude
 
-module Log = Logger.Make(struct let tag = "codegen" end)
+module Log = Log.Make(struct let section = "codegen" end)
 
 
 (*****************************************************
@@ -151,9 +152,7 @@ let rec string_of_cpp_type = function
       ^ "<"
       ^ String.concat ", " (List.map string_of_cpp_type tys)
       ^ ">"
-  | ty ->
-      Log.unimp "type: %a"
-        Show.format<cpp_type> ty
+  | ty -> abort (Log.fatal "unimp: type: %s" (string_of_cpp_type ty))
 
 
 (*****************************************************
@@ -358,7 +357,7 @@ let emit_intfs basename cg cpp_types =
   let pp_intf_list =
     Formatx.pp_list ~sep:(Formatx.pp_sep "\n") emit_intf
   in
-  let ucasename = String.uppercase basename in
+  let ucasename = String.uppercase_ascii basename in
   Formatx.fprintf cg.output
     "@[<v0>#ifndef %s_H@,\
      #define %s_H@,\
@@ -409,7 +408,7 @@ let emit_class_member_impl class_name fmt = function
         emit_ctor_init_list init
         emit_statement body
   | MemberField { decl_flags; decl_type; decl_name; decl_init; } ->
-      Log.bug "fields have no implementation"
+      abort (Log.fatal "fields have no implementation")
 
 
 let emit_class_impl fmt (i : class_intf) : unit =

@@ -4,7 +4,7 @@ version = "0.1"
 requires = "deriving,clangml.parser"
 
 package "parser" (
-requires = "clangml.util,deriving,unix"
+requires = "clangml.util,deriving,unix,dolog"
 archive(native) = "clang.cmx"
 archive(byte) = "clang.cmo"
 )

@@ -1,5 +1,5 @@
 # camlp4
-<*.ml{,i}>: package(deriving.syntax), syntax(camlp4o)
+<*.ml{,i}>: package(dolog), package(deriving.syntax), syntax(camlp4o)
 
 # Linking
-<*.cmxa>: package(unix), package(deriving)
+<*.cmxa>: package(dolog), package(unix), package(deriving)

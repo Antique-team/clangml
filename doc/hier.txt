@@ -241,6 +241,5 @@ tools/visitgen/visitgen.ml	Entry point for visitor generator.
 util/denseIntMap.ml		Array based immutable map from int to 'a,
 				using 'a Id.t as index.
 util/formatx.ml			Extensions to the standard Format module.
-util/logger.ml			Logging module based on the Format module.
 util/option.ml			Common operations on the OCaml option type.
 util/prelude.ml			Defines globally used operators and functions.

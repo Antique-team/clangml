@@ -14,10 +14,12 @@ let process clang =
         let's get rid of it *)
      |> Str.global_replace (Str.regexp "^[ \t]+") "")
 
-let () =
+let main () =
+  Log.set_log_level Log.INFO;
   Printexc.record_backtrace true;
   try
     Clang.Api.parse (List.tl @@ Array.to_list Sys.argv) process;
   with Clang.Api.E error ->
     failwith @@ Clang.Api.string_of_error error
-;;
+
+let () = main ()
