@@ -1,0 +1,91 @@
+How to update the supported version of clang in clangml
+=======================================================
+
+Author: francois.berenger@inria.fr
+
+Date: 5th October 2015
+
+I) Recommended steps to upgrade
+-------------------------------
+
+1) completely uninstall clang, libclang and llvm from your computer
+
+   This is in order to be sure that you will only be using the new clang
+   version that you want to add support for.
+
+2) install only the clang version you want to support
+
+   Example on Debian/Ubuntu for clang-3.6:
+   sudo apt-get install \
+     clang-3.6 libclang-3.6-dev llvm-3.6-dev binutils-dev libboost-dev
+
+3) update two version numbers in Doxyfile so that the HTML
+   documentation of clang can be produced with doxygen.
+   Clang AST nodes are succinctly described in there.
+
+   Execute doxygen to generate the doc.
+   Then open doc/html/index.html to browse it.
+
+4) update the version number in clang/clang/api.ml
+
+4') update the version number in myocamlbuild.ml
+
+5) try to compile clangml and do the update
+
+   Each compilation error will force you to update the file clang/clang/ast.ml
+   (AST nodes).
+   For each enum case that you need to add in this file, you will
+   need to update the file clang/clang/pp.ml accordingly (pretty printing
+   of AST nodes).
+   If some [name]Type AST node was added, the file clang/clang/types.ml
+   needs to be updated accordingly.
+   If some [name]Decl AST node was added, the file
+   plugin/c++/OcamlVisitor/Decl.cpp needs to be modified accordingly.
+   If some [name]Expr AST node was added, the file
+   plugin/c++/OcamlVisitor/Expr.cpp needs to be updated.
+   If some [name]Stmt or [name]Directive AST node was added, the file
+   plugin/c++/OcamlVisitor/Stmt.cpp needs to be updated.
+   If some [name]Type AST node was added, the file
+   plugin/c++/OcamlVisitor/Type.cpp needs to be updated.
+   If a [name]Type AST node is added/updated, the file
+   plugin/c++/OCamlVisitor/TypeLoc.cpp also needs to be updated.
+   If some enums were modified in clang, some modifications might be needed
+   in plugin/c++/clang_enums.cpp and plugin/c++/clang_enums.h.
+
+   To modify one of the previously mentioned file: look at the HTML
+   documentation of the new/modified AST node first.
+   Then, modify any impacted file by taking example from code that was
+   already in the file previously.
+   It is recommended to modify clang/clang/ast.ml only step by step: do one
+   modification at a time in there, then modify all the other impacted files
+   until they compile before introducing one more change in ast.ml.
+
+   Once clangml compiles again, install it (make install) and recompile
+   memcad before launching 'make prtp' in memcad's source tree.
+   A successful clang/clangml update should not break anything in memcad's
+   regression test suite.
+
+6) tag the new version of clangml
+
+   Optionally, create a new git branch as a snapshot so that people can see
+   later on what was done to support this new clang version.
+
+II) Previous upgrades examples
+------------------------------
+
+The branch (no more maintained) that was working with clang-3.4 is kept in git:
+
+https://github.com/Antique-team/clangml/tree/clang_3.4
+
+And, for clang-3.5:
+
+https://github.com/Antique-team/clangml/tree/clang_update_3.5
+
+For clang-3.6 (then became the master branch):
+
+https://github.com/Antique-team/clangml/tree/clang_update_3.6
+
+So, for example, if you want to see the diff between clangml for clang-3.4 and
+clangml for clang-3.5, you can use git/github to see a graphical diff:
+
+https://github.com/Antique-team/clangml/compare/clang_3.4...clang_update_3.5

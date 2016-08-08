@@ -1,0 +1,5 @@
+clangml is packaged for opam.
+First, you neeed to install and configure opam:
+cf. https://opam.ocaml.org/ for details.
+After, you can install clangml through opam with the command:
+opam install clangml .
