@@ -1,10 +1,6 @@
 open Ast
 open Util.Prelude
 
-(* Debug communication *)
-(*let debug = true*)
-let debug = false
-
 (* Server context *)
 type context
 
@@ -97,10 +93,20 @@ let connect (handle : 'a request -> 'a) =
   in
 
   try
-    io_loop ()
+    try
+      io_loop ()
+    with Failure msg ->
+      begin
+        if msg = "input_value: truncated object" then
+          (* change of behavior when unmarshaling an empty file
+             since OCaml 4.03.0 *)
+          raise End_of_file (* do as in previous OCaml versions *)
+        else
+          raise (Failure msg)
+      end
   with End_of_file ->
     close_in input;
-    close_out output;
+    close_out output
 ;;
 
 
@@ -116,12 +122,7 @@ type clang = {
 }
 
 let request { input; output } (msg : 'a request) : 'a =
-  if debug then (
-    Printf.printf "request (%s)\n"
-      (name_of_request msg);
-    flush stdout;
-  );
-
+  Log.debug "request (%s)" (name_of_request msg);
   Marshal.to_channel output msg [];
   flush output;
   match (Marshal.from_channel input: 'a response) with
