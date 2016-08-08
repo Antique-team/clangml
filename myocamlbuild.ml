@@ -25,7 +25,7 @@ let prompt_answer : type a. a prompt_question -> string -> a prompt_answer =
   fun kind answer ->
     match kind with
     | PQ_YN ->
-        (match String.lowercase answer with
+        (match String.lowercase_ascii answer with
          | "y" | "yes" | "" -> PA_Y
          | _ -> PA_N
         )
@@ -315,7 +315,7 @@ let () =
               Sh"|";
               A"sed"; A"-e";
               A("s/\\s\\+deriving (Show)//;s/= "
-                ^ String.capitalize (env "%")
+                ^ String.capitalize_ascii (env "%")
                 ^ "Bridge.\\w\\+ //");
               Sh">";
               A(env "clang/clang/%Bridge.ml");
@@ -378,6 +378,7 @@ let () =
               "-linkall";
               "-package"; "deriving";
               "-package"; "unix";
+              "-package"; "dolog";
               "-linkpkg";
             ]))
           end;

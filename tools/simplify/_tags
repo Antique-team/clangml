@@ -1,4 +1,4 @@
 # camlp4
 <*.ml{,i}>: package(batteries)
-<*.ml>: package(camlp4.quotations), camlp4of
-<*.{byte,native}>: package(camlp4.fulllib), package(deriving), package(unix), package(batteries)
+<*.ml>: package(dolog), package(camlp4.quotations), camlp4of
+<*.{byte,native}>: package(dolog), package(camlp4.fulllib), package(deriving), package(unix), package(batteries)
