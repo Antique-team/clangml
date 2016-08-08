@@ -1,6 +1,7 @@
 open Camlp4.PreCast
 open OcamlTypes.Sig
 open OcamlTypes.Process
+open Util.Prelude
 
 
 (* TODO: two new function shapes:
@@ -150,7 +151,7 @@ let make_update kind visit_type_names mangle ?record _loc expr ty =
            <:expr<$lid:mangle "tuple"$>>,
            <:expr<$lid:prefix ^ "tuple3"$ $update1$ $update2$ $update3$>>)
       | TupleType (_, tys) ->
-          Log.unimp "tuples with more than 3 elements"
+          abort (Log.fatal "tuples with more than 3 elements")
       | NamedType (_loc, name)
         when List.mem name visit_type_names ->
           let (var, update) = mkmap name in

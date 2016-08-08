@@ -1,4 +1,6 @@
-let (%) f g = fun x -> f (g x)
+
+
+let (%) f g x = f (g x)
 
 
 let finally f after =
@@ -12,3 +14,10 @@ let finally f after =
 
 
 external identity : 'a -> 'a = "%identity"
+
+let abort (_log_stmt: unit) =
+  exit 1
+
+let string_of_list to_str sep l' =
+  let l = List.rev l' in
+  "[" ^ String.concat sep (List.rev_map to_str l) ^ "]"
