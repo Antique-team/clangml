@@ -522,5 +522,5 @@ let codegen kind (visit_types : string list) ocaml_types =
     $tydcl$;;
 
     $functions$;;
-    let default = { $default$ };;
+    let default = { () with $default$ };;
   >>
