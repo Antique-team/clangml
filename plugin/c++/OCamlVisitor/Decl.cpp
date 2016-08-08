@@ -1,5 +1,13 @@
 #include "OCamlVisitor.h"
 
+const char* getNameAsString (clang::DeclarationName const &name)
+{
+  // name.getAsString().c_str() make linking with gcc5-compiled
+  // libraries fail; for example on Ubuntu 15.10
+  // assert( strcmp(name.getAsString().c_str(),
+  //                name.getAsIdentifierInfo()->getNameStart()) == 0);
+  return name.getAsIdentifierInfo()->getNameStart();
+}
 
 ptr<DeclarationName>
 OCamlVisitor::translate_declaration_name (clang::DeclarationName const &name)
@@ -7,15 +15,16 @@ OCamlVisitor::translate_declaration_name (clang::DeclarationName const &name)
   switch (name.getNameKind ())
     {
     case clang::DeclarationName::Identifier:
-      return mkDN_Identifier (strdup (name.getAsString ().c_str ()));
+      // FBR: add assert stmt
+      return mkDN_Identifier( strdup (getNameAsString (name) ));
     case clang::DeclarationName::ObjCZeroArgSelector:
-      printf ("ObjCZeroArgSelector: %s\n", name.getAsString ().c_str ());
+      printf ("ObjCZeroArgSelector: %s\n", getNameAsString (name));
       break;
     case clang::DeclarationName::ObjCOneArgSelector:
-      printf ("ObjCOneArgSelector: %s\n", name.getAsString ().c_str ());
+      printf ("ObjCOneArgSelector: %s\n", getNameAsString (name));
       break;
     case clang::DeclarationName::ObjCMultiArgSelector:
-      printf ("ObjCMultiArgSelector: %s\n", name.getAsString ().c_str ());
+      printf ("ObjCMultiArgSelector: %s\n", getNameAsString (name));
       break;
     case clang::DeclarationName::CXXConstructorName:
       return mkDN_CXXConstructorName (must_traverse (name.getCXXNameType ()));
@@ -27,10 +36,10 @@ OCamlVisitor::translate_declaration_name (clang::DeclarationName const &name)
       return mkDN_CXXOperatorName
         (translate_overloaded_operator_kind (name.getCXXOverloadedOperator ()));
     case clang::DeclarationName::CXXLiteralOperatorName:
-      printf ("CXXLiteralOperatorName: %s\n", name.getAsString ().c_str ());
+      printf ("CXXLiteralOperatorName: %s\n", getNameAsString (name));
       break;
     case clang::DeclarationName::CXXUsingDirective:
-      printf ("CXXUsingDirective: %s\n", name.getAsString ().c_str ());
+      printf ("CXXUsingDirective: %s\n", getNameAsString (name));
       break;
     }
 
