@@ -55,7 +55,7 @@ clang_type_sizeof (value context, value ctyp)
 
   clang::QualType const &type = ctx.refs.retrieve (ref);
 
-  int64 size = 0;
+  int64_t size = 0;
   if (!type->isIncompleteType ())
     size = ctx->getTypeInfo (type).Width / CHAR_BIT;
 

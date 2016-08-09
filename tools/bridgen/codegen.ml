@@ -356,7 +356,7 @@ let emit_intfs basename cg cpp_types =
   let pp_intf_list =
     Formatx.pp_list ~sep:(Formatx.pp_sep "\n") emit_intf
   in
-  let ucasename = String.uppercase basename in
+  let ucasename = String.uppercase_ascii basename in
   Formatx.fprintf cg.output
     "@[<v0>#ifndef %s_H@,\
      #define %s_H@,\
