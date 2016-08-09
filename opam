@@ -1,6 +1,5 @@
 opam-version: "1.2"
 name: "clangml"
-version: "3.6.0"
 maintainer: "francois.berenger@inria.fr"
 authors: "Pippijn van Steenhoven"
 homepage: "https://github.com/Antique-team/clangml"
