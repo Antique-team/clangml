@@ -4,13 +4,12 @@ let return_type_of_tloc = function
   | FunctionProtoTypeLoc (result, _)
   | FunctionNoProtoTypeLoc result ->
       result
-  | _ -> failwith "return_type_of_tloc: non-function type"
-
+  | x -> failwith ("return_type_of_tloc: non-function type: " ^ (Pp.string_of_tloc_ x))
 
 let args_of_tloc = function
   | FunctionProtoTypeLoc (_, args) -> args
   | FunctionNoProtoTypeLoc _ -> []
-  | _ -> failwith "args_of_tloc: non-function type"
+  | x -> failwith ("args_of_tloc: non-function type: " ^ (Pp.string_of_tloc_ x))
 
 
 let body_of_stmt = function
