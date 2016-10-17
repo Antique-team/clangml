@@ -14,12 +14,15 @@ let command_exists (cmd: string): bool =
     system ("which " ^ cmd ^ " 2>&1 > /dev/null") = WEXITED 0
   )
 
-exception No_command_found of string list
+exception No_command_found of string
+
+let string_of_list to_string sep l =
+  "[" ^ String.concat sep (List.map to_string l) ^ "]"
 
 let first_command_found (cmds: string list): string =
   let filtered = List.filter command_exists cmds in
   match filtered with
-  | [] -> raise (No_command_found cmds)
+  | [] -> raise (No_command_found (string_of_list (fun x -> x) "; " cmds))
   | cmd :: _ -> cmd
 
 let cpp_compiler =
