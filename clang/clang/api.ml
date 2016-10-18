@@ -132,18 +132,28 @@ let request { input; output } (msg : 'a request) : 'a =
   | Success value ->
       value
 
-let command_exists (cmd: string): bool =
+(* return the full path for the command, if found in path, none else *)
+let command_exists (cmd: string): string option =
   Unix.(
-    system ("which " ^ cmd ^ " 2>&1 > /dev/null") = WEXITED 0
+    if system ("which " ^ cmd ^ " 2>&1 > /dev/null") = WEXITED 0 then
+      Some (List.hd (Util.Various.get_command_output ("which " ^ cmd)))
+    else
+      None
   )
 
-exception No_command_found of string list
+exception Command_found of string
+exception No_command_found of string
 
+(* return the first available command from provided list of commands *)
 let first_command_found (cmds: string list): string =
-  let filtered = List.filter command_exists cmds in
-  match filtered with
-  | [] -> raise (No_command_found cmds)
-  | cmd :: _ -> cmd
+  try
+    List.iter (fun cmd ->
+        match command_exists cmd with
+        | Some cmd -> raise (Command_found cmd)
+        | None -> ()
+      ) cmds;
+    raise (No_command_found (string_of_list (fun x -> x) "; " cmds))
+  with Command_found cmd -> cmd
 
 let parse args continue =
   (* Try to find our clang plugin. *)
