@@ -161,7 +161,10 @@ let ocamlpicdir =
 let atomise = List.map (fun a -> A a)
 
 let cxxflags = Sh("`" ^ llvm_config ^
-                  " --cxxflags | sed 's/\-Wno\-maybe\-uninitialized/\-Wno\-uninitialized/g'`") :: atomise [
+                  " --cxxflags | " ^
+                  "sed 's/\-Wno\-maybe\-uninitialized/\-Wno\-uninitialized/g' |" ^
+                  "sed 's/-fno-rtti//g'`"
+                 ) :: atomise [
   "-Wall";
   "-Wextra";
   "-Werror";
