@@ -1,0 +1,23 @@
+# where are .ml and .mli files
+S clang/analysis
+S clang/clang
+S consumer
+S plugin/ocaml
+S tools/bridgen
+S tools/ocamlTypes
+S tools/simplify
+S tools/visitgen
+S util
+# where are .cmi and .cmt files
+B _build
+B _build/clang
+B _build/clang/clang
+B _build/consumer
+B _build/plugin/ocaml
+B _build/tools
+B _build/tools/bridgen
+B _build/tools/ocamlTypes
+B _build/tools/simplify
+B _build/tools/visitgen
+B _build/util
+PKG bytes deriving batteries dolog
