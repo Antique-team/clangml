@@ -332,16 +332,11 @@ let () =
           ~prod:"clang/clang/%Bridge.ml"
           ~dep:"clang/clang/%.ml"
           begin fun env build ->
-            Cmd (S[
-              A"grep"; A"-v"; A"^\\s*deriving (Show)\\s*$";
-              A(env "clang/clang/%.ml");
-              Sh"|";
-              A"sed"; A"-e";
-              A("s/\\s\\+deriving (Show)//;s/= "
-                ^ String.capitalize (env "%")
-                ^ "Bridge.\\w\\+ //");
-              Sh">";
-              A(env "clang/clang/%Bridge.ml");
+            Cmd (S[Sh(
+                Printf.sprintf
+                  "sed 's/deriving (Show)//g;s/= .*Bridge.* =/=/g' %s > %s"
+                  (env "clang/clang/%.ml") (* input file *)
+                  (env "clang/clang/%Bridge.ml")) (* ouput file *)
             ])
           end;
 
