@@ -1,6 +1,7 @@
 #include "backtrace.h"
 
 #ifndef __FreeBSD__ // all the following is Linux-specific
+#ifndef __APPLE__
 
 #define PACKAGE 1 // workaround to avoid config.h problem on Gentoo Linux
 #include <bfd.h>
@@ -477,4 +478,5 @@ backtrace_init ()
   catch_signal (SIGSEGV, handle);
 }
 
+#endif // __APPLE__
 #endif // __FreeBSD__
