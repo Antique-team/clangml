@@ -1,6 +1,7 @@
 #include "dynamic_stack.h"
 #include "trace.h"
 
+#undef invalid_argument // badly named macro from caml/compatibility.h
 #include <sstream>
 
 #define TRACING 0
