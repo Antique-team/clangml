@@ -26,7 +26,7 @@ tracer::~tracer ()
   level -= 2;
   std::printf ("%*s< %s", level, "", func);
   if (timing)
-    std::printf (" (%ld.%06ld)", diff.tv_sec, diff.tv_usec);
+    std::printf (" (%ld.%06d)", diff.tv_sec, diff.tv_usec);
   std::fputc ('\n', stdout);
   std::fflush (stdout);
 }
