@@ -201,7 +201,7 @@ let ldflags = Sh("`" ^ llvm_config ^ " --ldflags`") :: atomise [
   "-lLLVMSupport";
   "-lpthread";
   "-ldl";
-  "-ltinfo";
+  "-lncurses";
   "-lasmrun_pic";
   "-lunix";
   "-L" ^ ocamlpicdir ^ "/lib/ocaml";
