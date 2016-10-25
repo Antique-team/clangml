@@ -56,12 +56,12 @@ let first_command_found (cmds: string list): string =
   with Command_found c -> c
 
 let cpp_compiler =
-  (*                   linux                            osx *)
-  first_command_found ["clang++-" ^ Vars.clang_version; "clang++" ^ Vars.clang_version]
+  first_command_found ["clang++-" ^ Vars.clang_version; (* linux *)
+                       (Sys.getenv "HOME") ^ "/usr/clang38/bin/clang++"] (* osx *)
 
 let llvm_config =
-  (*                   linux                                osx *)
-  first_command_found ["llvm-config-" ^ Vars.clang_version; "llvm-config"]
+  first_command_found ["llvm-config-" ^ Vars.clang_version; (* linux *)
+                       (Sys.getenv "HOME") ^ "/usr/clang38/bin/llvm-config"] (* osx *)
 
 (* enforce llvm-config and clang++ versions match *)
 let () =
