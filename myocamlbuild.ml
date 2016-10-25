@@ -1,8 +1,8 @@
 open Ocamlbuild_plugin
 
-
 module Vars = struct
   let clang_version = "3.8"
+  let clang_long_version = "3.8.0"
   let ocaml_version = Sys.ocaml_version
   let ocaml_ver = Filename.chop_extension ocaml_version
   let ocaml_dist = "ocaml-" ^ ocaml_version
@@ -19,6 +19,26 @@ exception No_command_found of string
 let string_of_list to_string sep l =
   "[" ^ String.concat sep (List.map to_string l) ^ "]"
 
+type shell_command = string
+
+(* read first line output by given command *)
+let read_stdout (cmd: shell_command): string =
+  let cmd_out = Unix.open_process_in cmd in
+  let res =
+    try String.trim (input_line cmd_out)
+    with End_of_file -> ""
+  in
+  let () = close_in cmd_out in
+  res
+
+type os_type = Linux | OSX
+
+let get_os_type (): os_type =
+  match read_stdout "uname" with
+  | "Linxu" -> Linux
+  | "Darwin" -> OSX
+  | _ -> failwith "get_os_type: OS is neither Linux nor OSX"
+
 let first_command_found (cmds: string list): string =
   let filtered = List.filter command_exists cmds in
   match filtered with
@@ -26,10 +46,17 @@ let first_command_found (cmds: string list): string =
   | cmd :: _ -> cmd
 
 let cpp_compiler =
-  first_command_found ["clang++-" ^ Vars.clang_version; "clang++"]
+  (*                   linux                            osx *)
+  first_command_found ["clang++-" ^ Vars.clang_version; "clang++" ^ Vars.clang_version]
 
 let llvm_config =
+  (*                   linux                                osx *)
   first_command_found ["llvm-config-" ^ Vars.clang_version; "llvm-config"]
+
+(* enforce llvm-config and clang++ versions match *)
+let () =
+  if read_stdout "llvm-config --version" <> Vars.clang_long_version then
+    failwith (Printf.sprintf "%s and %s versions differ" cpp_compiler llvm_config)
 
 type _ prompt_question =
   | PQ_YN : [`PQ_YN] prompt_question
@@ -57,12 +84,6 @@ let prompt kind =
     flush stdout;
     Scanf.fscanf stdin "%s" (prompt_answer kind)
   ) stdout
-
-
-let pread cmd =
-  let proc = Unix.open_process_in cmd in
-  String.trim @@ input_line proc
-
 
 let find_ocamlpicdir_no_opam () =
   let src =
@@ -103,9 +124,9 @@ let find_ocamlpicdir_no_opam () =
 
 let find_ocamlpicdir () : string =
   try
-    let opam_dir = pread "opam config var root" in
+    let opam_dir = read_stdout "opam config var root" in
     let opam_switch_dir =
-      let dir = pread "opam config var switch" in
+      let dir = read_stdout "opam config var switch" in
       if dir = "system" then
         "/usr"
       else
@@ -126,7 +147,7 @@ let find_ocamlpicdir () : string =
            try to install it using OPAM.\nWould you like to attempt this?"
               = PA_Y then (
         (* Yes, try to install. *)
-        let preferred = pread "opam switch show" in
+        let preferred = read_stdout "opam switch show" in
         if Sys.command @@ "opam switch " ^ Vars.ocaml_version ^ "+PIC" <> 0 then
           failwith "opam failed to switch to PIC compiler";
         if  Sys.command @@ "opam switch " ^ preferred <> 0 then
@@ -164,50 +185,53 @@ let cxxflags = Sh("`" ^ llvm_config ^
                   " --cxxflags | " ^
                   "sed 's/\-Wno\-maybe\-uninitialized/\-Wno\-uninitialized/g' |" ^
                   "sed 's/-fno-rtti//g'`"
-                 ) :: atomise [
-  "-Wall";
-  "-Wextra";
-  "-Werror";
-  "-Wno-unused-parameter";
-  "-Wno-potentially-evaluated-expression";
-  "-std=c++11";
-  "-pedantic";
-  "-fcolor-diagnostics";
+                 ) :: atomise
+  ("-Wall" ::
+   "-Wextra" ::
+   "-Werror" ::
+   "-Wno-unused-parameter" ::
+   "-Wno-potentially-evaluated-expression" ::
+   "-std=c++11" ::
+   "-pedantic" ::
+   "-fcolor-diagnostics" ::
 
-  "-fPIC";
-  "-fexceptions";
-  "-fvisibility=hidden";
-  "-ggdb3";
-  "-O0";
+   "-fPIC" ::
+   "-fexceptions" ::
+   "-fvisibility=hidden" ::
+   "-ggdb3" ::
+   "-O0" ::
 
-  "-I" ^ ocamlpicdir ^ "/lib/ocaml";
+   ("-I" ^ ocamlpicdir ^ "/lib/ocaml") ::
 
-  "-Itools/bridgen/c++";
-  "-Iplugin/c++";
-  "-D__STDC_CONSTANT_MACROS";
-  "-D__STDC_LIMIT_MACROS";
+   "-Itools/bridgen/c++" ::
+   "-Iplugin/c++" ::
+   "-D__STDC_CONSTANT_MACROS" ::
+   "-D__STDC_LIMIT_MACROS" ::
 
-  "-UNDEBUG";
-]
+   "-UNDEBUG" ::
+   (match get_os_type () with
+   | Linux -> []
+   | OSX -> ["-I/usr/local/Cellar/boost159/1.59.0/include"]))
 
-let ldflags = Sh("`" ^ llvm_config ^ " --ldflags`") :: atomise [
-  "-Wl,-z,defs";
-  "-shared";
-  "-lclangStaticAnalyzerCore";
-  "-lclangAnalysis";
-  "-lclangAST";
-  "-lclangLex";
-  "-lclangBasic";
-  "-lLLVMSupport";
-  "-lpthread";
-  "-ldl";
-  "-lncurses";
-  "-lasmrun_pic";
-  "-lunix";
-  "-L" ^ ocamlpicdir ^ "/lib/ocaml";
-  "-Wl,-rpath," ^ ocamlpicdir ^ "/lib/ocaml";
-  "-ggdb3";
-]
+let ldflags = Sh("`" ^ llvm_config ^ " --ldflags`") :: atomise
+  ("-shared" ::
+  "-lclangStaticAnalyzerCore" ::
+  "-lclangAnalysis" ::
+  "-lclangAST" ::
+  "-lclangLex" ::
+  "-lclangBasic" ::
+  "-lLLVMSupport" ::
+  "-lpthread" ::
+  "-ldl" ::
+  "-lncurses" ::
+  "-lasmrun_pic" ::
+  "-lunix" ::
+  ("-L" ^ ocamlpicdir ^ "/lib/ocaml") ::
+  ("-Wl,-rpath," ^ ocamlpicdir ^ "/lib/ocaml") ::
+  "-ggdb3" ::
+  (match get_os_type () with
+  | Linux -> ["-Wl,-z,-defs"]
+  | OSX -> ["-Wl,-no_compact_unwind"]))
 
 let headers = [
   "tools/bridgen/c++/ocaml++.h";
