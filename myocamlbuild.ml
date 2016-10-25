@@ -222,7 +222,10 @@ let cxxflags = Sh("`" ^ llvm_config ^
    "-UNDEBUG" ::
    (match get_os_type () with
    | Linux -> []
-   | OSX -> ["-I/usr/local/Cellar/boost159/1.59.0/include"]))
+   (* find where are boost headers installed by brew *)
+   | OSX -> ["-I" ^ (read_stdout
+                       "brew list boost | grep include | tail -1 | \
+                        sed 's/include.*/include/g'")]))
 
 let ldflags = Sh("`" ^ llvm_config ^ " --ldflags`") :: atomise
   ("-shared" ::
