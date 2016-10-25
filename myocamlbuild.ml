@@ -65,7 +65,8 @@ let llvm_config =
 
 (* enforce llvm-config and clang++ versions match *)
 let () =
-  if read_stdout "llvm-config --version" <> Vars.clang_long_version then
+  let llvm_config_version = Printf.sprintf "%s --version" llvm_config in
+  if read_stdout llvm_config_version <> Vars.clang_long_version then
     failwith (Printf.sprintf "%s and %s versions differ" cpp_compiler llvm_config)
 
 type _ prompt_question =
