@@ -9,15 +9,11 @@ module Vars = struct
   let ocaml_tar = ocaml_dist ^ ".tar.gz"
 end
 
-let command_exists (cmd: string): bool =
-  Unix.(
-    system ("which " ^ cmd ^ " 2>&1 > /dev/null") = WEXITED 0
-  )
-
-exception No_command_found of string
-
 let string_of_list to_string sep l =
   "[" ^ String.concat sep (List.map to_string l) ^ "]"
+
+let concat_strings (l: string list): string =
+  string_of_list (fun x -> x) "; " l
 
 type shell_command = string
 
@@ -31,6 +27,13 @@ let read_stdout (cmd: shell_command): string =
   let () = close_in cmd_out in
   res
 
+(* return full path of command, if found *)
+let command_exists (cmd: string): string option =
+  if Unix.system ("which " ^ cmd ^ " 2>&1 > /dev/null") = Unix.WEXITED 0 then
+    Some (read_stdout ("which " ^ cmd))
+  else
+    None
+
 type os_type = Linux | OSX
 
 let get_os_type (): os_type =
@@ -39,11 +42,18 @@ let get_os_type (): os_type =
   | "Darwin" -> OSX
   | _ -> failwith "get_os_type: OS is neither Linux nor OSX"
 
+exception Command_found of string
+exception No_command_found of string
+
 let first_command_found (cmds: string list): string =
-  let filtered = List.filter command_exists cmds in
-  match filtered with
-  | [] -> raise (No_command_found (string_of_list (fun x -> x) "; " cmds))
-  | cmd :: _ -> cmd
+  try
+    List.iter (fun cmd ->
+      match command_exists cmd with
+      | None -> ()
+      | Some c -> raise (Command_found c)
+    ) cmds;
+    raise (No_command_found (concat_strings cmds))
+  with Command_found c -> c
 
 let cpp_compiler =
   (*                   linux                            osx *)
