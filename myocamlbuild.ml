@@ -38,7 +38,7 @@ type os_type = Linux | OSX
 
 let get_os_type (): os_type =
   match read_stdout "uname" with
-  | "Linxu" -> Linux
+  | "Linux" -> Linux
   | "Darwin" -> OSX
   | _ -> failwith "get_os_type: OS is neither Linux nor OSX"
 
