@@ -206,7 +206,11 @@ let parse args continue =
         String.escaped (Marshal.to_string (server_read, server_write) [])
       in
 
-      let c_compiler = first_command_found ["clang-3.8"; "clang"] in
+      let c_compiler =
+        first_command_found [
+          "clang-3.8"; (* linux *)
+          (Sys.getenv "HOME") ^ "/usr/clang38/bin/clang-3.8" (* osx *)
+        ] in
 
       let argv =
         let clang = [
