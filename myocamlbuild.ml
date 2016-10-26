@@ -223,23 +223,23 @@ let cxxflags = Sh("`" ^ llvm_config ^
 
 let ldflags = Sh("`" ^ llvm_config ^ " --ldflags`") :: atomise
   ("-shared" ::
-  "-lclangStaticAnalyzerCore" ::
-  "-lclangAnalysis" ::
-  "-lclangAST" ::
-  "-lclangLex" ::
-  "-lclangBasic" ::
-  "-lLLVMSupport" ::
-  "-lpthread" ::
-  "-ldl" ::
-  "-lncurses" ::
-  "-lasmrun_pic" ::
-  "-lunix" ::
-  ("-L" ^ ocamlpicdir) ::
-  ("-Wl,-rpath," ^ ocamlpicdir) ::
-  "-ggdb3" ::
-  (match get_os_type () with
-  | Linux -> ["-Wl,-z,defs"]
-  | OSX -> ["-Wl,-no_compact_unwind"]))
+   "-lclangStaticAnalyzerCore" ::
+   "-lclangAnalysis" ::
+   "-lclangAST" ::
+   "-lclangLex" ::
+   "-lclangBasic" ::
+   "-lLLVMSupport" ::
+   "-lpthread" ::
+   "-ldl" ::
+   "-lncurses" ::
+   "-lasmrun_pic" ::
+   "-lunix" ::
+   ("-L" ^ ocamlpicdir) ::
+   ("-Wl,-rpath," ^ ocamlpicdir) ::
+   "-ggdb3" ::
+   [match get_os_type () with
+   | Linux -> "-Wl,-z,defs"
+   | OSX -> "-Wl,-no_compact_unwind"])
 
 let headers = [
   "tools/bridgen/c++/ocaml++.h";
