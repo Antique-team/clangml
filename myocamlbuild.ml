@@ -132,25 +132,19 @@ let find_ocamlpicdir_no_opam () =
 
   Sys.getenv "PWD" ^ "/" ^ Vars.ocaml_dist ^ "/_install"
 
+let find_pic_dir (): string =
+  read_stdout "ocamlc -v | grep 'Standard library' | cut -d' ' -f4"
 
 let find_ocamlpicdir () : string =
   try
-    let opam_dir = read_stdout "opam config var root" in
-    let opam_switch_dir =
-      let dir = read_stdout "opam config var switch" in
-      if dir = "system" then
-        "/usr"
-      else
-        dir
-    in
     (* See if opam exists. *)
+    let opam_dir = read_stdout "opam config var root" in
     if Sys.file_exists opam_dir then (
-      let pic_dir      = opam_dir ^ "/" ^ opam_switch_dir in
-      let libasmrun_a = pic_dir ^ "/lib/ocaml/libasmrun_pic.a" in
+      let pic_dir = find_pic_dir () in
+      let libasmrun_a = pic_dir ^ "/libasmrun_pic.a" in
       (* See if there is the library we need. *)
       if Sys.file_exists libasmrun_a then
         pic_dir
-
       (* No opam version of 4.01.0+PIC. Ask the user whether he wants
          to use opam to install one. *)
       else if prompt PQ_YN
@@ -212,7 +206,7 @@ let cxxflags = Sh("`" ^ llvm_config ^
    "-ggdb3" ::
    "-O0" ::
 
-   ("-I" ^ ocamlpicdir ^ "/lib/ocaml") ::
+   ("-I" ^ ocamlpicdir) ::
 
    "-Itools/bridgen/c++" ::
    "-Iplugin/c++" ::
@@ -240,11 +234,11 @@ let ldflags = Sh("`" ^ llvm_config ^ " --ldflags`") :: atomise
   "-lncurses" ::
   "-lasmrun_pic" ::
   "-lunix" ::
-  ("-L" ^ ocamlpicdir ^ "/lib/ocaml") ::
-  ("-Wl,-rpath," ^ ocamlpicdir ^ "/lib/ocaml") ::
+  ("-L" ^ ocamlpicdir) ::
+  ("-Wl,-rpath," ^ ocamlpicdir) ::
   "-ggdb3" ::
   (match get_os_type () with
-  | Linux -> ["-Wl,-z,-defs"]
+  | Linux -> ["-Wl,-z,defs"]
   | OSX -> ["-Wl,-no_compact_unwind"]))
 
 let headers = [
