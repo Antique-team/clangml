@@ -25,6 +25,7 @@ depends: [
   "camlp4" {build}
   "ocamlfind" {build}
   "ocamlbuild" {build}
+  "conf-wget" {build}
 ]
 depexts: [
   [["archlinux"]
