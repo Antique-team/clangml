@@ -50,7 +50,7 @@ depexts: [
   [["osx" "homebrew"]
       ["boost"]]
 ]
-available: [ocaml-version >= "4.02.3" & !preinstalled]
+available: [ocaml-version >= "4.03.0"]
 post-messages: [
   "This package requires llvm-3.8, clang-3.8, boost and binutils" {failure}
 ]
