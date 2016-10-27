@@ -1,6 +1,4 @@
 opam-version: "1.2"
-name: "clangml"
-version: "3.7.0"
 maintainer: "francois.berenger@inria.fr"
 authors: "Pippijn van Steenhoven"
 homepage: "https://github.com/Antique-team/clangml"
@@ -20,33 +18,30 @@ depends: [
   "ocamlbuild" {build}
 ]
 depexts: [
-  [["archlinux"] ["binutils" "boost"]]
-  [
-    ["debian"]
-    [
-      "binutils-dev"
-      "clang-3.7"
-      "libboost-dev"
-      "libclang-3.7-dev"
-      "llvm-3.7-dev"
-    ]
-  ]
-  [
-    ["gentoo"]
-    ["dev-libs/boost" "sys-devel/binutils" "sys-devel/binutils-libs"]
-  ]
-  [
-    ["ubuntu"]
-    [
-      "binutils-dev"
-      "clang-3.7"
-      "libboost-dev"
-      "libclang-3.7-dev"
-      "llvm-3.7-dev"
-    ]
-  ]
+  [["archlinux"]
+      ["binutils"
+       "boost"]]
+  [["debian"]
+      ["binutils-dev"
+       "clang-3.7"
+       "libboost-dev"
+       "libclang-3.7-dev"
+       "llvm-3.7-dev"]]
+  [["gentoo"]
+      ["dev-libs/boost"
+       "sys-devel/binutils"
+       "sys-devel/binutils-libs"]]
+  [["ubuntu"]
+      ["binutils-dev"
+       "clang-3.7"
+       "libboost-dev"
+       "libclang-3.7-dev"
+       "llvm-3.7-dev"]]
+  [["osx" "homebrew"]
+      ["boost"
+       "homebrew/versions/llvm37"]]
 ]
-available: [ocaml-version >= "4.03.0" & !preinstalled & os != "darwin"]
+available: [ocaml-version >= "4.03.0"]
 post-messages: [
   "This package requires llvm-3.7, clang-3.7, boost and binutils" {failure}
 ]
