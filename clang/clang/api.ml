@@ -131,6 +131,28 @@ let request { input; output } (msg : 'a request) : 'a =
   | Success value ->
       value
 
+(* return the full path for the command, if found in path, none else *)
+let command_exists (cmd: string): string option =
+  Unix.(
+    if system ("which " ^ cmd ^ " 2>&1 > /dev/null") = WEXITED 0 then
+      Some (List.hd (Util.Various.get_command_output ("which " ^ cmd)))
+    else
+      None
+  )
+
+exception Command_found of string
+exception No_command_found of string
+
+(* return the first available command from provided list of commands *)
+let first_command_found (cmds: string list): string =
+  try
+    List.iter (fun cmd ->
+        match command_exists cmd with
+        | Some cmd -> raise (Command_found cmd)
+        | None -> ()
+      ) cmds;
+    raise (No_command_found (string_of_list (fun x -> x) "; " cmds))
+  with Command_found cmd -> cmd
 
 let parse args continue =
   (* Try to find our clang plugin. *)
@@ -183,10 +205,16 @@ let parse args continue =
         String.escaped (Marshal.to_string (server_read, server_write) [])
       in
 
+      let c_compiler =
+        first_command_found [
+          "clang-3.5"; (* linux *)
+          "/usr/local/bin/clang-3.5" (* osx *)
+        ] in
+
       let argv =
         let clang = [
           (* "/usr/bin/gdb"; "--args"; *)
-          "/usr/bin/clang-3.5";
+          c_compiler;
           "-fsyntax-only";
           "-Xclang"; "-load";
           "-Xclang"; plugin;
@@ -223,7 +251,7 @@ let parse args continue =
       (* Close unneeded fds. *)
       List.iter Unix.close [server_read; server_write];
 
-      finally 
+      finally
         (fun () ->
            let token =
              try

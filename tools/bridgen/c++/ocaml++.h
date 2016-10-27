@@ -320,7 +320,7 @@ static inline value value_of (value_of_context &ctx, size_t v)
 { return Val_int (v); }
 static inline value value_of (value_of_context &ctx, double v)
 { return caml_copy_double (v); }
-static inline value value_of (value_of_context &ctx, int64_t  v)
+static inline value value_of (value_of_context &ctx, int64_t v)
 { return caml_copy_int64 (v); }
 
 static inline value

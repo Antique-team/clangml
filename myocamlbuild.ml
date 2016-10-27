@@ -9,7 +9,65 @@ module Vars = struct
   let ocaml_tar = ocaml_dist ^ ".tar.gz"
 end
 
-let cpp_compiler = "clang++-" ^ Vars.clang_version
+let string_of_list to_string sep l =
+  "[" ^ String.concat sep (List.map to_string l) ^ "]"
+
+let concat_strings (l: string list): string =
+  string_of_list (fun x -> x) "; " l
+
+type shell_command = string
+
+(* read first line output by given command *)
+let read_stdout (cmd: shell_command): string =
+  let cmd_out = Unix.open_process_in cmd in
+  let res =
+    try String.trim (input_line cmd_out)
+    with End_of_file -> ""
+  in
+  let () = close_in cmd_out in
+  res
+
+(* return full path of command, if found *)
+let command_exists (cmd: string): string option =
+  if Unix.system ("which " ^ cmd ^ " 2>&1 > /dev/null") = Unix.WEXITED 0 then
+    Some (read_stdout ("which " ^ cmd))
+  else
+    None
+
+type os_type = Linux | OSX
+
+let get_os_type (): os_type =
+  match read_stdout "uname" with
+  | "Linux" -> Linux
+  | "Darwin" -> OSX
+  | _ -> failwith "get_os_type: OS is neither Linux nor OSX"
+
+exception Command_found of string
+exception No_command_found of string
+
+let first_command_found (cmds: string list): string =
+  try
+    List.iter (fun cmd ->
+      match command_exists cmd with
+      | None -> ()
+      | Some c -> raise (Command_found c)
+    ) cmds;
+    raise (No_command_found (concat_strings cmds))
+  with Command_found c -> c
+
+let cpp_compiler =
+  first_command_found ["clang++-" ^ Vars.clang_version; (* linux *)
+                       "/usr/local/bin/clang++-3.5"] (* osx *)
+
+let llvm_config =
+  first_command_found ["llvm-config-" ^ Vars.clang_version; (* linux *)
+                       "/usr/local/bin/llvm-config-3.5"] (* osx *)
+
+(* (\* enforce llvm-config and clang++ versions match *\) *)
+(* let () = *)
+(*   let llvm_config_version = Printf.sprintf "%s --version" llvm_config in *)
+(*   if read_stdout llvm_config_version <> Vars.clang_long_version then *)
+(*     failwith (Printf.sprintf "%s and %s versions differ" cpp_compiler llvm_config) *)
 
 type _ prompt_question =
   | PQ_YN : [`PQ_YN] prompt_question
@@ -80,25 +138,19 @@ let find_ocamlpicdir_no_opam () =
 
   Sys.getenv "PWD" ^ "/" ^ Vars.ocaml_dist ^ "/_install"
 
+let find_pic_dir (): string =
+  read_stdout "ocamlc -v | grep 'Standard library' | cut -d' ' -f4"
 
 let find_ocamlpicdir () : string =
   try
-    let opam_dir = pread "opam config var root" in
-    let opam_switch_dir =
-      let dir = pread "opam config var switch" in
-      if dir = "system" then
-        "/usr"
-      else
-        dir
-    in
     (* See if opam exists. *)
+    let opam_dir = read_stdout "opam config var root" in
     if Sys.file_exists opam_dir then (
-      let pic_dir      = opam_dir ^ "/" ^ opam_switch_dir in
-      let libasmrun_a = pic_dir ^ "/lib/ocaml/libasmrun_pic.a" in
+      let pic_dir = find_pic_dir () in
+      let libasmrun_a = pic_dir ^ "/libasmrun_pic.a" in
       (* See if there is the library we need. *)
       if Sys.file_exists libasmrun_a then
         pic_dir
-
       (* No opam version of 4.01.0+PIC. Ask the user whether he wants
          to use opam to install one. *)
       else if prompt PQ_YN
@@ -106,7 +158,7 @@ let find_ocamlpicdir () : string =
            try to install it using OPAM.\nWould you like to attempt this?"
               = PA_Y then (
         (* Yes, try to install. *)
-        let preferred = pread "opam switch show" in
+        let preferred = read_stdout "opam switch show" in
         if Sys.command @@ "opam switch " ^ Vars.ocaml_version ^ "+PIC" <> 0 then
           failwith "opam failed to switch to PIC compiler";
         if  Sys.command @@ "opam switch " ^ preferred <> 0 then
@@ -140,51 +192,59 @@ let ocamlpicdir =
 
 let atomise = List.map (fun a -> A a)
 
-let llvm_config = "llvm-config-" ^ Vars.clang_version
+let cxxflags = Sh("`" ^ llvm_config ^
+                  " --cxxflags | " ^
+                  "sed 's/\-Wno\-maybe\-uninitialized/\-Wno\-uninitialized/g' |" ^
+                  "sed 's/-fno-rtti//g'`"
+                 ) :: atomise
+  ("-Wall" ::
+   "-Wextra" ::
+   "-Werror" ::
+   "-Wno-unused-parameter" ::
+   "-std=c++11" ::
+   "-pedantic" ::
+   "-fcolor-diagnostics" ::
 
-let cxxflags = Sh("`" ^ llvm_config ^ " --cxxflags`") :: atomise [
-  "-Wall";
-  "-Wextra";
-  "-Werror";
-  "-Wno-unused-parameter";
-  "-std=c++11";
-  "-pedantic";
-  "-fcolor-diagnostics";
+   "-fPIC" ::
+   "-fexceptions" ::
+   "-fvisibility=hidden" ::
+   "-ggdb3" ::
+   "-O0" ::
 
-  "-fPIC";
-  "-fexceptions";
-  "-fvisibility=hidden";
-  "-ggdb3";
-  "-O0";
+   ("-I" ^ ocamlpicdir) ::
 
-  "-I" ^ ocamlpicdir ^ "/lib/ocaml";
+   "-Itools/bridgen/c++" ::
+   "-Iplugin/c++" ::
+   "-D__STDC_CONSTANT_MACROS" ::
+   "-D__STDC_LIMIT_MACROS" ::
 
-  "-Itools/bridgen/c++";
-  "-Iplugin/c++";
-  "-D__STDC_CONSTANT_MACROS";
-  "-D__STDC_LIMIT_MACROS";
+   "-UNDEBUG" ::
+   (match get_os_type () with
+   | Linux -> []
+   (* find where are boost headers installed by brew *)
+   | OSX -> ["-I" ^ (read_stdout
+                       "brew list boost | grep include | tail -1 | \
+                        sed 's/include.*/include/g'")]))
 
-  "-UNDEBUG";
-]
-
-let ldflags = Sh("`" ^ llvm_config ^ " --ldflags`") :: atomise [
-  "-Wl,-z,defs";
-  "-shared";
-  "-lclangStaticAnalyzerCore";
-  "-lclangAnalysis";
-  "-lclangAST";
-  "-lclangLex";
-  "-lclangBasic";
-  "-lLLVMSupport";
-  "-lpthread";
-  "-ldl";
-  "-ltinfo";
-  "-lasmrun_pic";
-  "-lunix";
-  "-L" ^ ocamlpicdir ^ "/lib/ocaml";
-  "-Wl,-rpath," ^ ocamlpicdir ^ "/lib/ocaml";
-  "-ggdb3";
-]
+let ldflags = Sh("`" ^ llvm_config ^ " --ldflags`") :: atomise
+  ("-shared" ::
+   "-lclangStaticAnalyzerCore" ::
+   "-lclangAnalysis" ::
+   "-lclangAST" ::
+   "-lclangLex" ::
+   "-lclangBasic" ::
+   "-lLLVMSupport" ::
+   "-lpthread" ::
+   "-ldl" ::
+   "-lncurses" ::
+   "-lasmrun_pic" ::
+   "-lunix" ::
+   ("-L" ^ ocamlpicdir) ::
+   ("-Wl,-rpath," ^ ocamlpicdir) ::
+   "-ggdb3" ::
+   [match get_os_type () with
+   | Linux -> "-Wl,-z,defs"
+   | OSX -> "-Wl,-no_compact_unwind"])
 
 let headers = [
   "tools/bridgen/c++/ocaml++.h";
@@ -309,16 +369,11 @@ let () =
           ~prod:"clang/clang/%Bridge.ml"
           ~dep:"clang/clang/%.ml"
           begin fun env build ->
-            Cmd (S[
-              A"grep"; A"-v"; A"^\\s*deriving (Show)\\s*$";
-              A(env "clang/clang/%.ml");
-              Sh"|";
-              A"sed"; A"-e";
-              A("s/\\s\\+deriving (Show)//;s/= "
-                ^ String.capitalize_ascii (env "%")
-                ^ "Bridge.\\w\\+ //");
-              Sh">";
-              A(env "clang/clang/%Bridge.ml");
+            Cmd (S[Sh(
+                Printf.sprintf
+                  "sed 's/deriving (Show)//g;s/= .*Bridge.* =/=/g' %s > %s"
+                  (env "clang/clang/%.ml") (* input file *)
+                  (env "clang/clang/%Bridge.ml")) (* ouput file *)
             ])
           end;
 
@@ -394,34 +449,5 @@ let () =
             ] @ objects) @ ldflags))
           end;
 
-        rule "Noweb to OCaml interface file"
-          ~prod:"%.mli"
-          ~dep:"%.ml.nw"
-          begin fun env build ->
-            Cmd (S[
-              A"notangle";
-              A"-L# %L \"%F\"%N";
-              A"-R.mli";
-              A(env "%.ml.nw");
-              Sh">";
-              A(env "%.mli");
-            ])
-          end;
-
-        rule "Noweb to OCaml implementation file"
-          ~prod:"%.ml"
-          ~dep:"%.ml.nw"
-          begin fun env build ->
-            Cmd (S[
-              A"notangle";
-              A"-L# %L \"%F\"%N";
-              A"-R.ml";
-              A(env "%.ml.nw");
-              Sh">";
-              A(env "%.ml");
-            ])
-          end;
-
-    | _ ->
-        ()
+    | _ -> ()
   end
