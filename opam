@@ -1,5 +1,4 @@
 opam-version: "1.2"
-name: "clangml"
 maintainer: "francois.berenger@inria.fr"
 authors: "Pippijn van Steenhoven"
 homepage: "https://github.com/Antique-team/clangml"
@@ -19,33 +18,29 @@ depends: [
   "ocamlbuild" {build}
 ]
 depexts: [
-  [["archlinux"] ["binutils" "boost"]]
-  [
-    ["debian"]
-    [
-      "binutils-dev"
-      "clang-3.6"
-      "libboost-dev"
-      "libclang-3.6-dev"
-      "llvm-3.6-dev"
-    ]
-  ]
-  [
-    ["gentoo"]
-    ["dev-libs/boost" "sys-devel/binutils" "sys-devel/binutils-libs"]
-  ]
-  [
-    ["ubuntu"]
-    [
-      "binutils-dev"
-      "clang-3.6"
-      "libboost-dev"
-      "libclang-3.6-dev"
-      "llvm-3.6-dev"
-    ]
-  ]
+  [["archlinux"]
+      ["binutils"
+       "boost"]]
+  [["debian"]
+      ["binutils-dev"
+       "clang-3.6"
+       "libboost-dev"
+       "libclang-3.6-dev"
+       "llvm-3.6-dev"]]
+  [["gentoo"]
+      ["dev-libs/boost"
+       "sys-devel/binutils"
+       "sys-devel/binutils-libs"]]
+  [["ubuntu"]
+      ["binutils-dev"
+       "clang-3.6"
+       "libboost-dev"
+       "libclang-3.6-dev"
+       "llvm-3.6-dev"]]
+  [["osx" "homebrew"]
+      ["boost"
+       "homebrew/versions/llvm36"]]
 ]
-available: [ocaml-version >= "4.03.0" & !preinstalled & os != "darwin"]
 post-messages: [
   "This package requires llvm-3.6, clang-3.6, boost and binutils" {failure}
 ]

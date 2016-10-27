@@ -11,6 +11,7 @@
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/Basic/SourceManager.h>
 
+#undef invalid_argument // badly named macro from caml/compatibility.h
 #include <sstream>
 
 #include <boost/range/adaptor/filtered.hpp>

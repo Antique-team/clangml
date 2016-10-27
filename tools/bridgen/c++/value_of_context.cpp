@@ -1,6 +1,5 @@
 #include "ocaml++/private.h"
 
-#include <sstream>
 #include <stdexcept>
 
 
