@@ -209,7 +209,7 @@ let parse args continue =
       let c_compiler =
         first_command_found [
           "clang-3.7"; (* linux *)
-          "/usr/local/Cellar/llvm37/3.7.1/bin/clang-3.7" (* osx *)
+          "/usr/local/bin/clang-3.7" (* osx *)
         ] in
 
       let argv =

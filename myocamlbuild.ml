@@ -58,11 +58,11 @@ let first_command_found (cmds: string list): string =
 
 let cpp_compiler =
   first_command_found ["clang++-" ^ Vars.clang_version; (* linux *)
-                       "/usr/local/Cellar/llvm37/3.7.1/bin/clang++-3.7"] (* osx *)
+                       "/usr/local/bin/clang++-3.7"] (* osx *)
 
 let llvm_config =
   first_command_found ["llvm-config-" ^ Vars.clang_version; (* linux *)
-                       "/usr/local/Cellar/llvm37/3.7.1/bin/llvm-config-3.7"] (* osx *)
+                       "/usr/local/bin/llvm-config-3.7"] (* osx *)
 
 (* enforce llvm-config and clang++ versions match *)
 let () =
