@@ -1,3 +1,4 @@
+.PHONY: clean wc install uninstall reinstall
 
 MAIN = mainClang
 
@@ -27,7 +28,7 @@ wc:
 	  | sort | xargs wc -l
 
 
-install: $(MAIN).native
+install:
 	ocamlfind install clangml META		\
 		_build/clangml.dylib		\
 		_build/clang/*.cm[iox]		\
