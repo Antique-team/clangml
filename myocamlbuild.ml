@@ -64,10 +64,11 @@ let llvm_config =
                        (Sys.getenv "HOME") ^ "/usr/clang38/bin/llvm-config"] (* osx *)
 
 (* enforce llvm-config and clang++ versions match *)
-let () =
-  let llvm_config_version = Printf.sprintf "%s --version" llvm_config in
-  if read_stdout llvm_config_version <> Vars.clang_long_version then
-    failwith (Printf.sprintf "%s and %s versions differ" cpp_compiler llvm_config)
+(* does not work on old Ubuntu *)
+(* let () = *)
+(*   let llvm_config_version = Printf.sprintf "%s --version" llvm_config in *)
+(*   if read_stdout llvm_config_version <> Vars.clang_long_version then *)
+(*     failwith (Printf.sprintf "%s and %s versions differ" cpp_compiler llvm_config) *)
 
 type _ prompt_question =
   | PQ_YN : [`PQ_YN] prompt_question
