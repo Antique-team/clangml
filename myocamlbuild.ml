@@ -64,11 +64,12 @@ let llvm_config =
   first_command_found ["llvm-config-" ^ Vars.clang_version; (* linux *)
                        "/usr/local/bin/llvm-config-3.6"] (* osx *)
 
+(* doesn't work on Ubuntu 14.04 LTS *)
 (* enforce llvm-config and clang++ versions match *)
-let () =
-  let llvm_config_version = Printf.sprintf "%s --version" llvm_config in
-  if read_stdout llvm_config_version <> Vars.clang_long_version then
-    failwith (Printf.sprintf "%s and %s versions differ" cpp_compiler llvm_config)
+(* let () = *)
+(*   let llvm_config_version = Printf.sprintf "%s --version" llvm_config in *)
+(*   if read_stdout llvm_config_version <> Vars.clang_long_version then *)
+(*     failwith (Printf.sprintf "%s and %s versions differ" cpp_compiler llvm_config) *)
 
 type _ prompt_question =
   | PQ_YN : [`PQ_YN] prompt_question
