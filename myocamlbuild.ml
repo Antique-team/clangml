@@ -65,10 +65,11 @@ let llvm_config =
                        "/usr/local/bin/llvm-config-3.7"] (* osx *)
 
 (* enforce llvm-config and clang++ versions match *)
-let () =
-  let llvm_config_version = Printf.sprintf "%s --version" llvm_config in
-  if read_stdout llvm_config_version <> Vars.clang_long_version then
-    failwith (Printf.sprintf "%s and %s versions differ" cpp_compiler llvm_config)
+(* doesn't work on old Ubuntu *)
+(* let () = *)
+(*   let llvm_config_version = Printf.sprintf "%s --version" llvm_config in *)
+(*   if read_stdout llvm_config_version <> Vars.clang_long_version then *)
+(*     failwith (Printf.sprintf "%s and %s versions differ" cpp_compiler llvm_config) *)
 
 type _ prompt_question =
   | PQ_YN : [`PQ_YN] prompt_question
@@ -219,7 +220,7 @@ let cxxflags = Sh("`" ^ llvm_config ^
    | Linux -> []
    (* find where are boost headers installed by brew *)
    | OSX -> ["-I" ^ (read_stdout
-                       "brew list boost | grep include | tail -1 | \
+                       "brew list boost160 | grep include | tail -1 | \
                         sed 's/include.*/include/g'")]))
 
 let ldflags = Sh("`" ^ llvm_config ^ " --ldflags`") :: atomise
