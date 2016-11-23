@@ -55,11 +55,11 @@ Much more thorough test:
 
 cd ~/src
 
-wget https://github.com/Antique-team/memcad/archive/v1.0.0.tar.gz
+wget https://github.com/Antique-team/memcad/archive/v1.0.1.tar.gz
 
-tar xzf v1.0.0.tar.gz
+tar xzf v1.0.1.tar.gz
 
-cd memcad-1.0.0
+cd memcad-1.0.1
 
 opam pin -n add memcad $PWD
 
