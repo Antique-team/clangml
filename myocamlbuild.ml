@@ -1,8 +1,8 @@
 open Ocamlbuild_plugin
 
 module Vars = struct
-  let clang_version = "3.8"
-  let clang_long_version = "3.8.0"
+  let clang_version = "3.9"
+  let clang_long_version = "3.9.0"
   let ocaml_version = Sys.ocaml_version
   let ocaml_ver = Filename.chop_extension ocaml_version
   let ocaml_dist = "ocaml-" ^ ocaml_version
@@ -57,11 +57,11 @@ let first_command_found (cmds: string list): string =
 
 let cpp_compiler =
   first_command_found ["clang++-" ^ Vars.clang_version; (* linux *)
-                       (Sys.getenv "HOME") ^ "/usr/clang38/bin/clang++"] (* osx *)
+                       (Sys.getenv "HOME") ^ "/usr/clang39/bin/clang++"] (* osx *)
 
 let llvm_config =
   first_command_found ["llvm-config-" ^ Vars.clang_version; (* linux *)
-                       (Sys.getenv "HOME") ^ "/usr/clang38/bin/llvm-config"] (* osx *)
+                       (Sys.getenv "HOME") ^ "/usr/clang39/bin/llvm-config"] (* osx *)
 
 (* enforce llvm-config and clang++ versions match *)
 (* does not work on old Ubuntu *)
@@ -230,6 +230,7 @@ let ldflags = Sh("`" ^ llvm_config ^ " --ldflags`") :: atomise
    "-lclangLex" ::
    "-lclangBasic" ::
    "-lLLVMSupport" ::
+   "-lLLVMCore" ::
    "-lpthread" ::
    "-ldl" ::
    "-lncurses" ::

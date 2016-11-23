@@ -304,6 +304,9 @@ type attributed_type_kind = AstBridge.attributed_type_kind =
  | ATK_nonnull
  | ATK_nullable
  | ATK_null_unspecified
+ | ATK_swiftcall
+ | ATK_preserve_most
+ | ATK_preserve_all
  deriving (Show)
 
 
@@ -718,6 +721,7 @@ type builtin_type = AstBridge.builtin_type =
 
   | BT_Half
   | BT_Float
+  | BT_Float128
   | BT_Double
   | BT_LongDouble
 
@@ -729,18 +733,42 @@ type builtin_type = AstBridge.builtin_type =
 
   | BT_OCLClkEvent
   | BT_OCLEvent
-  | BT_OCLImage1d
-  | BT_OCLImage1dArray
-  | BT_OCLImage1dBuffer
-  | BT_OCLImage2d
-  | BT_OCLImage2dArray
-  | BT_OCLImage2dArrayDepth
-  | BT_OCLImage2dArrayMSAA
-  | BT_OCLImage2dArrayMSAADepth
-  | BT_OCLImage2dDepth
-  | BT_OCLImage2dMSAA
-  | BT_OCLImage2dMSAADepth
-  | BT_OCLImage3d
+  | BT_OCLImage1dRO
+  | BT_OCLImage1dWO
+  | BT_OCLImage1dRW
+  | BT_OCLImage1dArrayRO
+  | BT_OCLImage1dArrayWO
+  | BT_OCLImage1dArrayRW
+  | BT_OCLImage1dBufferRO
+  | BT_OCLImage1dBufferWO
+  | BT_OCLImage1dBufferRW
+  | BT_OCLImage2dRO
+  | BT_OCLImage2dWO
+  | BT_OCLImage2dRW
+  | BT_OCLImage2dArrayRO
+  | BT_OCLImage2dArrayWO
+  | BT_OCLImage2dArrayRW
+  | BT_OCLImage2dArrayDepthRO
+  | BT_OCLImage2dArrayDepthWO
+  | BT_OCLImage2dArrayDepthRW
+  | BT_OCLImage2dArrayMSAARO
+  | BT_OCLImage2dArrayMSAAWO
+  | BT_OCLImage2dArrayMSAARW
+  | BT_OCLImage2dArrayMSAADepthRO
+  | BT_OCLImage2dArrayMSAADepthWO
+  | BT_OCLImage2dArrayMSAADepthRW
+  | BT_OCLImage2dDepthRO
+  | BT_OCLImage2dDepthWO
+  | BT_OCLImage2dDepthRW
+  | BT_OCLImage2dMSAARO
+  | BT_OCLImage2dMSAAWO
+  | BT_OCLImage2dMSAARW
+  | BT_OCLImage2dMSAADepthRO
+  | BT_OCLImage2dMSAADepthWO
+  | BT_OCLImage2dMSAADepthRW
+  | BT_OCLImage3dRO
+  | BT_OCLImage3dWO
+  | BT_OCLImage3dRW
   | BT_OCLNDRange
   | BT_OCLQueue
   | BT_OCLReserveID
@@ -1298,7 +1326,22 @@ and decl_ = AstBridge.decl_ =
   | VarTemplateDecl
   | VarTemplatePartialSpecializationDecl
   | VarTemplateSpecializationDecl
-
+  | PragmaCommentDecl
+  | OMPCapturedExprDecl
+  | OMPDeclareReductionDecl
+  | CXXInheritedCtorInitExpr
+  | OMPTargetUpdateDirective
+  | PragmaDetectMismatchDecl
+  | ConstructorUsingShadowDecl
+  | OMPDistributeSimdDirective
+  | OMPTargetExitDataDirective
+  | OMPTargetParallelDirective
+  | OMPTargetEnterDataDirective
+  | OMPTargetParallelForDirective
+  | OMPDistributeParallelForDirective
+  | OMPTargetParallelForSimdDirective
+  | OMPDistributeParallelForSimdDirective
+  | ObjCAvailabilityCheckExpr
 
 and field_decl = AstBridge.field_decl = {
   fd_type : tloc;
