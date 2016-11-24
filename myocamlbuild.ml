@@ -230,8 +230,8 @@ let ldflags = Sh("`" ^ llvm_config ^ " --ldflags`") :: atomise
    "-lclangAST" ::
    "-lclangLex" ::
    "-lclangBasic" ::
-   "-lLLVMSupport" ::
    "-lLLVMCore" ::
+   "-lLLVMSupport" ::
    "-lpthread" ::
    "-ldl" ::
    "-lncurses" ::
