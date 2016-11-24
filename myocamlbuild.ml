@@ -189,6 +189,7 @@ let atomise = List.map (fun a -> A a)
 
 let cxxflags = Sh("`" ^ llvm_config ^
                   " --cxxflags | " ^
+                  "sed 's/-Wl,-fuse-ld=gold//g' |" ^
                   "sed 's/-Wno-maybe-uninitialized/-Wno-uninitialized/g' |" ^
                   "sed 's/-fno-rtti//g'`"
                  ) :: atomise
