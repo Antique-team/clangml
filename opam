@@ -35,7 +35,8 @@ depexts: [
        "clang-3.8"
        "libboost-dev"
        "libclang-3.8-dev"
-       "llvm-3.8-dev"]]
+       "llvm-3.8-dev"
+       "libncurses-dev"]]
   [["gentoo"]
       ["dev-libs/boost"
        "sys-devel/binutils"
@@ -45,7 +46,8 @@ depexts: [
        "clang-3.8"
        "libboost-dev"
        "libclang-3.8-dev"
-       "llvm-3.8-dev"]]
+       "llvm-3.8-dev"
+       "libncurses-dev"]]
   [["osx" "homebrew"]
       ["boost160"]]
 ]
