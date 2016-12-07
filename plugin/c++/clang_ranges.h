@@ -41,8 +41,8 @@ arg_range = [] (clang::CallExpr *S)
 static const auto
 designator_range = [] (clang::DesignatedInitExpr *S)
 {
-  return boost::make_iterator_range (S->designators_begin (),
-                                     S->designators_end ());
+  return boost::make_iterator_range (S->designators().begin (),
+                                     S->designators().end ());
 };
 
 

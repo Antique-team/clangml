@@ -122,9 +122,12 @@ translate_attributed_type_kind (clang::AttributedType::Kind kind)
     case clang::AttributedType::Kind::attr_stdcall:              return ATK_stdcall;
     case clang::AttributedType::Kind::attr_thiscall:             return ATK_thiscall;
     case clang::AttributedType::Kind::attr_pascal:               return ATK_pascal;
+    case clang::AttributedType::Kind::attr_swiftcall:            return ATK_swiftcall;
     case clang::AttributedType::Kind::attr_inteloclbicc:         return ATK_inteloclbicc;
     case clang::AttributedType::Kind::attr_ms_abi:               return ATK_ms_abi;
     case clang::AttributedType::Kind::attr_sysv_abi:             return ATK_sysv_abi;
+    case clang::AttributedType::Kind::attr_preserve_most:        return ATK_preserve_most;
+    case clang::AttributedType::Kind::attr_preserve_all:         return ATK_preserve_all;
     case clang::AttributedType::Kind::attr_ptr32:                return ATK_ptr32;
     case clang::AttributedType::Kind::attr_ptr64:                return ATK_ptr64;
     case clang::AttributedType::Kind::attr_sptr:                 return ATK_sptr;
@@ -182,6 +185,9 @@ translate_builtin_type (clang::BuiltinType::Kind kind)
 #define BUILTIN_TYPE(Id, SingletonId)   \
     case clang::BuiltinType::Id:        \
       return BT_##Id;
+#define IMAGE_TYPE(ImgType, Id, SingletonId, Access, Suffix)   \
+    BUILTIN_TYPE(Id, SingletonId)
+#include <clang/Basic/OpenCLImageTypes.def>
 #include <clang/AST/BuiltinTypes.def>
     }
   throw std::runtime_error ("invalid builtin type");
