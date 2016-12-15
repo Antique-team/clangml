@@ -1,0 +1,66 @@
+ClangML release HOWTO
+=====================
+
+author: francois.berenger@inria.fr
+date: Thu Dec 15 2016
+
+This HOWTO describes how to release a new version of clangml as an official
+OPAM[0] package.
+
+I - Tag a new release
+---------------------
+
+Please follow the version number of the clang version your are supporting.
+For example, all those clangml versions
+(3.6.0, 3.6.0.1, 3.6.0.2, 3.6.0.4, 3.6.0.5, 3.6.0.6) support clang-3.6.0.
+
+The official website for the source code of clangml is:
+https://github.com/Antique-team/clangml
+
+You must tag this new version of the software:
+---
+git tag v3.6.0.5 # for example
+git push --tags git@github.com:Antique-team/clangml.git
+---
+
+Github will automatically create a tarball for this version at:
+https://github.com/Antique-team/clangml/archive/v3.6.0.5.tar.gz
+
+II - Create a new OPAM package
+------------------------------
+
+Now, you must create a new OPAM package.
+For simplicity, we will reuse the already existing package.
+
+---
+git clone https://github.com/ocaml/opam-repository.git
+cd opam-repository
+cp -a packages/clangml/clangml.3.6.0.4 packages/clangml/clangml.3.6.0.5
+---
+
+Update the URL and MD5 of your new tarball in file
+packages/clangml/clangml.3.6.0.5/url.
+You must also update the
+packages/clangml/clangml.3.6.0.5/opam file since there is
+a clang version number in there (external dependencies of the package).
+
+Store the new package version in a specific git branch:
+---
+git checkout -b clangml_3.6.0.5
+git add packages/clangml/clangml.3.6.0.5
+git commit packages/clangml/clangml.3.6.0.5
+---
+
+Testing the package on Linux and OSX is strongly recommended
+(troubleshooting an opam package based on its Travis continuous integration
+results being slow and difficult).
+
+Then, create a pull request with your branch at:
+https://github.com/ocaml/opam-repository
+
+Once your pull request is accepted, the new package will be available
+to all opam users within a few days (and after they execute 'opam update').
+
+References
+==========
+[0] https://opam.ocaml.org/
