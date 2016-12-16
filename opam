@@ -1,7 +1,6 @@
 opam-version: "1.2"
 maintainer: "francois.berenger@inria.fr"
 authors: "Pippijn van Steenhoven"
-version: "3.9.0.1"
 homepage: "https://github.com/Antique-team/clangml"
 bug-reports: "https://github.com/Antique-team/clangml/issues"
 dev-repo: "https://github.com/Antique-team/clangml.git"
@@ -14,9 +13,7 @@ build: [
   [make]
 ]
 install: [make "install"]
-remove: [
-  [make "uninstall"]
-]
+remove: [make "uninstall"]
 depends: [
   "dolog"
   "batteries"
@@ -32,6 +29,10 @@ depexts: [
   [["archlinux"]
       ["binutils"
        "boost"]]
+  [["gentoo"]
+      ["dev-libs/boost"
+       "sys-devel/binutils"
+       "sys-devel/binutils-libs"]]
   [["debian"]
       ["binutils-dev"
        "clang-3.9"
@@ -39,13 +40,12 @@ depexts: [
        "libclang-3.9-dev"
        "llvm-3.9-dev"
        "libncurses-dev"]]
-  [["gentoo"]
-      ["dev-libs/boost"
-       "sys-devel/binutils"
-       "sys-devel/binutils-libs"]]
   [["ubuntu"]
       ["binutils-dev"
+       "clang-3.9"
        "libboost-dev"
+       "libclang-3.9-dev"
+       "llvm-3.9-dev"
        "libncurses-dev"]]
   [["osx" "homebrew"]
       ["boost160"]]
