@@ -61,7 +61,8 @@ let cpp_compiler =
 
 let llvm_config =
   first_command_found ["llvm-config-" ^ Vars.clang_version; (* linux *)
-                       (Sys.getenv "HOME") ^ "/usr/clang39/bin/llvm-config"] (* osx *)
+                       (Sys.getenv "HOME") ^ "/usr/clang39/bin/llvm-config"; (* osx *)
+                       "llvm-config"] (* Gentoo *)
 
 (* enforce llvm-config and clang++ versions match *)
 (* does not work on old Ubuntu *)
@@ -223,7 +224,7 @@ let cxxflags = Sh("`" ^ llvm_config ^
                        "brew list boost160 | grep include | tail -1 | \
                         sed 's/include.*/include/g'")]))
 
-let ldflags = Sh("`" ^ llvm_config ^ " --ldflags`") :: atomise
+let ldflags = Sh("`" ^ llvm_config ^ " --ldflags --libs`") :: atomise
   ("-shared" ::
    "-lclangStaticAnalyzerCore" ::
    "-lclangAnalysis" ::
@@ -239,9 +240,8 @@ let ldflags = Sh("`" ^ llvm_config ^ " --ldflags`") :: atomise
    ("-Wl,-rpath," ^ ocamlpicdir) ::
    "-ggdb3" ::
    (match get_os_type () with
-    | Linux -> ["-lLLVM"; "-Wl,-z,defs"]
-    | OSX -> ["-lLLVMCore"; "-lLLVMSupport";
-              "-Wl,-no_compact_unwind"]))
+    | Linux -> ["-Wl,-z,defs"]
+    | OSX -> ["-Wl,-no_compact_unwind"]))
 
 let headers = [
   "tools/bridgen/c++/ocaml++.h";
