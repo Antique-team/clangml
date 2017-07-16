@@ -26,27 +26,22 @@ depends: [
   "camlp4" {build}
   "ocamlfind" {build}
   "ocamlbuild" {build}
+  "conf-binutils" {build}
+  "conf-ncurses" {build}
   "conf-wget" {build}
 ]
 depexts: [
   [["archlinux"]
-      ["binutils"
-       "boost"]]
+      ["boost"]]
   [["debian"]
-      ["binutils-dev"
-       "clang-3.9"
+      ["clang-3.9"
        "libboost-dev"
        "libclang-3.9-dev"
-       "llvm-3.9-dev"
-       "libncurses-dev"]]
+       "llvm-3.9-dev"]]
   [["gentoo"]
-      ["dev-libs/boost"
-       "sys-devel/binutils"
-       "sys-devel/binutils-libs"]]
+      ["dev-libs/boost"]]
   [["ubuntu"]
-      ["binutils-dev"
-       "libboost-dev"
-       "libncurses-dev"]]
+      ["libboost-dev"]]
   [["osx" "homebrew"]
       ["boost160"]]
 ]
