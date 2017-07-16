@@ -50,7 +50,7 @@ depexts: [
   [["osx" "homebrew"]
       ["boost160"]]
 ]
-available: [ocaml-version >= "4.03.0"]
+available: [ocaml-version >= "4.03.0" & os != "alpine" & os != "centos"]
 post-messages: [
   "This package requires llvm-3.9, clang-3.9, boost and binutils" {failure}
 ]
