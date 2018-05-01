@@ -11,28 +11,29 @@ open Prelude
   This function is non-destructive (returns a new string).
  *)
 let cpp_name name =
+  let name = Bytes.of_string name in
   let rec to_camelcase length name =
     try
       (* If the name starts with an underscore,
          keep that first underscore. *)
-      let underscore = String.index_from name 1 '_' in
+      let underscore = Bytes.index_from name 1 '_' in
       (* If it ends with one, also keep that. *)
       if underscore = length - 1 then
         raise Not_found
       else (
-        String.blit
+        Bytes.blit
           name (underscore + 1)
           name underscore
           (length - underscore - 1);
-        Bytes.set name underscore (Char.uppercase name.[underscore]);
+        Bytes.set name underscore (Char.uppercase (Bytes.get name underscore));
         to_camelcase (length - 1) name
       )
     with Not_found ->
       (* Second copy here. *)
-      String.sub name 0 length
+      Bytes.to_string (Bytes.sub name 0 length)
   in
   (* First copy here. *)
-  to_camelcase (String.length name) (String.capitalize name)
+  to_camelcase (Bytes.length name) (Bytes.capitalize name)
 
 
 (*****************************************************
